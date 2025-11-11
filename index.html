@@ -2710,7 +2710,17 @@
         return window.groupsCache || [];
       }
       
-      window.groupsCache = data || [];
+      // Map group_name back to name for app compatibility
+      const mappedData = (data || []).map(group => ({
+        id: group.id,
+        name: group.group_name,
+        schedule: group.schedule,
+        color: group.color,
+        created_at: group.created_at,
+        updated_at: group.updated_at
+      }));
+      
+      window.groupsCache = mappedData;
       return window.groupsCache;
     }
     
