@@ -9390,12 +9390,17 @@
           const nowLA = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
           const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
           
-          console.log('[ClassCountdownTimer] Current LA time:', nowLA.toLocaleString('en-US'), '(UTC offset:', laOffset, 'hours)');
+          console.log('[ClassCountdownTimer] Current LA time:', nowLA.toLocaleString(), '(UTC offset:', laOffset, 'hours)');
+          
+          // Get current time in seconds since midnight LA time
+          const currentTimeInSeconds = nowLA.hours * 3600 + nowLA.minutes * 60 + nowLA.seconds;
           
           // Check each day for the next 7 days
           for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
-            const checkDate = new Date(nowLA.getTime() + daysAhead * 86400000);
-            const checkDayName = checkDate.toLocaleDateString('en-US', { weekday: 'long', timeZone: 'America/Los_Angeles' });
+            // Calculate the day we're checking
+            const checkDayIndex = (nowLA.getDay() + daysAhead) % 7;
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const checkDayName = dayNames[checkDayIndex];
 
             groups.forEach(group => {
               let sessions = [];
@@ -9457,25 +9462,28 @@
                 if (period === 'PM' && hours !== 12) hours += 12;
                 if (period === 'AM' && hours === 12) hours = 0;
 
-                // Create exact class datetime
-                const classDate = new Date(checkDate);
-                classDate.setHours(hours, minutes, 0, 0);
+                // Calculate class time in seconds since midnight
+                const classTimeInSeconds = hours * 3600 + minutes * 60;
                 
-                // Calculate time difference in seconds
-                const totalDiffSeconds = Math.floor((classDate - nowLA) / 1000);
+                // Calculate total time difference in seconds
+                let totalDiffSeconds;
+                if (daysAhead === 0) {
+                  // Same day - just subtract current time
+                  totalDiffSeconds = classTimeInSeconds - currentTimeInSeconds;
+                } else {
+                  // Future day - add full days, subtract current time, add class time
+                  totalDiffSeconds = (daysAhead * 86400) - currentTimeInSeconds + classTimeInSeconds;
+                }
                 
                 if (daysAhead === 0) {
                   console.log(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time}: ${(totalDiffSeconds/3600).toFixed(1)}h away`);
                 }
                 
-                // BEGIN CLASS COUNTDOWN TIMER FIX
                 // Skip if more than 2 hours (7200 seconds) past - class is over
                 if (totalDiffSeconds < -7200) return;
 
-                // Skip classes currently in progress (between 0 and -7200 seconds)
                 // Only show future classes (totalDiffSeconds > 0)
                 if (totalDiffSeconds > 0) {
-                // END CLASS COUNTDOWN TIMER FIX
                   let dayLabel = '';
                   if (daysAhead === 0) {
                     dayLabel = 'Today';
@@ -9498,10 +9506,8 @@
             });
           }
 
-          // BEGIN CLASS COUNTDOWN TIMER FIX
-          // Sort by time chronologically (no special "in-progress" sorting)
+          // Sort by time chronologically
           allClasses.sort((a, b) => a.sortTime - b.sortTime);
-          // END CLASS COUNTDOWN TIMER FIX
 
           // Remove duplicates based on group name + time + day
           const uniqueClasses = [];
