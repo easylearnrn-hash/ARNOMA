@@ -8422,10 +8422,10 @@
       if (!contentEl) return;
       
       try {
-        // CRITICAL FIX: Load groups from correct localStorage key
-        const groupsData = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
+        // Load groups from Supabase cache
+        const groupsData = window.groupsCache || window.globalData?.groups || [];
         
-        if (groupsData.length === 0) {
+        if (!Array.isArray(groupsData) || groupsData.length === 0) {
           contentEl.innerHTML = '<div style="text-align: center; padding: 60px; color: rgba(255,255,255,0.5); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">📚</div><p>No groups found.<br>Add groups in Group Manager to see schedules here.</p></div>';
           return;
         }
@@ -8611,6 +8611,14 @@
       }
     }
     // END QUICK VIEW FIX
+    
+    // Listen for group updates and refresh Quick View if it's open
+    window.addEventListener('groups:updated', function() {
+      const quickViewModal = document.getElementById('quickViewModal');
+      if (quickViewModal && quickViewModal.style.display !== 'none') {
+        renderQuickView();
+      }
+    });
     
     // ============================
     // END QUICK VIEW FUNCTIONS
