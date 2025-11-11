@@ -6262,7 +6262,9 @@
               <div class="info-column">
                 <span class="info-label">ALIASES</span>
                 <div class="aliases-container">
-                  ${aliases.map(alias => `<span class="alias-badge">${escapeHtml(alias)}</span>`).join('')}
+                  ${(Array.isArray(aliases) ? aliases : (aliases ? String(aliases).split(',') : []))
+                    .map(alias => `<span class="alias-badge">${escapeHtml(alias.trim())}</span>`)
+                    .join('')}
                 </div>
               </div>
             ` : ''}
