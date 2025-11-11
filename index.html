@@ -7666,7 +7666,14 @@
         return;
       }
       
-      groups.forEach(group => {
+      // Sort groups alphabetically by name
+      const sortedGroups = [...groups].sort((a, b) => {
+        const nameA = String(a.name || '').toUpperCase();
+        const nameB = String(b.name || '').toUpperCase();
+        return nameA.localeCompare(nameB);
+      });
+      
+      sortedGroups.forEach(group => {
         const card = document.createElement('div');
         card.className = 'group-card';
         card.innerHTML = `
