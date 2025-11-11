@@ -9222,9 +9222,12 @@
 
           console.log('[ClassCountdownTimer] Found', groups.length, 'groups');
 
-          // Get current LA time
-          const nowLA = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-          console.log('[ClassCountdownTimer] Current LA time:', nowLA.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+          // Get current LA time properly
+          const nowUTC = new Date();
+          const nowLA = new Date(nowUTC.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+          const laDateStr = nowLA.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' });
+          const laTimeStr = nowLA.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles' });
+          console.log('[ClassCountdownTimer] Current LA time:', laDateStr, laTimeStr);
           
           // Check each day for the next 7 days
           for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
