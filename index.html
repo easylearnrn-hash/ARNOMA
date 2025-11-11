@@ -9015,11 +9015,37 @@
       function findNextClass() {
         try {
           const groups = window.groupsCache || window.globalData?.groups || [];
-          // Get current time in LA timezone
-          const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+          // Get current time in LA timezone using same method as getAllUpcomingClasses
+          const nowUTC = new Date();
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Los_Angeles',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          
+          const parts = formatter.formatToParts(nowUTC);
+          const dateParts = {};
+          parts.forEach(part => {
+            dateParts[part.type] = part.value;
+          });
+          
+          const now = new Date(Date.UTC(
+            parseInt(dateParts.year),
+            parseInt(dateParts.month) - 1,
+            parseInt(dateParts.day),
+            parseInt(dateParts.hour),
+            parseInt(dateParts.minute),
+            parseInt(dateParts.second)
+          ));
+          
           const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          const currentDayIndex = now.getDay();
-          const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+          const currentDayIndex = now.getUTCDay();
+          const currentTime = now.getUTCHours() * 3600 + now.getUTCMinutes() * 60 + now.getUTCSeconds();
 
           console.log('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }), 'Day:', dayNames[currentDayIndex]);
 
@@ -9222,11 +9248,39 @@
 
           console.log('[ClassCountdownTimer] Found', groups.length, 'groups');
 
-          // Get current LA time properly
+          // Get current LA time properly by using UTC and offset
           const nowUTC = new Date();
-          const nowLA = new Date(nowUTC.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-          const laDateStr = nowLA.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' });
-          const laTimeStr = nowLA.toLocaleTimeString('en-US', { timeZone: 'America/Los_Angeles' });
+          // LA is UTC-8 (PST) or UTC-7 (PDT)
+          // Use Intl API to format in LA timezone and parse back
+          const formatter = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'America/Los_Angeles',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          
+          const parts = formatter.formatToParts(nowUTC);
+          const dateParts = {};
+          parts.forEach(part => {
+            dateParts[part.type] = part.value;
+          });
+          
+          // Create date in LA timezone by using UTC and setting the LA values
+          const nowLA = new Date(Date.UTC(
+            parseInt(dateParts.year),
+            parseInt(dateParts.month) - 1,
+            parseInt(dateParts.day),
+            parseInt(dateParts.hour),
+            parseInt(dateParts.minute),
+            parseInt(dateParts.second)
+          ));
+          
+          const laDateStr = nowLA.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' });
+          const laTimeStr = nowLA.toLocaleTimeString('en-US');
           console.log('[ClassCountdownTimer] Current LA time:', laDateStr, laTimeStr);
           
           // Check each day for the next 7 days
