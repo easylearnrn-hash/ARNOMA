@@ -4059,7 +4059,7 @@
     }
     
     function initiateGmailAuth() {
-      const redirectUri = 'https://www.richyfesta.com';
+      const redirectUri = 'https://www.richyfesta.com/index.html';
       // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       // Request offline access for longer-lived tokens (implicit flow limitation: token still expires in ~1 hour)
       // Note: For truly persistent auth, backend OAuth2 flow with refresh tokens is required
@@ -4071,6 +4071,8 @@
         `prompt=consent`; // Force consent screen to get maximum token lifetime
       // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       
+      console.log('🔐 Initiating Gmail OAuth with redirect URI:', redirectUri);
+      console.log('📋 Full auth URL:', authUrl);
       window.location.href = authUrl;
     }
     
