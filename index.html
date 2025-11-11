@@ -9391,9 +9391,11 @@
           const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
           
           console.log('[ClassCountdownTimer] Current LA time:', nowLA.toLocaleString(), '(UTC offset:', laOffset, 'hours)');
+          console.log('[ClassCountdownTimer] LA time breakdown - hours:', nowLA.hours, 'minutes:', nowLA.minutes, 'day:', nowLA.dayOfWeek);
           
           // Get current time in seconds since midnight LA time
           const currentTimeInSeconds = nowLA.hours * 3600 + nowLA.minutes * 60 + nowLA.seconds;
+          console.log('[ClassCountdownTimer] Current time in seconds since midnight:', currentTimeInSeconds, `(${(currentTimeInSeconds/3600).toFixed(2)} hours)`);
           
           // Check each day for the next 7 days
           for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
@@ -9475,12 +9477,13 @@
                   totalDiffSeconds = (daysAhead * 86400) - currentTimeInSeconds + classTimeInSeconds;
                 }
                 
-                if (daysAhead === 0) {
-                  console.log(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time}: ${(totalDiffSeconds/3600).toFixed(1)}h away`);
-                }
+                console.log(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time} (day +${daysAhead}): classTime=${classTimeInSeconds}s, currentTime=${currentTimeInSeconds}s, diff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
                 
                 // Skip if more than 2 hours (7200 seconds) past - class is over
-                if (totalDiffSeconds < -7200) return;
+                if (totalDiffSeconds < -7200) {
+                  console.log(`[ClassCountdownTimer] ❌ Skipping ${group.name} - more than 2h past`);
+                  return;
+                }
 
                 // Only show future classes (totalDiffSeconds > 0)
                 if (totalDiffSeconds > 0) {
