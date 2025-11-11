@@ -8117,7 +8117,7 @@
     
     // For backwards compatibility with Student Manager
     function loadGroups() {
-      return groups;
+      return loadGroupsFromSupabase();
     }
 
     // Listen for student updates to refresh group displays
@@ -9554,6 +9554,16 @@
     function updateForecastData() {
       // Load students data from Supabase cache
       const students = window.studentsCache || window.globalData?.students || [];
+      
+      // Safety check: ensure students is an array
+      if (!Array.isArray(students)) {
+        console.warn('⚠️ Students data is not an array:', students);
+        document.getElementById('forecastActiveCount').textContent = '0';
+        document.getElementById('forecastWeekly').textContent = formatCurrency(0, '$');
+        document.getElementById('forecastMonthly').textContent = formatCurrency(0, '$');
+        document.getElementById('forecastActual').textContent = formatCurrency(0, '$');
+        return;
+      }
       
       // Filter active students only (exclude paused, graduated, inactive)
       const activeStudents = students.filter(s => {
