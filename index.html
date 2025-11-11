@@ -6672,7 +6672,17 @@
       document.getElementById('studentEmail').value = '';
       document.getElementById('studentAliases').value = '';
       document.getElementById('studentNotes').value = '';
+      
+      // Clear group selections
       document.querySelectorAll('.group-select-btn').forEach(btn => btn.classList.remove('selected'));
+      
+      // Clear pay amount selections
+      document.querySelectorAll('.pay-select-btn').forEach(btn => {
+        btn.classList.remove('selected');
+        btn.style.background = 'rgba(255,255,255,.05)';
+        btn.style.color = '#6b7280';
+        btn.style.borderColor = 'rgba(255,255,255,.2)';
+      });
       
       const modal = document.getElementById('studentModal');
       
