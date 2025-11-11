@@ -9552,8 +9552,8 @@
     }
     
     function updateForecastData() {
-      // Load students data from localStorage
-      const students = loadStudents();
+      // Load students data from Supabase cache
+      const students = window.studentsCache || window.globalData?.students || [];
       
       // Filter active students only (exclude paused, graduated, inactive)
       const activeStudents = students.filter(s => {
@@ -9608,8 +9608,8 @@
       // Return 0 if no group name provided
       if (!groupName || !groupName.trim()) return 0;
       
-      // Load groups from localStorage
-      const groups = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
+      // Load groups from Supabase cache
+      const groups = window.groupsCache || window.globalData?.groups || [];
       
       // Find the group by name
       const group = groups.find(g => g.name === groupName);
