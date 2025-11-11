@@ -6375,7 +6375,14 @@
 
           <div class="inline-form-group">
             <label>Pay Per Class</label>
-            <input type="number" id="inline-pay-${student.id}" value="${student.payPerClass || 0}" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
+            <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 25)" style="padding: 6px 12px; background: ${student.payPerClass === 25 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 25 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 25 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$25</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 50)" style="padding: 6px 12px; background: ${student.payPerClass === 50 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 50 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 50 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$50</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 75)" style="padding: 6px 12px; background: ${student.payPerClass === 75 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 75 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 75 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$75</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 100)" style="padding: 6px 12px; background: ${student.payPerClass === 100 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 100 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 100 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$100</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 150)" style="padding: 6px 12px; background: ${student.payPerClass === 150 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 150 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 150 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$150</button>
+            </div>
+            <input type="number" id="inline-pay-${student.id}" value="${student.payPerClass || 0}" placeholder="Custom amount" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
           </div>
 
           <div class="inline-form-group">
@@ -6742,6 +6749,24 @@
       
       // Set the amount in the input field
       document.getElementById('studentPay').value = amount;
+    }
+
+    function selectInlinePayAmount(btn, studentId, amount) {
+      // Get all buttons for this student's inline editor
+      const container = btn.parentElement;
+      container.querySelectorAll('.pay-select-btn-inline').forEach(b => {
+        b.style.background = 'rgba(255,255,255,.05)';
+        b.style.color = '#6b7280';
+        b.style.borderColor = 'rgba(255,255,255,.2)';
+      });
+      
+      // Highlight selected button
+      btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+      btn.style.color = 'white';
+      btn.style.borderColor = '#22c55e';
+      
+      // Set the amount in the input field
+      document.getElementById(`inline-pay-${studentId}`).value = amount;
     }
 
     async function saveStudentFromModal() {
