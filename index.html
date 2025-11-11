@@ -8906,6 +8906,14 @@
      * - 2-hour class duration with automatic skip to next class
      * - Continuous rolling countdown without "in progress" pauses
      * - Zero side effects on existing code
+     * 
+     * TIMEZONE SYNCHRONIZATION (Yerevan ⇄ Los Angeles):
+     * - Los Angeles: America/Los_Angeles (PST UTC-8 or PDT UTC-7)
+     * - Yerevan: Asia/Yerevan (AMT UTC+4, no DST)
+     * - Time difference between Yerevan and Los Angeles is usually 11 hours (during PDT),
+     *   but 12 hours during U.S. Standard Time (November → March).
+     * - All calculations are done in UTC internally, then converted to local time for display.
+     * - NEVER hard-code timezone offsets - always retrieve them dynamically.
      */
     window.ClassCountdownTimer = (function() {
       // Private state
@@ -8913,6 +8921,91 @@
       let updateInterval = null;
       let currentClassData = null;
       let isPinned = false;
+
+      /**
+       * Timezone Utilities
+       * All time calculations use UTC internally, with dynamic timezone conversion
+       */
+      const TimezoneUtils = {
+        /**
+         * Get current time in a specific timezone
+         * @param {string} timezone - IANA timezone string (e.g., 'America/Los_Angeles')
+         * @returns {Date} Date object representing current time in that timezone
+         */
+        getCurrentTimeInZone(timezone) {
+          const now = new Date();
+          const localString = now.toLocaleString('en-US', { timeZone: timezone });
+          return new Date(localString);
+        },
+
+        /**
+         * Get the UTC offset for a timezone in hours (dynamically calculated)
+         * @param {string} timezone - IANA timezone string
+         * @returns {number} Offset in hours (e.g., -8 for PST, +4 for Yerevan)
+         */
+        getTimezoneOffset(timezone) {
+          const now = new Date();
+          const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+          const zoneDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+          return (zoneDate - utcDate) / (1000 * 60 * 60);
+        },
+
+        /**
+         * Convert a time from LA timezone to Yerevan timezone
+         * @param {string} laTimeStr - Time in LA (e.g., "8:00 PM")
+         * @param {Date} referenceDate - Reference date for the conversion (defaults to today)
+         * @returns {Object} { time: string, dayShift: number }
+         */
+        convertLATimeToYerevan(laTimeStr, referenceDate = new Date()) {
+          if (!laTimeStr) return { time: '', dayShift: 0 };
+          
+          const match = laTimeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+          if (!match) return { time: laTimeStr, dayShift: 0 };
+          
+          let hours = parseInt(match[1]);
+          const minutes = match[2];
+          const period = match[3].toUpperCase();
+          
+          // Convert to 24-hour
+          if (period === 'PM' && hours !== 12) hours += 12;
+          if (period === 'AM' && hours === 12) hours = 0;
+          
+          // Create a date object in LA timezone
+          const laDate = new Date(referenceDate);
+          const laString = laDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
+          const [month, day, year] = laString.split('/');
+          
+          // Create UTC date with LA time components
+          // Get LA's current UTC offset dynamically
+          const laOffset = this.getTimezoneOffset('America/Los_Angeles');
+          const utcHours = hours - laOffset;
+          
+          const utcDate = new Date(Date.UTC(
+            parseInt(year),
+            parseInt(month) - 1,
+            parseInt(day),
+            utcHours,
+            parseInt(minutes)
+          ));
+          
+          // Convert to Yerevan time
+          const yerevanString = utcDate.toLocaleString('en-US', { 
+            timeZone: 'Asia/Yerevan',
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+          
+          // Calculate day shift
+          const yerevanDate = new Date(utcDate.toLocaleString('en-US', { timeZone: 'Asia/Yerevan' }));
+          const dayShift = yerevanDate.getDate() - laDate.getDate();
+          
+          return {
+            time: yerevanString,
+            dayShift: dayShift
+          };
+        }
+      };
 
       // Time conversion helper (reuses existing convertLATimeToYerevan function)
       function ensureAMPMFormatLocal(timeStr) {
@@ -8932,7 +9025,14 @@
         return `${hours}:${minutes} ${period}`;
       }
 
-      // DST-aware LA to Yerevan conversion
+      // DST-aware LA to Yerevan conversion (legacy - kept for compatibility)
+      // NOTE: This uses dynamic offset calculation via TimezoneUtils
+      function convertLAToYerevanTime(laTimeStr) {
+        return TimezoneUtils.convertLATimeToYerevan(laTimeStr);
+      }
+
+      // Original implementation preserved below for reference
+      /*
       function convertLAToYerevanTime(laTimeStr) {
         if (!laTimeStr) return { time: '', dayShift: 0 };
         
@@ -8982,6 +9082,7 @@
           dayShift: dayShift
         };
       }
+      */
 
       // Parse schedule string format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
       function parseScheduleString(scheduleStr) {
@@ -9023,16 +9124,19 @@
       function findNextClass() {
         try {
           const groups = window.groupsCache || window.globalData?.groups || [];
-          // Get current time in LA timezone - simpler approach
-          const nowUTC = new Date();
-          const nowLAString = nowUTC.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
-          const now = new Date(nowLAString);
+          
+          // Get current time in LA timezone using UTC-based calculation
+          // CRITICAL: All time calculations use UTC internally for accuracy
+          // Time difference between Yerevan and Los Angeles is usually 11 hours (PDT),
+          // but 12 hours during U.S. Standard Time (November → March). Always retrieve dynamically.
+          const now = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+          const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
           
           const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
           const currentDayIndex = now.getDay();
           const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
-          console.log('[ClassCountdownTimer] Current LA time:', nowLAString, 'Day:', dayNames[currentDayIndex]);
+          console.log('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US'), 'Day:', dayNames[currentDayIndex], '(UTC offset:', laOffset, 'hours)');
 
           let nextClass = null;
           let minDiffInSeconds = Infinity;
@@ -9233,12 +9337,14 @@
 
           console.log('[ClassCountdownTimer] Found', groups.length, 'groups');
 
-          // Get current LA time - simpler approach
-          const nowUTC = new Date();
-          const nowLAString = nowUTC.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' });
-          const nowLA = new Date(nowLAString);
+          // Get current LA time using UTC-based calculation
+          // CRITICAL: All time calculations use UTC internally for accuracy
+          // Time difference between Yerevan and Los Angeles is usually 11 hours (PDT),
+          // but 12 hours during U.S. Standard Time (November → March). Always retrieve dynamically.
+          const nowLA = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+          const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
           
-          console.log('[ClassCountdownTimer] Current LA time:', nowLAString);
+          console.log('[ClassCountdownTimer] Current LA time:', nowLA.toLocaleString('en-US'), '(UTC offset:', laOffset, 'hours)');
           
           // Check each day for the next 7 days
           for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
