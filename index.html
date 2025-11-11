@@ -8935,35 +8935,37 @@
         getCurrentTimeInZone(timezone) {
           const now = new Date();
           
-          // Get the time components in the target timezone
-          const formatter = new Intl.DateTimeFormat('en-US', {
+          // Get ISO string in the target timezone
+          const isoString = now.toLocaleString('en-CA', {
             timeZone: timezone,
             year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-            weekday: 'long',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
             hour12: false
           });
           
-          const parts = formatter.formatToParts(now);
-          const values = {};
-          parts.forEach(part => {
-            if (part.type !== 'literal') {
-              values[part.type] = part.value;
-            }
+          // Get day of week separately
+          const dayOfWeek = now.toLocaleString('en-US', {
+            timeZone: timezone,
+            weekday: 'long'
           });
           
+          // Parse: "YYYY-MM-DD, HH:mm:ss"
+          const [datePart, timePart] = isoString.split(', ');
+          const [year, month, day] = datePart.split('-').map(n => parseInt(n));
+          const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+          
           return {
-            hours: parseInt(values.hour),
-            minutes: parseInt(values.minute),
-            seconds: parseInt(values.second),
-            day: parseInt(values.day),
-            month: parseInt(values.month),
-            year: parseInt(values.year),
-            dayOfWeek: values.weekday,
+            hours,
+            minutes,
+            seconds,
+            day,
+            month,
+            year,
+            dayOfWeek,
             // For backwards compatibility, provide a getDay() method
             getDay() {
               const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
