@@ -6030,6 +6030,11 @@
       try {
         students = await loadStudents();
         console.log(`✅ Loaded ${students.length} students from Supabase`);
+        // Render if student manager is open
+        const studentManager = document.getElementById('studentManagerModal');
+        if (studentManager && studentManager.style.display !== 'none') {
+          renderStudents();
+        }
       } catch (error) {
         console.error('Error loading students on init:', error);
         students = [];
@@ -6207,6 +6212,10 @@
     function renderStudents() {
       const grid = document.getElementById('studentGrid');
       if (!grid) return;
+      
+      // Always use the most current data from cache
+      students = window.studentsCache || students || [];
+      console.log('🎨 renderStudents called, students count:', students.length);
       
       grid.innerHTML = '';
       const activeStudents = students.filter(s => s.isActive !== false);
@@ -6539,20 +6548,26 @@
       // Prevent event bubbling
       event.stopPropagation();
       
-      const students = window.studentsCache || window.globalData?.students || [];
+      console.log('🔵 changeStudentGroup called:', { studentId, newGroup });
+      
+      // Find student in both local array and cache
       const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) {
         console.error('Student not found:', studentId);
         return;
       }
       
+      console.log('🔵 Found student:', student.name, 'current group:', student.group);
+      
       // Check if already in this group
       if ((student.group || '').toUpperCase() === newGroup.toUpperCase()) {
+        console.log('🔵 Already in this group, skipping');
         return; // Already in this group, no action needed
       }
       
       // Update student group
       student.group = newGroup;
+      console.log('🔵 Updated student.group to:', student.group);
       
       // Save to Supabase
       saveStudents();
@@ -6568,20 +6583,26 @@
       // Prevent event bubbling
       event.stopPropagation();
       
-      const students = window.studentsCache || window.globalData?.students || [];
+      console.log('💰 changeStudentPayAmount called:', { studentId, newAmount });
+      
+      // Find student in local array
       const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) {
         console.error('Student not found:', studentId);
         return;
       }
       
+      console.log('💰 Found student:', student.name, 'current pay:', student.payPerClass, 'type:', typeof student.payPerClass);
+      
       // Check if already this amount (compare as numbers)
       if (Number(student.payPerClass) === Number(newAmount)) {
+        console.log('💰 Already this amount, skipping');
         return; // Already this amount, no action needed
       }
       
       // Update student pay amount
       student.payPerClass = Number(newAmount);
+      console.log('💰 Updated student.payPerClass to:', student.payPerClass, 'type:', typeof student.payPerClass);
       
       // Save to Supabase
       saveStudents();
