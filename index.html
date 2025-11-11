@@ -4059,29 +4059,35 @@
     }
     
     function initiateGmailAuth() {
-      const redirectUri = 'https://www.richyfesta.com';
-      // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-      // Request offline access for longer-lived tokens (implicit flow limitation: token still expires in ~1 hour)
-      // Note: For truly persistent auth, backend OAuth2 flow with refresh tokens is required
+      // Use the exact current origin to match what's in Google Cloud Console
+      const redirectUri = window.location.origin;
+      
+      console.log('🔐 Current page URL:', window.location.href);
+      console.log('🔐 Using redirect URI:', redirectUri);
+      
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${GMAIL_CLIENT_ID}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `response_type=token&` +
         `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
-        `prompt=consent`; // Force consent screen to get maximum token lifetime
-      // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+        `prompt=consent`;
       
-      console.log('🔐 Initiating Gmail OAuth with redirect URI:', redirectUri);
       console.log('📋 Full auth URL:', authUrl);
+      console.log('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
+      console.log('   https://console.cloud.google.com/apis/credentials');
       window.location.href = authUrl;
     }
     
     function handleOAuthCallback() {
       const hash = window.location.hash;
+      console.log('🔍 Checking for OAuth callback - hash:', hash);
+      
       if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
         const token = params.get('access_token');
         const expiresIn = parseInt(params.get('expires_in') || '3600');
+        
+        console.log('✅ OAuth token found, expires in:', expiresIn, 'seconds');
         
         if (token) {
           gmailAccessToken = token;
@@ -4099,6 +4105,16 @@
           // Auto-fetch payments
           setTimeout(() => refreshPayments(), 1000);
         }
+      } else if (hash && hash.includes('error')) {
+        // Handle OAuth errors
+        const params = new URLSearchParams(hash.substring(1));
+        const error = params.get('error');
+        const errorDesc = params.get('error_description');
+        console.error('❌ OAuth error:', error, errorDesc);
+        showNotification(`Gmail connection failed: ${errorDesc || error}`, 'error');
+        
+        // Clear hash from URL
+        window.history.replaceState(null, '', window.location.pathname);
       }
     }
     
