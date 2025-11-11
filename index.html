@@ -7840,7 +7840,7 @@
 
     // ===== SAVE SCHEDULE =====
     // BEGIN GROUP MANAGER SCHEDULE FIX
-    function saveScheduleEdit(groupName) {
+    async function saveScheduleEdit(groupName) {
       const card = event.target.closest('.group-card');
       if (!card) return;
       
@@ -7862,7 +7862,18 @@
       
       // CRITICAL FIX: Replace old schedule entirely (no appending)
       group.schedule = schedule.join(', ');
-      saveGroups();
+      
+      // Save only this group (not all groups)
+      const savedGroup = await saveGroup(group);
+      if (savedGroup && savedGroup.id) {
+        group.id = savedGroup.id;
+        group.name = savedGroup.group_name || group.name;
+      }
+      
+      // Update cache and notify
+      window.groupsCache = groups;
+      window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
+      window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
       
       // Flash save confirmation
       const saveBtn = card.querySelector('button[onclick*="saveScheduleEdit"]');
