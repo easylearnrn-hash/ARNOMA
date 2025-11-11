@@ -9205,11 +9205,11 @@
         try {
           const allClasses = [];
           
-          // Load groups from localStorage
-          const groups = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
+          // Load groups from Supabase cache or global groups variable
+          const groups = window.groupsCache || window.globalData?.groups || [];
           
           if (!groups || groups.length === 0) {
-            console.log('[ClassCountdownTimer] No groups found in localStorage');
+            console.log('[ClassCountdownTimer] No groups found in cache');
             return [];
           }
 
@@ -9493,6 +9493,26 @@
         isActive: () => timerElement !== null
       };
     })();
+    
+    // Reinitialize countdown timer when groups/schedules are updated
+    window.addEventListener('groups:updated', () => {
+      if (window.ClassCountdownTimer) {
+        window.ClassCountdownTimer.destroy();
+        setTimeout(() => {
+          window.ClassCountdownTimer.init();
+        }, 500);
+      }
+    });
+    
+    window.addEventListener('schedules:updated', () => {
+      if (window.ClassCountdownTimer) {
+        window.ClassCountdownTimer.destroy();
+        setTimeout(() => {
+          window.ClassCountdownTimer.init();
+        }, 500);
+      }
+    });
+    
     /* END CLASS COUNTDOWN TIMER */
 
     // Initialize Floating Nav on DOM ready
