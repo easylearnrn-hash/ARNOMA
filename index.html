@@ -6165,8 +6165,8 @@
       // Request groups from Group Manager
       window.dispatchEvent(new CustomEvent("groups:request"));
       
-      // Load from localStorage if available
-      const storedGroups = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
+      // Load from Supabase cache
+      const storedGroups = window.groupsCache || window.globalData?.groups || [];
       if (storedGroups.length > 0) {
         groups = storedGroups;
       }
@@ -8930,37 +8930,52 @@
         /**
          * Get current time in a specific timezone
          * @param {string} timezone - IANA timezone string (e.g., 'America/Los_Angeles')
-         * @returns {Date} Date object representing current time in that timezone
+         * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
         getCurrentTimeInZone(timezone) {
           const now = new Date();
-          const localString = now.toLocaleString('en-US', { 
+          
+          // Get the time components in the target timezone
+          const formatter = new Intl.DateTimeFormat('en-US', {
             timeZone: timezone,
             year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
+            month: 'numeric',
+            day: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            weekday: 'long',
             hour12: false
           });
           
-          // Parse the formatted string which is now in timezone
-          // Format: "MM/DD/YYYY, HH:mm:ss"
-          const [datePart, timePart] = localString.split(', ');
-          const [month, day, year] = datePart.split('/');
-          const [hours, minutes, seconds] = timePart.split(':');
+          const parts = formatter.formatToParts(now);
+          const values = {};
+          parts.forEach(part => {
+            if (part.type !== 'literal') {
+              values[part.type] = part.value;
+            }
+          });
           
-          // Create a new Date object treating these as local values
-          // This represents the "wall clock time" in that timezone
-          return new Date(
-            parseInt(year),
-            parseInt(month) - 1,
-            parseInt(day),
-            parseInt(hours),
-            parseInt(minutes),
-            parseInt(seconds)
-          );
+          return {
+            hours: parseInt(values.hour),
+            minutes: parseInt(values.minute),
+            seconds: parseInt(values.second),
+            day: parseInt(values.day),
+            month: parseInt(values.month),
+            year: parseInt(values.year),
+            dayOfWeek: values.weekday,
+            // For backwards compatibility, provide a getDay() method
+            getDay() {
+              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+              return dayNames.indexOf(this.dayOfWeek);
+            },
+            getHours() { return this.hours; },
+            getMinutes() { return this.minutes; },
+            getSeconds() { return this.seconds; },
+            toLocaleString() {
+              return `${this.month}/${this.day}/${this.year}, ${String(this.hours).padStart(2, '0')}:${String(this.minutes).padStart(2, '0')}:${String(this.seconds).padStart(2, '0')}`;
+            }
+          };
         },
 
         /**
@@ -10057,9 +10072,9 @@
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
       
-      // Load data
-      const students = loadStudents();
-      const groups = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
+      // Load data from Supabase cache
+      const students = window.studentsCache || window.globalData?.students || [];
+      const groups = window.groupsCache || window.globalData?.groups || [];
       const payments = PaymentStore.getAll();
       
       // Filter active students
