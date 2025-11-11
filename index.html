@@ -1103,15 +1103,15 @@
     }
 
     .status-paused {
-      background: rgba(255,152,0,.15);
-      border-color: rgba(255,152,0,.4);
-      color: #ff9800;
+      background: rgba(251,191,36,.15);
+      border-color: rgba(251,191,36,.4);
+      color: #fbbf24;
     }
 
     .status-graduated {
-      background: rgba(33,150,243,.15);
-      border-color: rgba(33,150,243,.4);
-      color: #2196f3;
+      background: rgba(156,163,175,.15);
+      border-color: rgba(156,163,175,.4);
+      color: #9ca3af;
     }
 
     .mini-toggle {
@@ -6064,9 +6064,9 @@
       const normalized = normalizeStatus(status);
       switch (normalized) {
         case STUDENT_STATUSES.PAUSED:
-          return { label: 'Paused', color: '#ff9800', bg: 'rgba(255,152,0,.15)', border: 'rgba(255,152,0,.4)' };
+          return { label: 'Paused', color: '#fbbf24', bg: 'rgba(251,191,36,.15)', border: 'rgba(251,191,36,.4)' };
         case STUDENT_STATUSES.GRADUATED:
-          return { label: 'Graduated', color: '#2196f3', bg: 'rgba(33,150,243,.15)', border: 'rgba(33,150,243,.4)' };
+          return { label: 'Graduated', color: '#9ca3af', bg: 'rgba(156,163,175,.15)', border: 'rgba(156,163,175,.4)' };
         default:
           return { label: 'Active', color: '#4caf50', bg: 'rgba(76,175,80,.15)', border: 'rgba(76,175,80,.4)' };
       }
