@@ -6151,7 +6151,9 @@
       
       const statusDetails = getStatusDetails(student.status);
       const showInGrid = student.showInGrid !== false;
-      const aliases = student.aliases || [];
+      const aliases = (student.aliases && typeof student.aliases === 'string') 
+        ? student.aliases.split(',').map(a => a.trim()).filter(a => a) 
+        : (Array.isArray(student.aliases) ? student.aliases : []);
       
       card.innerHTML = `
         <!-- VIEW MODE -->
