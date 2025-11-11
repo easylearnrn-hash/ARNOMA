@@ -6074,6 +6074,7 @@
 
     // ===== SAVE/LOAD FUNCTIONS =====
     async function saveStudents() {
+      console.trace('🚨 saveStudents() called - WHO CALLED ME?');
       try {
         // Save all students to Supabase
         for (const student of students) {
