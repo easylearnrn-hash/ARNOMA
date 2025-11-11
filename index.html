@@ -6319,6 +6319,16 @@
           </div>
           <!-- END FEATURE 2 -->
 
+          <!-- Payment Amount Quick Switch Buttons -->
+          <div class="group-buttons" onclick="event.stopPropagation()">
+            ${[25, 50, 75, 100, 150].map(amount => `
+              <button 
+                class="group-btn ${student.payPerClass === amount ? 'active' : ''}" 
+                onclick="changeStudentPayAmount('${student.id}', ${amount})"
+                title="Set pay to $${amount}">$${amount}</button>
+            `).join('')}
+          </div>
+
           <div class="student-info">
             <div class="info-row">
               <span class="info-label">PAY/CLASS</span>
@@ -6545,6 +6555,34 @@
       // Re-render students to update UI
       renderStudents();
     }
+
+    function changeStudentPayAmount(studentId, newAmount) {
+      // Prevent event bubbling
+      event.stopPropagation();
+      
+      const student = students.find(s => s.id === studentId);
+      if (!student) {
+        console.error('Student not found:', studentId);
+        return;
+      }
+      
+      // Check if already this amount
+      if (student.payPerClass === newAmount) {
+        return; // Already this amount, no action needed
+      }
+      
+      // Update student pay amount
+      student.payPerClass = newAmount;
+      
+      // Save to localStorage
+      saveStudents();
+      
+      // Show success feedback
+      showNotification(`✅ ${student.name} pay/class set to $${newAmount}`, 'success');
+      
+      // Re-render students to update UI
+      renderStudents();
+    }
     // END FEATURE 2
 
     function toggleInlineEdit(studentId, event) {
@@ -6552,7 +6590,8 @@
       if (event && (
         event.target.closest('.status-pill-single') || 
         event.target.closest('.mini-toggle') ||
-        event.target.closest('.group-btn')
+        event.target.closest('.group-btn') ||
+        event.target.closest('.group-buttons')
       )) {
         return;
       }
