@@ -2732,10 +2732,13 @@
     }
     
     async function loadGroups() {
+      console.log('🔍 loadGroups() called');
       const { data, error } = await supabase
         .from('groups')
         .select('*')
         .order('group_name', { ascending: true });
+      
+      console.log('🔍 Supabase response - data:', data, 'error:', error);
       
       if (error) {
         console.error('❌ Error loading groups:', error);
