@@ -4059,7 +4059,7 @@
     }
     
     function initiateGmailAuth() {
-      const redirectUri = `${window.location.origin}${window.location.pathname}`;
+      const redirectUri = 'https://www.richyfesta.com';
       // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       // Request offline access for longer-lived tokens (implicit flow limitation: token still expires in ~1 hour)
       // Note: For truly persistent auth, backend OAuth2 flow with refresh tokens is required
@@ -9012,7 +9012,7 @@
       // Classes last 2 hours - automatically skip to next class after 2-hour window ends
       function findNextClass() {
         try {
-          const groups = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
+          const groups = window.groupsCache || window.globalData?.groups || [];
           const now = new Date();
           const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
           const currentDayIndex = now.getDay();
