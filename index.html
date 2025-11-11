@@ -6074,7 +6074,6 @@
 
     // ===== SAVE/LOAD FUNCTIONS =====
     async function saveStudents() {
-      console.trace('🚨 saveStudents() called - WHO CALLED ME?');
       try {
         // Save all students to Supabase
         for (const student of students) {
@@ -6216,7 +6215,6 @@
       
       // Always use the most current data from cache
       students = window.studentsCache || students || [];
-      console.log('🎨 renderStudents called, students count:', students.length);
       
       grid.innerHTML = '';
       const activeStudents = students.filter(s => s.isActive !== false);
@@ -6545,11 +6543,50 @@
 
     // ===== INLINE EDITING =====
     // BEGIN FEATURE 2 - Instant Group Switch Function
+    
+    // Helper function to update a single student card's display without re-sorting
+    function updateStudentCardDisplay(student) {
+      const card = document.getElementById(`card-${student.id}`);
+      if (!card) return;
+      
+      // Update group display
+      const groupDisplay = card.querySelector('.student-group');
+      if (groupDisplay) {
+        groupDisplay.textContent = `Group ${student.group || 'N/A'}`;
+      }
+      
+      // Update pay display
+      const payDisplay = card.querySelector('.info-value');
+      if (payDisplay && payDisplay.closest('.info-row')?.querySelector('.info-label')?.textContent === 'PAY/CLASS') {
+        payDisplay.textContent = formatCurrency(student.payPerClass || 0, '$');
+      }
+      
+      // Update group button active states
+      const groupButtons = card.querySelectorAll('.group-buttons:first-of-type .group-btn');
+      groupButtons.forEach(btn => {
+        const btnGroup = btn.textContent.trim();
+        if ((student.group || '').toUpperCase() === btnGroup) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      
+      // Update payment button active states
+      const paymentButtons = card.querySelectorAll('.group-buttons:last-of-type .group-btn');
+      paymentButtons.forEach(btn => {
+        const btnAmount = parseInt(btn.textContent.replace('$', ''));
+        if (Number(student.payPerClass) === btnAmount) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+    }
+    
     async function changeStudentGroup(studentId, newGroup) {
       // Prevent event bubbling
       event.stopPropagation();
-      
-      console.log('🔵 changeStudentGroup called:', { studentId, newGroup });
       
       // Find student in both local array and cache
       const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
@@ -6558,17 +6595,13 @@
         return;
       }
       
-      console.log('🔵 Found student:', student.name, 'current group:', student.group);
-      
       // Check if already in this group
       if ((student.group || '').toUpperCase() === newGroup.toUpperCase()) {
-        console.log('🔵 Already in this group, skipping');
         return; // Already in this group, no action needed
       }
       
       // Update student group
       student.group = newGroup;
-      console.log('🔵 Updated student.group to:', student.group);
       
       // Save only this student to Supabase
       await saveStudent(student);
@@ -6579,15 +6612,13 @@
       // Show success feedback
       showNotification(`✅ ${student.name} moved to Group ${newGroup}`, 'success');
       
-      // Re-render students to update UI
-      renderStudents();
+      // Update the card's display without re-sorting
+      updateStudentCardDisplay(student);
     }
 
     async function changeStudentPayAmount(studentId, newAmount) {
       // Prevent event bubbling
       event.stopPropagation();
-      
-      console.log('💰 changeStudentPayAmount called:', { studentId, newAmount });
       
       // Find student in local array
       const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
@@ -6596,17 +6627,13 @@
         return;
       }
       
-      console.log('💰 Found student:', student.name, 'current pay:', student.payPerClass, 'type:', typeof student.payPerClass);
-      
       // Check if already this amount (compare as numbers)
       if (Number(student.payPerClass) === Number(newAmount)) {
-        console.log('💰 Already this amount, skipping');
         return; // Already this amount, no action needed
       }
       
       // Update student pay amount
       student.payPerClass = Number(newAmount);
-      console.log('💰 Updated student.payPerClass to:', student.payPerClass, 'type:', typeof student.payPerClass);
       
       // Save only this student to Supabase
       await saveStudent(student);
@@ -6617,8 +6644,8 @@
       // Show success feedback
       showNotification(`✅ ${student.name} pay/class set to $${newAmount}`, 'success');
       
-      // Re-render students to update UI
-      renderStudents();
+      // Update the card's display without re-sorting
+      updateStudentCardDisplay(student);
     }
     // END FEATURE 2
 
@@ -6741,7 +6768,17 @@
       // Update cache
       window.studentsCache = students;
       
-      renderStudents();
+      // Update only the status badge on the card
+      const card = document.getElementById(`card-${student.id}`);
+      if (card) {
+        const statusBadge = card.querySelector('.status-pill-single');
+        if (statusBadge) {
+          const statusDetails = getStatusDetails(student.status);
+          statusBadge.className = `status-pill-single status-${normalizeStatus(student.status)}`;
+          statusBadge.textContent = statusDetails.label;
+        }
+      }
+      
       showNotificationSimple('Status updated', 'success');
     }
 
