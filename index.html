@@ -2799,11 +2799,31 @@
           .eq('id', groupData.id)
           .select());
       } else {
-        // INSERT or UPDATE by unique group_name to avoid duplicates
-        ({ data, error } = await supabase
+        // INSERT new group - check if name exists first
+        const { data: existing, error: checkError } = await supabase
           .from('groups')
-          .upsert([payload], { onConflict: 'group_name' })
-          .select());
+          .select('id')
+          .eq('group_name', payload.group_name)
+          .maybeSingle();
+        
+        if (checkError) {
+          console.error('Error checking for existing group:', checkError);
+        }
+        
+        if (existing) {
+          // Group with this name already exists, update it
+          ({ data, error } = await supabase
+            .from('groups')
+            .update(payload)
+            .eq('id', existing.id)
+            .select());
+        } else {
+          // Insert new group
+          ({ data, error } = await supabase
+            .from('groups')
+            .insert([payload])
+            .select());
+        }
       }
       
       if (error) {
