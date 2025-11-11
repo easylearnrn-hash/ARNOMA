@@ -6532,7 +6532,8 @@
       // Prevent event bubbling
       event.stopPropagation();
       
-      const student = students.find(s => s.id === studentId);
+      const students = window.studentsCache || window.globalData?.students || [];
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) {
         console.error('Student not found:', studentId);
         return;
@@ -6546,7 +6547,7 @@
       // Update student group
       student.group = newGroup;
       
-      // Save to localStorage
+      // Save to Supabase
       saveStudents();
       
       // Show success feedback
@@ -6560,7 +6561,8 @@
       // Prevent event bubbling
       event.stopPropagation();
       
-      const student = students.find(s => s.id === studentId);
+      const students = window.studentsCache || window.globalData?.students || [];
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) {
         console.error('Student not found:', studentId);
         return;
@@ -6574,7 +6576,7 @@
       // Update student pay amount
       student.payPerClass = newAmount;
       
-      // Save to localStorage
+      // Save to Supabase
       saveStudents();
       
       // Show success feedback
