@@ -2766,19 +2766,27 @@
     async function saveGroup(groupData) {
       // Map 'name' to 'group_name' for Supabase
       const payload = {
-        id: groupData.id,
         group_name: groupData.name || groupData.group_name,
         schedule: groupData.schedule,
         color: groupData.color
       };
       
-      // Remove id if it's undefined (for new groups)
-      if (!payload.id) delete payload.id;
+      let data, error;
       
-      const { data, error } = await supabase
-        .from('groups')
-        .upsert([payload], { onConflict: 'id' })
-        .select();
+      if (groupData.id) {
+        // UPDATE existing group - use eq() to match by id
+        ({ data, error } = await supabase
+          .from('groups')
+          .update(payload)
+          .eq('id', groupData.id)
+          .select());
+      } else {
+        // INSERT new group - let Supabase generate the id
+        ({ data, error } = await supabase
+          .from('groups')
+          .insert([payload])
+          .select());
+      }
       
       if (error) {
         console.error('❌ Error saving group:', error);
