@@ -1094,6 +1094,7 @@
       transition: all 0.2s;
       text-transform: uppercase;
       border: 1px solid;
+      user-select: none;
     }
 
     .status-active {
@@ -1101,17 +1102,35 @@
       border-color: rgba(76,175,80,.4);
       color: #4caf50;
     }
+    
+    .status-active:hover {
+      background: rgba(76,175,80,.25);
+      border-color: rgba(76,175,80,.6);
+      transform: scale(1.05);
+    }
 
     .status-paused {
       background: rgba(251,191,36,.15);
       border-color: rgba(251,191,36,.4);
       color: #fbbf24;
     }
+    
+    .status-paused:hover {
+      background: rgba(251,191,36,.25);
+      border-color: rgba(251,191,36,.6);
+      transform: scale(1.05);
+    }
 
     .status-graduated {
       background: rgba(156,163,175,.15);
       border-color: rgba(156,163,175,.4);
       color: #9ca3af;
+    }
+    
+    .status-graduated:hover {
+      background: rgba(156,163,175,.25);
+      border-color: rgba(156,163,175,.6);
+      transform: scale(1.05);
     }
 
     .mini-toggle {
@@ -2647,6 +2666,39 @@
       return true;
     }
     
+    window.studentsCache = Array.isArray(window.studentsCache) ? window.studentsCache : [];
+
+    function getCachedStudents() {
+      return Array.isArray(window.studentsCache) ? window.studentsCache : [];
+    }
+
+    function normalizeStudentStatusValue(status) {
+      if (!status) return 'active';
+      const lower = String(status).toLowerCase();
+      if (lower === 'pause' || lower === 'paused') return 'paused';
+      if (lower === 'graduate' || lower === 'graduated') return 'graduated';
+      return 'active';
+    }
+
+    function mapSupabaseStudent(record) {
+      if (!record) return null;
+
+      const aliases = typeof record.aliases === 'string'
+        ? record.aliases.split(',').map(alias => alias.trim()).filter(Boolean)
+        : Array.isArray(record.aliases) ? record.aliases : [];
+
+      return {
+        ...record,
+        group: record.group_name ?? record.group ?? null,
+        payPerClass: record.price_per_class ?? record.payPerClass ?? null,
+        status: normalizeStudentStatusValue(record.status),
+        showInGrid: record.show_in_grid ?? record.showInGrid ?? true,
+        isActive: record.is_active ?? (record.isActive ?? true),
+        statusChangedDate: record.status_changed_date ?? record.statusChangedDate ?? null,
+        aliases
+      };
+    }
+
     async function loadStudents() {
       const { data, error } = await supabase
         .from('students')
@@ -2659,14 +2711,10 @@
       }
       
       // Map Supabase column names to local property names
-      const mappedData = (data || []).map(student => ({
-        ...student,
-        group: student.group_name || student.group || null,
-        payPerClass: student.price_per_class ?? student.payPerClass ?? null
-      }));
+      const mappedData = (data || []).map(mapSupabaseStudent).filter(Boolean);
       
       window.studentsCache = mappedData;
-      return window.studentsCache;
+      return mappedData;
     }
     
     async function saveStudent(studentData) {
@@ -2677,13 +2725,17 @@
       const payload = {
         name: studentData.name,
         group_name: studentData.group || studentData.group_name || null,
-        price_per_class: studentData.price_per_class ?? studentData.payPerClass ?? null
+        price_per_class: studentData.price_per_class ?? studentData.payPerClass ?? null,
+        status: normalizeStudentStatusValue(studentData.status),
+        status_changed_date: studentData.statusChangedDate ?? null
       };
       
       // Add optional fields only if they exist
       if (studentData.email) payload.email = studentData.email;
       if (studentData.phone) payload.phone = studentData.phone;
       if (studentData.notes) payload.notes = studentData.notes;
+      if (typeof studentData.showInGrid === 'boolean') payload.show_in_grid = studentData.showInGrid;
+      if (typeof studentData.isActive === 'boolean') payload.is_active = studentData.isActive;
       
       // Handle aliases - convert array to comma-separated string if needed
       if (studentData.aliases) {
@@ -2726,8 +2778,9 @@
           return null;
         }
         
-        console.log('✅ Student saved successfully:', data[0]);
-        return data[0];
+        const mappedRecord = mapSupabaseStudent(data?.[0]);
+        console.log('✅ Student saved successfully:', mappedRecord);
+        return mappedRecord;
       } catch (err) {
         console.error('❌ Exception saving student:', err);
         return null;
@@ -2901,7 +2954,7 @@
     
     // Resolve payment to student using alias system
     function resolvePaymentToStudent(payment, studentCache) {
-      const students = Array.isArray(studentCache) ? studentCache : loadStudents();
+  const students = Array.isArray(studentCache) ? studentCache : getCachedStudents();
       
       // Priority 1: Manual link (check both linkedStudentId and studentId)
       const manualStudentId = payment.linkedStudentId || payment.studentId;
@@ -2999,7 +3052,7 @@
     // Recompute resolution for all payments
     function recomputePaymentResolutions() {
       const payments = PaymentStore.getAll();
-      const students = loadStudents();
+    const students = getCachedStudents();
       let updated = false;
       
       payments.forEach(payment => {
@@ -3048,7 +3101,7 @@
           return;
         }
         
-        const resolution = resolvePaymentToStudent(payment, loadStudents());
+  const resolution = resolvePaymentToStudent(payment, getCachedStudents());
         
         const menu = document.createElement('div');
         menu.id = 'paymentContextMenu';
@@ -3176,7 +3229,7 @@
         animation: fadeIn 0.2s ease;
       `;
       
-      const students = loadStudents();
+  const students = getCachedStudents();
       
       const modalContent = document.createElement('div');
       modalContent.style.cssText = `
@@ -3319,8 +3372,8 @@
           return;
         }
         
-        const students = loadStudents();
-        const student = students.find(s => s.id === studentId);
+    const students = getCachedStudents();
+    const student = students.find(s => s.id === studentId);
         
         if (!student) {
           showNotification('❌ Student not found', 'error');
@@ -3376,7 +3429,7 @@
     async function showAddAliasModal(paymentId, studentId) {
       const payments = PaymentStore.getAll();
       const payment = payments.find(p => p.id === paymentId);
-      const students = loadStudents();
+  const students = getCachedStudents();
       const student = students.find(s => s.id === studentId);
       
       if (!payment || !student) return;
@@ -3399,8 +3452,16 @@
         const exists = student.aliases.some(a => normalizeForMatching(a) === normalizeForMatching(payerName));
         
         if (!exists) {
+          const originalAliases = Array.isArray(student.aliases) ? [...student.aliases] : [];
           student.aliases.push(payerName);
-          saveStudents(students);
+          const saved = await saveStudent(student);
+          if (!saved) {
+            student.aliases = originalAliases;
+            showNotification('❌ Failed to save alias to Supabase', 'error');
+            return;
+          }
+          Object.assign(student, saved);
+          window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
           syncWithServer({ studentsChanged: [student] });
           
           // Recompute all payment resolutions
@@ -3800,7 +3861,7 @@
         </div>
       `;
 
-      const studentsCache = loadStudents();
+  const studentsCache = getCachedStudents();
       const resolutionCache = new Map();
 
       const getResolutionForPayment = (payment) => {
@@ -4314,7 +4375,7 @@
         if (!amount) return null;
         
         // Try to match student from Student Manager
-        const students = loadStudents();
+  const students = getCachedStudents();
         let matchedStudent = null;
         let studentEmail = '';
         let groupId = '';
@@ -4643,7 +4704,7 @@
         const payerName = currentPaymentPopupData.payerName;
         
         // Find the student in Student Manager
-        const students = loadStudents();
+        const students = getCachedStudents();
         const student = students.find(s => 
           s.name.toLowerCase().trim() === studentName.toLowerCase().trim()
         );
@@ -4666,10 +4727,18 @@
           }
           
           // Add new alias
+          const originalAliases = Array.isArray(student.aliases) ? [...student.aliases] : [];
           student.aliases.push(payerName);
           
-          // Save students using the proper function
-          saveStudents();
+          // Persist alias change for this student only
+          const saved = await saveStudent(student);
+          if (!saved) {
+            student.aliases = originalAliases;
+            showNotification('❌ Failed to save alias to Supabase', 'error');
+            return;
+          }
+          Object.assign(student, saved);
+          window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
         } else {
           showNotification('❌ Student not found', 'error');
           return;
@@ -4847,7 +4916,7 @@
       }
       
       // Get list of students
-      const students = loadStudents();
+  const students = getCachedStudents();
       
       if (!students || students.length === 0) {
         showNotification('⚠️ No students found. Create students first.', 'warning');
@@ -5002,7 +5071,7 @@
       }
       
       try {
-        const students = loadStudents();
+  const students = getCachedStudents();
         const student = students.find(s => s.id === studentId);
         
         if (!student) {
@@ -5041,9 +5110,17 @@
           );
           
           if (normalizedPayerName !== normalizedStudentName && !aliasExists) {
-            student.aliases = [...currentAliases, payerName.trim()];
-            saveStudents(students); // Save updated student data
-            console.log(`✅ Added "${payerName}" to ${student.name}'s aliases`);
+            const originalAliases = Array.isArray(currentAliases) ? [...currentAliases] : [];
+            student.aliases = [...originalAliases, payerName.trim()];
+            const savedAliasUpdate = await saveStudent(student);
+            if (!savedAliasUpdate) {
+              student.aliases = originalAliases;
+              showNotification('❌ Failed to save alias to Supabase', 'error');
+            } else {
+              Object.assign(student, savedAliasUpdate);
+              window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
+              console.log(`✅ Added "${payerName}" to ${student.name}'s aliases`);
+            }
           }
         }
         
@@ -5601,7 +5678,7 @@
         
         // Reload all views
         if (typeof loadStudents === 'function') {
-          students = loadStudents();
+          students = getCachedStudents();
         }
         
         if (typeof loadGroups === 'function') {
@@ -6060,11 +6137,15 @@
     }
 
     function normalizeStatus(status) {
-      if (!status) return STUDENT_STATUSES.ACTIVE;
-      const lower = status.toLowerCase();
-      if (lower === 'pause' || lower === 'paused') return STUDENT_STATUSES.PAUSED;
-      if (lower === 'graduate' || lower === 'graduated') return STUDENT_STATUSES.GRADUATED;
-      return STUDENT_STATUSES.ACTIVE;
+      const normalized = normalizeStudentStatusValue(status);
+      switch (normalized) {
+        case 'paused':
+          return STUDENT_STATUSES.PAUSED;
+        case 'graduated':
+          return STUDENT_STATUSES.GRADUATED;
+        default:
+          return STUDENT_STATUSES.ACTIVE;
+      }
     }
 
     function getStatusDetails(status) {
@@ -6317,8 +6398,11 @@
         <!-- VIEW MODE -->
         <div class="student-view" onclick="toggleInlineEdit('${student.id}', event)">
           <div class="student-header">
-            <div style="display: flex; gap: 8px; align-items: center;">
-              <span class="status-pill-single status-${normalizeStatus(student.status)}" onclick="event.stopPropagation(); cycleStatus('${student.id}')">
+            <div style="display: flex; gap: 8px; align-items: center; flex: 1;">
+              <span class="status-pill-single status-${normalizeStatus(student.status)}" 
+                    onclick="event.stopPropagation(); cycleStatus('${student.id}')"
+                    title="Click to cycle: Active → Paused → Graduated"
+                    style="cursor: pointer; user-select: none; transition: all 0.2s;">
                 ${statusDetails.label}
               </span>
             </div>
@@ -6770,24 +6854,36 @@
       const student = students.find(s => s.id === studentId);
       if (!student) return;
 
+      // Define status cycle: Active → Paused → Graduated → Active
       const statusCycle = {
         [STUDENT_STATUSES.ACTIVE]: STUDENT_STATUSES.PAUSED,
         [STUDENT_STATUSES.PAUSED]: STUDENT_STATUSES.GRADUATED,
         [STUDENT_STATUSES.GRADUATED]: STUDENT_STATUSES.ACTIVE
       };
 
-      student.status = statusCycle[normalizeStatus(student.status)] || STUDENT_STATUSES.ACTIVE;
+      const oldStatus = normalizeStatus(student.status);
+      const newStatus = statusCycle[oldStatus] || STUDENT_STATUSES.ACTIVE;
+      
+      student.status = newStatus;
 
-      if (student.status === STUDENT_STATUSES.PAUSED || student.status === STUDENT_STATUSES.GRADUATED) {
+      // Record timestamp when status changes to paused or graduated
+      if (newStatus === STUDENT_STATUSES.PAUSED || newStatus === STUDENT_STATUSES.GRADUATED) {
         student.statusChangedDate = new Date().toISOString();
       } else {
-        delete student.statusChangedDate;
+        // Clear timestamp when returning to active
+        student.statusChangedDate = null;
       }
 
       // Save only this student to Supabase
-      await saveStudent(student);
+      const saved = await saveStudent(student);
       
-      // Update cache
+      if (!saved) {
+        showNotificationSimple('❌ Failed to update status', 'error');
+        return;
+      }
+      
+      // Update cache with saved record
+      Object.assign(student, saved);
       window.studentsCache = students;
       
       // Update only the status badge on the card
@@ -6795,13 +6891,35 @@
       if (card) {
         const statusBadge = card.querySelector('.status-pill-single');
         if (statusBadge) {
-          const statusDetails = getStatusDetails(student.status);
-          statusBadge.className = `status-pill-single status-${normalizeStatus(student.status)}`;
+          const statusDetails = getStatusDetails(newStatus);
+          statusBadge.className = `status-pill-single status-${newStatus}`;
           statusBadge.textContent = statusDetails.label;
+          
+          // Add a quick animation to show the change
+          statusBadge.style.transform = 'scale(1.1)';
+          setTimeout(() => {
+            statusBadge.style.transform = 'scale(1)';
+          }, 200);
         }
+        
+        // Update data attribute for filtering
+        card.setAttribute('data-status', newStatus);
       }
       
-      showNotificationSimple('Status updated', 'success');
+      // Show status-specific notification
+      const statusMessages = {
+        [STUDENT_STATUSES.ACTIVE]: '✅ Student is now active',
+        [STUDENT_STATUSES.PAUSED]: '⏸️ Student is now paused',
+        [STUDENT_STATUSES.GRADUATED]: '🎓 Student has graduated'
+      };
+      
+      showNotificationSimple(statusMessages[newStatus] || 'Status updated', 'success');
+      
+      // Trigger forecast update if forecast modal is open
+      const forecastModal = document.getElementById('earningsForecastModal');
+      if (forecastModal && forecastModal.style.opacity === '1') {
+        updateForecastData();
+      }
     }
 
     async function toggleVisibility(studentId, visible) {
@@ -6985,15 +7103,10 @@
 
       console.log('✅ Student saved to Supabase:', savedRecord);
       
-      // If this was a new student, update local array with Supabase-generated ID
       if (!editingStudentId) {
-        const studentWithId = {
-          ...savedStudent,
-          id: savedRecord.id, // Use Supabase-generated ID
-          group: savedRecord.group_name,
-          payPerClass: savedRecord.price_per_class
-        };
-        students.push(studentWithId);
+        students.push(savedRecord);
+      } else if (savedStudent) {
+        Object.assign(savedStudent, savedRecord);
       }
       
       // Update global cache
@@ -10699,7 +10812,7 @@
       const confirmed = confirm(`Add payment of ${formatCurrency(amount, '$')} for this class?`);
       if (!confirmed) return;
       
-      const students = loadStudents();
+  const students = getCachedStudents();
       const student = students.find(s => s.id === studentId);
       if (!student) return;
       
