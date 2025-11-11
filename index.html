@@ -2730,12 +2730,15 @@
         status_changed_date: studentData.statusChangedDate ?? null
       };
       
-      // Add optional fields only if they exist
+      // Add optional fields only if they exist in the Supabase schema
       if (studentData.email) payload.email = studentData.email;
       if (studentData.phone) payload.phone = studentData.phone;
       if (studentData.notes) payload.notes = studentData.notes;
-      if (typeof studentData.showInGrid === 'boolean') payload.show_in_grid = studentData.showInGrid;
-      if (typeof studentData.isActive === 'boolean') payload.is_active = studentData.isActive;
+      
+      // NOTE: show_in_grid and is_active are NOT in Supabase schema
+      // They are only used locally in the frontend
+      // if (typeof studentData.showInGrid === 'boolean') payload.show_in_grid = studentData.showInGrid;
+      // if (typeof studentData.isActive === 'boolean') payload.is_active = studentData.isActive;
       
       // Handle aliases - convert array to comma-separated string if needed
       if (studentData.aliases) {
