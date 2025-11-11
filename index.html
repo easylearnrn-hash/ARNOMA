@@ -6544,7 +6544,7 @@
 
     // ===== INLINE EDITING =====
     // BEGIN FEATURE 2 - Instant Group Switch Function
-    function changeStudentGroup(studentId, newGroup) {
+    async function changeStudentGroup(studentId, newGroup) {
       // Prevent event bubbling
       event.stopPropagation();
       
@@ -6569,8 +6569,11 @@
       student.group = newGroup;
       console.log('🔵 Updated student.group to:', student.group);
       
-      // Save to Supabase
-      saveStudents();
+      // Save only this student to Supabase
+      await saveStudent(student);
+      
+      // Update cache
+      window.studentsCache = students;
       
       // Show success feedback
       showNotification(`✅ ${student.name} moved to Group ${newGroup}`, 'success');
@@ -6579,7 +6582,7 @@
       renderStudents();
     }
 
-    function changeStudentPayAmount(studentId, newAmount) {
+    async function changeStudentPayAmount(studentId, newAmount) {
       // Prevent event bubbling
       event.stopPropagation();
       
@@ -6604,8 +6607,11 @@
       student.payPerClass = Number(newAmount);
       console.log('💰 Updated student.payPerClass to:', student.payPerClass, 'type:', typeof student.payPerClass);
       
-      // Save to Supabase
-      saveStudents();
+      // Save only this student to Supabase
+      await saveStudent(student);
+      
+      // Update cache
+      window.studentsCache = students;
       
       // Show success feedback
       showNotification(`✅ ${student.name} pay/class set to $${newAmount}`, 'success');
@@ -6697,7 +6703,12 @@
       student.aliases = aliases;
       student.notes = notes;
 
-      saveStudents();
+      // Save only this student to Supabase
+      await saveStudent(student);
+      
+      // Update cache
+      window.studentsCache = students;
+      
       renderStudents();
       showNotificationSimple('Student updated', 'success');
       
@@ -6705,7 +6716,7 @@
     }
 
     // ===== STATUS MANAGEMENT =====
-    function cycleStatus(studentId) {
+    async function cycleStatus(studentId) {
       const student = students.find(s => s.id === studentId);
       if (!student) return;
 
@@ -6723,17 +6734,28 @@
         delete student.statusChangedDate;
       }
 
-      saveStudents();
+      // Save only this student to Supabase
+      await saveStudent(student);
+      
+      // Update cache
+      window.studentsCache = students;
+      
       renderStudents();
       showNotificationSimple('Status updated', 'success');
     }
 
-    function toggleVisibility(studentId, visible) {
+    async function toggleVisibility(studentId, visible) {
       const student = students.find(s => s.id === studentId);
       if (!student) return;
 
       student.showInGrid = visible;
-      saveStudents();
+      
+      // Save only this student to Supabase
+      await saveStudent(student);
+      
+      // Update cache
+      window.studentsCache = students;
+      
       showNotificationSimple(visible ? 'Student shown in calendar' : 'Student hidden from calendar', 'success');
     }
 
