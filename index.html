@@ -7877,9 +7877,15 @@
     // ===== SAVE GROUPS =====
     async function saveGroups() {
       try {
-        // Save all groups to Supabase
-        for (const group of groups) {
-          await saveGroup(group);
+        // Save all groups to Supabase and update with returned IDs
+        for (let i = 0; i < groups.length; i++) {
+          const savedGroup = await saveGroup(groups[i]);
+          if (savedGroup && savedGroup.id) {
+            // Update the local group with the id from Supabase
+            groups[i].id = savedGroup.id;
+            // Also map back group_name to name
+            groups[i].name = savedGroup.group_name || groups[i].name;
+          }
         }
         
         // Update global cache
