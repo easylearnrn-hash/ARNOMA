@@ -9015,7 +9015,8 @@
       function findNextClass() {
         try {
           const groups = window.groupsCache || window.globalData?.groups || [];
-          const now = new Date();
+          // Get current time in LA timezone
+          const now = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
           const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
           const currentDayIndex = now.getDay();
           const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
