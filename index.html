@@ -6150,7 +6150,11 @@
       }
 
       activeStudents.forEach(student => {
-        grid.appendChild(createStudentCard(student));
+        try {
+          grid.appendChild(createStudentCard(student));
+        } catch (error) {
+          console.error('Error creating card for student:', student.name, error);
+        }
       });
       
       // Add click-outside-to-cancel-edit listener
