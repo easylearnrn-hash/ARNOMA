@@ -2739,6 +2739,8 @@
         return window.groupsCache || [];
       }
       
+      console.log('📊 Raw groups from Supabase:', data);
+      
       // Map group_name back to name for app compatibility
       const mappedData = (data || []).map(group => ({
         id: group.id,
@@ -2748,6 +2750,8 @@
         created_at: group.created_at,
         updated_at: group.updated_at
       }));
+      
+      console.log('📊 Mapped groups:', mappedData);
       
       window.groupsCache = mappedData;
       return window.groupsCache;
