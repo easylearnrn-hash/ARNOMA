@@ -2736,7 +2736,7 @@
       const { data, error } = await supabase
         .from('groups')
         .select('*')
-        .order('group_name', { ascending: true });
+        .order('updated_at', { ascending: false });
       
       console.log('🔍 Supabase response - data:', data, 'error:', error);
       
@@ -2757,13 +2757,31 @@
         updated_at: group.updated_at
       }));
       
-      console.log('📊 Mapped groups:', mappedData);
+      // De-duplicate by name, keeping the most recently updated/created row
+      const deduped = [];
+      const seen = new Set();
+      const sorted = [...mappedData].sort((a, b) => {
+        const aTime = new Date(a.updated_at || a.created_at || 0).getTime();
+        const bTime = new Date(b.updated_at || b.created_at || 0).getTime();
+        return bTime - aTime; // newest first
+      });
+      for (const g of sorted) {
+        if (!g.name) continue;
+        const key = String(g.name).trim().toUpperCase();
+        if (!seen.has(key)) {
+          deduped.push(g);
+          seen.add(key);
+        }
+      }
       
-      window.groupsCache = mappedData;
+      console.log('📊 Mapped groups:', mappedData);
+      console.log('🧹 Deduped groups (by name):', deduped);
+      
+      window.groupsCache = deduped;
       return window.groupsCache;
     }
     
-    async function saveGroup(groupData) {
+  async function saveGroup(groupData) {
       // Map 'name' to 'group_name' for Supabase
       const payload = {
         group_name: groupData.name || groupData.group_name,
@@ -2796,7 +2814,7 @@
       return data[0];
     }
     
-    async function deleteGroup(id) {
+    async function deleteGroupById(id) {
       const { error } = await supabase
         .from('groups')
         .delete()
@@ -7677,10 +7695,19 @@
         });
         return;
       }
-      groups.push({ name, schedule: '' });
-      saveGroups();
-      showToast('✅ Group Added');
-      renderGroups();
+      // Persist only the new group to Supabase to get an id
+      const saved = await saveGroup({ name, schedule: '' });
+      if (saved && saved.id) {
+        groups.push({ id: saved.id, name: saved.group_name || name, schedule: saved.schedule || '' });
+        // Update cache and notify
+        window.groupsCache = groups;
+        window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
+        window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
+        showToast('✅ Group Added');
+        renderGroups();
+      } else {
+        await customAlert('Could not save group. Please try again.');
+      }
     }
 
     // ===== DELETE GROUP =====
@@ -7696,8 +7723,25 @@
       );
       
       if (!confirmed) return;
+      // Collect ids of matching groups to delete exact rows
+      const idsToDelete = groups.filter(g => g.name === name && g.id).map(g => g.id);
+      try {
+        if (idsToDelete.length > 0) {
+          const { error } = await supabase.from('groups').delete().in('id', idsToDelete);
+          if (error) console.error('❌ Error deleting groups by id:', error);
+        } else {
+          // Fallback: delete by group_name
+          const { error } = await supabase.from('groups').delete().eq('group_name', name);
+          if (error) console.error('❌ Error deleting groups by name:', error);
+        }
+      } catch (e) {
+        console.error('❌ Delete operation failed:', e);
+      }
+      // Update local state
       groups = groups.filter(g => g.name !== name);
-      saveGroups();
+      window.groupsCache = groups;
+      window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
+      window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
       showToast('🗑️ Group Deleted');
       renderGroups();
     }
