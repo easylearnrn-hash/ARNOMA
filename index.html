@@ -2715,9 +2715,20 @@
     }
     
     async function saveGroup(groupData) {
+      // Map 'name' to 'group_name' for Supabase
+      const payload = {
+        id: groupData.id,
+        group_name: groupData.name || groupData.group_name,
+        schedule: groupData.schedule,
+        color: groupData.color
+      };
+      
+      // Remove id if it's undefined (for new groups)
+      if (!payload.id) delete payload.id;
+      
       const { data, error } = await supabase
         .from('groups')
-        .upsert([groupData], { onConflict: 'id' })
+        .upsert([payload], { onConflict: 'id' })
         .select();
       
       if (error) {
