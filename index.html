@@ -2006,7 +2006,6 @@
           <button class="pay-select-btn" onclick="selectPayAmount(this, 50)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$50</button>
           <button class="pay-select-btn" onclick="selectPayAmount(this, 75)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$75</button>
           <button class="pay-select-btn" onclick="selectPayAmount(this, 100)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$100</button>
-          <button class="pay-select-btn" onclick="selectPayAmount(this, 150)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$150</button>
         </div>
         <input type="number" id="studentPay" placeholder="Or enter custom amount" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
       </div>
@@ -6330,9 +6329,9 @@
 
           <!-- Payment Amount Quick Switch Buttons -->
           <div class="group-buttons" onclick="event.stopPropagation()">
-            ${[25, 50, 75, 100, 150].map(amount => `
+            ${[25, 50, 75, 100].map(amount => `
               <button 
-                class="group-btn ${student.payPerClass === amount ? 'active' : ''}" 
+                class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" 
                 onclick="changeStudentPayAmount('${student.id}', ${amount})"
                 title="Set pay to $${amount}">$${amount}</button>
             `).join('')}
@@ -6395,11 +6394,10 @@
           <div class="inline-form-group">
             <label>Pay Per Class</label>
             <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
-              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 25)" style="padding: 6px 12px; background: ${student.payPerClass === 25 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 25 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 25 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$25</button>
-              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 50)" style="padding: 6px 12px; background: ${student.payPerClass === 50 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 50 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 50 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$50</button>
-              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 75)" style="padding: 6px 12px; background: ${student.payPerClass === 75 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 75 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 75 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$75</button>
-              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 100)" style="padding: 6px 12px; background: ${student.payPerClass === 100 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 100 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 100 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$100</button>
-              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 150)" style="padding: 6px 12px; background: ${student.payPerClass === 150 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${student.payPerClass === 150 ? 'white' : '#6b7280'}; border: 2px solid ${student.payPerClass === 150 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$150</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 25)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 25 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 25 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 25 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$25</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 50)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 50 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 50 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 50 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$50</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 75)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 75 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 75 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 75 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$75</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 100)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 100 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 100 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 100 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$100</button>
             </div>
             <input type="number" id="inline-pay-${student.id}" value="${student.payPerClass || 0}" placeholder="Custom amount" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
           </div>
@@ -6577,13 +6575,13 @@
         return;
       }
       
-      // Check if already this amount
-      if (student.payPerClass === newAmount) {
+      // Check if already this amount (compare as numbers)
+      if (Number(student.payPerClass) === Number(newAmount)) {
         return; // Already this amount, no action needed
       }
       
       // Update student pay amount
-      student.payPerClass = newAmount;
+      student.payPerClass = Number(newAmount);
       
       // Save to Supabase
       saveStudents();
