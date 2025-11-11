@@ -2731,8 +2731,8 @@
       }
     }
     
-    async function loadGroups() {
-      console.log('🔍 loadGroups() called');
+    async function loadGroupsFromSupabase() {
+      console.log('🔍 loadGroupsFromSupabase() called');
       const { data, error } = await supabase
         .from('groups')
         .select('*')
@@ -7551,7 +7551,7 @@
     // Initialize groups from Supabase when page loads
     (async function initializeGroups() {
       try {
-        groups = await loadGroups();
+        groups = await loadGroupsFromSupabase();
         console.log(`✅ Loaded ${groups.length} groups from Supabase`);
       } catch (error) {
         console.error('Error loading groups on init:', error);
