@@ -9224,6 +9224,7 @@
 
           // Get current LA time
           const nowLA = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+          console.log('[ClassCountdownTimer] Current LA time:', nowLA.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
           
           // Check each day for the next 7 days
           for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
@@ -9296,6 +9297,10 @@
                 
                 // Calculate time difference in seconds
                 const totalDiffSeconds = Math.floor((classDate - nowLA) / 1000);
+                
+                if (daysAhead === 0) {
+                  console.log(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time}: ${(totalDiffSeconds/3600).toFixed(1)}h away`);
+                }
                 
                 // BEGIN CLASS COUNTDOWN TIMER FIX
                 // Skip if more than 2 hours (7200 seconds) past - class is over
@@ -9738,10 +9743,17 @@
     }
     
     function updateStudentBreakdown() {
-      const students = loadStudents();
+      const students = window.studentsCache || window.globalData?.students || [];
       const container = document.getElementById('studentBreakdownList');
       
       if (!container) return;
+      
+      // Safety check
+      if (!Array.isArray(students)) {
+        console.warn('⚠️ Students data is not an array in breakdown:', students);
+        container.innerHTML = '<div class="no-data">No student data available</div>';
+        return;
+      }
       
       // Filter active students
       const activeStudents = students.filter(s => {
