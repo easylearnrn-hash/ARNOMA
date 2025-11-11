@@ -1020,14 +1020,21 @@
       display: flex;
       gap: 6px;
       justify-content: center;
-      margin: 12px 0;
-      flex-wrap: wrap;
+      margin: 8px 0;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
+    }
+
+    .group-buttons::-webkit-scrollbar {
+      display: none; /* Chrome/Safari */
     }
 
     .group-btn {
-      padding: 6px 14px;
+      padding: 6px 12px;
       border-radius: 20px;
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 700;
       cursor: pointer;
       transition: all 0.25s ease;
@@ -1036,6 +1043,8 @@
       backdrop-filter: blur(10px);
       color: rgba(255,255,255,0.7);
       min-width: 36px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .group-btn:hover {
