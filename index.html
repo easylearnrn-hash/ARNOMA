@@ -6851,8 +6851,16 @@
 
     // ===== STATUS MANAGEMENT =====
     async function cycleStatus(studentId) {
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
+      console.log('🔄 cycleStatus called with ID:', studentId, 'type:', typeof studentId);
+      
+      // Handle both string and numeric IDs from Supabase
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+      if (!student) {
+        console.error('❌ Student not found:', studentId, 'Available IDs:', students.map(s => s.id));
+        return;
+      }
+      
+      console.log('👤 Current student:', student.name, 'Status:', student.status);
 
       // Define status cycle: Active → Paused → Graduated → Active
       const statusCycle = {
@@ -6863,6 +6871,8 @@
 
       const oldStatus = normalizeStatus(student.status);
       const newStatus = statusCycle[oldStatus] || STUDENT_STATUSES.ACTIVE;
+      
+      console.log('🔄 Cycling from', oldStatus, 'to', newStatus);
       
       student.status = newStatus;
 
@@ -6923,7 +6933,8 @@
     }
 
     async function toggleVisibility(studentId, visible) {
-      const student = students.find(s => s.id === studentId);
+      // Handle both string and numeric IDs from Supabase
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) return;
 
       student.showInGrid = visible;
