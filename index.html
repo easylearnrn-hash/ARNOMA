@@ -6547,7 +6547,10 @@
     // Helper function to update a single student card's display without re-sorting
     function updateStudentCardDisplay(student) {
       const card = document.getElementById(`card-${student.id}`);
-      if (!card) return;
+      if (!card) {
+        console.warn('Card not found for student:', student.id);
+        return;
+      }
       
       // Update group display
       const groupDisplay = card.querySelector('.student-group');
@@ -6555,32 +6558,44 @@
         groupDisplay.textContent = `Group ${student.group || 'N/A'}`;
       }
       
-      // Update pay display
-      const payDisplay = card.querySelector('.info-value');
-      if (payDisplay && payDisplay.closest('.info-row')?.querySelector('.info-label')?.textContent === 'PAY/CLASS') {
-        payDisplay.textContent = formatCurrency(student.payPerClass || 0, '$');
-      }
-      
-      // Update group button active states
-      const groupButtons = card.querySelectorAll('.group-buttons:first-of-type .group-btn');
-      groupButtons.forEach(btn => {
-        const btnGroup = btn.textContent.trim();
-        if ((student.group || '').toUpperCase() === btnGroup) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
+      // Update pay display - find the correct info-value for PAY/CLASS
+      const infoRows = card.querySelectorAll('.info-row');
+      infoRows.forEach(row => {
+        const label = row.querySelector('.info-label');
+        if (label && label.textContent === 'PAY/CLASS') {
+          const payDisplay = row.querySelector('.info-value');
+          if (payDisplay) {
+            payDisplay.textContent = formatCurrency(student.payPerClass || 0, '$');
+          }
         }
       });
       
-      // Update payment button active states
-      const paymentButtons = card.querySelectorAll('.group-buttons:last-of-type .group-btn');
-      paymentButtons.forEach(btn => {
-        const btnAmount = parseInt(btn.textContent.replace('$', ''));
-        if (Number(student.payPerClass) === btnAmount) {
-          btn.classList.add('active');
-        } else {
-          btn.classList.remove('active');
-        }
+      // Update group button active states (buttons A-F)
+      const allButtonContainers = card.querySelectorAll('.group-buttons');
+      allButtonContainers.forEach(container => {
+        const buttons = container.querySelectorAll('.group-btn');
+        buttons.forEach(btn => {
+          const btnText = btn.textContent.trim();
+          
+          // Check if this is a group button (single letter A-F)
+          if (btnText.length === 1 && /[A-F]/.test(btnText)) {
+            if ((student.group || '').toUpperCase() === btnText) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
+          }
+          
+          // Check if this is a payment button (starts with $)
+          if (btnText.startsWith('$')) {
+            const btnAmount = parseInt(btnText.replace('$', ''));
+            if (Number(student.payPerClass) === btnAmount) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
+          }
+        });
       });
     }
     
