@@ -19,6 +19,35 @@
     window.paymentsCache = [];
     window.studentsCache = [];
     window.groupsCache = [];
+    
+    // ============================================================================
+    // LOS ANGELES TIMEZONE UTILITIES
+    // ============================================================================
+    const LA_TIMEZONE = 'America/Los_Angeles';
+    
+    // Get current date/time in LA timezone
+    function getNowLA() {
+      return new Date(new Date().toLocaleString('en-US', { timeZone: LA_TIMEZONE }));
+    }
+    
+    // Get today's date string in LA timezone (YYYY-MM-DD)
+    function getTodayLA() {
+      const now = getNowLA();
+      return now.toISOString().slice(0, 10);
+    }
+    
+    // Convert any date to LA timezone
+    function toLA(date) {
+      return new Date(date.toLocaleString('en-US', { timeZone: LA_TIMEZONE }));
+    }
+    
+    // Format date in LA timezone
+    function formatDateLA(date, options = {}) {
+      return new Date(date).toLocaleString('en-US', { 
+        timeZone: LA_TIMEZONE,
+        ...options 
+      });
+    }
   </script>
 
   <!-- BEGIN POPUP BACK & EXIT FIX -->
@@ -5664,7 +5693,7 @@
       try {
         // Check last auto backup date
         const lastAutoBackupDate = localStorage.getItem('lastAutoBackupDate');
-        const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+        const today = getTodayLA(); // YYYY-MM-DD in LA timezone
         
         // If no backup today, create one
         if (lastAutoBackupDate !== today) {
@@ -5710,7 +5739,7 @@
         createAutoBackup(backup);
         
         // Update last backup date
-        const today = new Date().toISOString().slice(0, 10);
+        const today = getTodayLA();
         localStorage.setItem('lastAutoBackupDate', today);
         
         console.log('Daily auto backup completed:', today);
@@ -7862,7 +7891,7 @@
     // BEGIN GROUP MANAGER SCHEDULE FIX - Correct nearest class calculation
     function getMinutesUntilClass(day, time) {
       const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const now = new Date();
+      const now = getNowLA(); // Use LA timezone
       
       // Parse the day index
       const targetDayIndex = days.findIndex(d => d.startsWith(day));
