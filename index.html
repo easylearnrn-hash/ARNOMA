@@ -2658,7 +2658,14 @@
         return window.studentsCache || [];
       }
       
-      window.studentsCache = data || [];
+      // Map Supabase column names to local property names
+      const mappedData = (data || []).map(student => ({
+        ...student,
+        group: student.group_name || student.group || null,
+        payPerClass: student.price_per_class ?? student.payPerClass ?? null
+      }));
+      
+      window.studentsCache = mappedData;
       return window.studentsCache;
     }
     
