@@ -2799,10 +2799,10 @@
           .eq('id', groupData.id)
           .select());
       } else {
-        // INSERT new group - let Supabase generate the id
+        // INSERT or UPDATE by unique group_name to avoid duplicates
         ({ data, error } = await supabase
           .from('groups')
-          .insert([payload])
+          .upsert([payload], { onConflict: 'group_name' })
           .select());
       }
       
