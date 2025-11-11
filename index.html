@@ -1992,7 +1992,14 @@
       
       <div style="margin-bottom: 20px;">
         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Pay Per Class</label>
-        <input type="number" id="studentPay" placeholder="50" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+          <button class="pay-select-btn" onclick="selectPayAmount(this, 25)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$25</button>
+          <button class="pay-select-btn" onclick="selectPayAmount(this, 50)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$50</button>
+          <button class="pay-select-btn" onclick="selectPayAmount(this, 75)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$75</button>
+          <button class="pay-select-btn" onclick="selectPayAmount(this, 100)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$100</button>
+          <button class="pay-select-btn" onclick="selectPayAmount(this, 150)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$150</button>
+        </div>
+        <input type="number" id="studentPay" placeholder="Or enter custom amount" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
       </div>
       
       <div style="margin-bottom: 20px;">
@@ -6706,6 +6713,25 @@
 
     function toggleGroup(btn, group) {
       btn.classList.toggle('selected');
+    }
+
+    function selectPayAmount(btn, amount) {
+      // Remove selected class from all pay buttons
+      document.querySelectorAll('.pay-select-btn').forEach(b => {
+        b.classList.remove('selected');
+        b.style.background = 'rgba(255,255,255,.05)';
+        b.style.color = '#6b7280';
+        b.style.borderColor = 'rgba(255,255,255,.2)';
+      });
+      
+      // Add selected class to clicked button
+      btn.classList.add('selected');
+      btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+      btn.style.color = 'white';
+      btn.style.borderColor = '#22c55e';
+      
+      // Set the amount in the input field
+      document.getElementById('studentPay').value = amount;
     }
 
     async function saveStudentFromModal() {
