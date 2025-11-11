@@ -9021,6 +9021,8 @@
           const currentDayIndex = now.getDay();
           const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
+          console.log('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }), 'Day:', dayNames[currentDayIndex]);
+
           let nextClass = null;
           let minDiffInSeconds = Infinity;
 
@@ -9067,6 +9069,7 @@
                 let totalDiffSeconds;
                 if (daysAhead === 0) {
                   totalDiffSeconds = classTimeInSeconds - currentTime;
+                  console.log(`[ClassCountdownTimer] Checking ${group.name} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
                   // Skip if more than 2 hours (7200 seconds) past - class is over
                   if (totalDiffSeconds < -7200) return;
                 } else {
@@ -9076,6 +9079,7 @@
                 // Skip classes currently in progress (started but not yet 2 hours past)
                 // Only count future classes (totalDiffSeconds > 0)
                 if (totalDiffSeconds > 0 && totalDiffSeconds < minDiffInSeconds) {
+                  console.log(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
                   minDiffInSeconds = totalDiffSeconds;
                   
                   // Determine day label
