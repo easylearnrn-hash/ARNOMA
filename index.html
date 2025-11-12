@@ -2597,56 +2597,56 @@
       },
       save: async function(payments) {
         try {
-          // Map JavaScript camelCase to Supabase snake_case with ALL resolution metadata
+          // CRITICAL FIX: Map JavaScript camelCase to Supabase snake_case
           const paymentsForSupabase = payments.map(p => ({
             // Core payment data
             id: p.id,
-            gmailId: p.gmailId,
+            gmail_id: p.gmailId || null,              // FIX: gmailId -> gmail_id
             amount: p.amount,
             date: p.date,
             
             // Raw immutable data from email
-            payerNameRaw: p.payerNameRaw || p.payerName,
-            payerEmailRaw: p.payerEmailRaw || null,
+            payer_name_raw: p.payerNameRaw || p.payerName,  // FIX: snake_case
+            payer_email_raw: p.payerEmailRaw || null,       // FIX: snake_case
             memo: p.memo || null,
             message: p.message || null,
             
             // Display fields (computed/resolved)
-            payerName: p.payerName,
-            senderName: p.senderName,
-            studentName: p.studentName,
-            studentEmail: p.studentEmail || null,
-            groupId: p.groupId || null,
+            payer_name: p.payerName,                   // FIX: snake_case
+            sender_name: p.senderName,                 // FIX: snake_case
+            student_name: p.studentName,               // FIX: snake_case
+            student_email: p.studentEmail || null,     // FIX: snake_case
+            group_id: p.groupId || null,               // FIX: snake_case
             
             // Manual linking (highest priority - user override)
-            linked_student_id: p.linkedStudentId || null,
-            manually_linked: p.manuallyLinked || false,
+            linked_student_id: p.linkedStudentId || null,     // Already snake_case
+            manually_linked: p.manuallyLinked || false,       // Already snake_case
             
             // Automatic resolution metadata
-            derived_student_id: p.derivedStudentId || null,
-            resolved_student_name: p.resolvedStudentName || null,
-            derived_student_group: p.derivedStudentGroup || null,
-            resolution_source: p.resolutionSource || 'none',
+            derived_student_id: p.derivedStudentId || null,              // Already snake_case
+            resolved_student_name: p.resolvedStudentName || null,        // Already snake_case
+            derived_student_group: p.derivedStudentGroup || null,        // Already snake_case
+            resolution_source: p.resolutionSource || 'none',             // Already snake_case
             
             // Legacy/compatibility field
-            studentId: p.studentId || p.linkedStudentId || p.derivedStudentId || null,
+            student_id: p.studentId || p.linkedStudentId || p.derivedStudentId || null,  // FIX: snake_case
             
             // Status tracking
             status: p.status || 'unmatched',
             viewed: p.viewed || false,
-            ignored_once: p.ignoredOnce || false,
-            ignore_permanently: p.ignorePermanently || false,
+            ignored_once: p.ignoredOnce || false,              // FIX: snake_case
+            ignore_permanently: p.ignorePermanently || false,  // FIX: snake_case
             
             // Timestamps
-            email_date: p.emailDate || p.date,
-            created_at: p.createdAt || new Date().toISOString(),
-            linked_at: p.linkedAt || null,
-            date_modified_at: p.dateModifiedAt || null
+            email_date: p.emailDate || p.date,                 // FIX: snake_case
+            created_at: p.createdAt || new Date().toISOString(),  // FIX: snake_case
+            linked_at: p.linkedAt || null,                     // FIX: snake_case
+            date_modified_at: p.dateModifiedAt || null         // FIX: snake_case
           }));
           
           console.log('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
           if (paymentsForSupabase.length > 0) {
-            console.log('📋 Payment fields:', Object.keys(paymentsForSupabase[0]));
+            console.log('📋 Payment fields (snake_case):', Object.keys(paymentsForSupabase[0]));
             console.log('📋 Sample payment:', paymentsForSupabase[0]);
           }
           
