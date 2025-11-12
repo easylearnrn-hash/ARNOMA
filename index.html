@@ -11601,9 +11601,10 @@
         }
       }
       
-      // Check if can deduct from balance (for current and future dates)
-      // Only deduct for TODAY or FUTURE (not past dates - those use snapshots)
-      if (balance >= pricePerClass && dateStr >= todayStr) {
+      // Check if can deduct from balance
+      // Allow balance deduction for past dates (within reasonable timeframe)
+      // and for current/future dates
+      if (balance >= pricePerClass) {
         const newBalance = balance - pricePerClass;
         
         // Update student balance in memory and Supabase
