@@ -2603,29 +2603,31 @@
       },
       save: async function(payments) {
         try {
-          // Strip fields to match minimal Supabase schema
-          // Only keep the basic fields that definitely exist
-          const paymentsForSupabase = payments.map(p => {
-            const { 
-              createdAt,
-              emailDate,
-              emailId,
-              derivedStudentId, 
-              linkedStudentId, 
-              resolvedStudentName, 
-              resolutionSource,
-              isMatched,
-              viewed,
-              ignoredOnce,
-              ignorePermanently,
-              ...rest 
-            } = p;
-            return rest;
-          });
+          // Map to Supabase schema - only basic payment fields
+          // Keep it minimal to match existing schema: id, gmailId, amount, payerName, 
+          // senderName, studentName, studentEmail, groupId, memo, message, date, status,
+          // payerNameRaw, payerEmailRaw, studentId
+          const paymentsForSupabase = payments.map(p => ({
+            id: p.id,
+            gmailId: p.gmailId,
+            amount: p.amount,
+            payerName: p.payerName,
+            senderName: p.senderName,
+            studentName: p.studentName,
+            studentEmail: p.studentEmail || null,
+            groupId: p.groupId || null,
+            memo: p.memo || null,
+            message: p.message || null,
+            date: p.date,
+            status: p.status || 'unmatched',
+            payerNameRaw: p.payerNameRaw || p.payerName,
+            payerEmailRaw: p.payerEmailRaw || null,
+            studentId: p.studentId || null
+          }));
           
           console.log('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
           if (paymentsForSupabase.length > 0) {
-            console.log('📋 Sample payment fields:', Object.keys(paymentsForSupabase[0]));
+            console.log('📋 Payment fields:', Object.keys(paymentsForSupabase[0]));
           }
           
           // For bulk save, we'll upsert all payments
@@ -2637,6 +2639,7 @@
           
           if (error) {
             console.error('❌ Error saving payments to Supabase:', error);
+            console.error('📋 Failed payload sample:', paymentsForSupabase[0]);
             return;
           }
           
@@ -4551,10 +4554,9 @@
         const finalStudentName = matchedStudent ? matchedStudent.name : (memo || 'Unmatched');
         const finalPayerName = senderName;
         
-        // Create payment object with all fields for Supabase
+        // Create payment object matching Supabase schema
         const payment = {
           id: `payment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          emailId: messageData.id.substring(0, 16),
           gmailId: messageData.id,
           amount,
           
@@ -4571,24 +4573,14 @@
           memo: memo,
           message: memo,
           
-          // Linking/resolution fields for Supabase
-          linkedStudentId: null,
-          derivedStudentId: matchedStudent ? matchedStudent.id : null,
-          resolvedStudentName: finalStudentName,
-          resolutionSource: matchedStudent ? 'memo-match' : 'none',
+          // Linking field (basic - just store the matched student ID)
           studentId: matchedStudent ? matchedStudent.id : null,
           
-          // Dates
-          emailDate: emailDate.toISOString(),
+          // Date
           date: emailDate.toISOString(),
-          createdAt: new Date().toISOString(),
           
           // Status
-          status: matchedStudent ? 'unapplied' : 'unmatched',
-          isMatched: !!matchedStudent,
-          viewed: false,
-          ignoredOnce: false,
-          ignorePermanently: false
+          status: matchedStudent ? 'matched' : 'unmatched'
         };
         
         return payment;
