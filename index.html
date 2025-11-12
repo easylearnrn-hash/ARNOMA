@@ -4880,7 +4880,7 @@
         
         // Create payment object with full resolution metadata
         const payment = {
-          id: `payment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `payment-${messageData.id}`, // Use Gmail ID to prevent duplicates
           gmailId: messageData.id,
           amount,
           
