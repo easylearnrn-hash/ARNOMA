@@ -3708,13 +3708,19 @@
       
       // Remove footer text that might have been included in the message
       cleaned = cleaned
-        .replace(/\s*(The money is ready for use right now\.?|Pay it forward!?|If you'd rather not follow links.*|Thanks for using Zelle.*|You can add a note.*|View transaction details.*)/gi, '')
+        .replace(/\*?\s*If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
+        .replace(/\*?\s*The\s+money\s+is\s+ready\s+for\s+use.*/gi, '')
+        .replace(/\*?\s*Pay\s+it\s+forward.*/gi, '')
+        .replace(/\*?\s*Thanks\s+for\s+using\s+Zelle.*/gi, '')
+        .replace(/\*?\s*You\s+can\s+add\s+a\s+note.*/gi, '')
+        .replace(/\*?\s*View\s+transaction\s+details.*/gi, '')
         .trim();
       
-      // If the message is ONLY footer text or generic content, return empty string
+      // If the message is ONLY footer text, asterisks, or generic content, return empty string
       if (!cleaned || 
           cleaned.length < 3 || 
-          /^(The money|Pay it|If you|Thanks|You can|View|—|-)+$/i.test(cleaned)) {
+          /^[\*\s\-—.]+$/.test(cleaned) ||
+          /^(The money|Pay it|If you|Thanks|You can|View)+$/i.test(cleaned)) {
         return '';
       }
       
