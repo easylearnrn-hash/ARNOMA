@@ -11290,6 +11290,15 @@
         }
       });
       
+      console.log('📋 Schedule Map:', {
+        count: Object.keys(scheduleMap).length,
+        entries: Object.values(scheduleMap).map(s => ({
+          student: s.student.name,
+          days: s.scheduleDays,
+          price: s.pricePerClass
+        }))
+      });
+      
       // Build day data
       const days = [];
       for (let day = 1; day <= daysInMonth; day++) {
@@ -11301,6 +11310,7 @@
         const studentsWithClass = [];
         
         Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
+          console.log(`🔍 Checking ${student.name} for ${dayName}:`, { scheduleDays, includes: scheduleDays.includes(dayName) });
           if (scheduleDays.includes(dayName)) {
             const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
             studentsWithClass.push({
@@ -11333,6 +11343,9 @@
       // Parse "Tue 8:00 PM, Thu 8:00 PM" or "Monday 8:00 PM, Wednesday 8:00 PM" → ["Tuesday", "Thursday"]
       if (!scheduleString || !scheduleString.trim()) return [];
       
+      // Remove Markdown bold markers (* and **) that may wrap the schedule
+      const cleanedSchedule = scheduleString.replace(/\*\*/g, '').replace(/\*/g, '');
+      
       // Map abbreviated day names to full names
       const dayMap = {
         'sun': 'Sunday',
@@ -11352,7 +11365,7 @@
       };
       
       const days = [];
-      const slots = scheduleString.split(',');
+      const slots = cleanedSchedule.split(',');
       
       slots.forEach(slot => {
         const trimmed = slot.trim().toLowerCase();
@@ -11368,7 +11381,7 @@
         }
       });
       
-      console.log('🔍 parseScheduleDays:', { input: scheduleString, output: days });
+      console.log('🔍 parseScheduleDays:', { input: scheduleString, cleaned: cleanedSchedule, output: days });
       return days;
     }
     
