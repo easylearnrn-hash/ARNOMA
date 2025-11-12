@@ -2695,6 +2695,7 @@
           console.log('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
           if (paymentsForSupabase.length > 0) {
             console.log('📋 Payment fields (snake_case):', Object.keys(paymentsForSupabase[0]));
+            console.log('📋 Sample payment ID:', paymentsForSupabase[0].id);
             console.log('📋 Sample payment:', paymentsForSupabase[0]);
           }
           
@@ -2706,7 +2707,17 @@
           
           if (error) {
             console.error('❌ Error saving payments to Supabase:', error);
+            console.error('📋 Error details:', {
+              code: error.code,
+              message: error.message,
+              details: error.details,
+              hint: error.hint
+            });
             console.error('📋 Failed payload sample:', paymentsForSupabase[0]);
+            
+            // Try to save to cache anyway so data isn't lost
+            window.paymentsCache = payments;
+            showNotification('⚠️ Failed to save to database, but cached locally', 'warning');
             return;
           }
           
