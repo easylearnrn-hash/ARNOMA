@@ -12944,8 +12944,74 @@
     // END EARNING FORECAST SYSTEM
     // ============================================================================
     
+    // ============================================================================
+    // ONE-TIME MIGRATION: Fix Calendar Payment Timezone Issues
+    // ============================================================================
+    async function migrateCalendarPaymentTimezones() {
+      const MIGRATION_KEY = 'migration_calendar_timezone_v1';
+      
+      // Check if migration already ran
+      if (localStorage.getItem(MIGRATION_KEY) === 'completed') {
+        debug('[Migration] Calendar payment timezone fix already completed');
+        return;
+      }
+      
+      debug('[Migration] Starting calendar payment timezone fix...');
+      
+      try {
+        const payments = PaymentStore.getAll();
+        let fixedCount = 0;
+        
+        payments.forEach(payment => {
+          // Only fix calendar payments without a source field (created before the fix)
+          // These have IDs starting with "cal_" and emailDate at midnight UTC
+          if (payment.id && payment.id.startsWith('cal_') && !payment.source && payment.emailDate) {
+            const oldDate = new Date(payment.emailDate);
+            
+            // Check if it's at midnight UTC (the bug signature)
+            if (oldDate.getUTCHours() === 0 && oldDate.getUTCMinutes() === 0) {
+              // Fix: Add 1 day and set to noon local time
+              const fixedDate = new Date(oldDate);
+              fixedDate.setDate(fixedDate.getDate() + 1);
+              fixedDate.setHours(12, 0, 0, 0);
+              
+              payment.emailDate = fixedDate.toISOString();
+              payment.timestamp = fixedDate.toISOString();
+              payment.source = 'calendar-migrated';
+              
+              fixedCount++;
+              debug(`[Migration] Fixed: ${payment.studentName || payment.payerName} - ${payment.emailDate}`);
+            }
+          }
+        });
+        
+        if (fixedCount > 0) {
+          debug(`[Migration] Saving ${fixedCount} fixed payment(s) to Supabase...`);
+          await PaymentStore.save(payments);
+          debug(`[Migration] ✅ Successfully fixed ${fixedCount} calendar payment(s)`);
+        } else {
+          debug('[Migration] No calendar payments needed fixing');
+        }
+        
+        // Mark migration as completed
+        localStorage.setItem(MIGRATION_KEY, 'completed');
+        debug('[Migration] Calendar payment timezone fix completed and marked');
+        
+      } catch (error) {
+        console.error('[Migration] Error fixing calendar payment timezones:', error);
+        // Don't mark as completed so it will retry next time
+      }
+    }
+    // ============================================================================
+    // END ONE-TIME MIGRATION
+    // ============================================================================
+    
     // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initialize);
+    document.addEventListener('DOMContentLoaded', async () => {
+      await initialize();
+      // Run migration after initialization (when PaymentStore is ready)
+      await migrateCalendarPaymentTimezones();
+    });
     
     debug('✅ ARNOMA app loaded - Using Supabase cloud database [v2.3.0 - Performance Optimized ⚡ - Build 20251112-0500]');
     debug('🔧 Optimizations: Debug logs disabled, Map caching enabled, CSS GPU acceleration');
