@@ -5589,12 +5589,19 @@
       
       try {
   const students = getCachedStudents();
+        console.log('🔍 Looking for student ID:', studentId);
+        console.log('📋 Available students:', students.length);
+        console.log('📋 Available student IDs:', students.map(s => s.id));
+        
         const student = students.find(s => s.id === studentId);
         
         if (!student) {
+          console.error('❌ Student not found. ID:', studentId, 'Available:', students.map(s => ({ id: s.id, name: s.name })));
           showNotification('❌ Student not found', 'error');
           return;
         }
+        
+        console.log('✅ Found student:', student.name);
         
         // BEGIN CRITICAL BUG FIX - Payment ↔ Student Linking Logic
         // Update payment with student link using correct field names:
