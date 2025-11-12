@@ -11651,7 +11651,7 @@
           case 'absent':
             statusColor = '#94a3b8';
             statusText = 'Absent';
-            statusIcon = '🚫';
+            statusIcon = '⚪';
             break;
           default:
             statusColor = '#ef4444';
@@ -11747,7 +11747,7 @@
                 ➕ Add Payment
               </button>
               <button onclick="event.stopPropagation(); markAsAbsent('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(100,116,139,0.2); border: 1px solid rgba(100,116,139,0.4); border-radius: 8px; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(100,116,139,0.3)'" onmouseout="this.style.background='rgba(100,116,139,0.2)'">
-                🚫 Mark Absent
+                ⚪ Mark Absent
               </button>
             </div>
           </div>
@@ -11773,13 +11773,13 @@
       ` : '';
       
       const detailHTML = `
-        <div onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 28000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; min-width: 400px; max-width: 500px; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
+        <div id="classDetailModal" onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 28000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; min-width: 400px; max-width: 500px; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
             <div>
               <h3 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; color: white;">${escapeHtml(student.name)}</h3>
               <p style="margin: 0; font-size: 12px; color: #94a3b8;">Group ${escapeHtml(student.group || 'N/A')}</p>
             </div>
-            <button onclick="this.parentElement.parentElement.remove(); document.getElementById('calendarDetailOverlay').remove();" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
+            <button onclick="document.getElementById('classDetailModal').remove(); document.getElementById('calendarDetailOverlay').remove();" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
           </div>
           
           <div style="padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 16px;">
@@ -11808,7 +11808,8 @@
       overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 27500; backdrop-filter: blur(4px);';
       overlay.onclick = function() {
         this.remove();
-        document.querySelector('[onclick*="calendarDetailOverlay"]').parentElement.remove();
+        const modal = document.getElementById('classDetailModal');
+        if (modal) modal.remove();
       };
       
       document.body.insertAdjacentHTML('beforeend', detailHTML);
@@ -11851,15 +11852,13 @@
       // Convert to number for consistency
       const numericId = parseInt(studentId);
       
-      // Close detail popup
+      // Close detail modal by ID
+      const modal = document.getElementById('classDetailModal');
+      if (modal) modal.remove();
+      
+      // Close overlay
       const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) {
-        const detailModal = document.querySelector('[onclick*="calendarDetailOverlay"]');
-        if (detailModal && detailModal.parentElement) {
-          detailModal.parentElement.remove();
-        }
-        overlay.remove();
-      }
+      if (overlay) overlay.remove();
       
       // Close day details panel if open
       closeDayDetails();
@@ -11867,7 +11866,7 @@
       const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.setItem(absentKey, 'true');
       
-      showToast('🚫 Marked as absent');
+      showToast('⚪ Marked as absent');
       renderCalendar();
     }
     
@@ -11875,15 +11874,13 @@
       // Convert to number for consistency
       const numericId = parseInt(studentId);
       
-      // Close detail popup
+      // Close detail modal by ID
+      const modal = document.getElementById('classDetailModal');
+      if (modal) modal.remove();
+      
+      // Close overlay
       const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) {
-        const detailModal = document.querySelector('[onclick*="calendarDetailOverlay"]');
-        if (detailModal && detailModal.parentElement) {
-          detailModal.parentElement.remove();
-        }
-        overlay.remove();
-      }
+      if (overlay) overlay.remove();
       
       // Close day details panel if open
       closeDayDetails();
