@@ -12132,9 +12132,8 @@
           const remainder = paymentAmount - pricePerClass;
           const newBalance = balance + remainder;
           
-          // Update student balance in memory and Supabase
+          // Update student balance in memory only (no auto-save during calendar render)
           student.balance = newBalance;
-          saveStudent(student); // Save to Supabase asynchronously
           
           const result = {
             status: 'paid',
@@ -12176,9 +12175,8 @@
       if (balance >= pricePerClass && dateStr >= todayStr) {
         const newBalance = balance - pricePerClass;
         
-        // Update student balance in memory and Supabase
+        // Update student balance in memory only (no auto-save during calendar render)
         student.balance = newBalance;
-        saveStudent(student); // Save to Supabase asynchronously
         
         const lowBalance = newBalance > 0 && newBalance < pricePerClass;
         
