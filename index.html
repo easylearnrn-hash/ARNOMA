@@ -11211,11 +11211,24 @@
     // Initialize balances
     studentBalances = loadStudentBalances();
     
+    // Helper function to get current date in LA timezone
+    function getLADate() {
+      const now = new Date();
+      const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+      return laTime;
+    }
+    
+    // Helper function to convert any date to LA timezone
+    function toLADate(date) {
+      const laTime = new Date(date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+      return laTime;
+    }
+    
     function openSmartCalendar() {
       const modal = document.getElementById('smartCalendarModal');
       if (!modal) return;
       
-      currentCalendarDate = new Date();
+      currentCalendarDate = getLADate();
       renderCalendar();
       
       modal.style.display = 'block';
@@ -11387,67 +11400,83 @@
     function checkPaymentStatus(student, classDate, pricePerClass, payments) {
       const dateStr = formatDateYYYYMMDD(classDate);
       const studentId = student.id;
+      const laToday = getLADate();
       
       // Check if student has balance
       const balance = studentBalances[studentId] || 0;
       
-      // Check for payment on this specific date
-      const paymentOnDate = payments.find(p => {
+      // Find all payments for this student (by name or alias match)
+      const studentPayments = payments.filter(p => {
         if (p.ignored) return false;
         
-        const paymentDate = new Date(p.timestamp);
+        // Match by student name or any alias
+        const payerName = (p.payerName || '').toLowerCase().trim();
+        const studentNameLower = (student.name || '').toLowerCase().trim();
+        
+        // Check exact name match
+        if (payerName === studentNameLower) return true;
+        
+        // Check aliases (now using ||| delimiter)
+        if (student.aliases && Array.isArray(student.aliases)) {
+          return student.aliases.some(alias => 
+            alias.toLowerCase().trim() === payerName
+          );
+        }
+        
+        return false;
+      });
+      
+      // Check for direct payment on this specific date
+      const paymentOnDate = studentPayments.find(p => {
+        const paymentDate = toLADate(new Date(p.timestamp));
         const paymentDateStr = formatDateYYYYMMDD(paymentDate);
-        
-        // Check if payment matches student
-        const matchesStudent = p.studentName === student.name || 
-                              (student.aliases && student.aliases.includes(p.payerName));
-        
-        return matchesStudent && paymentDateStr === dateStr;
+        return paymentDateStr === dateStr;
       });
       
       if (paymentOnDate) {
         const paymentAmount = parseFloat(paymentOnDate.amount) || 0;
         
-        // Check if this is an advance payment (more than one class)
+        // If payment is more than one class, add remainder to balance
         if (paymentAmount > pricePerClass) {
-          const newBalance = balance + paymentAmount;
+          const remainder = paymentAmount - pricePerClass;
+          const newBalance = balance + remainder;
           studentBalances[studentId] = newBalance;
           saveStudentBalances(studentBalances);
           
           return {
-            status: 'deposit',
+            status: 'paid',
             paid: true,
             amount: paymentAmount,
             balance: newBalance,
-            message: `Paid ${formatCurrency(paymentAmount, '$')} (Deposit: ${formatCurrency(newBalance, '$')})`
+            message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
           };
         } else {
           return {
             status: 'paid',
             paid: true,
             amount: paymentAmount,
-            balance: 0,
+            balance: balance,
             message: `Paid ${formatCurrency(paymentAmount, '$')}`
           };
         }
       }
       
-      // Check if can deduct from balance
-      if (balance >= pricePerClass && classDate <= new Date()) {
+      // Check if can deduct from balance (only for past/current dates)
+      if (balance >= pricePerClass && classDate <= laToday) {
         const newBalance = balance - pricePerClass;
         studentBalances[studentId] = newBalance;
         saveStudentBalances(studentBalances);
         
         // Check if low balance alert needed
-        const lowBalance = newBalance > 0 && newBalance <= pricePerClass;
+        const lowBalance = newBalance > 0 && newBalance < pricePerClass;
         
         return {
           status: lowBalance ? 'low-balance' : 'deducted',
           paid: true,
           amount: pricePerClass,
           balance: newBalance,
-          message: `Deducted ${formatCurrency(pricePerClass, '$')} (Remaining: ${formatCurrency(newBalance, '$')})`,
-          alert: lowBalance ? `⚠️ Only 1 class remaining` : null
+          message: `From Balance (${formatCurrency(newBalance, '$')} remaining)`,
+          alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
         };
       }
       
@@ -11465,14 +11494,25 @@
         };
       }
       
+      // Future class - show as pending if has balance
+      if (classDate > laToday && balance >= pricePerClass) {
+        return {
+          status: 'pending',
+          paid: false,
+          amount: 0,
+          balance: balance,
+          message: `Future (${formatCurrency(balance, '$')} available)`
+        };
+      }
+      
       // Unpaid
       return {
         status: 'unpaid',
         paid: false,
         amount: 0,
         balance: balance,
-        message: 'Not Paid',
-        showActions: classDate <= new Date() // Only show actions for past/current dates
+        message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
+        showActions: classDate <= laToday // Only show actions for past/current dates
       };
     }
     
@@ -11534,26 +11574,31 @@
         
         switch (status) {
           case 'paid':
-          case 'deposit':
           case 'deducted':
           case 'low-balance':
-            dotColor = '#22c55e'; // Green
+            dotColor = '#22c55e'; // Green - Paid
+            break;
+          case 'pending':
+            dotColor = '#3b82f6'; // Blue - Future class with balance
             break;
           case 'absent':
-            dotColor = '#94a3b8'; // Gray
+            dotColor = '#94a3b8'; // Gray - Absent
             break;
           case 'unpaid':
           default:
-            dotColor = '#ef4444'; // Red
+            dotColor = '#ef4444'; // Red - Unpaid
             break;
         }
         
         const dateStr = formatDateYYYYMMDD(dayData.date);
+        const statusText = status === 'paid' || status === 'deducted' ? 'Paid' : 
+                          status === 'pending' ? 'Future' :
+                          status === 'absent' ? 'Absent' : 'Unpaid';
         
         html += `
           <div class="calendar-dot" 
                onclick="event.stopPropagation(); showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
-               data-tooltip="${escapeHtml(student.name)} — ${status === 'paid' || status === 'deposit' || status === 'deducted' ? 'Paid' : status === 'absent' ? 'Absent' : 'Unpaid'}"
+               data-tooltip="${escapeHtml(student.name)} — ${statusText}"
                style="width: 8px; height: 8px; border-radius: 50%; background: ${dotColor}; 
                       cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
                onmouseover="this.style.transform='scale(1.5)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.5)';"
@@ -11565,7 +11610,7 @@
     }
     
     function isDateToday(date) {
-      const today = new Date();
+      const today = getLADate();
       return date.getDate() === today.getDate() &&
              date.getMonth() === today.getMonth() &&
              date.getFullYear() === today.getFullYear();
@@ -11587,12 +11632,16 @@
         let statusColor, statusText, statusIcon;
         switch (status) {
           case 'paid':
-          case 'deposit':
           case 'deducted':
           case 'low-balance':
             statusColor = '#22c55e';
             statusText = 'Paid';
             statusIcon = '✅';
+            break;
+          case 'pending':
+            statusColor = '#3b82f6';
+            statusText = 'Future';
+            statusIcon = '🔵';
             break;
           case 'absent':
             statusColor = '#94a3b8';
