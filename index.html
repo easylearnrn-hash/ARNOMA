@@ -11964,6 +11964,20 @@
         return status === 'active' && s.isActive !== false;
       });
       
+      // AUTO-APPLY PAYMENTS (November 1, 2025+)
+      const monthStart = new Date(year, month, 1);
+      const monthEnd = new Date(year, month + 1, 0);
+      const autoAppliedData = autoApplyPaymentsToCalendar(activeStudents, payments, monthStart, monthEnd);
+      
+      // Store unmatched payments for user assignment
+      if (autoAppliedData.unmatchedPayments.length > 0) {
+        window.unmatchedPayments = autoAppliedData.unmatchedPayments;
+        debug(`⚠️ ${autoAppliedData.unmatchedPayments.length} unmatched payments need assignment`);
+      }
+      
+      // Store applied payments globally for checkPaymentStatus to use
+      window.autoAppliedPayments = autoAppliedData.appliedPayments;
+      
       // Map students to their schedules
       const scheduleMap = {};
       let totalScheduledClasses = 0;
@@ -12071,6 +12085,229 @@
       return days;
     }
     
+    // ============================================================================
+    // PAYMENT AUTO-APPLICATION SYSTEM (November 1, 2025+)
+    // ============================================================================
+    // This system automatically matches Gmail payments to calendar dates
+    // All operations use LA timezone (America/Los_Angeles)
+    // ============================================================================
+    
+    /**
+     * Auto-apply payments to calendar starting November 1, 2025
+     * Returns a map of { dateStr: { studentId: paymentInfo } }
+     */
+    function autoApplyPaymentsToCalendar(students, payments, startDate, endDate) {
+      const appliedPayments = {}; // dateStr -> studentId -> paymentInfo
+      const unmatchedPayments = []; // Payments that need user assignment
+      
+      // Only process payments from November 1, 2025 onwards
+      const nov1_2025 = new Date('2025-11-01T00:00:00');
+      const laToday = getLADate();
+      
+      // Get all class dates for each student from Nov 1 onwards
+      const studentClassDates = buildStudentClassSchedule(students, nov1_2025, endDate);
+      
+      // Track which payments have been applied
+      const appliedPaymentIds = new Set();
+      
+      // Sort payments by date (LA timezone)
+      const sortedPayments = payments
+        .filter(p => !p.ignored)
+        .map(p => {
+          const timestamp = p.emailDate || p.date || p.timestamp;
+          const laDate = toLADate(new Date(timestamp));
+          return { ...p, laDate, laDateStr: formatDateYYYYMMDD(laDate) };
+        })
+        .sort((a, b) => a.laDate - b.laDate);
+      
+      // Process each payment
+      sortedPayments.forEach(payment => {
+        // Find student by name matching
+        const student = findStudentByPayment(payment, students);
+        
+        if (!student) {
+          debug(`⚠️ Cannot match payment to student: ${payment.payerName || payment.studentName}`);
+          unmatchedPayments.push(payment);
+          return;
+        }
+        
+        const studentId = student.id;
+        const pricePerClass = parseFloat(student.payPerClass) || 0;
+        const paymentAmount = parseFloat(payment.amount) || 0;
+        
+        // Get student's class dates
+        const classDates = studentClassDates[studentId] || [];
+        
+        // Strategy 1: Try exact date match first
+        const exactMatch = classDates.find(dateStr => {
+          return dateStr === payment.laDateStr && !appliedPayments[dateStr]?.[studentId];
+        });
+        
+        if (exactMatch) {
+          applyPaymentToDate(exactMatch, studentId, payment, paymentAmount, pricePerClass, appliedPayments);
+          appliedPaymentIds.add(payment.id);
+          debug(`✅ Exact match: ${student.name} payment on ${exactMatch}`);
+          return;
+        }
+        
+        // Strategy 2: Find nearest unpaid class within ±7 days
+        const nearbyClass = findNearestUnpaidClass(
+          payment.laDateStr,
+          classDates,
+          appliedPayments,
+          studentId,
+          7 // days window
+        );
+        
+        if (nearbyClass) {
+          applyPaymentToDate(nearbyClass, studentId, payment, paymentAmount, pricePerClass, appliedPayments);
+          appliedPaymentIds.add(payment.id);
+          debug(`✅ Nearby match: ${student.name} payment applied to ${nearbyClass}`);
+          return;
+        }
+        
+        // Strategy 3: Payment doesn't match any class - needs user assignment
+        debug(`⚠️ Extra payment for ${student.name}: $${paymentAmount} on ${payment.laDateStr}`);
+        unmatchedPayments.push({
+          ...payment,
+          student,
+          studentId,
+          reason: 'no_matching_class'
+        });
+      });
+      
+      return {
+        appliedPayments,
+        unmatchedPayments
+      };
+    }
+    
+    /**
+     * Build a schedule map of all class dates for each student
+     */
+    function buildStudentClassSchedule(students, startDate, endDate) {
+      const schedule = {}; // studentId -> [dateStr, dateStr, ...]
+      const groups = window.groupsCache || [];
+      
+      students.forEach(student => {
+        const groupName = student.group;
+        if (!groupName) return;
+        
+        const group = groups.find(g => g.name === groupName);
+        if (!group || !group.schedule) return;
+        
+        const scheduleDays = parseScheduleDays(group.schedule);
+        const classDates = [];
+        
+        // Generate all class dates from start to end
+        const current = new Date(startDate);
+        while (current <= endDate) {
+          const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][current.getDay()];
+          
+          if (scheduleDays.includes(dayName)) {
+            const dateStr = formatDateYYYYMMDD(current);
+            
+            // Check if class was skipped
+            const isSkipped = window.SkipClassManager?.isClassSkipped(groupName, dateStr);
+            if (!isSkipped) {
+              classDates.push(dateStr);
+            }
+          }
+          
+          current.setDate(current.getDate() + 1);
+        }
+        
+        schedule[student.id] = classDates;
+      });
+      
+      return schedule;
+    }
+    
+    /**
+     * Find student by payment payer/student name
+     */
+    function findStudentByPayment(payment, students) {
+      const paymentStudentName = (payment.studentName || '').toLowerCase().trim();
+      const paymentPayerName = (payment.payerName || '').toLowerCase().trim();
+      
+      return students.find(student => {
+        const studentNameLower = (student.name || '').toLowerCase().trim();
+        
+        // Direct match
+        if (paymentStudentName === studentNameLower || paymentPayerName === studentNameLower) {
+          return true;
+        }
+        
+        // Last name match (for "Husikyan Consulting" → "Sona Husikyan")
+        const studentLastName = studentNameLower.split(' ').pop();
+        if (studentLastName && studentLastName.length > 3) {
+          if (paymentPayerName.includes(studentLastName) || paymentStudentName.includes(studentLastName)) {
+            return true;
+          }
+        }
+        
+        // Alias match
+        if (student.aliases && Array.isArray(student.aliases)) {
+          return student.aliases.some(alias => {
+            const aliasLower = alias.toLowerCase().trim();
+            return aliasLower === paymentStudentName || aliasLower === paymentPayerName;
+          });
+        }
+        
+        return false;
+      });
+    }
+    
+    /**
+     * Find nearest unpaid class within a date window
+     */
+    function findNearestUnpaidClass(paymentDateStr, classDates, appliedPayments, studentId, daysWindow) {
+      const paymentDate = new Date(paymentDateStr);
+      
+      let nearest = null;
+      let minDiff = Infinity;
+      
+      classDates.forEach(dateStr => {
+        // Skip if already paid
+        if (appliedPayments[dateStr]?.[studentId]) return;
+        
+        const classDate = new Date(dateStr);
+        const daysDiff = Math.abs((classDate - paymentDate) / (1000 * 60 * 60 * 24));
+        
+        if (daysDiff <= daysWindow && daysDiff < minDiff) {
+          minDiff = daysDiff;
+          nearest = dateStr;
+        }
+      });
+      
+      return nearest;
+    }
+    
+    /**
+     * Apply a payment to a specific class date
+     */
+    function applyPaymentToDate(dateStr, studentId, payment, paymentAmount, pricePerClass, appliedPayments) {
+      if (!appliedPayments[dateStr]) {
+        appliedPayments[dateStr] = {};
+      }
+      
+      appliedPayments[dateStr][studentId] = {
+        paymentId: payment.id,
+        amount: paymentAmount,
+        pricePerClass: pricePerClass,
+        remainder: Math.max(0, paymentAmount - pricePerClass),
+        paid: true,
+        status: 'paid',
+        message: paymentAmount > pricePerClass 
+          ? `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(paymentAmount - pricePerClass, '$')} to balance)`
+          : `Paid ${formatCurrency(paymentAmount, '$')}`
+      };
+    }
+    
+    // ============================================================================
+    // END PAYMENT AUTO-APPLICATION SYSTEM
+    // ============================================================================
+    
     function checkPaymentStatus(student, classDate, pricePerClass, payments) {
       const dateStr = formatDateYYYYMMDD(classDate);
       const studentId = student.id;
@@ -12119,122 +12356,39 @@
         };
       }
       
-      // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
-      const balance = student.balance || 0;
-      
-      // Find all payments for this student (by name or alias match)
-      // Check BOTH studentName AND payerName fields
-      const studentPayments = payments.filter(p => {
-        if (p.ignored) return false;
+      // RULE 3: Check auto-applied payments first (for November 1, 2025+)
+      if (window.autoAppliedPayments && window.autoAppliedPayments[dateStr]?.[studentId]) {
+        const appliedPayment = window.autoAppliedPayments[dateStr][studentId];
+        const balance = student.balance || 0;
         
-        const paymentStudentName = (p.studentName || '').toLowerCase().trim();
-        const paymentPayerName = (p.payerName || '').toLowerCase().trim();
-        const studentNameLower = (student.name || '').toLowerCase().trim();
-        
-        // Check if studentName matches
-        if (paymentStudentName === studentNameLower) return true;
-        
-        // Check if payerName matches (for cases where parent pays)
-        if (paymentPayerName === studentNameLower) return true;
-        
-        // SMART MATCHING: Check if payer name contains student's last name
-        // This handles cases like "Husikyan Consulting" → "Sona Husikyan"
-        const studentLastName = studentNameLower.split(' ').pop(); // Get last word as last name
-        if (studentLastName && studentLastName.length > 3) { // Only match if last name is significant
-          if (paymentPayerName.includes(studentLastName)) {
-            debug(`💡 Smart match: "${paymentPayerName}" contains "${studentLastName}" (${student.name})`);
-            return true;
-          }
-          if (paymentStudentName.includes(studentLastName)) {
-            debug(`💡 Smart match: "${paymentStudentName}" contains "${studentLastName}" (${student.name})`);
-            return true;
-          }
-        }
-        
-        // Check if payment matches any student alias
-        if (student.aliases && Array.isArray(student.aliases)) {
-          return student.aliases.some(alias => {
-            const aliasLower = alias.toLowerCase().trim();
-            return aliasLower === paymentStudentName || aliasLower === paymentPayerName;
-          });
-        }
-        
-        return false;
-      });
-      
-      // Check for payment on this date OR any recent payment that can cover this class
-      // If checking a past date, allow payments from up to 7 days after the class
-      const paymentOnDate = studentPayments.find(p => {
-        const paymentTimestamp = p.emailDate || p.date || p.timestamp;
-        if (!paymentTimestamp) return false;
-        
-        const paymentDate = toLADate(new Date(paymentTimestamp));
-        const paymentDateStr = formatDateYYYYMMDD(paymentDate);
-        
-        // Exact date match
-        if (paymentDateStr === dateStr) return true;
-        
-        // For past classes: allow payment from up to 7 days after the class
-        if (dateStr < todayStr) {
-          const classDate = new Date(dateStr);
-          const payDate = new Date(paymentDateStr);
-          const daysDiff = Math.floor((payDate - classDate) / (1000 * 60 * 60 * 24));
-          
-          // Payment can be up to 7 days after the class date
-          if (daysDiff > 0 && daysDiff <= 7) return true;
-        }
-        
-        return false;
-      });
-      
-      if (paymentOnDate) {
-        const paymentAmount = parseFloat(paymentOnDate.amount) || 0;
-        
-        if (paymentAmount > pricePerClass) {
-          const remainder = paymentAmount - pricePerClass;
-          const newBalance = balance + remainder;
-          
-          // Update student balance in memory and queue for save
+        // Handle remainder and update balance
+        if (appliedPayment.remainder > 0) {
+          const newBalance = balance + appliedPayment.remainder;
           student.balance = newBalance;
           queueBalanceUpdate(studentId, newBalance);
           
-          const result = {
+          return {
             status: 'paid',
             paid: true,
-            amount: paymentAmount,
+            amount: appliedPayment.amount,
             balance: newBalance,
-            message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
+            message: appliedPayment.message
           };
-          
-          // Freeze today's data at end of day
-          if (dateStr === todayStr) {
-            saveCalendarSnapshot(dateStr, {
-              [studentId]: result
-            });
-          }
-          
-          return result;
-        } else {
-          const result = {
-            status: 'paid',
-            paid: true,
-            amount: paymentAmount,
-            balance: balance,
-            message: `Paid ${formatCurrency(paymentAmount, '$')}`
-          };
-          
-          if (dateStr === todayStr) {
-            saveCalendarSnapshot(dateStr, {
-              [studentId]: result
-            });
-          }
-          
-          return result;
         }
+        
+        return {
+          status: 'paid',
+          paid: true,
+          amount: appliedPayment.amount,
+          balance: balance,
+          message: appliedPayment.message
+        };
       }
       
-      // Check if can deduct from balance (for TODAY and future dates only)
-      // Do NOT deduct for past dates - those should use snapshots or payment records
+      // RULE 4: Check if can deduct from balance (for TODAY and future dates only)
+      // Do NOT deduct for past dates - those should use auto-applied payments or snapshots
+      const balance = student.balance || 0;
+      
       if (balance >= pricePerClass && dateStr >= todayStr) {
         const newBalance = balance - pricePerClass;
         
