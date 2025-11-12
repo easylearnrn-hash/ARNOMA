@@ -15,8 +15,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
     // VERSION CHECK - This should appear FIRST in console
-    console.log('🔥 CACHE BUSTER: Version 2.2.1 - Build 20251112-0420');
-    console.log('🔥 Fixed: Unpaid classes modal now only shows dates with actual class records');
+    console.log('🔥 CACHE BUSTER: Version 2.2.2 - Build 20251112-0430');
+    console.log('🔥 Fixed: Group and amount buttons now wrap instead of scroll');
     
     // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -1059,10 +1059,8 @@
       gap: 6px;
       justify-content: center;
       margin: 8px 0;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE/Edge */
+      flex-wrap: wrap; /* Allow wrapping to new line */
+      overflow-x: visible; /* No horizontal scrolling */
     }
 
     .group-buttons::-webkit-scrollbar {
