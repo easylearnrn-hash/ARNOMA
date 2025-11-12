@@ -11330,20 +11330,45 @@
     }
     
     function parseScheduleDays(scheduleString) {
-      // Parse "Monday 8:00 PM, Wednesday 8:00 PM" → ["Monday", "Wednesday"]
+      // Parse "Tue 8:00 PM, Thu 8:00 PM" or "Monday 8:00 PM, Wednesday 8:00 PM" → ["Tuesday", "Thursday"]
       if (!scheduleString || !scheduleString.trim()) return [];
+      
+      // Map abbreviated day names to full names
+      const dayMap = {
+        'sun': 'Sunday',
+        'mon': 'Monday',
+        'tue': 'Tuesday',
+        'wed': 'Wednesday',
+        'thu': 'Thursday',
+        'fri': 'Friday',
+        'sat': 'Saturday',
+        'sunday': 'Sunday',
+        'monday': 'Monday',
+        'tuesday': 'Tuesday',
+        'wednesday': 'Wednesday',
+        'thursday': 'Thursday',
+        'friday': 'Friday',
+        'saturday': 'Saturday'
+      };
       
       const days = [];
       const slots = scheduleString.split(',');
       
       slots.forEach(slot => {
-        const trimmed = slot.trim();
-        const dayMatch = trimmed.match(/^(Sunday|Monday|Tuesday|Wednesday|Thursday|Friday|Saturday)/i);
+        const trimmed = slot.trim().toLowerCase();
+        
+        // Try to match abbreviated or full day name at the start
+        const dayMatch = trimmed.match(/^(sun|mon|tue|wed|thu|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i);
+        
         if (dayMatch) {
-          days.push(dayMatch[1]);
+          const fullDayName = dayMap[dayMatch[1].toLowerCase()];
+          if (fullDayName && !days.includes(fullDayName)) {
+            days.push(fullDayName);
+          }
         }
       });
       
+      console.log('🔍 parseScheduleDays:', { input: scheduleString, output: days });
       return days;
     }
     
