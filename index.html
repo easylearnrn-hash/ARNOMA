@@ -2844,9 +2844,21 @@
     function mapSupabaseStudent(record) {
       if (!record) return null;
 
-      const aliases = typeof record.aliases === 'string'
-        ? record.aliases.split(',').map(alias => alias.trim()).filter(Boolean)
-        : Array.isArray(record.aliases) ? record.aliases : [];
+      // CRITICAL FIX: Use delimiter that won't appear in names (|||)
+      // This prevents "Company, Inc." from being split into ["Company", "Inc."]
+      let aliases = [];
+      if (typeof record.aliases === 'string') {
+        if (record.aliases.includes('|||')) {
+          // New format: delimited by |||
+          aliases = record.aliases.split('|||').map(alias => alias.trim()).filter(Boolean);
+        } else {
+          // Legacy format: comma-separated (but this breaks company names with commas)
+          // For backward compatibility, keep as single alias if it looks like a company name
+          aliases = record.aliases ? [record.aliases.trim()] : [];
+        }
+      } else if (Array.isArray(record.aliases)) {
+        aliases = record.aliases;
+      }
 
       return {
         ...record,
@@ -2908,10 +2920,11 @@
       // if (typeof studentData.showInGrid === 'boolean') payload.show_in_grid = studentData.showInGrid;
       // if (typeof studentData.isActive === 'boolean') payload.is_active = studentData.isActive;
       
-      // Handle aliases - convert array to comma-separated string if needed
+      // Handle aliases - convert array to delimited string using ||| separator
+      // This prevents aliases with commas (like "Company, Inc.") from being split incorrectly
       if (studentData.aliases) {
         payload.aliases = Array.isArray(studentData.aliases) 
-          ? studentData.aliases.join(', ') 
+          ? studentData.aliases.join('|||') 
           : studentData.aliases;
       }
       
