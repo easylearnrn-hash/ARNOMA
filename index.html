@@ -5893,7 +5893,7 @@
         showNotification(`🔍 Fetching payments from ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`, 'info');
         
         const fromTime = Math.floor(fromDate.getTime() / 1000);
-        const toTime = Math.floor(toDate.getTime() / 1000) + 86400; // Include entire end day
+        const toTime = Math.floor(toDate.getTime() / 1000); // Exact date range - no padding
         
         const query = `from:usbank@notifications.usbank.com subject:Zelle after:${fromTime} before:${toTime}`;
         
