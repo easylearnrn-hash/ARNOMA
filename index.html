@@ -11405,13 +11405,13 @@
           const timerElement = document.getElementById('enhancedCountdownTimer');
           if (!timerElement) {
             console.log('[SkipClassManager] Timer element not found, will retry...');
-            return;
+            return false; // Return false to indicate failure
           }
           
           // Remove existing listener if any
           if (timerElement._skipHandlerAttached) {
             console.log('[SkipClassManager] Handler already attached');
-            return;
+            return true; // Return true to indicate already attached
           }
           
           // Use event delegation for dynamic timer items
@@ -11450,31 +11450,39 @@
           });
           
           timerElement._skipHandlerAttached = true;
-          console.log('[SkipClassManager] Double-click handler attached successfully');
+          console.log('[SkipClassManager] ✅ Double-click handler attached successfully');
+          return true; // Return true to indicate success
         };
         
-        // Try attaching handlers after a short delay
-        setTimeout(attachHandlers, 500);
-        setTimeout(attachHandlers, 1500); // Retry after 1.5s
-        setTimeout(attachHandlers, 3000); // Retry after 3s
+        // Retry mechanism with exponential backoff
+        let retryCount = 0;
+        const maxRetries = 10;
+        const tryAttach = () => {
+          if (attachHandlers()) {
+            console.log('[SkipClassManager] Handler attached, stopping retries');
+            return;
+          }
+          retryCount++;
+          if (retryCount < maxRetries) {
+            const delay = Math.min(100 * Math.pow(1.5, retryCount), 3000); // Max 3s delay
+            console.log(`[SkipClassManager] Retry ${retryCount}/${maxRetries} in ${delay}ms`);
+            setTimeout(tryAttach, delay);
+          } else {
+            console.warn('[SkipClassManager] Max retries reached, giving up');
+          }
+        };
         
-        // Listen for timer being opened
+        // Start initial retry sequence
+        tryAttach();
+        
+        // Listen for timer being opened - reset retry counter and try again
         window.addEventListener('timerOpened', () => {
-          console.log('[SkipClassManager] Timer opened event received');
-          setTimeout(attachHandlers, 200);
+          console.log('[SkipClassManager] Timer opened event received, attempting attachment...');
+          retryCount = 0; // Reset retry counter
+          setTimeout(tryAttach, 100); // Small delay to ensure DOM is ready
         });
         
-        // Also attach when timer is reinitialized
-        window.addEventListener('groups:updated', () => {
-          console.log('[SkipClassManager] Groups updated, reattaching handlers');
-          setTimeout(attachHandlers, 600);
-        });
-        window.addEventListener('schedules:updated', () => {
-          console.log('[SkipClassManager] Schedules updated, reattaching handlers');
-          setTimeout(attachHandlers, 600);
-        });
-        
-        console.log('[SkipClassManager] Initialized');
+        console.log('[SkipClassManager] Initialized with smart retry mechanism');
       }
 
       // Public API
