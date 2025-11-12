@@ -11513,6 +11513,17 @@
         const paymentPayerName = (p.payerName || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
         
+        // Debug logging for Sona
+        if (studentNameLower.includes('sona')) {
+          console.log('Sona payment check', {
+            studentName: student.name,
+            paymentStudentName: p.studentName,
+            paymentPayerName: p.payerName,
+            dateStr,
+            paymentTimestamp: p.emailDate || p.date || p.timestamp
+          });
+        }
+        
         // Check if studentName matches
         if (paymentStudentName === studentNameLower) return true;
         
