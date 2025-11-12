@@ -12711,18 +12711,28 @@
     }
     
     function quickAddPayment(studentId, dateStr, amount) {
+      console.log('[QuickAddPayment] Called with:', { studentId, dateStr, amount });
+      
       // Close detail popup
       const overlay = document.getElementById('calendarDetailOverlay');
       if (overlay) overlay.click();
       
       // Show unpaid classes selection modal
+      console.log('[QuickAddPayment] Opening unpaid classes modal...');
       showUnpaidClassesModal(studentId, dateStr);
     }
     
     function showUnpaidClassesModal(studentId, initialDateStr) {
+      console.log('[UnpaidClassesModal] Opening modal for:', { studentId, initialDateStr });
+      
       const students = getCachedStudents();
       const student = students.find(s => s.id === studentId);
-      if (!student) return;
+      if (!student) {
+        console.error('[UnpaidClassesModal] Student not found:', studentId);
+        return;
+      }
+      
+      console.log('[UnpaidClassesModal] Student found:', student.name);
       
       const groups = window.groupsCache || [];
       const payments = PaymentStore.getAll();
@@ -12761,8 +12771,10 @@
         }
       }
       
+      console.log('[UnpaidClassesModal] Found', unpaidClasses.length, 'unpaid classes');
+      
       if (unpaidClasses.length === 0) {
-        showToast('✅ No unpaid classes found', 'info');
+        showToast('✅ No unpaid classes found');
         return;
       }
       
@@ -12817,6 +12829,8 @@
       
       document.body.insertAdjacentHTML('beforeend', modalHTML);
       document.body.appendChild(modalOverlay);
+      
+      console.log('[UnpaidClassesModal] ✅ Modal created and displayed');
     }
     
     function closeUnpaidClassesModal() {
@@ -12829,7 +12843,7 @@
     function applyPaymentToSelected(studentId) {
       const checkboxes = document.querySelectorAll('.unpaid-class-checkbox:checked');
       if (checkboxes.length === 0) {
-        showToast('⚠️ Please select at least one class', 'warning');
+        showToast('⚠️ Please select at least one class');
         return;
       }
       
@@ -12864,7 +12878,7 @@
       
       PaymentStore.save(payments);
       
-      showToast(`✅ Payment applied to ${selectedDates.length} class${selectedDates.length !== 1 ? 'es' : ''}`, 'success');
+      showToast(`✅ Payment applied to ${selectedDates.length} class${selectedDates.length !== 1 ? 'es' : ''}`);
       closeUnpaidClassesModal();
       renderCalendar();
     }
