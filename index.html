@@ -4858,6 +4858,25 @@
         
         console.log(`📩 Parsed Zelle payment: ${finalPayerName} → ${finalStudentName} ($${amount})`);
 
+        // Final cleanup: If memo contains ONLY footer/generic text, set it to empty string
+        let cleanMemo = memo || '';
+        if (cleanMemo) {
+          // Remove all known footer patterns
+          cleanMemo = cleanMemo
+            .replace(/\*\s*If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
+            .replace(/If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
+            .replace(/The\s+money\s+is\s+ready\s+for\s+use.*/gi, '')
+            .replace(/Pay\s+it\s+forward.*/gi, '')
+            .replace(/Thanks\s+for\s+using\s+Zelle.*/gi, '')
+            .replace(/You\s+can\s+add\s+a\s+note.*/gi, '')
+            .replace(/View\s+transaction\s+details.*/gi, '')
+            .trim();
+          
+          // If nothing meaningful remains, set to empty
+          if (cleanMemo.length < 3 || /^[*\s\-—.]+$/.test(cleanMemo)) {
+            cleanMemo = '';
+          }
+        }
         
         // Create payment object with full resolution metadata
         const payment = {
@@ -4868,8 +4887,8 @@
           // Raw immutable data from email
           payerNameRaw: senderName,
           payerEmailRaw: null,
-          memo: memo,
-          message: memo,
+          memo: cleanMemo,
+          message: cleanMemo,
           
           // Display fields (computed)
           payerName: finalPayerName,
