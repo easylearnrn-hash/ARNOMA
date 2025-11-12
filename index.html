@@ -11563,26 +11563,6 @@
       
       return html;
     }
-        
-        const dateStr = formatDateYYYYMMDD(dayData.date);
-        
-        html += `
-          <div style="padding: 6px; background: ${bgColor}; border: 1px solid ${borderColor}; border-radius: 6px; font-size: 10px; transition: all 0.2s; cursor: pointer;" 
-               onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)';" 
-               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';"
-               onclick="showClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')})">
-            <div style="display: flex; align-items: center; gap: 4px; margin-bottom: 3px;">
-              <span>${icon}</span>
-              <span style="font-weight: 700; color: white; font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(student.name)}</span>
-            </div>
-            <div style="font-size: 8px; color: rgba(255,255,255,0.7);">${message}</div>
-            ${alert ? `<div style="font-size: 8px; color: #eab308; margin-top: 2px; font-weight: 700;">${alert}</div>` : ''}
-          </div>
-        `;
-      });
-      
-      return html;
-    }
     
     function isDateToday(date) {
       const today = new Date();
