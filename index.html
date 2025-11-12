@@ -3700,10 +3700,18 @@
     
     function cleanPaymentMemoText(text) {
       if (!text) return '';
-      return String(text)
+      
+      let cleaned = String(text)
         .replace(/[^\x20-\x7E\n\r\t]/g, '')
         .replace(/\s+/g, ' ')
         .trim();
+      
+      // Remove footer text that might have been included in the message
+      cleaned = cleaned
+        .replace(/\s*(The money is ready for use right now\.?|Pay it forward!?|If you'd rather not follow links.*|Thanks for using Zelle.*|You can add a note.*|View transaction details.*)/gi, '')
+        .trim();
+      
+      return cleaned;
     }
     
     // Enhanced duplicate detection per developer command
@@ -4180,7 +4188,7 @@
     
     function addClickToMarkPaymentsViewed() {
       // One click clears ALL green blinking indicators
-      const container = document.getElementById('paymentRecordsContainer');
+      const container = document.getElementById('paymentEmailsContent');
       const oldListener = container?._clickListener;
       if (oldListener) {
         container.removeEventListener('click', oldListener);
@@ -4211,6 +4219,8 @@
             row.style.animation = 'none';
             row.style.boxShadow = 'none';
           });
+          
+          console.log('✅ Marked', newPaymentRows.length, 'payment(s) as viewed');
           
           // Remove this listener after first acknowledgment
           if (container) {
