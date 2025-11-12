@@ -1474,28 +1474,28 @@
 
     /* Time-based color tints */
     #enhancedCountdownTimer.time-safe {
-      background: rgba(30, 30, 40, 0.95);
-      border-color: rgba(0, 255, 160, 0.3);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(0, 255, 160, 0.15);
+      background: rgba(15, 40, 45, 0.95);
+      border-color: rgba(0, 255, 160, 0.95);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 50px rgba(0, 255, 160, 0.8), 0 0 80px rgba(0, 255, 160, 0.4);
     }
 
     #enhancedCountdownTimer.time-upcoming {
-      background: rgba(40, 38, 30, 0.95);
-      border-color: rgba(255, 220, 50, 0.35);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 20px rgba(255, 220, 50, 0.2);
+      background: rgba(50, 47, 15, 0.95);
+      border-color: rgba(255, 220, 50, 0.95);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 50px rgba(255, 220, 50, 0.8), 0 0 80px rgba(255, 220, 50, 0.4);
       transition: all 0.8s ease-in-out;
     }
 
     #enhancedCountdownTimer.time-warning {
-      background: rgba(45, 35, 30, 0.95);
-      border-color: rgba(255, 160, 50, 0.4);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 160, 50, 0.25);
+      background: rgba(55, 40, 15, 0.95);
+      border-color: rgba(255, 160, 50, 0.95);
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 55px rgba(255, 160, 50, 0.85), 0 0 85px rgba(255, 160, 50, 0.5);
       transition: all 0.8s ease-in-out;
     }
 
     #enhancedCountdownTimer.time-critical {
-      background: rgba(50, 30, 30, 0.95);
-      border-color: rgba(255, 100, 100, 0.5);
+      background: rgba(60, 20, 20, 0.95);
+      border-color: rgba(255, 60, 60, 1);
       transition: all 1s ease-in-out;
     }
 
@@ -1514,34 +1514,34 @@
 
     @keyframes redPulseSlow {
       0%, 100% {
-        border-color: rgba(255, 100, 100, 0.5);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 24px rgba(255, 100, 100, 0.3);
+        border-color: rgba(255, 60, 60, 0.95);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 55px rgba(255, 60, 60, 0.8), 0 0 90px rgba(255, 60, 60, 0.5);
       }
       50% {
-        border-color: rgba(255, 100, 100, 0.7);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 32px rgba(255, 100, 100, 0.4);
+        border-color: rgba(255, 60, 60, 1);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 70px rgba(255, 60, 60, 0.9), 0 0 110px rgba(255, 60, 60, 0.6);
       }
     }
 
     @keyframes redPulseMedium {
       0%, 100% {
-        border-color: rgba(255, 80, 80, 0.6);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 28px rgba(255, 80, 80, 0.35);
+        border-color: rgba(255, 50, 50, 0.95);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 60px rgba(255, 50, 50, 0.85), 0 0 95px rgba(255, 50, 50, 0.55);
       }
       50% {
-        border-color: rgba(255, 80, 80, 0.8);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 36px rgba(255, 80, 80, 0.5);
+        border-color: rgba(255, 50, 50, 1);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 75px rgba(255, 50, 50, 0.95), 0 0 115px rgba(255, 50, 50, 0.65);
       }
     }
 
     @keyframes redPulseFast {
       0%, 100% {
-        border-color: rgba(255, 60, 60, 0.7);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 32px rgba(255, 60, 60, 0.4);
+        border-color: rgba(255, 40, 40, 1);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 65px rgba(255, 40, 40, 0.9), 0 0 100px rgba(255, 40, 40, 0.6);
       }
       50% {
-        border-color: rgba(255, 60, 60, 0.9);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 60, 60, 0.6);
+        border-color: rgba(255, 30, 30, 1);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 80px rgba(255, 30, 30, 1), 0 0 120px rgba(255, 30, 30, 0.7);
       }
     }
 
@@ -1816,6 +1816,176 @@
         transform: translateY(0);
       }
     }
+
+    /* SKIP CLASS FEATURE */
+    #enhancedCountdownTimer .timer-class-item.skipped {
+      opacity: 0.4;
+      background: rgba(100, 100, 100, 0.15) !important;
+      border-color: rgba(150, 150, 150, 0.3) !important;
+      box-shadow: none !important;
+      animation: none !important;
+      text-decoration: line-through;
+      pointer-events: none;
+    }
+
+    #enhancedCountdownTimer .timer-class-item.skipped .timer-class-group::before {
+      content: "⚫ ";
+      color: rgba(150, 150, 150, 0.7);
+    }
+
+    #enhancedCountdownTimer .timer-class-item {
+      cursor: pointer;
+      user-select: none;
+      position: relative;
+    }
+
+    #enhancedCountdownTimer .timer-class-item:not(.skipped):active {
+      transform: scale(0.98);
+    }
+
+    /* Skip Class Confirmation Dialog */
+    #skipClassDialog {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(30, 30, 40, 0.98);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 24px;
+      min-width: 380px;
+      max-width: 90%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(138, 180, 255, 0.3);
+      backdrop-filter: blur(20px);
+      z-index: 100002;
+      display: none;
+      animation: scaleInFade 0.3s ease-out;
+    }
+
+    #skipClassDialog.show {
+      display: block;
+    }
+
+    #skipClassDialog .dialog-header {
+      font-size: 18px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    #skipClassDialog .dialog-message {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.8);
+      line-height: 1.5;
+      margin-bottom: 20px;
+    }
+
+    #skipClassDialog .dialog-class-info {
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 20px;
+      border-left: 3px solid rgba(255, 180, 50, 0.6);
+    }
+
+    #skipClassDialog .dialog-class-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    #skipClassDialog .dialog-class-time {
+      font-size: 13px;
+      color: rgba(255, 255, 255, 0.7);
+    }
+
+    #skipClassDialog .dialog-warning {
+      font-size: 13px;
+      color: rgba(255, 200, 100, 0.9);
+      margin-bottom: 20px;
+      padding: 10px;
+      background: rgba(255, 200, 100, 0.1);
+      border-radius: 6px;
+      border-left: 3px solid rgba(255, 200, 100, 0.5);
+    }
+
+    #skipClassDialog .dialog-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    #skipClassDialog .dialog-btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    #skipClassDialog .dialog-btn-cancel {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    #skipClassDialog .dialog-btn-cancel:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    #skipClassDialog .dialog-btn-confirm {
+      background: rgba(255, 100, 100, 0.8);
+      color: #fff;
+    }
+
+    #skipClassDialog .dialog-btn-confirm:hover {
+      background: rgba(255, 100, 100, 1);
+      box-shadow: 0 4px 12px rgba(255, 100, 100, 0.4);
+    }
+
+    #skipClassDialog .dialog-btn-undo {
+      background: rgba(100, 200, 255, 0.8);
+      color: #fff;
+    }
+
+    #skipClassDialog .dialog-btn-undo:hover {
+      background: rgba(100, 200, 255, 1);
+      box-shadow: 0 4px 12px rgba(100, 200, 255, 0.4);
+    }
+
+    #skipClassOverlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 100001;
+      display: none;
+    }
+
+    #skipClassOverlay.show {
+      display: block;
+    }
+
+    @keyframes slideInRight {
+      from {
+        opacity: 0;
+        transform: translateX(400px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+    /* END SKIP CLASS FEATURE */
+
     /* END CLASS COUNTDOWN TIMER */
     /* Responsive adjustments */
     @media (max-width: 600px) {
@@ -1860,6 +2030,30 @@
   </style>
 </head>
 <body>
+  <!-- ========== SKIP CLASS DIALOG ========== -->
+  <div id="skipClassOverlay"></div>
+  <div id="skipClassDialog">
+    <div class="dialog-header">
+      <span>⚠️</span>
+      <span>Skip Class Session</span>
+    </div>
+    <div class="dialog-message">
+      Do you want to skip this class for all students in this group?
+    </div>
+    <div class="dialog-class-info">
+      <div class="dialog-class-name" id="skipDialogClassName"></div>
+      <div class="dialog-class-time" id="skipDialogClassTime"></div>
+    </div>
+    <div class="dialog-warning">
+      ℹ️ Students' payments will automatically roll over to the next scheduled class. The skipped session will be grayed out in the calendar.
+    </div>
+    <div class="dialog-actions">
+      <button class="dialog-btn dialog-btn-cancel" onclick="SkipClassManager.cancelSkip()">Cancel</button>
+      <button class="dialog-btn dialog-btn-confirm" onclick="SkipClassManager.confirmSkip()">Skip Class</button>
+    </div>
+  </div>
+  <!-- ========== END SKIP CLASS DIALOG ========== -->
+
   <!-- ========== BEGIN FLOATING NAV HTML ========== -->
   <!-- Floating Navigation Bar -->
   <div id="floatingNav" class="floating-nav" style="display:none;">
@@ -10775,6 +10969,10 @@
           const yerevanData = convertLAToYerevanTime(classData.laTime);
           const countdown = formatCountdown(classData.secondsRemaining);
           
+          // Check if this class is skipped
+          const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
+          const isSkipped = window.SkipClassManager && window.SkipClassManager.isClassSkipped(classData.groupName, dateStr);
+          
           // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "in-progress" state
           // Determine card tint class based on time remaining
           let cardTintClass = '';
@@ -10807,9 +11005,10 @@
           // END CLASS COUNTDOWN TIMER FIX
 
           const isNext = index === 0;
+          const skippedClass = isSkipped ? 'skipped' : '';
 
           html += `
-            <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''}">
+            <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''} ${skippedClass}" data-group="${classData.groupName}" data-day="${classData.dayName}" data-time="${classData.laTime}">
               <div class="timer-class-header">
                 <span class="timer-class-icon">${stateIcon}</span>
                 <span class="timer-class-group">${classData.groupName}</span>
@@ -10827,6 +11026,35 @@
         });
 
         listContainer.innerHTML = html;
+      }
+
+      // Helper function to calculate class date
+      function calculateClassDateForTimer(dayName, laTime) {
+        const now = new Date();
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        let targetDate;
+        if (dayName === 'Today') {
+          targetDate = new Date(now);
+        } else if (dayName === 'Tomorrow') {
+          targetDate = new Date(now);
+          targetDate.setDate(targetDate.getDate() + 1);
+        } else {
+          // Find next occurrence of this day
+          const currentDay = now.getDay();
+          const targetDay = dayNames.indexOf(dayName);
+          let daysAhead = targetDay - currentDay;
+          if (daysAhead <= 0) daysAhead += 7;
+          
+          targetDate = new Date(now);
+          targetDate.setDate(targetDate.getDate() + daysAhead);
+        }
+        
+        // Format as YYYY-MM-DD
+        const year = targetDate.getFullYear();
+        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const day = String(targetDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
       }
 
       // Initialize timer
@@ -10916,6 +11144,304 @@
     });
     
     /* END CLASS COUNTDOWN TIMER */
+
+    // ============================================================================
+    // SKIP CLASS MANAGER - Smart Calendar + Timer Integration
+    // ============================================================================
+    /**
+     * Skip Class Manager
+     * - Double-click timer class items to skip
+     * - Automatic payment roll-over
+     * - Calendar integration with visual feedback
+     * - Undo functionality
+     */
+    window.SkipClassManager = (function() {
+      // Skipped classes data structure: { groupName: { 'YYYY-MM-DD': true } }
+      let skippedClasses = loadSkippedClasses();
+      let pendingSkip = null;
+
+      // Load skipped classes from localStorage
+      function loadSkippedClasses() {
+        try {
+          const data = localStorage.getItem('skipped-classes:v1');
+          return data ? JSON.parse(data) : {};
+        } catch (error) {
+          console.error('[SkipClassManager] Error loading skipped classes:', error);
+          return {};
+        }
+      }
+
+      // Save skipped classes to localStorage
+      function saveSkippedClasses() {
+        try {
+          localStorage.setItem('skipped-classes:v1', JSON.stringify(skippedClasses));
+          console.log('[SkipClassManager] Saved skipped classes:', skippedClasses);
+        } catch (error) {
+          console.error('[SkipClassManager] Error saving skipped classes:', error);
+        }
+      }
+
+      // Calculate the date for a class (Today, Tomorrow, or specific day)
+      function calculateClassDate(dayName, laTime) {
+        const now = new Date();
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        let targetDate;
+        if (dayName === 'Today') {
+          targetDate = new Date(now);
+        } else if (dayName === 'Tomorrow') {
+          targetDate = new Date(now);
+          targetDate.setDate(targetDate.getDate() + 1);
+        } else {
+          // Find next occurrence of this day
+          const currentDay = now.getDay();
+          const targetDay = dayNames.indexOf(dayName);
+          let daysAhead = targetDay - currentDay;
+          if (daysAhead <= 0) daysAhead += 7;
+          
+          targetDate = new Date(now);
+          targetDate.setDate(targetDate.getDate() + daysAhead);
+        }
+        
+        // Format as YYYY-MM-DD
+        const year = targetDate.getFullYear();
+        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+        const day = String(targetDate.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
+      // Check if a class is skipped
+      function isClassSkipped(groupName, dateStr) {
+        return skippedClasses[groupName] && skippedClasses[groupName][dateStr] === true;
+      }
+
+      // Skip a class
+      function skipClass(groupName, dateStr, classInfo) {
+        if (!skippedClasses[groupName]) {
+          skippedClasses[groupName] = {};
+        }
+        skippedClasses[groupName][dateStr] = true;
+        saveSkippedClasses();
+        
+        console.log('[SkipClassManager] Skipped class:', groupName, dateStr);
+        
+        // Dispatch event for calendar refresh
+        window.dispatchEvent(new CustomEvent('classSkipped', { 
+          detail: { groupName, date: dateStr, classInfo } 
+        }));
+        
+        // Refresh timer display
+        if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
+          window.ClassCountdownTimer.destroy();
+          setTimeout(() => {
+            window.ClassCountdownTimer.init();
+          }, 100);
+        }
+        
+        // Refresh calendar if visible
+        if (typeof renderCalendar === 'function') {
+          try {
+            renderCalendar();
+          } catch (error) {
+            console.warn('[SkipClassManager] Could not refresh calendar:', error);
+          }
+        }
+      }
+
+      // Unskip a class (undo)
+      function unskipClass(groupName, dateStr) {
+        if (skippedClasses[groupName]) {
+          delete skippedClasses[groupName][dateStr];
+          if (Object.keys(skippedClasses[groupName]).length === 0) {
+            delete skippedClasses[groupName];
+          }
+          saveSkippedClasses();
+        }
+        
+        console.log('[SkipClassManager] Unskipped class:', groupName, dateStr);
+        
+        // Dispatch event for calendar refresh
+        window.dispatchEvent(new CustomEvent('classUnskipped', { 
+          detail: { groupName, date: dateStr } 
+        }));
+        
+        // Refresh timer display
+        if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
+          window.ClassCountdownTimer.destroy();
+          setTimeout(() => {
+            window.ClassCountdownTimer.init();
+          }, 100);
+        }
+        
+        // Refresh calendar if visible
+        if (typeof renderCalendar === 'function') {
+          try {
+            renderCalendar();
+          } catch (error) {
+            console.warn('[SkipClassManager] Could not refresh calendar:', error);
+          }
+        }
+      }
+
+      // Show skip confirmation dialog
+      function showSkipDialog(classData) {
+        pendingSkip = classData;
+        
+        const dialog = document.getElementById('skipClassDialog');
+        const overlay = document.getElementById('skipClassOverlay');
+        const classNameEl = document.getElementById('skipDialogClassName');
+        const classTimeEl = document.getElementById('skipDialogClassTime');
+        
+        if (!dialog || !overlay) {
+          console.error('[SkipClassManager] Dialog elements not found');
+          return;
+        }
+        
+        // Populate dialog
+        classNameEl.textContent = classData.groupName;
+        classTimeEl.textContent = `${classData.dayName} at ${classData.laTime}`;
+        
+        // Show dialog
+        overlay.classList.add('show');
+        dialog.classList.add('show');
+      }
+
+      // Hide skip dialog
+      function hideSkipDialog() {
+        const dialog = document.getElementById('skipClassDialog');
+        const overlay = document.getElementById('skipClassOverlay');
+        
+        if (dialog) dialog.classList.remove('show');
+        if (overlay) overlay.classList.remove('show');
+        
+        pendingSkip = null;
+      }
+
+      // Confirm skip
+      function confirmSkip() {
+        if (!pendingSkip) return;
+        
+        const dateStr = calculateClassDate(pendingSkip.dayName, pendingSkip.laTime);
+        skipClass(pendingSkip.groupName, dateStr, pendingSkip);
+        hideSkipDialog();
+        
+        // Show success notification
+        showNotification(`✓ Class skipped: ${pendingSkip.groupName} on ${pendingSkip.dayName}`, 'success');
+      }
+
+      // Cancel skip
+      function cancelSkip() {
+        hideSkipDialog();
+      }
+
+      // Show notification (simple version)
+      function showNotification(message, type = 'info') {
+        // Create notification element
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 80px;
+          right: 20px;
+          background: ${type === 'success' ? 'rgba(34, 197, 94, 0.95)' : 'rgba(59, 130, 246, 0.95)'};
+          color: white;
+          padding: 16px 24px;
+          border-radius: 12px;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+          z-index: 100003;
+          font-size: 14px;
+          font-weight: 500;
+          animation: slideInRight 0.3s ease-out;
+          max-width: 350px;
+        `;
+        notification.textContent = message;
+        
+        document.body.appendChild(notification);
+        
+        // Auto-remove after 3 seconds
+        setTimeout(() => {
+          notification.style.opacity = '0';
+          notification.style.transform = 'translateX(400px)';
+          notification.style.transition = 'all 0.3s ease-out';
+          setTimeout(() => notification.remove(), 300);
+        }, 3000);
+      }
+
+      // Initialize - attach double-click handlers to timer items
+      function init() {
+        // Wait for timer to be rendered, then attach handlers
+        const attachHandlers = () => {
+          const timerElement = document.getElementById('enhancedCountdownTimer');
+          if (!timerElement) return;
+          
+          // Use event delegation for dynamic timer items
+          timerElement.addEventListener('dblclick', (e) => {
+            const classItem = e.target.closest('.timer-class-item');
+            if (!classItem || classItem.classList.contains('skipped')) return;
+            
+            // Extract class data from the element
+            const groupNameEl = classItem.querySelector('.timer-class-group');
+            const dayNameEl = classItem.querySelector('.timer-class-day');
+            const timeEl = classItem.querySelector('.timer-class-time');
+            
+            if (!groupNameEl || !dayNameEl || !timeEl) return;
+            
+            const groupName = groupNameEl.textContent.trim();
+            const dayName = dayNameEl.textContent.trim();
+            const laTime = timeEl.textContent.replace(' LA', '').trim();
+            
+            const classData = {
+              groupName,
+              dayName,
+              laTime
+            };
+            
+            showSkipDialog(classData);
+          });
+        };
+        
+        // Try attaching handlers after a short delay
+        setTimeout(attachHandlers, 500);
+        
+        // Also attach when timer is reinitialized
+        window.addEventListener('groups:updated', () => setTimeout(attachHandlers, 600));
+        window.addEventListener('schedules:updated', () => setTimeout(attachHandlers, 600));
+        
+        console.log('[SkipClassManager] Initialized');
+      }
+
+      // Public API
+      return {
+        init,
+        isClassSkipped,
+        skipClass,
+        unskipClass,
+        confirmSkip,
+        cancelSkip,
+        getSkippedClasses: () => ({ ...skippedClasses })
+      };
+    })();
+
+    // Initialize Skip Class Manager
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        SkipClassManager.init();
+      });
+    } else {
+      SkipClassManager.init();
+    }
+
+    // Listen for skip events to update calendar
+    window.addEventListener('classSkipped', (event) => {
+      console.log('[SkipClassManager] Class skipped event:', event.detail);
+    });
+
+    window.addEventListener('classUnskipped', (event) => {
+      console.log('[SkipClassManager] Class unskipped event:', event.detail);
+    });
+    
+    // ============================================================================
+    // END SKIP CLASS MANAGER
+    // ============================================================================
 
     // Initialize Floating Nav on DOM ready
     if (document.readyState === 'loading') {
@@ -11479,6 +12005,19 @@
       const laToday = getLADate();
       const todayStr = formatDateYYYYMMDD(laToday);
       
+      // CHECK: Is this class skipped?
+      const groupName = student.group;
+      if (groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr)) {
+        return {
+          status: 'skipped',
+          paid: false,
+          amount: 0,
+          balance: student.balance || 0,
+          message: 'Class skipped - payments roll over',
+          showActions: false
+        };
+      }
+      
       // RULE 1: Skip dates before November 1, 2025
       if (classDate < CALENDAR_START_DATE) {
         return {
@@ -11719,21 +12258,35 @@
         const hasClasses = dayData.studentsWithClass.length > 0;
         const dateStr = formatDateYYYYMMDD(dayData.date);
         
+        // Check if any classes are skipped on this day
+        const hasSkippedClass = hasClasses && dayData.studentsWithClass.some(classInfo => {
+          const groupName = window.groupsCache?.find(g => g.name === classInfo.student.group)?.name;
+          return groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
+        });
+        
+        // Determine cell styling based on skipped status
+        const cellBgColor = hasSkippedClass ? 'rgba(100, 100, 100, 0.12)' : 
+                            isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)';
+        const cellBorderColor = hasSkippedClass ? 'rgba(150, 150, 150, 0.3)' : 
+                                isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)';
+        
         html += `
           <div onclick="openDayDetails('${dateStr}', ${JSON.stringify(dayData).replace(/"/g, '&quot;')})" 
-               style="min-height: 80px; background: ${isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)'}; 
-                      border: 1px solid ${isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)'}; 
+               style="min-height: 80px; background: ${cellBgColor}; 
+                      border: 1px solid ${cellBorderColor}; 
                       border-radius: 8px; padding: 8px; display: flex; flex-direction: column; 
                       cursor: ${hasClasses ? 'pointer' : 'default'}; 
-                      transition: all 0.2s;"
+                      transition: all 0.2s;
+                      ${hasSkippedClass ? 'opacity: 0.5;' : ''}"
                onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
-               onmouseout="this.style.background='${isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)'}'; this.style.borderColor='${isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)'}';">
-            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : 'white'}; margin-bottom: 8px;">
+               onmouseout="this.style.background='${cellBgColor}'; this.style.borderColor='${cellBorderColor}';">
+            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : hasSkippedClass ? 'rgba(150,150,150,0.8)' : 'white'}; margin-bottom: 8px; ${hasSkippedClass ? 'text-decoration: line-through;' : ''}">
               ${dayData.day}
               ${isToday ? '<span style="font-size: 9px; color: #8ab4ff; margin-left: 4px;">TODAY</span>' : ''}
+              ${hasSkippedClass ? '<span style="font-size: 9px; color: rgba(150,150,150,0.7); margin-left: 4px;">⚫ SKIPPED</span>' : ''}
             </div>
             <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;">
-              ${hasClasses ? renderDayDots(dayData) : ''}
+              ${hasClasses ? renderDayDots(dayData, dateStr) : ''}
             </div>
             ${hasClasses ? `<div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: center;">${dayData.studentsWithClass.length} class${dayData.studentsWithClass.length !== 1 ? 'es' : ''}</div>` : ''}
           </div>
@@ -11743,7 +12296,7 @@
       grid.innerHTML = html;
     }
     
-    function renderDayDots(dayData) {
+    function renderDayDots(dayData, dateStr) {
       let html = '';
       
       dayData.studentsWithClass.forEach((classInfo, index) => {
@@ -11754,36 +12307,43 @@
           return;
         }
         
+        // Check if this class is skipped
+        const groupName = window.groupsCache?.find(g => g.name === student.group)?.name;
+        const isSkipped = groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
+        
         let dotColor;
         
-        switch (status) {
-          case 'paid':
-          case 'deducted':
-          case 'low-balance':
-            dotColor = '#22c55e'; // Green - Paid
-            break;
-          case 'pending':
-            dotColor = '#3b82f6'; // Blue - Future class with balance
-            break;
-          case 'absent':
-            dotColor = '#94a3b8'; // Gray - Absent
-            break;
-          case 'unpaid':
-            dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
-            break;
-          case 'future':
-            dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
-            break;
-          default:
-            dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
-            break;
+        if (isSkipped) {
+          dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped classes
+        } else {
+          switch (status) {
+            case 'paid':
+            case 'deducted':
+            case 'low-balance':
+              dotColor = '#22c55e'; // Green - Paid
+              break;
+            case 'pending':
+              dotColor = '#3b82f6'; // Blue - Future class with balance
+              break;
+            case 'absent':
+              dotColor = '#94a3b8'; // Gray - Absent
+              break;
+            case 'unpaid':
+              dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
+              break;
+            case 'future':
+              dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
+              break;
+            default:
+              dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
+              break;
+          }
         }
         
-        const dateStr = formatDateYYYYMMDD(dayData.date);
-        const statusText = status === 'paid' || status === 'deducted' ? 'Paid' : 
+        const statusText = isSkipped ? 'Skipped' :
+                          status === 'paid' || status === 'deducted' ? 'Paid' : 
                           status === 'pending' ? 'Future' :
                           status === 'future' ? 'Scheduled' :
-                          status === 'absent' ? 'Absent' : 'Unpaid';
                           status === 'absent' ? 'Absent' : 'Unpaid';
         
         html += `
