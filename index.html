@@ -11848,26 +11848,50 @@
     }
     
     function markAsAbsent(studentId, dateStr) {
+      // Convert to number for consistency
+      const numericId = parseInt(studentId);
+      
       // Close detail popup
       const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.click();
+      if (overlay) {
+        const detailModal = document.querySelector('[onclick*="calendarDetailOverlay"]');
+        if (detailModal && detailModal.parentElement) {
+          detailModal.parentElement.remove();
+        }
+        overlay.remove();
+      }
       
-      const absentKey = `absent:${studentId}:${dateStr}`;
+      // Close day details panel if open
+      closeDayDetails();
+      
+      const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.setItem(absentKey, 'true');
       
-      showToast('🚫 Marked as absent', 'success');
+      showToast('🚫 Marked as absent');
       renderCalendar();
     }
     
     function unmarkAbsent(studentId, dateStr) {
+      // Convert to number for consistency
+      const numericId = parseInt(studentId);
+      
       // Close detail popup
       const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.click();
+      if (overlay) {
+        const detailModal = document.querySelector('[onclick*="calendarDetailOverlay"]');
+        if (detailModal && detailModal.parentElement) {
+          detailModal.parentElement.remove();
+        }
+        overlay.remove();
+      }
       
-      const absentKey = `absent:${studentId}:${dateStr}`;
+      // Close day details panel if open
+      closeDayDetails();
+      
+      const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.removeItem(absentKey);
       
-      showToast('↩️ Unmarked absent', 'success');
+      showToast('↩️ Unmarked absent');
       renderCalendar();
     }
     
