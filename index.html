@@ -4518,7 +4518,7 @@
         today.setHours(0, 0, 0, 0);
         const afterDate = Math.floor(today.getTime() / 1000);
         
-        const query = `from:hrachfilm@gmail.com subject:Zelle after:${afterDate}`;
+        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
         const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
         
         const searchResponse = await fetch(searchUrl, {
@@ -4647,7 +4647,7 @@
         today.setHours(0, 0, 0, 0);
         const afterDate = Math.floor(today.getTime() / 1000);
         
-        const query = `from:hrachfilm@gmail.com subject:Zelle after:${afterDate}`;
+        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
         const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
         
         const searchResponse = await fetch(searchUrl, {
@@ -5036,6 +5036,7 @@
     // ============================================================================
     
   let currentPaymentPopupData = null;
+  let savedPaymentDataForLinking = null; // PERSISTENT storage for linking operations
   let paymentRenderRAF = null;
   let paymentRenderToken = 0;
   let lastPopupOpenTime = 0; // Debounce double-click
@@ -5483,6 +5484,10 @@
         return;
       }
       
+      // CRITICAL: Save to persistent storage IMMEDIATELY before opening any modals
+      savedPaymentDataForLinking = { ...currentPaymentPopupData };
+      console.log('💾 SAVED payment data to persistent storage:', savedPaymentDataForLinking);
+      
       console.log('✅ Payment selected, payment ID:', currentPaymentPopupData.paymentId);
       console.log('✅ Payment details:', {
         id: currentPaymentPopupData.paymentId,
@@ -5648,17 +5653,27 @@
         return;
       }
       
-      // CRITICAL FIX: Store payment data IMMEDIATELY before ANY modal operations
-      // because closing modals may clear currentPaymentPopupData
-      const paymentDataSnapshot = currentPaymentPopupData ? { ...currentPaymentPopupData } : null;
+      // CRITICAL FIX: Try multiple sources for payment data
+      // 1. First try current popup data
+      // 2. Fall back to persistent saved data
+      // 3. If both are null, fail gracefully
+      let paymentDataSnapshot = currentPaymentPopupData ? { ...currentPaymentPopupData } : null;
+      
+      if (!paymentDataSnapshot && savedPaymentDataForLinking) {
+        console.log('⚠️ currentPaymentPopupData was null, using savedPaymentDataForLinking');
+        paymentDataSnapshot = { ...savedPaymentDataForLinking };
+      }
       
       if (!paymentDataSnapshot) {
+        console.error('❌ No payment data available from any source');
+        console.error('   - currentPaymentPopupData:', currentPaymentPopupData);
+        console.error('   - savedPaymentDataForLinking:', savedPaymentDataForLinking);
         showNotification('❌ No payment selected', 'error');
         closeLinkStudentModal();
         return;
       }
       
-      console.log('💾 Payment data snapshot saved:', paymentDataSnapshot);
+      console.log('💾 Payment data snapshot confirmed:', paymentDataSnapshot);
       
       try {
   const students = getCachedStudents();
@@ -5753,6 +5768,11 @@
         recomputePaymentResolutions();
         
         showNotification(`✅ Payment linked to ${student.name}`, 'success');
+        
+        // Clear persistent storage after successful link
+        savedPaymentDataForLinking = null;
+        console.log('🧹 Cleared savedPaymentDataForLinking after successful link');
+        
         closeLinkStudentModal();
         closePaymentActionsPopup();
         renderPaymentEmailsView();
@@ -5760,6 +5780,8 @@
       } catch (error) {
         console.error('Error linking payment:', error);
         showNotification('❌ Failed to link payment', 'error');
+        // Clear persistent storage on error too
+        savedPaymentDataForLinking = null;
       }
     }
     
@@ -5982,7 +6004,7 @@
         showNotification(`🔍 Syncing ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`, 'info');
         
         // Build Gmail search query
-        const query = `from:hrachfilm@gmail.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
+        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
         console.log('   Query string:', query);
         
         // Fetch all messages with pagination
