@@ -5641,11 +5641,17 @@
         return;
       }
       
-      if (!currentPaymentPopupData) {
+      // CRITICAL FIX: Store payment data IMMEDIATELY before ANY modal operations
+      // because closing modals may clear currentPaymentPopupData
+      const paymentDataSnapshot = currentPaymentPopupData ? { ...currentPaymentPopupData } : null;
+      
+      if (!paymentDataSnapshot) {
         showNotification('❌ No payment selected', 'error');
         closeLinkStudentModal();
         return;
       }
+      
+      console.log('💾 Payment data snapshot saved:', paymentDataSnapshot);
       
       try {
   const students = getCachedStudents();
@@ -5673,7 +5679,7 @@
         // - manuallyLinked: flag to trigger manual resolution path
         // - linkedAt: timestamp for audit trail
         const payments = PaymentStore.getAll();
-        const payment = payments.find(p => p.id === currentPaymentPopupData.paymentId);
+        const payment = payments.find(p => p.id === paymentDataSnapshot.paymentId);
         
         if (!payment) {
           showNotification('❌ Payment not found', 'error');
