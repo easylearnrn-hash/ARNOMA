@@ -3625,17 +3625,53 @@
         .trim();
     }
     
+    // Enhanced duplicate detection per developer command
     function buildPaymentDuplicateKey(payment) {
       if (!payment) return null;
+      
       const amount = parseFloat(payment.amount);
       const payer = (payment.payerName || payment.senderName || '').toLowerCase().trim();
+      
+      // Use the actual transaction date from email, not the fetch date
       const dateSource = payment.emailDate || payment.date || payment.createdAt;
       const date = dateSource ? new Date(dateSource) : null;
+      
       if (!payer || Number.isNaN(amount) || !date || Number.isNaN(date.getTime())) {
+        console.warn('⚠️ Cannot build duplicate key - missing data:', { payer, amount, date });
         return null;
       }
+      
+      // Use date only (ignore time) for duplicate detection
       const dateKey = date.toISOString().split('T')[0];
-      return `${dateKey}|${amount.toFixed(2)}|${payer}`;
+      const key = `${dateKey}|${amount.toFixed(2)}|${payer}`;
+      
+      return key;
+    }
+    
+    // Per developer command: Check if payment is duplicate by Gmail ID or composite key
+    function isDuplicatePayment(gmailId, payment, existingPayments) {
+      // Check 1: Gmail ID already exists
+      const gmailIdExists = existingPayments.some(p => p.gmailId === gmailId || p.emailId === gmailId);
+      if (gmailIdExists) {
+        console.log(`⚠️ Skipped duplicate email payment (Gmail ID exists): ${gmailId}`);
+        return true;
+      }
+      
+      // Check 2: Composite key (payer + amount + date)
+      const compositeKey = buildPaymentDuplicateKey(payment);
+      if (!compositeKey) return false;
+      
+      const compositeExists = existingPayments.some(p => {
+        const existingKey = buildPaymentDuplicateKey(p);
+        return existingKey === compositeKey;
+      });
+      
+      if (compositeExists) {
+        console.log(`⚠️ Skipped duplicate email payment from ${payment.payerName} ($${payment.amount})`);
+        return true;
+      }
+      
+      return false;
     }
 
     /**
@@ -4384,14 +4420,6 @@
         console.log(`✅ Found ${searchData.messages.length} payment emails`);
         
         const existingPayments = PaymentStore.getAll();
-        const existingEmailIds = new Set();
-        const existingCompositeKeys = new Set();
-        existingPayments.forEach(existingPayment => {
-          const idsToTrack = [existingPayment.emailId, existingPayment.gmailId].filter(Boolean);
-          idsToTrack.forEach(id => existingEmailIds.add(id));
-          const compositeKey = buildPaymentDuplicateKey(existingPayment);
-          if (compositeKey) existingCompositeKeys.add(compositeKey);
-        });
         
         const payments = [];
         
@@ -4405,18 +4433,13 @@
             const messageData = await messageResponse.json();
             const payment = parseZelleEmail(messageData);
             if (payment) {
-              const idsToCheck = [payment.emailId, payment.gmailId].filter(Boolean);
-              const isExistingId = idsToCheck.some(id => existingEmailIds.has(id));
-              if (isExistingId) {
-                continue;
+              // Use enhanced duplicate detection
+              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPayments)) {
+                continue; // Skip duplicate (already logged in isDuplicatePayment)
               }
-              const compositeKey = buildPaymentDuplicateKey(payment);
-              if (compositeKey && existingCompositeKeys.has(compositeKey)) {
-                continue;
-              }
-              idsToCheck.forEach(id => existingEmailIds.add(id));
-              if (compositeKey) existingCompositeKeys.add(compositeKey);
+              
               payments.push(payment);
+              existingPayments.push(payment); // Add to list for subsequent checks
             }
           }
           
@@ -4508,14 +4531,6 @@
         console.log(`✅ Found ${searchData.messages.length} payment emails`);
         
         const existingPayments = PaymentStore.getAll();
-        const existingEmailIds = new Set();
-        const existingCompositeKeys = new Set();
-        existingPayments.forEach(existingPayment => {
-          const idsToTrack = [existingPayment.emailId, existingPayment.gmailId].filter(Boolean);
-          idsToTrack.forEach(id => existingEmailIds.add(id));
-          const compositeKey = buildPaymentDuplicateKey(existingPayment);
-          if (compositeKey) existingCompositeKeys.add(compositeKey);
-        });
         
         const payments = [];
         
@@ -4529,16 +4544,13 @@
             const messageData = await messageResponse.json();
             const payment = parseZelleEmail(messageData);
             if (payment) {
-              const idsToCheck = [payment.emailId, payment.gmailId].filter(Boolean);
-              const isExistingId = idsToCheck.some(id => existingEmailIds.has(id));
-              if (isExistingId) continue;
+              // Use enhanced duplicate detection
+              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPayments)) {
+                continue; // Skip duplicate (already logged in isDuplicatePayment)
+              }
               
-              const compositeKey = buildPaymentDuplicateKey(payment);
-              if (compositeKey && existingCompositeKeys.has(compositeKey)) continue;
-              
-              idsToCheck.forEach(id => existingEmailIds.add(id));
-              if (compositeKey) existingCompositeKeys.add(compositeKey);
               payments.push(payment);
+              existingPayments.push(payment); // Add to list for subsequent checks
             }
           }
           
@@ -4614,84 +4626,130 @@
         
         // Parse memo/message - try multiple patterns
         let memo = '';
+        let studentNameFromMessage = '';
         
-        // Pattern 1: "Memo:" or "Message:" or "Note:" (text/plain format)
-        let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
-        if (memoMatch) {
-          memo = memoMatch[1].trim();
+        // Pattern 1: "Message from [Payer]: [Student Name]" (US Bank specific - extract student name)
+        let messageFromMatch = bodyText.match(/Message\s+from\s+[^:]+:\s*([A-Za-z\s'\-]+)/i);
+        if (messageFromMatch) {
+          studentNameFromMessage = messageFromMatch[1].trim();
+          memo = studentNameFromMessage; // Use as memo too
+          console.log('📩 Extracted student name from message:', studentNameFromMessage);
         } else {
-          // Pattern 2: "Message from [Sender]: [ActualMessage]" (US Bank specific)
-          memoMatch = bodyText.match(/Message from [^:]+:\s*([^\n]+)/i);
+          // Pattern 2: "Memo:" or "Message:" or "Note:" (text/plain format)
+          let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
           if (memoMatch) {
             memo = memoMatch[1].trim();
           }
         }
         
-        console.log('📧 Parsed email:', { amount, senderName, memo, bodyPreview: bodyText.substring(0, 200) });
+        console.log('📧 Parsed email:', { amount, senderName, memo, studentNameFromMessage, bodyPreview: bodyText.substring(0, 200) });
         
         if (!amount || !senderName) return null;
         
-        // Enhanced student matching using memo and sender name
+        // Enhanced student matching per developer command
         const students = getCachedStudents();
         let matchedStudent = null;
         let studentEmail = '';
         let groupId = '';
         
-        if (memo || senderName) {
-          const searchText = (memo || senderName).toLowerCase().trim();
-          const senderLower = senderName.toLowerCase().trim();
+        // Priority 1: Use extracted student name from "Message from [payer]: [student]"
+        if (studentNameFromMessage) {
+          const searchName = studentNameFromMessage.toLowerCase().trim();
           
-          // Priority 1: Exact name match (memo or sender)
-          matchedStudent = students.find(s => 
-            s.name.toLowerCase() === searchText || 
-            s.name.toLowerCase() === senderLower
-          );
+          // Try exact name match
+          matchedStudent = students.find(s => s.name.toLowerCase() === searchName);
           
-          // Priority 2: Alias match (check if memo/sender matches any alias)
+          // Try alias match if no exact match
           if (!matchedStudent) {
             matchedStudent = students.find(s => {
               if (!s.aliases || s.aliases.length === 0) return false;
-              return s.aliases.some(alias => 
-                alias.toLowerCase().trim() === searchText ||
-                alias.toLowerCase().trim() === senderLower
-              );
+              return s.aliases.some(alias => alias.toLowerCase().trim() === searchName);
             });
           }
           
-          // Priority 3: Partial name match (contains)
+          // Try partial match if still no match
           if (!matchedStudent) {
             matchedStudent = students.find(s => {
               const nameLower = s.name.toLowerCase();
-              return nameLower.includes(searchText) || 
-                     searchText.includes(nameLower) ||
-                     nameLower.includes(senderLower) ||
-                     senderLower.includes(nameLower);
-            });
-          }
-          
-          // Priority 4: Partial alias match
-          if (!matchedStudent) {
-            matchedStudent = students.find(s => {
-              if (!s.aliases || s.aliases.length === 0) return false;
-              return s.aliases.some(alias => {
-                const aliasLower = alias.toLowerCase().trim();
-                return aliasLower.includes(searchText) || 
-                       searchText.includes(aliasLower) ||
-                       aliasLower.includes(senderLower) ||
-                       senderLower.includes(aliasLower);
-              });
+              return nameLower.includes(searchName) || searchName.includes(nameLower);
             });
           }
           
           if (matchedStudent) {
-            studentEmail = matchedStudent.email || '';
-            groupId = matchedStudent.groupId || '';
+            console.log(`✅ Matched student from message: ${matchedStudent.name}`);
           }
         }
         
+        // Priority 2: If no student name extracted, try memo field
+        if (!matchedStudent && memo) {
+          const searchText = memo.toLowerCase().trim();
+          
+          // Exact name match
+          matchedStudent = students.find(s => s.name.toLowerCase() === searchText);
+          
+          // Alias match
+          if (!matchedStudent) {
+            matchedStudent = students.find(s => {
+              if (!s.aliases || s.aliases.length === 0) return false;
+              return s.aliases.some(alias => alias.toLowerCase().trim() === searchText);
+            });
+          }
+          
+          // Partial name match
+          if (!matchedStudent) {
+            matchedStudent = students.find(s => {
+              const nameLower = s.name.toLowerCase();
+              return nameLower.includes(searchText) || searchText.includes(nameLower);
+            });
+          }
+          
+          if (matchedStudent) {
+            console.log(`✅ Matched student from memo: ${matchedStudent.name}`);
+          }
+        }
+        
+        // Priority 3: Try matching sender name as last resort
+        if (!matchedStudent) {
+          const senderLower = senderName.toLowerCase().trim();
+          
+          // Exact match
+          matchedStudent = students.find(s => s.name.toLowerCase() === senderLower);
+          
+          // Alias match
+          if (!matchedStudent) {
+            matchedStudent = students.find(s => {
+              if (!s.aliases || s.aliases.length === 0) return false;
+              return s.aliases.some(alias => alias.toLowerCase().trim() === senderLower);
+            });
+          }
+          
+          // Partial match
+          if (!matchedStudent) {
+            matchedStudent = students.find(s => {
+              const nameLower = s.name.toLowerCase();
+              return nameLower.includes(senderLower) || senderLower.includes(nameLower);
+            });
+          }
+          
+          if (matchedStudent) {
+            console.log(`✅ Matched student from sender: ${matchedStudent.name}`);
+          }
+        }
+        
+        // Extract student email and group if matched
+        if (matchedStudent) {
+          studentEmail = matchedStudent.email || '';
+          groupId = matchedStudent.groupId || '';
+        } else {
+          console.log(`⚠️ No student match found for: ${studentNameFromMessage || memo || senderName}`);
+        }
+        
         // Determine final display names
-        const finalStudentName = matchedStudent ? matchedStudent.name : (memo || 'Unmatched');
+        const finalStudentName = matchedStudent ? matchedStudent.name : 'Unmatched';
         const finalPayerName = senderName;
+        
+        console.log(`📩 Parsed Zelle payment: ${finalPayerName} → ${finalStudentName} ($${amount})`);
+
         
         // Create payment object with full resolution metadata
         const payment = {
@@ -5677,14 +5735,6 @@
         text.textContent = `Processing ${allMessages.length}...`;
         
         const existingPayments = PaymentStore.getAll();
-        const existingEmailIds = new Set();
-        const existingCompositeKeys = new Set();
-        existingPayments.forEach(existingPayment => {
-          const idsToTrack = [existingPayment.emailId, existingPayment.gmailId].filter(Boolean);
-          idsToTrack.forEach(id => existingEmailIds.add(id));
-          const compositeKey = buildPaymentDuplicateKey(existingPayment);
-          if (compositeKey) existingCompositeKeys.add(compositeKey);
-        });
         
         const payments = [];
         
@@ -5710,18 +5760,13 @@
             const messageData = await messageResponse.json();
             const payment = parseZelleEmail(messageData);
             if (payment) {
-              const idsToCheck = [payment.emailId, payment.gmailId].filter(Boolean);
-              const isExistingId = idsToCheck.some(id => existingEmailIds.has(id));
-              if (isExistingId) {
-                continue;
+              // Use enhanced duplicate detection
+              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPayments)) {
+                continue; // Skip duplicate (already logged in isDuplicatePayment)
               }
-              const compositeKey = buildPaymentDuplicateKey(payment);
-              if (compositeKey && existingCompositeKeys.has(compositeKey)) {
-                continue;
-              }
-              idsToCheck.forEach(id => existingEmailIds.add(id));
-              if (compositeKey) existingCompositeKeys.add(compositeKey);
+              
               payments.push(payment);
+              existingPayments.push(payment); // Add to list for subsequent checks
             }
           } catch (error) {
             console.error(`❌ Error processing message ${i + 1}/${allMessages.length}:`, error);
