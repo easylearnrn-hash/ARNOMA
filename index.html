@@ -11600,27 +11600,25 @@
         };
       }
       
-      // RULE 4: Red dots only for TODAY's unpaid classes
-      if (dateStr === todayStr) {
-        return {
-          status: 'unpaid',
-          paid: false,
-          amount: 0,
-          balance: balance,
-          message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
-          showActions: true
-        };
-      }
-      
-      // Future unpaid - no red dot, just gray/empty
-      return {
-        status: 'future-unpaid',
+      // UNPAID - Red dots persist indefinitely until payment received
+      // This applies to past, today, and future unpaid classes
+      const result = {
+        status: 'unpaid',
         paid: false,
         amount: 0,
         balance: balance,
-        message: 'Not yet due',
-        showActions: false
+        message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
+        showActions: classDate <= laToday // Only show action buttons for past/current dates
       };
+      
+      // Save snapshot for today's unpaid classes
+      if (dateStr === todayStr) {
+        saveCalendarSnapshot(dateStr, {
+          [studentId]: result
+        });
+      }
+      
+      return result;
     }
     
     function formatDateYYYYMMDD(date) {
@@ -11697,21 +11695,15 @@
             dotColor = '#94a3b8'; // Gray - Absent
             break;
           case 'unpaid':
-            dotColor = '#ef4444'; // Red - Unpaid (today only)
-            break;
-          case 'future-unpaid':
-            dotColor = '#cbd5e1'; // Light gray - Future unpaid (no red dot)
-            break;
           default:
-            dotColor = '#ef4444'; // Red - Default to unpaid
+            dotColor = '#ef4444'; // Red - Unpaid (persists indefinitely)
             break;
         }
         
         const dateStr = formatDateYYYYMMDD(dayData.date);
         const statusText = status === 'paid' || status === 'deducted' ? 'Paid' : 
                           status === 'pending' ? 'Future' :
-                          status === 'absent' ? 'Absent' :
-                          status === 'future-unpaid' ? 'Not yet due' : 'Unpaid';
+                          status === 'absent' ? 'Absent' : 'Unpaid';
         
         html += `
           <div class="calendar-dot" 
@@ -11771,16 +11763,7 @@
             statusText = 'Absent';
             statusIcon = '⚪';
             break;
-          case 'future-unpaid':
-            statusColor = '#cbd5e1';
-            statusText = 'Not yet due';
-            statusIcon = '⏳';
-            break;
           case 'unpaid':
-            statusColor = '#ef4444';
-            statusText = 'Unpaid';
-            statusIcon = '❌';
-            break;
           default:
             statusColor = '#ef4444';
             statusText = 'Unpaid';
@@ -11852,10 +11835,10 @@
     
     // Show individual student class details (when clicking a dot)
     function showStudentClassDetails(studentId, dateStr, classInfo) {
-      // Close day details if open
-      closeDayDetails();
+      // Don't close day details - keep it open for marking multiple absences
+      // closeDayDetails();
       
-      // Reuse existing showClassDetails function
+      // Show class details modal
       showClassDetails(studentId, dateStr, classInfo);
     }
     
@@ -11980,44 +11963,42 @@
       // Convert to number for consistency
       const numericId = parseInt(studentId);
       
-      // Close detail modal by ID
-      const modal = document.getElementById('classDetailModal');
-      if (modal) modal.remove();
-      
-      // Close overlay
-      const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.remove();
-      
-      // Close day details panel if open
-      closeDayDetails();
-      
       const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.setItem(absentKey, 'true');
       
       showToast('⚪ Marked as absent');
+      
+      // Close the detail modal only
+      const modal = document.getElementById('classDetailModal');
+      if (modal) modal.remove();
+      const overlay = document.getElementById('calendarDetailOverlay');
+      if (overlay) overlay.remove();
+      
+      // Refresh calendar to update dot colors
       renderCalendar();
+      
+      // Note: Day panel stays open for marking multiple absences
     }
     
     function unmarkAbsent(studentId, dateStr) {
       // Convert to number for consistency
       const numericId = parseInt(studentId);
       
-      // Close detail modal by ID
-      const modal = document.getElementById('classDetailModal');
-      if (modal) modal.remove();
-      
-      // Close overlay
-      const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.remove();
-      
-      // Close day details panel if open
-      closeDayDetails();
-      
       const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.removeItem(absentKey);
       
       showToast('↩️ Unmarked absent');
+      
+      // Close the detail modal only
+      const modal = document.getElementById('classDetailModal');
+      if (modal) modal.remove();
+      const overlay = document.getElementById('calendarDetailOverlay');
+      if (overlay) overlay.remove();
+      
+      // Refresh calendar to update dot colors
       renderCalendar();
+      
+      // Note: Day panel stays open for marking multiple absences
     }
     
     // Listen for payment/student updates to refresh calendar
