@@ -4138,11 +4138,58 @@
     }
     
     // ============================================================================
-    // GMAIL INTEGRATION
+    // GMAIL INTEGRATION - Enhanced for robust message retrieval
     // ============================================================================
     
     const GMAIL_CLIENT_ID = '67231383915-4kpdv0k6u517admvhl7jlejku7qtbsjj.apps.googleusercontent.com';
     const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
+    const GMAIL_CONNECTION_KEY = 'gmail-connection'; // Per developer command spec
+    
+    // Enhanced Gmail connection with persistent token management
+    function getGmailConnection() {
+      const stored = localStorage.getItem(GMAIL_CONNECTION_KEY);
+      if (!stored) return null;
+      
+      try {
+        const connection = JSON.parse(stored);
+        // Check if token is expired
+        if (connection.expiry_date && Date.now() >= connection.expiry_date) {
+          console.log('Gmail token expired');
+          localStorage.removeItem(GMAIL_CONNECTION_KEY);
+          return null;
+        }
+        return connection;
+      } catch (e) {
+        console.error('Error parsing Gmail connection:', e);
+        return null;
+      }
+    }
+    
+    function saveGmailConnection(token, expiresIn, userEmail = null) {
+      const connection = {
+        access_token: token,
+        expiry_date: Date.now() + (expiresIn * 1000),
+        user_email: userEmail,
+        connected_at: new Date().toISOString()
+      };
+      
+      localStorage.setItem(GMAIL_CONNECTION_KEY, JSON.stringify(connection));
+      localStorage.setItem(STORAGE_KEYS.GMAIL_TOKEN, token);
+      localStorage.setItem(STORAGE_KEYS.GMAIL_EXPIRY, connection.expiry_date.toString());
+      
+      gmailAccessToken = token;
+      gmailTokenExpiry = connection.expiry_date.toString();
+      
+      console.log('✅ Gmail connection saved, expires:', new Date(connection.expiry_date).toLocaleString());
+    }
+    
+    function clearGmailConnection() {
+      localStorage.removeItem(GMAIL_CONNECTION_KEY);
+      localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
+      localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
+      gmailAccessToken = null;
+      gmailTokenExpiry = null;
+    }
     
     // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
     // Gmail connection stability - check and refresh token automatically
@@ -4213,12 +4260,14 @@
       console.log('🔐 Current page URL:', window.location.href);
       console.log('🔐 Using redirect URI:', redirectUri);
       
+      // Enhanced OAuth flow with offline access and consent prompt
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${GMAIL_CLIENT_ID}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `response_type=token&` +
         `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
-        `prompt=consent`;
+        `access_type=offline&` +           // Request offline access for refresh tokens
+        `prompt=consent`;                   // Force consent screen to get refresh token
       
       console.log('📋 Full auth URL:', authUrl);
       console.log('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
@@ -4228,7 +4277,7 @@
     
     function handleOAuthCallback() {
       const hash = window.location.hash;
-      console.log('🔍 Checking for OAuth callback - hash:', hash);
+      console.log('🔍 Checking for OAuth callback - hash:', hash ? 'Found' : 'None');
       
       if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
@@ -4238,19 +4287,17 @@
         console.log('✅ OAuth token found, expires in:', expiresIn, 'seconds');
         
         if (token) {
-          gmailAccessToken = token;
-          const expiry = Date.now() + (expiresIn * 1000);
-          localStorage.setItem(STORAGE_KEYS.GMAIL_TOKEN, token);
-          localStorage.setItem(STORAGE_KEYS.GMAIL_EXPIRY, expiry.toString());
-          gmailTokenExpiry = expiry.toString();
+          // Save using enhanced connection storage
+          saveGmailConnection(token, expiresIn);
           
           updateGmailButtonState(true);
-          showNotification('✅ Gmail connected successfully!', 'success');
+          showNotification('✅ Gmail connected successfully! Token valid for 1 hour.', 'success');
           
           // Clear hash from URL
           window.history.replaceState(null, '', window.location.pathname);
           
-          // Auto-fetch payments
+          // Auto-fetch payments after connection
+          console.log('📥 Auto-fetching payments after connection...');
           setTimeout(() => refreshPayments(), 1000);
         }
       } else if (hash && hash.includes('error')) {
@@ -4384,8 +4431,13 @@
           // Recompute resolutions to populate group information
           await recomputePaymentResolutions();
           
-          // Data automatically synced to Supabase via PaymentStore.save()
-          console.log('✅ Payments auto-saved to Supabase cloud');
+          // Log success per developer command
+          console.log(`📥 Loaded ${payments.length} new payment${payments.length > 1 ? 's' : ''} from Gmail.`);
+          
+          // Dispatch update event per developer command
+          window.dispatchEvent(new CustomEvent('payments:updated', {
+            detail: { count: payments.length, source: 'gmail-sync' }
+          }));
           
           showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`, 'success');
           renderPaymentEmailsView();
@@ -4519,6 +4571,7 @@
         const dateHeader = headers.find(h => h.name === 'Date');
         const emailDate = dateHeader ? new Date(dateHeader.value) : new Date();
         
+        // Extract email body (multiple sources)
         let bodyText = '';
         if (messageData.payload.body && messageData.payload.body.data) {
           bodyText = atob(messageData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
@@ -4527,6 +4580,17 @@
           if (textPart && textPart.body && textPart.body.data) {
             bodyText = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'));
           }
+        }
+        
+        // Fallback to snippet if body is empty (per developer command)
+        if (!bodyText && messageData.snippet) {
+          bodyText = messageData.snippet;
+          console.log('📧 Using email snippet as fallback');
+        }
+        
+        if (!bodyText) {
+          console.warn('⚠️ No body text or snippet available for email:', messageData.id);
+          return null;
         }
         
         // Parse amount - universal pattern
@@ -8796,15 +8860,30 @@
       // Handle OAuth callback
       handleOAuthCallback();
       
-      // Update Gmail button state
-      if (gmailAccessToken) {
-        const expiry = parseInt(gmailTokenExpiry);
-        if (expiry && Date.now() < expiry) {
-          updateGmailButtonState(true);
-        } else {
-          localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
-          gmailAccessToken = null;
+      // Restore Gmail connection state (per developer command)
+      const connection = getGmailConnection();
+      if (connection && connection.access_token) {
+        gmailAccessToken = connection.access_token;
+        gmailTokenExpiry = connection.expiry_date.toString();
+        updateGmailButtonState(true);
+        console.log('✅ Gmail connection restored from storage');
+        console.log('   Connected at:', connection.connected_at);
+        console.log('   Expires:', new Date(connection.expiry_date).toLocaleString());
+        
+        // Add Gmail status indicator (🟢 connected)
+        showNotification('🟢 Gmail connected', 'success');
+      } else {
+        // Clear any stale tokens
+        if (gmailAccessToken) {
+          const expiry = parseInt(gmailTokenExpiry || '0');
+          if (expiry && Date.now() < expiry) {
+            updateGmailButtonState(true);
+          } else {
+            clearGmailConnection();
+            gmailAccessToken = null;
+            updateGmailButtonState(false);
+            console.log('🔴 Gmail disconnected (token expired)');
+          }
         }
       }
       
