@@ -2604,10 +2604,12 @@
       save: async function(payments) {
         try {
           // Strip fields to match minimal Supabase schema
+          // Only keep the basic fields that definitely exist
           const paymentsForSupabase = payments.map(p => {
             const { 
               createdAt,
               emailDate,
+              emailId,
               derivedStudentId, 
               linkedStudentId, 
               resolvedStudentName, 
@@ -2622,6 +2624,9 @@
           });
           
           console.log('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
+          if (paymentsForSupabase.length > 0) {
+            console.log('📋 Sample payment fields:', Object.keys(paymentsForSupabase[0]));
+          }
           
           // For bulk save, we'll upsert all payments
           // Supabase upsert uses 'id' as conflict resolution by default
