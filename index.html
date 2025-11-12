@@ -4533,13 +4533,26 @@
         const amountMatch = bodyText.match(/\$[\d,]+\.\d{2}/);
         const amount = amountMatch ? parseFloat(amountMatch[0].replace(/[$,]/g, '')) : 0;
         
-        // Parse sender name - simpler pattern
-        const fromMatch = bodyText.match(/From:\s*([^\n]+)/i);
+        // Parse sender name - look for "from [Name]" pattern
+        const fromMatch = bodyText.match(/from\s+([^\s].*?)(?:\s+was\s+deposited|\n|$)/i);
         const senderName = fromMatch ? fromMatch[1].trim() : 'Unknown';
         
-        // Parse memo/message - simpler pattern
-        const memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
-        const memo = memoMatch ? memoMatch[1].trim() : '';
+        // Parse memo/message - US Bank Zelle format: "Message from [Sender]: [ActualMessage]"
+        let memo = '';
+        
+        // Try pattern: "Message from [Name]: [Message]"
+        const messageFromMatch = bodyText.match(/Message from [^:]+:\s*([^\n]+)/i);
+        if (messageFromMatch) {
+          memo = messageFromMatch[1].trim();
+        } else {
+          // Fallback: Try generic "Message:" or "Memo:" or "Note:"
+          const genericMemoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
+          if (genericMemoMatch) {
+            memo = genericMemoMatch[1].trim();
+          }
+        }
+        
+        console.log('📧 Parsed email:', { amount, senderName, memo, bodyPreview: bodyText.substring(0, 200) });
         
         if (!amount || !senderName) return null;
         
