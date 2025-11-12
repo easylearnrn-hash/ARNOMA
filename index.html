@@ -12726,9 +12726,11 @@
       console.log('[UnpaidClassesModal] Opening modal for:', { studentId, initialDateStr });
       
       const students = getCachedStudents();
-      const student = students.find(s => s.id === studentId);
+      // Use loose equality to handle string/number mismatch
+      const student = students.find(s => s.id == studentId);
       if (!student) {
         console.error('[UnpaidClassesModal] Student not found:', studentId);
+        console.log('[UnpaidClassesModal] Available student IDs:', students.map(s => `${s.id} (${typeof s.id})`));
         return;
       }
       
@@ -12848,7 +12850,8 @@
       }
       
       const students = getCachedStudents();
-      const student = students.find(s => s.id === studentId);
+      // Use loose equality to handle string/number mismatch
+      const student = students.find(s => s.id == studentId);
       if (!student) return;
       
       const selectedDates = Array.from(checkboxes).map(cb => cb.dataset.date);
