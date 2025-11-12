@@ -4533,8 +4533,10 @@
         console.log(`✅ Found ${searchData.messages.length} payment emails`);
         
         const existingPayments = PaymentStore.getAll();
+        const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
         
         const payments = [];
+        const processedGmailIds = new Set();
         
         for (const message of searchData.messages) {
           const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
@@ -4546,13 +4548,19 @@
             const messageData = await messageResponse.json();
             const payment = parseZelleEmail(messageData);
             if (payment) {
-              // Use enhanced duplicate detection
-              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPayments)) {
+              // Check if already processed in this batch
+              if (processedGmailIds.has(payment.gmailId)) {
+                console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
+                continue;
+              }
+              
+              // Use enhanced duplicate detection against existing payments
+              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPaymentsForCheck)) {
                 continue; // Skip duplicate (already logged in isDuplicatePayment)
               }
               
               payments.push(payment);
-              existingPayments.push(payment); // Add to list for subsequent checks
+              processedGmailIds.add(payment.gmailId);
             }
           }
           
@@ -4560,7 +4568,7 @@
         }
         
         if (payments.length > 0) {
-          // Save new payments at the beginning (so newest are first)
+          // Save new payments combined with existing ones
           const allPayments = [...payments, ...existingPayments];
           await PaymentStore.save(allPayments);
           
@@ -4644,8 +4652,10 @@
         console.log(`✅ Found ${searchData.messages.length} payment emails`);
         
         const existingPayments = PaymentStore.getAll();
+        const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
         
         const payments = [];
+        const processedGmailIds = new Set();
         
         for (const message of searchData.messages) {
           const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
@@ -4657,13 +4667,19 @@
             const messageData = await messageResponse.json();
             const payment = parseZelleEmail(messageData);
             if (payment) {
-              // Use enhanced duplicate detection
-              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPayments)) {
+              // Check if already processed in this batch
+              if (processedGmailIds.has(payment.gmailId)) {
+                console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
+                continue;
+              }
+              
+              // Use enhanced duplicate detection against existing payments
+              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPaymentsForCheck)) {
                 continue; // Skip duplicate (already logged in isDuplicatePayment)
               }
               
               payments.push(payment);
-              existingPayments.push(payment); // Add to list for subsequent checks
+              processedGmailIds.add(payment.gmailId);
             }
           }
           
@@ -5879,8 +5895,10 @@
         text.textContent = `Processing ${allMessages.length}...`;
         
         const existingPayments = PaymentStore.getAll();
+        const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
         
         const payments = [];
+        const processedGmailIds = new Set();
         
         for (let i = 0; i < allMessages.length; i++) {
           const message = allMessages[i];
@@ -5904,13 +5922,19 @@
             const messageData = await messageResponse.json();
             const payment = parseZelleEmail(messageData);
             if (payment) {
-              // Use enhanced duplicate detection
-              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPayments)) {
+              // Check if already processed in this batch
+              if (processedGmailIds.has(payment.gmailId)) {
+                console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
+                continue;
+              }
+              
+              // Use enhanced duplicate detection against existing payments
+              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPaymentsForCheck)) {
                 continue; // Skip duplicate (already logged in isDuplicatePayment)
               }
               
               payments.push(payment);
-              existingPayments.push(payment); // Add to list for subsequent checks
+              processedGmailIds.add(payment.gmailId);
             }
           } catch (error) {
             console.error(`❌ Error processing message ${i + 1}/${allMessages.length}:`, error);
