@@ -11605,25 +11605,35 @@
         };
       }
       
-      // UNPAID - Red dots persist indefinitely until payment received
-      // This applies to past, today, and future unpaid classes
-      const result = {
-        status: 'unpaid',
-        paid: false,
-        amount: 0,
-        balance: balance,
-        message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
-        showActions: classDate <= laToday // Only show action buttons for past/current dates
-      };
-      
-      // Save snapshot for today's unpaid classes
+      // CRITICAL: Red dots ONLY for CURRENT DAY (not past, not future)
       if (dateStr === todayStr) {
+        // Current day unpaid - show red dot
+        const result = {
+          status: 'unpaid',
+          paid: false,
+          amount: 0,
+          balance: balance,
+          message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
+          showActions: true
+        };
+        
+        // Save snapshot for today's unpaid classes
         saveCalendarSnapshot(dateStr, {
           [studentId]: result
         });
+        
+        return result;
       }
       
-      return result;
+      // Future unpaid - no red dot, show as transparent/empty
+      return {
+        status: 'future',
+        paid: false,
+        amount: 0,
+        balance: balance,
+        message: 'Scheduled',
+        showActions: false
+      };
     }
     
     function formatDateYYYYMMDD(date) {
@@ -11700,14 +11710,21 @@
             dotColor = '#94a3b8'; // Gray - Absent
             break;
           case 'unpaid':
+            dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
+            break;
+          case 'future':
+            dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
+            break;
           default:
-            dotColor = '#ef4444'; // Red - Unpaid (persists indefinitely)
+            dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
             break;
         }
         
         const dateStr = formatDateYYYYMMDD(dayData.date);
         const statusText = status === 'paid' || status === 'deducted' ? 'Paid' : 
                           status === 'pending' ? 'Future' :
+                          status === 'future' ? 'Scheduled' :
+                          status === 'absent' ? 'Absent' : 'Unpaid';
                           status === 'absent' ? 'Absent' : 'Unpaid';
         
         html += `
@@ -11767,6 +11784,11 @@
             statusColor = '#94a3b8';
             statusText = 'Absent';
             statusIcon = '⚪';
+            break;
+          case 'future':
+            statusColor = 'rgba(255,255,255,0.4)';
+            statusText = 'Scheduled';
+            statusIcon = '📅';
             break;
           case 'unpaid':
           default:
