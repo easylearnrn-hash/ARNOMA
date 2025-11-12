@@ -15,7 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
     // VERSION CHECK - This should appear FIRST in console
-    console.log('🔥 CACHE BUSTER: Version 2.1.0 - Build 20251112-0240');
+    console.log('🔥 CACHE BUSTER: Version 2.1.1 - Build 20251112-0300');
     console.log('🔥 If you see this, the new code is loading!');
     
     // Supabase Client Initialization
@@ -12726,11 +12726,15 @@
       console.log('[UnpaidClassesModal] Opening modal for:', { studentId, initialDateStr });
       
       const students = getCachedStudents();
+      console.log('[UnpaidClassesModal] Total students in cache:', students.length);
+      console.log('[UnpaidClassesModal] Looking for student ID:', studentId, 'Type:', typeof studentId);
+      
       // Use loose equality to handle string/number mismatch
       const student = students.find(s => s.id == studentId);
       if (!student) {
         console.error('[UnpaidClassesModal] Student not found:', studentId);
-        console.log('[UnpaidClassesModal] Available student IDs:', students.map(s => `${s.id} (${typeof s.id})`));
+        console.log('[UnpaidClassesModal] Available student IDs:', students.slice(0, 10).map(s => `${s.id} (${typeof s.id})`));
+        console.log('[UnpaidClassesModal] Checking with parseInt:', students.find(s => s.id === parseInt(studentId)));
         return;
       }
       
@@ -12964,7 +12968,7 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', initialize);
     
-    console.log('✅ ARNOMA app loaded - Using Supabase cloud database [v2.1.0 - Full Sync Redesigned - Build 20251112-0230]');
+    console.log('✅ ARNOMA app loaded - Using Supabase cloud database [v2.1.1 - Payment Modal Fixed - Build 20251112-0300]');
     console.log('🔧 CACHE CHECK: If you see this message, JavaScript is loading correctly.');
     console.log('🔧 Full Sync has been redesigned with proper date range handling.');
   </script>
