@@ -12530,6 +12530,30 @@
         `;
       });
       
+      // Check if this is a past date (frozen snapshot)
+      const laToday = getLADate();
+      const isPastDate = dateObj < laToday;
+      const snapshot = isPastDate ? getCalendarSnapshot(dateStr) : null;
+      
+      // Add Force Recalculate button for past dates
+      const forceRecalcButton = isPastDate && snapshot ? `
+        <div style="margin-top: 16px; padding: 12px; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="font-size: 16px;">⚠️</span>
+            <span style="font-size: 11px; font-weight: 700; color: #fbbf24;">FROZEN DATA</span>
+          </div>
+          <p style="margin: 0 0 10px 0; font-size: 11px; color: rgba(251,191,36,0.8); line-height: 1.4;">
+            This date is frozen to preserve historical accuracy. Frozen at ${new Date(snapshot.frozenAt).toLocaleString()}.
+          </p>
+          <button onclick="forceRecalculateDay('${dateStr}')" 
+                  style="width: 100%; padding: 8px 12px; background: rgba(251,191,36,0.2); border: 1px solid rgba(251,191,36,0.5); border-radius: 6px; color: #fbbf24; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;"
+                  onmouseover="this.style.background='rgba(251,191,36,0.3)'; this.style.borderColor='#fbbf24';"
+                  onmouseout="this.style.background='rgba(251,191,36,0.2)'; this.style.borderColor='rgba(251,191,36,0.5)';">
+            🔄 Force Recalculate with Current Data
+          </button>
+        </div>
+      ` : '';
+      
       const panelHTML = `
         <div id="dayDetailsOverlay" onclick="closeDayDetails()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 28000; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;"></div>
         <div id="dayDetailsPanel" onclick="event.stopPropagation()" style="position: fixed; right: -500px; top: 0; bottom: 0; width: 450px; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border-left: 2px solid rgba(138,180,255,0.3); z-index: 28001; backdrop-filter: blur(20px); box-shadow: -10px 0 40px rgba(0,0,0,0.5); transition: right 0.3s ease; overflow-y: auto;">
@@ -12541,6 +12565,7 @@
               </div>
               <button onclick="closeDayDetails()" style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 20px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">×</button>
             </div>
+            ${forceRecalcButton}
           </div>
           <div style="padding: 24px;">
             ${studentsHTML}
@@ -12569,6 +12594,117 @@
           overlay.remove();
           panel.remove();
         }, 300);
+      }
+    }
+    
+    // Force recalculate a frozen day with current payment data
+    function forceRecalculateDay(dateStr) {
+      const confirmed = confirm(
+        `⚠️ FORCE RECALCULATE\n\n` +
+        `This will recalculate ${dateStr} using CURRENT payment data and balance information.\n\n` +
+        `The frozen snapshot will be replaced with fresh calculations.\n\n` +
+        `Use this if:\n` +
+        `• You added/modified payments after the date was frozen\n` +
+        `• Student balances have changed\n` +
+        `• You need to correct historical data\n\n` +
+        `Continue?`
+      );
+      
+      if (!confirmed) return;
+      
+      debug(`[ForceRecalc] Recalculating ${dateStr} with current data...`);
+      
+      try {
+        const students = getCachedStudents();
+        const payments = PaymentStore.getAll();
+        const groups = window.groupsCache || [];
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const date = new Date(year, month - 1, day);
+        
+        const newSnapshot = { students: {}, frozenAt: new Date().toISOString() };
+        
+        // Get all students who should have class on this date
+        students.forEach(student => {
+          if (!student.group) return;
+          
+          const group = groups.find(g => g.name === student.group);
+          if (!group || !group.schedule) return;
+          
+          const scheduleDays = parseScheduleDays(group.schedule);
+          const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
+          
+          if (scheduleDays.includes(dayName)) {
+            const pricePerClass = parseFloat(student.payPerClass) || 0;
+            
+            // Calculate payment status using current data
+            const studentPayments = payments.filter(p => {
+              if (p.ignored) return false;
+              const paymentStudentName = (p.studentName || '').toLowerCase().trim();
+              const paymentPayerName = (p.payerName || '').toLowerCase().trim();
+              const studentNameLower = student.name.toLowerCase().trim();
+              
+              if (paymentStudentName === studentNameLower || paymentPayerName === studentNameLower) return true;
+              
+              const studentLastName = studentNameLower.split(' ').pop();
+              if (studentLastName && studentLastName.length > 3) {
+                if (paymentPayerName.includes(studentLastName) || paymentStudentName.includes(studentLastName)) return true;
+              }
+              return false;
+            });
+            
+            // Check for payment on this date
+            const paymentOnDate = studentPayments.find(p => {
+              const paymentTimestamp = p.emailDate || p.date || p.timestamp;
+              if (!paymentTimestamp) return false;
+              const paymentDate = toLADate(new Date(paymentTimestamp));
+              const paymentDateStr = formatDateYYYYMMDD(paymentDate);
+              return paymentDateStr === dateStr;
+            });
+            
+            let paymentStatus;
+            if (paymentOnDate) {
+              paymentStatus = {
+                status: 'paid',
+                paid: true,
+                amount: parseFloat(paymentOnDate.amount),
+                balance: student.balance || 0,
+                message: 'Paid'
+              };
+            } else if (student.balance >= pricePerClass) {
+              paymentStatus = {
+                status: 'deducted',
+                paid: true,
+                amount: pricePerClass,
+                balance: (student.balance || 0) - pricePerClass,
+                message: 'Deducted from balance'
+              };
+            } else {
+              paymentStatus = {
+                status: 'unpaid',
+                paid: false,
+                amount: 0,
+                balance: student.balance || 0,
+                message: 'Not Paid'
+              };
+            }
+            
+            newSnapshot.students[student.id] = paymentStatus;
+          }
+        });
+        
+        // Save new snapshot
+        localStorage.setItem(`calendar_snapshot_${dateStr}`, JSON.stringify(newSnapshot));
+        debug(`[ForceRecalc] ✅ Recalculated ${dateStr} - ${Object.keys(newSnapshot.students).length} students`);
+        
+        // Close panel and refresh calendar
+        closeDayDetails();
+        renderCalendar();
+        
+        showToast(`✅ ${dateStr} recalculated with current data`);
+        
+      } catch (error) {
+        console.error('[ForceRecalc] Error:', error);
+        showToast('❌ Failed to recalculate');
       }
     }
     
