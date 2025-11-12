@@ -4179,12 +4179,7 @@
     }
     
     function addClickToMarkPaymentsViewed() {
-      // DISABLED: Keep green blinking indicators - don't auto-mark as viewed on click
-      // Users can manually mark payments if needed through the UI
-      return;
-      
-      // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-      // Remove any existing listener first
+      // One click clears ALL green blinking indicators
       const container = document.getElementById('paymentRecordsContainer');
       const oldListener = container?._clickListener;
       if (oldListener) {
@@ -4210,7 +4205,7 @@
         if (hasChanges) {
           PaymentStore.save(payments);
           
-          // Remove animation class immediately
+          // Remove animation class immediately from ALL green blinking rows
           newPaymentRows.forEach(row => {
             row.classList.remove('payment-row-new');
             row.style.animation = 'none';
