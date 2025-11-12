@@ -4529,26 +4529,37 @@
           }
         }
         
-        // Parse amount - simpler pattern that works
+        // Parse amount - universal pattern
         const amountMatch = bodyText.match(/\$[\d,]+\.\d{2}/);
         const amount = amountMatch ? parseFloat(amountMatch[0].replace(/[$,]/g, '')) : 0;
         
-        // Parse sender name - look for "from [Name]" pattern
-        const fromMatch = bodyText.match(/from\s+([^\s].*?)(?:\s+was\s+deposited|\n|$)/i);
-        const senderName = fromMatch ? fromMatch[1].trim() : 'Unknown';
+        // Parse sender name - try multiple patterns
+        let senderName = 'Unknown';
         
-        // Parse memo/message - US Bank Zelle format: "Message from [Sender]: [ActualMessage]"
+        // Pattern 1: "From: Name" (text/plain format with colon)
+        let fromMatch = bodyText.match(/From:\s*([^\n]+)/i);
+        if (fromMatch) {
+          senderName = fromMatch[1].trim();
+        } else {
+          // Pattern 2: "from Name was deposited" (HTML format)
+          fromMatch = bodyText.match(/from\s+([^\s].*?)(?:\s+was\s+deposited|\n|$)/i);
+          if (fromMatch) {
+            senderName = fromMatch[1].trim();
+          }
+        }
+        
+        // Parse memo/message - try multiple patterns
         let memo = '';
         
-        // Try pattern: "Message from [Name]: [Message]"
-        const messageFromMatch = bodyText.match(/Message from [^:]+:\s*([^\n]+)/i);
-        if (messageFromMatch) {
-          memo = messageFromMatch[1].trim();
+        // Pattern 1: "Memo:" or "Message:" or "Note:" (text/plain format)
+        let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
+        if (memoMatch) {
+          memo = memoMatch[1].trim();
         } else {
-          // Fallback: Try generic "Message:" or "Memo:" or "Note:"
-          const genericMemoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
-          if (genericMemoMatch) {
-            memo = genericMemoMatch[1].trim();
+          // Pattern 2: "Message from [Sender]: [ActualMessage]" (US Bank specific)
+          memoMatch = bodyText.match(/Message from [^:]+:\s*([^\n]+)/i);
+          if (memoMatch) {
+            memo = memoMatch[1].trim();
           }
         }
         
