@@ -11456,7 +11456,7 @@
         
         // Retry mechanism with exponential backoff
         let retryCount = 0;
-        const maxRetries = 10;
+        const maxRetries = 5;
         const tryAttach = () => {
           if (attachHandlers()) {
             console.log('[SkipClassManager] Handler attached, stopping retries');
@@ -11464,16 +11464,16 @@
           }
           retryCount++;
           if (retryCount < maxRetries) {
-            const delay = Math.min(100 * Math.pow(1.5, retryCount), 3000); // Max 3s delay
+            const delay = Math.min(100 * Math.pow(1.5, retryCount), 1000); // Max 1s delay
             console.log(`[SkipClassManager] Retry ${retryCount}/${maxRetries} in ${delay}ms`);
             setTimeout(tryAttach, delay);
           } else {
-            console.warn('[SkipClassManager] Max retries reached, giving up');
+            console.warn('[SkipClassManager] Max retries reached - will try again when timer opens');
           }
         };
         
-        // Start initial retry sequence
-        tryAttach();
+        // Don't try to attach on page load - timer doesn't exist yet
+        // Only attach when timer is actually opened
         
         // Listen for timer being opened - reset retry counter and try again
         window.addEventListener('timerOpened', () => {
@@ -11482,7 +11482,7 @@
           setTimeout(tryAttach, 100); // Small delay to ensure DOM is ready
         });
         
-        console.log('[SkipClassManager] Initialized with smart retry mechanism');
+        console.log('[SkipClassManager] Initialized - waiting for timer to open');
       }
 
       // Public API
