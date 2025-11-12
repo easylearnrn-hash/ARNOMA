@@ -2597,35 +2597,60 @@
       },
       save: async function(payments) {
         try {
-          // Map to Supabase schema - only basic payment fields
-          // Keep it minimal to match existing schema: id, gmailId, amount, payerName, 
-          // senderName, studentName, studentEmail, groupId, memo, message, date, status,
-          // payerNameRaw, payerEmailRaw, studentId
+          // Map JavaScript camelCase to Supabase snake_case with ALL resolution metadata
           const paymentsForSupabase = payments.map(p => ({
+            // Core payment data
             id: p.id,
             gmailId: p.gmailId,
             amount: p.amount,
+            date: p.date,
+            
+            // Raw immutable data from email
+            payerNameRaw: p.payerNameRaw || p.payerName,
+            payerEmailRaw: p.payerEmailRaw || null,
+            memo: p.memo || null,
+            message: p.message || null,
+            
+            // Display fields (computed/resolved)
             payerName: p.payerName,
             senderName: p.senderName,
             studentName: p.studentName,
             studentEmail: p.studentEmail || null,
             groupId: p.groupId || null,
-            memo: p.memo || null,
-            message: p.message || null,
-            date: p.date,
+            
+            // Manual linking (highest priority - user override)
+            linked_student_id: p.linkedStudentId || null,
+            manually_linked: p.manuallyLinked || false,
+            
+            // Automatic resolution metadata
+            derived_student_id: p.derivedStudentId || null,
+            resolved_student_name: p.resolvedStudentName || null,
+            derived_student_group: p.derivedStudentGroup || null,
+            resolution_source: p.resolutionSource || 'none',
+            
+            // Legacy/compatibility field
+            studentId: p.studentId || p.linkedStudentId || p.derivedStudentId || null,
+            
+            // Status tracking
             status: p.status || 'unmatched',
-            payerNameRaw: p.payerNameRaw || p.payerName,
-            payerEmailRaw: p.payerEmailRaw || null,
-            studentId: p.studentId || null
+            viewed: p.viewed || false,
+            ignored_once: p.ignoredOnce || false,
+            ignore_permanently: p.ignorePermanently || false,
+            
+            // Timestamps
+            email_date: p.emailDate || p.date,
+            created_at: p.createdAt || new Date().toISOString(),
+            linked_at: p.linkedAt || null,
+            date_modified_at: p.dateModifiedAt || null
           }));
           
           console.log('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
           if (paymentsForSupabase.length > 0) {
             console.log('📋 Payment fields:', Object.keys(paymentsForSupabase[0]));
+            console.log('📋 Sample payment:', paymentsForSupabase[0]);
           }
           
           // For bulk save, we'll upsert all payments
-          // Supabase upsert uses 'id' as conflict resolution by default
           const { data, error } = await supabase
             .from('payments')
             .upsert(paymentsForSupabase, { onConflict: 'id' })
@@ -4580,7 +4605,7 @@
         const finalStudentName = matchedStudent ? matchedStudent.name : (memo || 'Unmatched');
         const finalPayerName = senderName;
         
-        // Create payment object matching Supabase schema
+        // Create payment object with full resolution metadata
         const payment = {
           id: `payment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           gmailId: messageData.id,
@@ -4589,24 +4614,41 @@
           // Raw immutable data from email
           payerNameRaw: senderName,
           payerEmailRaw: null,
+          memo: memo,
+          message: memo,
           
-          // Display fields
+          // Display fields (computed)
           payerName: finalPayerName,
           senderName: finalPayerName,
           studentName: finalStudentName,
           studentEmail: studentEmail,
           groupId: groupId,
-          memo: memo,
-          message: memo,
           
-          // Linking field (basic - just store the matched student ID)
+          // Manual linking (not set during parsing - only via UI)
+          linkedStudentId: null,
+          manuallyLinked: false,
+          
+          // Automatic resolution metadata
+          derivedStudentId: matchedStudent ? matchedStudent.id : null,
+          resolvedStudentName: finalStudentName,
+          derivedStudentGroup: matchedStudent ? (matchedStudent.group || matchedStudent.groups || '') : '',
+          resolutionSource: matchedStudent ? 'memo-match' : 'none',
+          
+          // Legacy/compatibility field
           studentId: matchedStudent ? matchedStudent.id : null,
           
-          // Date
-          date: emailDate.toISOString(),
+          // Status tracking
+          status: matchedStudent ? 'matched' : 'unmatched',
+          viewed: false,
+          ignoredOnce: false,
+          ignorePermanently: false,
           
-          // Status
-          status: matchedStudent ? 'matched' : 'unmatched'
+          // Timestamps
+          emailDate: emailDate.toISOString(),
+          date: emailDate.toISOString(),
+          createdAt: new Date().toISOString(),
+          linkedAt: null,
+          dateModifiedAt: null
         };
         
         return payment;
