@@ -5623,19 +5623,30 @@
         
         // Add payer name to student's alias if not already there
         const payerName = payment.payerName || payment.fromName || '';
+        console.log('🔍 Payer name to add as alias:', payerName);
+        console.log('🔍 Student current aliases:', student.aliases);
+        
         if (payerName && payerName.trim()) {
           const currentAliases = student.aliases || [];
           const normalizedPayerName = payerName.trim().toLowerCase();
           const normalizedStudentName = student.name.toLowerCase();
+          
+          console.log('🔍 Normalized payer:', normalizedPayerName);
+          console.log('🔍 Normalized student:', normalizedStudentName);
           
           // Only add if payer name is different from student name and not already in aliases
           const aliasExists = currentAliases.some(alias => 
             alias.toLowerCase() === normalizedPayerName
           );
           
+          console.log('🔍 Alias already exists?', aliasExists);
+          
           if (normalizedPayerName !== normalizedStudentName && !aliasExists) {
             const originalAliases = Array.isArray(currentAliases) ? [...currentAliases] : [];
             student.aliases = [...originalAliases, payerName.trim()];
+            
+            console.log('💾 Saving new aliases:', student.aliases);
+            
             const savedAliasUpdate = await saveStudent(student);
             if (!savedAliasUpdate) {
               student.aliases = originalAliases;
@@ -5645,7 +5656,11 @@
               window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
               console.log(`✅ Added "${payerName}" to ${student.name}'s aliases`);
             }
+          } else {
+            console.log('⏭️ Skipped adding alias (already exists or same as student name)');
           }
+        } else {
+          console.log('⚠️ No payer name to add as alias');
         }
         
         // Compute derived fields immediately (before saving)
