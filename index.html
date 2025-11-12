@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARNOMA - Student Management [v2.1.0]</title>
+  <title>ARNOMA - Student Management [v2.2.0 - Cleaned]</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="-1">
@@ -15,8 +15,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
     // VERSION CHECK - This should appear FIRST in console
-    console.log('🔥 CACHE BUSTER: Version 2.1.2 - Build 20251112-0310');
-    console.log('🔥 If you see this, the new code is loading!');
+    console.log('🔥 CACHE BUSTER: Version 2.2.0 - Build 20251112-0400');
+    console.log('🔥 Code Cleanup: Removed duplicates, validated syntax');
     
     // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -3731,15 +3731,6 @@
     }
     
     // BEGIN LINKING & SEARCH FIX
-    function closeLinkStudentModal() {
-      const modal = document.getElementById('linkStudentModal');
-      if (modal) {
-        modal.style.opacity = '0';
-        setTimeout(() => {
-          modal.remove();
-        }, 200);
-      }
-    }
     
     function filterStudentList() {
       const searchInput = document.getElementById('studentSearchInput');
@@ -4526,31 +4517,6 @@
         container.addEventListener('click', markAllPaymentsAsViewed, { once: false });
       }
       // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-    }
-    
-    // Legacy function for compatibility
-    function markAllPaymentsAsViewed() {
-      const newPaymentRows = document.querySelectorAll('.payment-row-new');
-      if (newPaymentRows.length === 0) return;
-      
-      const payments = PaymentStore.getAll();
-      let hasChanges = false;
-      
-      payments.forEach(payment => {
-        if (!payment.viewed && payment.createdAt && (Date.now() - new Date(payment.createdAt).getTime()) < TIMING.NEW_PAYMENT_INDICATOR) {
-          payment.viewed = true;
-          hasChanges = true;
-        }
-      });
-      
-      if (hasChanges) {
-        PaymentStore.save(payments);
-        newPaymentRows.forEach(row => {
-          row.classList.remove('payment-row-new');
-          row.style.animation = 'none';
-          row.style.boxShadow = 'none';
-        });
-      }
     }
     
     // ============================================================================
@@ -6749,32 +6715,6 @@
      * Create Auto Backup
      * Stores automatic backups in localStorage (keeps last 5)
      */
-    function createAutoBackup(backupData) {
-      try {
-        // Get existing auto backups
-        const autoBackupsRaw = localStorage.getItem('autoBackups:v2');
-        let autoBackups = autoBackupsRaw ? JSON.parse(autoBackupsRaw) : [];
-        
-        // Add new backup
-        autoBackups.push({
-          timestamp: backupData.timestamp,
-          data: backupData
-        });
-        
-        // Keep only last 5 backups
-        if (autoBackups.length > 5) {
-          autoBackups = autoBackups.slice(-5);
-        }
-        
-        // Save back to localStorage
-        localStorage.setItem('autoBackups:v2', JSON.stringify(autoBackups));
-        
-        // Also save as lastAutoBackup for quick access
-        localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
-      } catch (error) {
-        console.error('Error creating auto backup:', error);
-      }
-    }
     /**
      * Create Auto Backup
      * All data is already in Supabase, so this just logs the backup event
@@ -12974,7 +12914,7 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', initialize);
     
-    console.log('✅ ARNOMA app loaded - Using Supabase cloud database [v2.1.1 - Payment Modal Fixed - Build 20251112-0300]');
+    console.log('✅ ARNOMA app loaded - Using Supabase cloud database [v2.2.0 - Code Cleanup - Build 20251112-0400]');
     console.log('🔧 CACHE CHECK: If you see this message, JavaScript is loading correctly.');
     console.log('🔧 Full Sync has been redesigned with proper date range handling.');
   </script>
