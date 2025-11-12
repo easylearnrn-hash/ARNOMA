@@ -11469,21 +11469,26 @@
       const balance = studentBalances[studentId] || 0;
       
       // Find all payments for this student (by name or alias match)
+      // Check BOTH studentName AND payerName fields
       const studentPayments = payments.filter(p => {
         if (p.ignored) return false;
         
-        // Use studentName from payment (not payerName which is the sender)
         const paymentStudentName = (p.studentName || '').toLowerCase().trim();
+        const paymentPayerName = (p.payerName || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
         
-        // Check exact name match
+        // Check if studentName matches
         if (paymentStudentName === studentNameLower) return true;
+        
+        // Check if payerName matches (for cases where parent pays)
+        if (paymentPayerName === studentNameLower) return true;
         
         // Check if payment matches any student alias
         if (student.aliases && Array.isArray(student.aliases)) {
-          return student.aliases.some(alias => 
-            alias.toLowerCase().trim() === paymentStudentName
-          );
+          return student.aliases.some(alias => {
+            const aliasLower = alias.toLowerCase().trim();
+            return aliasLower === paymentStudentName || aliasLower === paymentPayerName;
+          });
         }
         
         return false;
