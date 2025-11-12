@@ -12190,24 +12190,26 @@
           return;
         }
         
-        // Strategy 2: Find nearest unpaid class within ±7 days
-        const nearbyClass = findNearestUnpaidClass(
+        // Strategy 2: ONLY look for PAST classes within 7 days BEFORE the payment
+        // This prevents applying Nov 10 payment to Nov 13 class
+        // Payment can cover a class from up to 7 days ago, but NOT future classes
+        const pastClass = findPastUnpaidClass(
           payment.laDateStr,
           classDates,
           appliedPayments,
           studentId,
-          7 // days window
+          7 // days lookback window
         );
         
-        if (nearbyClass) {
-          applyPaymentToDate(nearbyClass, studentId, payment, paymentAmount, pricePerClass, appliedPayments);
+        if (pastClass) {
+          applyPaymentToDate(pastClass, studentId, payment, paymentAmount, pricePerClass, appliedPayments);
           appliedPaymentIds.add(payment.id);
-          debug(`✅ Nearby match: ${student.name} payment applied to ${nearbyClass}`);
+          debug(`✅ Past class match: ${student.name} payment on ${payment.laDateStr} applied to ${pastClass}`);
           return;
         }
         
         // Strategy 3: Payment doesn't match any class - needs user assignment
-        debug(`⚠️ Extra payment for ${student.name}: $${paymentAmount} on ${payment.laDateStr}`);
+        debug(`⚠️ Extra payment for ${student.name}: $${paymentAmount} on ${payment.laDateStr} - no past class within 7 days`);
         unmatchedPayments.push({
           ...payment,
           student,
@@ -12299,9 +12301,10 @@
     }
     
     /**
-     * Find nearest unpaid class within a date window
+     * Find most recent unpaid class BEFORE the payment date (lookback only)
+     * This prevents applying payments to future classes
      */
-    function findNearestUnpaidClass(paymentDateStr, classDates, appliedPayments, studentId, daysWindow) {
+    function findPastUnpaidClass(paymentDateStr, classDates, appliedPayments, studentId, daysLookback) {
       const paymentDate = new Date(paymentDateStr);
       
       let nearest = null;
@@ -12312,9 +12315,12 @@
         if (appliedPayments[dateStr]?.[studentId]) return;
         
         const classDate = new Date(dateStr);
-        const daysDiff = Math.abs((classDate - paymentDate) / (1000 * 60 * 60 * 24));
+        const daysDiff = (paymentDate - classDate) / (1000 * 60 * 60 * 24);
         
-        if (daysDiff <= daysWindow && daysDiff < minDiff) {
+        // ONLY consider classes BEFORE or ON the payment date
+        // daysDiff > 0 means class was in the past
+        // daysDiff = 0 means same day
+        if (daysDiff >= 0 && daysDiff <= daysLookback && daysDiff < minDiff) {
           minDiff = daysDiff;
           nearest = dateStr;
         }
