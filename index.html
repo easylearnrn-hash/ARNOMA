@@ -2711,8 +2711,41 @@
           }
           
           console.log('✅ Saved successfully:', data?.length || 0, 'payments');
-          window.paymentsCache = data || payments;
-          dispatchPaymentsUpdated(payments);
+          
+          // Convert snake_case response back to camelCase for cache
+          const paymentsFromSupabase = (data || []).map(p => ({
+            id: p.id,
+            gmailId: p.gmail_id,
+            amount: p.amount,
+            date: p.date,
+            payerNameRaw: p.payer_name_raw,
+            payerEmailRaw: p.payer_email_raw,
+            memo: p.memo,
+            message: p.message,
+            payerName: p.payer_name,
+            senderName: p.sender_name,
+            studentName: p.student_name,
+            studentEmail: p.student_email,
+            groupId: p.group_id,
+            linkedStudentId: p.linked_student_id,
+            manuallyLinked: p.manually_linked,
+            derivedStudentId: p.derived_student_id,
+            resolvedStudentName: p.resolved_student_name,
+            derivedStudentGroup: p.derived_student_group,
+            resolutionSource: p.resolution_source,
+            studentId: p.student_id,
+            status: p.status,
+            viewed: p.viewed,
+            ignoredOnce: p.ignored_once,
+            ignorePermanently: p.ignore_permanently,
+            emailDate: p.email_date,
+            createdAt: p.created_at,
+            linkedAt: p.linked_at,
+            dateModifiedAt: p.date_modified_at
+          }));
+          
+          window.paymentsCache = paymentsFromSupabase;
+          dispatchPaymentsUpdated(paymentsFromSupabase);
           
           // Auto-backup on every save
           try {
