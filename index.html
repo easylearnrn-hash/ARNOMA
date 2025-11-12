@@ -4179,6 +4179,10 @@
     }
     
     function addClickToMarkPaymentsViewed() {
+      // DISABLED: Keep green blinking indicators - don't auto-mark as viewed on click
+      // Users can manually mark payments if needed through the UI
+      return;
+      
       // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       // Remove any existing listener first
       const container = document.getElementById('paymentRecordsContainer');
