@@ -15,8 +15,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
     // VERSION CHECK - This should appear FIRST in console
-    console.log('🔥 CACHE BUSTER: Version 2.2.2 - Build 20251112-0430');
-    console.log('🔥 Fixed: Group and amount buttons now wrap instead of scroll');
+    console.log('🔥 CACHE BUSTER: Version 2.2.3 - Build 20251112-0445');
+    console.log('🔥 Fixed: Unpaid classes modal now uses calendar render data (same logic)');
     
     // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -12685,45 +12685,57 @@
       
       console.log('[UnpaidClassesModal] Student found:', student.name);
       
-      const groups = window.groupsCache || [];
-      const payments = PaymentStore.getAll();
-      const pricePerClass = parseFloat(student.payPerClass) || 0;
-      
-      // Find all unpaid classes for this student
-      const unpaidClasses = [];
+      // Get calendar data by regenerating it
+      // This uses the SAME logic as the calendar rendering
       const today = getLADate();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth();
+      
+      // Find all unpaid classes by scanning rendered calendar data
+      const unpaidClasses = [];
+      
+      // Scan from calendar start date to current month
       const startDate = new Date(CALENDAR_START_DATE);
+      const startYear = startDate.getFullYear();
+      const startMonth = startDate.getMonth();
       
-      // Check classes from calendar start date to TODAY ONLY (not future)
-      // Set today to end of day for proper comparison
-      const endOfToday = new Date(today);
-      endOfToday.setHours(23, 59, 59, 999);
-      
-      console.log('[UnpaidClassesModal] Scanning from', formatDateYYYYMMDD(startDate), 'to', formatDateYYYYMMDD(today), '(today)');
-      
-      for (let d = new Date(startDate); d <= endOfToday; d.setDate(d.getDate() + 1)) {
-        const dateStr = formatDateYYYYMMDD(d);
-        const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
+      // Generate calendar data for each month from start to current
+      for (let year = startYear; year <= currentYear; year++) {
+        const monthStart = (year === startYear) ? startMonth : 0;
+        const monthEnd = (year === currentYear) ? currentMonth : 11;
         
-        // Check if student has class on this day
-        const group = groups.find(g => g.name === student.group);
-        if (!group || !group.schedule) continue;
-        
-        const scheduleDays = parseScheduleDays(group.schedule);
-        if (!scheduleDays.includes(dayName)) continue;
-        
-        // Check payment status
-        const classInfo = checkPaymentStatus(student, d, pricePerClass, payments);
-        
-        // Only include unpaid classes (not skipped, hidden, or paid)
-        if (classInfo.status === 'unpaid') {
-          unpaidClasses.push({
-            date: d,
-            dateStr: dateStr,
-            dayName: dayName,
-            groupName: student.group,
-            status: classInfo.status,
-            pricePerClass: pricePerClass
+        for (let month = monthStart; month <= monthEnd; month++) {
+          const calendarData = generateCalendarData(year, month);
+          
+          // Check each day in this month
+          calendarData.days.forEach(dayData => {
+            const dateStr = formatDateYYYYMMDD(dayData.date);
+            
+            // Only include dates up to today
+            if (dayData.date > today) return;
+            
+            // Find this student in the day's data
+            const studentClass = dayData.studentsWithClass.find(sc => sc.student.id == studentId);
+            
+            // Only include if student has class and it's unpaid
+            if (studentClass && studentClass.status === 'unpaid') {
+              const dateDisplay = dayData.date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              });
+              
+              unpaidClasses.push({
+                date: dayData.date,
+                dateStr: dateStr,
+                dayName: dayData.dayName,
+                groupName: student.group,
+                status: 'unpaid',
+                pricePerClass: studentClass.pricePerClass,
+                dateDisplay: dateDisplay
+              });
+            }
           });
         }
       }
