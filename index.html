@@ -1912,6 +1912,12 @@
       </div>
     </div>
     
+    <div style="margin-bottom: 16px; display: flex; gap: 8px;">
+      <button onclick="setFullSyncThisWeek()" style="flex: 1; padding: 10px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #60a5fa; font-weight: 600; cursor: pointer; font-size: 13px;">This Week</button>
+      <button onclick="setFullSyncThisMonth()" style="flex: 1; padding: 10px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #60a5fa; font-weight: 600; cursor: pointer; font-size: 13px;">This Month</button>
+      <button onclick="setFullSyncLastMonth()" style="flex: 1; padding: 10px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #60a5fa; font-weight: 600; cursor: pointer; font-size: 13px;">Last Month</button>
+    </div>
+    
     <div style="margin-bottom: 20px;">
       <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">From Date *</label>
       <input type="date" id="fullSyncFromDate" value="2024-07-01" style="width: 100%; padding: 14px 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px;">
@@ -2311,7 +2317,7 @@
         <button id="earningsForecastBtn" class="control-btn" onclick="openEarningsForecast()" title="Earning Forecast">
           $
         </button>
-        <button id="syncBtn" class="control-btn" onclick="syncToCloud()" title="Sync to Supabase Cloud">
+        <button id="syncBtn" class="control-btn" onclick="fetchTodaysEmails()" title="Fetch Today's Payment Emails">
           ☁️
         </button>
         <button id="calendarBtn" class="control-btn" onclick="openSmartCalendar()" title="Smart Payment Calendar">
@@ -2562,7 +2568,7 @@
       NEW_PAYMENT_INDICATOR: 60000,  // 60 seconds
       AUTO_REFRESH_INTERVAL: 30000,  // 30 seconds
       API_DELAY: 100,                // 100ms between API calls
-      FULL_SYNC_API_DELAY: 50        // 50ms for full sync
+      FULL_SYNC_API_DELAY: 150       // 150ms to respect Gmail rate limits during full sync
     };
     
     let gmailAccessToken = localStorage.getItem(STORAGE_KEYS.GMAIL_TOKEN);
@@ -2597,11 +2603,17 @@
       },
       save: async function(payments) {
         try {
+          // Remove createdAt field as it's not in the Supabase table schema
+          const paymentsForSupabase = payments.map(p => {
+            const { createdAt, ...rest } = p;
+            return rest;
+          });
+          
           // For bulk save, we'll upsert all payments
           // Supabase upsert uses 'id' as conflict resolution by default
           const { data, error } = await supabase
             .from('payments')
-            .upsert(payments, { onConflict: 'id' })
+            .upsert(paymentsForSupabase, { onConflict: 'id' })
             .select();
           
           if (error) {
@@ -4239,9 +4251,9 @@
       }
       // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       
-      const btn = document.getElementById('refreshBtn');
+      const btn = document.getElementById('navRefreshBtn');
       if (!btn) {
-        console.error('refreshBtn element not found');
+        console.error('navRefreshBtn element not found');
         return;
       }
       btn.classList.add('spinning');
@@ -4348,6 +4360,117 @@
       }
     }
     
+    async function fetchTodaysEmails() {
+      // Check token validity before attempting sync
+      const isValid = await ensureGmailTokenValid();
+      if (!isValid || !gmailAccessToken) {
+        showNotification('⚠️ Please connect Gmail first', 'warning');
+        return;
+      }
+      
+      const btn = document.getElementById('syncBtn');
+      if (!btn) {
+        console.error('syncBtn element not found');
+        return;
+      }
+      btn.disabled = true;
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳';
+      
+      try {
+        showNotification('🔍 Fetching today\'s payment emails...', 'info');
+        
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const afterDate = Math.floor(today.getTime() / 1000);
+        
+        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
+        const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
+        
+        const searchResponse = await fetch(searchUrl, {
+          headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
+        });
+        
+        if (!searchResponse.ok) {
+          if (searchResponse.status === 401) {
+            localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
+            localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
+            gmailAccessToken = null;
+            updateGmailButtonState(false);
+            throw new Error('Gmail session expired. Please reconnect.');
+          }
+          throw new Error(`Gmail API error: ${searchResponse.status}`);
+        }
+        
+        const searchData = await searchResponse.json();
+        
+        if (!searchData.messages || searchData.messages.length === 0) {
+          showNotification('📭 No payment emails found today', 'info');
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+          return;
+        }
+        
+        console.log(`✅ Found ${searchData.messages.length} payment emails`);
+        
+        const existingPayments = PaymentStore.getAll();
+        const existingEmailIds = new Set();
+        const existingCompositeKeys = new Set();
+        existingPayments.forEach(existingPayment => {
+          const idsToTrack = [existingPayment.emailId, existingPayment.gmailId].filter(Boolean);
+          idsToTrack.forEach(id => existingEmailIds.add(id));
+          const compositeKey = buildPaymentDuplicateKey(existingPayment);
+          if (compositeKey) existingCompositeKeys.add(compositeKey);
+        });
+        
+        const payments = [];
+        
+        for (const message of searchData.messages) {
+          const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
+          const messageResponse = await fetch(messageUrl, {
+            headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
+          });
+          
+          if (messageResponse.ok) {
+            const messageData = await messageResponse.json();
+            const payment = parseZelleEmail(messageData);
+            if (payment) {
+              const idsToCheck = [payment.emailId, payment.gmailId].filter(Boolean);
+              const isExistingId = idsToCheck.some(id => existingEmailIds.has(id));
+              if (isExistingId) continue;
+              
+              const compositeKey = buildPaymentDuplicateKey(payment);
+              if (compositeKey && existingCompositeKeys.has(compositeKey)) continue;
+              
+              idsToCheck.forEach(id => existingEmailIds.add(id));
+              if (compositeKey) existingCompositeKeys.add(compositeKey);
+              payments.push(payment);
+            }
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, TIMING.API_DELAY));
+        }
+        
+        if (payments.length > 0) {
+          const allPayments = [...payments, ...existingPayments];
+          PaymentStore.save(allPayments);
+          recomputePaymentResolutions();
+          
+          showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`, 'success');
+          renderPaymentEmailsView();
+        } else {
+          showNotification('✅ All today\'s payments already synced', 'success');
+        }
+        
+      } catch (error) {
+        console.error('Error fetching today\'s emails:', error);
+        showNotification('❌ Error: ' + error.message, 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+    
     function parseZelleEmail(messageData) {
       try {
         const headers = messageData.payload.headers;
@@ -4364,44 +4487,37 @@
           }
         }
         
-        // Clean up body text - remove extra whitespace and normalize
-        bodyText = bodyText.replace(/\r\n/g, '\n').replace(/\s+/g, ' ').trim();
+        // Parse amount - simpler pattern that works
+        const amountMatch = bodyText.match(/\$[\d,]+\.\d{2}/);
+        const amount = amountMatch ? parseFloat(amountMatch[0].replace(/[$,]/g, '')) : 0;
         
-        // Extract amount: "A new payment of $50.00 from..."
-        const amountMatch = bodyText.match(/(?:payment of|received)\s*\$?([\d,]+\.\d{2})/i);
-        const amount = amountMatch ? parseFloat(amountMatch[1].replace(/,/g, '')) : 0;
+        // Parse sender name - simpler pattern
+        const fromMatch = bodyText.match(/From:\s*([^\n]+)/i);
+        const senderName = fromMatch ? fromMatch[1].trim() : 'Unknown';
         
-        // Extract payer name: "from Zg Consulting, I.Nc. was deposited"
-        const payerMatch = bodyText.match(/from\s+([^.]+?)\s+was deposited/i);
-        const payerName = payerMatch ? payerMatch[1].trim() : 'Unknown';
+        // Parse memo/message - simpler pattern
+        const memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
+        const memo = memoMatch ? memoMatch[1].trim() : '';
         
-        // Use actual email timestamp (when notification was received)
-        // Don't use "Received date" from email body as it's often the processing date, not actual receipt time
-        let receivedDate = emailDate; // Always use the actual email timestamp with correct time
+        if (!amount || !senderName) return null;
         
-        // Extract message/student name: "Message from Zg Consulting, I.Nc.: Gayane Zadourian"
-        const messageMatch = bodyText.match(/Message from[^:]+:\s*([^\n.]+?)(?:\s*\.{3}|\s*The money|\s*$)/i);
-        const studentMessage = messageMatch ? messageMatch[1].trim() : '';
-        
-        if (!amount) return null;
-        
-        // Try to match student from Student Manager
-  const students = getCachedStudents();
+        // Try to match student from Student Manager using memo
+        const students = getCachedStudents();
         let matchedStudent = null;
         let studentEmail = '';
         let groupId = '';
         
-        if (studentMessage) {
+        if (memo) {
           // Try exact name match first
           matchedStudent = students.find(s => 
-            s.name.toLowerCase() === studentMessage.toLowerCase()
+            s.name.toLowerCase() === memo.toLowerCase()
           );
           
           // Try partial match if exact fails
           if (!matchedStudent) {
             matchedStudent = students.find(s => 
-              s.name.toLowerCase().includes(studentMessage.toLowerCase()) ||
-              studentMessage.toLowerCase().includes(s.name.toLowerCase())
+              s.name.toLowerCase().includes(memo.toLowerCase()) ||
+              memo.toLowerCase().includes(s.name.toLowerCase())
             );
           }
           
@@ -4411,12 +4527,11 @@
           }
         }
         
-        // Use student name as payer name (student name takes priority)
-        const finalPayerName = studentMessage || payerName || 'Unknown';
-        const finalStudentName = matchedStudent ? matchedStudent.name : (studentMessage || 'Unmatched');
+        // Determine final display names
+        const finalStudentName = matchedStudent ? matchedStudent.name : (memo || 'Unmatched');
+        const finalPayerName = senderName;
         
-        // BEGIN CRITICAL BUG FIX - parseZelleEmail() resolutionSource
-        // Create payment with raw data preserved
+        // Create payment object with all fields for Supabase
         const payment = {
           id: `payment-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
           emailId: messageData.id.substring(0, 16),
@@ -4424,32 +4539,37 @@
           amount,
           
           // Raw immutable data from email
-          payerNameRaw: payerName,  // EXACT from email "from Zg Consulting..."
-          payerEmailRaw: null,       // No email in Zelle notification
+          payerNameRaw: senderName,
+          payerEmailRaw: null,
           
-          // Legacy fields (kept for compatibility)
+          // Display fields
           payerName: finalPayerName,
           senderName: finalPayerName,
           studentName: finalStudentName,
           studentEmail: studentEmail,
           groupId: groupId,
-          memo: studentMessage,
-          message: studentMessage,
+          memo: memo,
+          message: memo,
           
-          // Linking fields - Don't set linkedStudentId for memo matches
-          // This allows the proper automatic resolution system to handle it
-          linkedStudentId: null,  // Let resolver handle automatic matching
+          // Linking/resolution fields for Supabase
+          linkedStudentId: null,
           derivedStudentId: matchedStudent ? matchedStudent.id : null,
           resolvedStudentName: finalStudentName,
-          resolutionSource: matchedStudent ? 'memo-match' : 'none',  // ✅ Fixed: 'memo-match' not 'manual'
+          resolutionSource: matchedStudent ? 'memo-match' : 'none',
+          studentId: matchedStudent ? matchedStudent.id : null,
           
-          emailDate: receivedDate.toISOString(),
-          date: receivedDate.toISOString(),
+          // Dates
+          emailDate: emailDate.toISOString(),
+          date: emailDate.toISOString(),
           createdAt: new Date().toISOString(),
+          
+          // Status
           status: matchedStudent ? 'unapplied' : 'unmatched',
-          isMatched: !!matchedStudent
+          isMatched: !!matchedStudent,
+          viewed: false,
+          ignoredOnce: false,
+          ignorePermanently: false
         };
-        // END CRITICAL BUG FIX
         
         return payment;
       } catch (error) {
@@ -5245,6 +5365,33 @@
       // Default from date is July 1, 2024 (already set in HTML)
     }
     
+    function setFullSyncThisWeek() {
+      const today = new Date();
+      const dayOfWeek = today.getDay();
+      const monday = new Date(today);
+      monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+      
+      document.getElementById('fullSyncFromDate').value = monday.toISOString().split('T')[0];
+      document.getElementById('fullSyncToDate').value = today.toISOString().split('T')[0];
+    }
+    
+    function setFullSyncThisMonth() {
+      const today = new Date();
+      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+      
+      document.getElementById('fullSyncFromDate').value = firstDay.toISOString().split('T')[0];
+      document.getElementById('fullSyncToDate').value = today.toISOString().split('T')[0];
+    }
+    
+    function setFullSyncLastMonth() {
+      const today = new Date();
+      const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+      const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+      
+      document.getElementById('fullSyncFromDate').value = firstDayLastMonth.toISOString().split('T')[0];
+      document.getElementById('fullSyncToDate').value = lastDayLastMonth.toISOString().split('T')[0];
+    }
+    
     function closeFullSyncDatePicker() {
       const modal = document.getElementById('fullSyncModal');
       if (!modal) return;
@@ -5318,9 +5465,16 @@
           pageCount++;
           const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=500${pageToken ? `&pageToken=${pageToken}` : ''}`;
           
-          const searchResponse = await fetch(searchUrl, {
-            headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-          });
+          let searchResponse;
+          try {
+            searchResponse = await fetch(searchUrl, {
+              headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
+            });
+          } catch (networkError) {
+            console.error('❌ Network error while requesting Gmail message list:', networkError);
+            showNotification('❌ Network error contacting Gmail. Please check your connection and try again.', 'error');
+            break;
+          }
           
           if (!searchResponse.ok) {
             if (searchResponse.status === 401) {
@@ -5374,11 +5528,17 @@
           }
           
           const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
-          const messageResponse = await fetch(messageUrl, {
-            headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-          });
           
-          if (messageResponse.ok) {
+          try {
+            const messageResponse = await fetch(messageUrl, {
+              headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
+            });
+            
+            if (!messageResponse.ok) {
+              console.warn(`⚠️ Failed to fetch message ${i + 1}/${allMessages.length}: ${messageResponse.status}`);
+              continue;
+            }
+            
             const messageData = await messageResponse.json();
             const payment = parseZelleEmail(messageData);
             if (payment) {
@@ -5395,6 +5555,9 @@
               if (compositeKey) existingCompositeKeys.add(compositeKey);
               payments.push(payment);
             }
+          } catch (error) {
+            console.error(`❌ Error processing message ${i + 1}/${allMessages.length}:`, error);
+            // Continue processing other messages
           }
           
           await new Promise(resolve => setTimeout(resolve, TIMING.FULL_SYNC_API_DELAY));
