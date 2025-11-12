@@ -5953,6 +5953,10 @@
           
           const searchData = await searchResponse.json();
           
+          console.log(`📬 Gmail API Response (page ${pageCount}):`, searchData);
+          console.log(`  - Result size estimate: ${searchData.resultSizeEstimate || 0}`);
+          console.log(`  - Messages in page: ${searchData.messages?.length || 0}`);
+          
           if (searchData.messages) {
             allMessages = allMessages.concat(searchData.messages);
             text.textContent = `Found ${allMessages.length}...`;
