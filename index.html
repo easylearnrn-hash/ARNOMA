@@ -2874,6 +2874,13 @@
       // Map Supabase column names to local property names
       const mappedData = (data || []).map(mapSupabaseStudent).filter(Boolean);
       
+      // Debug: Check Sona Husikyan's aliases
+      const sona = mappedData.find(s => s.id === 13);
+      if (sona) {
+        console.log('🔍 DEBUG: Sona Husikyan aliases from Supabase:', sona.aliases);
+        console.log('🔍 DEBUG: Raw Supabase data for Sona:', data.find(s => s.id === 13)?.aliases);
+      }
+      
       window.studentsCache = mappedData;
       return mappedData;
     }
