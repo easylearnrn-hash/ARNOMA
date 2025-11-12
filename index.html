@@ -2603,9 +2603,20 @@
       },
       save: async function(payments) {
         try {
-          // Remove createdAt field as it's not in the Supabase table schema
+          // Remove fields that might not be in Supabase schema yet
           const paymentsForSupabase = payments.map(p => {
-            const { createdAt, ...rest } = p;
+            const { 
+              createdAt, 
+              derivedStudentId, 
+              linkedStudentId, 
+              resolvedStudentName, 
+              resolutionSource,
+              isMatched,
+              viewed,
+              ignoredOnce,
+              ignorePermanently,
+              ...rest 
+            } = p;
             return rest;
           });
           
