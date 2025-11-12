@@ -2588,7 +2588,55 @@
             return window.paymentsCache || [];
           }
           
-          window.paymentsCache = data || [];
+          // CRITICAL FIX: Convert snake_case from Supabase back to camelCase for JavaScript
+          const paymentsFromSupabase = (data || []).map(p => ({
+            // Core payment data
+            id: p.id,
+            gmailId: p.gmail_id,
+            amount: p.amount,
+            date: p.date,
+            
+            // Raw immutable data from email
+            payerNameRaw: p.payer_name_raw,
+            payerEmailRaw: p.payer_email_raw,
+            memo: p.memo,
+            message: p.message,
+            
+            // Display fields (computed/resolved)
+            payerName: p.payer_name,
+            senderName: p.sender_name,
+            studentName: p.student_name,
+            studentEmail: p.student_email,
+            groupId: p.group_id,
+            
+            // Manual linking (highest priority - user override)
+            linkedStudentId: p.linked_student_id,
+            manuallyLinked: p.manually_linked,
+            
+            // Automatic resolution metadata
+            derivedStudentId: p.derived_student_id,
+            resolvedStudentName: p.resolved_student_name,
+            derivedStudentGroup: p.derived_student_group,
+            resolutionSource: p.resolution_source,
+            
+            // Legacy/compatibility field
+            studentId: p.student_id,
+            
+            // Status tracking
+            status: p.status,
+            viewed: p.viewed,
+            ignoredOnce: p.ignored_once,
+            ignorePermanently: p.ignore_permanently,
+            
+            // Timestamps
+            emailDate: p.email_date,
+            createdAt: p.created_at,
+            linkedAt: p.linked_at,
+            dateModifiedAt: p.date_modified_at
+          }));
+          
+          console.log('✅ Loaded from Supabase:', paymentsFromSupabase.length, 'payments');
+          window.paymentsCache = paymentsFromSupabase;
           return window.paymentsCache;
         } catch (err) {
           console.error('❌ Exception loading payments:', err);
