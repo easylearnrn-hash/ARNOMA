@@ -11942,6 +11942,53 @@
       
       // Render grid
       renderCalendarGrid(calendarData);
+      
+      // Save any balance changes to Supabase after rendering is complete
+      saveBalanceUpdates();
+    }
+    
+    // Debounced balance save to prevent loops
+    let balanceUpdateQueue = new Map(); // studentId -> newBalance
+    let balanceSaveTimer = null;
+    
+    function queueBalanceUpdate(studentId, newBalance) {
+      balanceUpdateQueue.set(studentId, newBalance);
+    }
+    
+    function saveBalanceUpdates() {
+      // Clear existing timer
+      if (balanceSaveTimer) {
+        clearTimeout(balanceSaveTimer);
+      }
+      
+      // Debounce: save after 1 second of no new renders
+      balanceSaveTimer = setTimeout(async () => {
+        if (balanceUpdateQueue.size === 0) return;
+        
+        console.log(`💾 Saving ${balanceUpdateQueue.size} balance updates to Supabase...`);
+        
+        // Get students cache
+        const students = window.studentsCache || [];
+        
+        // Save each balance update
+        for (const [studentId, newBalance] of balanceUpdateQueue.entries()) {
+          const student = students.find(s => s.id === studentId);
+          if (student && student.balance !== newBalance) {
+            student.balance = newBalance;
+            
+            try {
+              // Save to Supabase
+              await saveStudent(student);
+              console.log(`✅ Saved balance for ${student.name}: ${formatCurrency(newBalance, '$')}`);
+            } catch (error) {
+              console.error(`❌ Failed to save balance for ${student.name}:`, error);
+            }
+          }
+        }
+        
+        // Clear the queue
+        balanceUpdateQueue.clear();
+      }, 1000);
     }
     
     function generateCalendarData(year, month) {
@@ -12183,8 +12230,9 @@
           const remainder = paymentAmount - pricePerClass;
           const newBalance = balance + remainder;
           
-          // Update student balance in memory only (no auto-save during calendar render)
+          // Update student balance in memory and queue for save
           student.balance = newBalance;
+          queueBalanceUpdate(studentId, newBalance);
           
           const result = {
             status: 'paid',
@@ -12226,8 +12274,9 @@
       if (balance >= pricePerClass && dateStr >= todayStr) {
         const newBalance = balance - pricePerClass;
         
-        // Update student balance in memory only (no auto-save during calendar render)
+        // Update student balance in memory and queue for save
         student.balance = newBalance;
+        queueBalanceUpdate(studentId, newBalance);
         
         const lowBalance = newBalance > 0 && newBalance < pricePerClass;
         
