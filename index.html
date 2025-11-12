@@ -5857,7 +5857,6 @@
         return;
       }
       
-      // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       // Check token validity before attempting full sync
       const isValid = await ensureGmailTokenValid();
       if (!isValid || !gmailAccessToken) {
@@ -5865,7 +5864,6 @@
         closeFullSyncDatePicker();
         return;
       }
-      // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       
       const fromDate = new Date(fromDateStr);
       const toDate = new Date(toDateStr);
@@ -5890,17 +5888,11 @@
       text.textContent = 'Syncing...';
       
       try {
-        showNotification(`🔍 Fetching payments from ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`, 'info');
+        // REDESIGNED DATE RANGE LOGIC
+        // Gmail's after: is INCLUSIVE (gets emails from this date forward)
+        // Gmail's before: is EXCLUSIVE (gets emails up to but not including this date)
+        // Solution: Use after:YYYY/MM/DD and before:NEXT_DAY to include the end date
         
-        // Set fromDate to start of day (00:00:00)
-        fromDate.setHours(0, 0, 0, 0);
-        
-        // Set toDate to END of day - add 1 day for Gmail's exclusive 'before:' parameter
-        toDate.setHours(23, 59, 59, 999);
-        const toDatePlusOne = new Date(toDate);
-        toDatePlusOne.setDate(toDatePlusOne.getDate() + 1);
-        
-        // Gmail API expects YYYY/MM/DD format for after: and before:
         const formatGmailDate = (date) => {
           const year = date.getFullYear();
           const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -5908,37 +5900,34 @@
           return `${year}/${month}/${day}`;
         };
         
-        const fromDateFormatted = formatGmailDate(fromDate);
-        const toDateFormatted = formatGmailDate(toDatePlusOne); // Use +1 day since before: is exclusive
+        const afterDate = formatGmailDate(fromDate);
         
-        // Debug: Log the exact query being sent
-        console.log('📅 Full Sync Date Range:');
-        console.log('  From (inclusive):', fromDate.toString(), '| Gmail format:', fromDateFormatted);
-        console.log('  To (inclusive):', toDate.toString());
-        console.log('  To (exclusive for before:):', toDatePlusOne.toString(), '| Gmail format:', toDateFormatted);
+        // Add 1 day to toDate for exclusive 'before:' parameter
+        const beforeDate = new Date(toDate);
+        beforeDate.setDate(beforeDate.getDate() + 1);
+        const beforeDateStr = formatGmailDate(beforeDate);
         
-        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${fromDateFormatted} before:${toDateFormatted}`;
-        console.log('  Gmail Query:', query);
+        console.log('� FULL SYNC - Date Range:');
+        console.log(`   User selected: ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}`);
+        console.log(`   Gmail query: after:${afterDate} before:${beforeDateStr}`);
+        console.log(`   This will fetch emails from ${afterDate} through ${toDate.toLocaleDateString()} (inclusive)`);
         
+        showNotification(`🔍 Syncing ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`, 'info');
+        
+        // Build Gmail search query
+        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
+        console.log('   Query string:', query);
+        
+        // Fetch all messages with pagination
         let allMessages = [];
         let pageToken = null;
-        let pageCount = 0;
         
-        // Paginate through all results
         do {
-          pageCount++;
           const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=500${pageToken ? `&pageToken=${pageToken}` : ''}`;
           
-          let searchResponse;
-          try {
-            searchResponse = await fetch(searchUrl, {
-              headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-            });
-          } catch (networkError) {
-            console.error('❌ Network error while requesting Gmail message list:', networkError);
-            showNotification('❌ Network error contacting Gmail. Please check your connection and try again.', 'error');
-            break;
-          }
+          const searchResponse = await fetch(searchUrl, {
+            headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
+          });
           
           if (!searchResponse.ok) {
             if (searchResponse.status === 401) {
@@ -5952,10 +5941,7 @@
           }
           
           const searchData = await searchResponse.json();
-          
-          console.log(`📬 Gmail API Response (page ${pageCount}):`, searchData);
-          console.log(`  - Result size estimate: ${searchData.resultSizeEstimate || 0}`);
-          console.log(`  - Messages in page: ${searchData.messages?.length || 0}`);
+          console.log(`📬 Page ${allMessages.length === 0 ? 1 : Math.ceil(allMessages.length / 500) + 1}: ${searchData.messages?.length || 0} messages`);
           
           if (searchData.messages) {
             allMessages = allMessages.concat(searchData.messages);
@@ -5966,83 +5952,110 @@
           
         } while (pageToken);
         
+        console.log(`✅ Total emails found: ${allMessages.length}`);
+        
         if (allMessages.length === 0) {
-          showNotification('📭 No payments found in this date range', 'info');
+          showNotification('📭 No Zelle emails found in this date range', 'info');
           btn.disabled = false;
           text.textContent = 'Full Sync';
           return;
         }
         
-        console.log(`✅ Found ${allMessages.length} payment emails`);
-        text.textContent = `Processing ${allMessages.length}...`;
+        // Process messages and remove duplicates
+        text.textContent = `Processing ${allMessages.length} emails...`;
         
         const existingPayments = PaymentStore.getAll();
-        const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
+        const existingGmailIds = new Set(existingPayments.map(p => p.gmailId).filter(Boolean));
         
-        const payments = [];
-        const processedGmailIds = new Set();
+        console.log(`📊 Existing payments in database: ${existingPayments.length}`);
+        console.log(`📊 Existing Gmail IDs: ${existingGmailIds.size}`);
+        
+        const newPayments = [];
+        const skippedDuplicates = [];
+        const processedInBatch = new Set();
+        let invalidEmails = 0;
         
         for (let i = 0; i < allMessages.length; i++) {
           const message = allMessages[i];
           
-          if (i % 10 === 0) {
+          if (i % 10 === 0 || i === allMessages.length - 1) {
             text.textContent = `Processing ${i + 1}/${allMessages.length}...`;
           }
           
-          const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
-          
           try {
+            const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
             const messageResponse = await fetch(messageUrl, {
               headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
             });
             
             if (!messageResponse.ok) {
-              console.warn(`⚠️ Failed to fetch message ${i + 1}/${allMessages.length}: ${messageResponse.status}`);
+              console.warn(`⚠️ Failed to fetch message ${message.id}: ${messageResponse.status}`);
+              invalidEmails++;
               continue;
             }
             
             const messageData = await messageResponse.json();
             const payment = parseZelleEmail(messageData);
-            if (payment) {
-              // Check if already processed in this batch
-              if (processedGmailIds.has(payment.gmailId)) {
-                console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
-                continue;
-              }
-              
-              // Use enhanced duplicate detection against existing payments
-              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPaymentsForCheck)) {
-                continue; // Skip duplicate (already logged in isDuplicatePayment)
-              }
-              
-              payments.push(payment);
-              processedGmailIds.add(payment.gmailId);
+            
+            if (!payment) {
+              // Email didn't match Zelle criteria (wrong account, outgoing, etc.)
+              invalidEmails++;
+              continue;
             }
+            
+            // Check if Gmail ID already exists in database
+            if (existingGmailIds.has(payment.gmailId)) {
+              skippedDuplicates.push(payment.gmailId);
+              continue;
+            }
+            
+            // Check if Gmail ID was already processed in this batch
+            if (processedInBatch.has(payment.gmailId)) {
+              console.warn(`⚠️ Duplicate in batch: ${payment.gmailId}`);
+              skippedDuplicates.push(payment.gmailId);
+              continue;
+            }
+            
+            // Valid new payment
+            newPayments.push(payment);
+            processedInBatch.add(payment.gmailId);
+            
           } catch (error) {
-            console.error(`❌ Error processing message ${i + 1}/${allMessages.length}:`, error);
-            // Continue processing other messages
+            console.error(`❌ Error processing message ${message.id}:`, error);
+            invalidEmails++;
           }
           
-          await new Promise(resolve => setTimeout(resolve, TIMING.FULL_SYNC_API_DELAY));
+          // Rate limiting
+          if (i < allMessages.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+          }
         }
         
-        if (payments.length > 0) {
-          const allPayments = [...existingPayments, ...payments];
+        // Summary
+        console.log('📊 FULL SYNC COMPLETE:');
+        console.log(`   Total emails found: ${allMessages.length}`);
+        console.log(`   New payments: ${newPayments.length}`);
+        console.log(`   Duplicates skipped: ${skippedDuplicates.length}`);
+        console.log(`   Invalid/filtered: ${invalidEmails}`);
+        
+        if (newPayments.length > 0) {
+          // Save new payments
+          const allPayments = [...existingPayments, ...newPayments];
           await PaymentStore.save(allPayments);
           
-          // Recompute resolutions to populate group information
+          // Recompute resolutions
           await recomputePaymentResolutions();
           
-          const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
-          showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!\n💰 Total: ${formatCurrency(totalAmount, '$')}`, 'success');
+          const totalAmount = newPayments.reduce((sum, p) => sum + p.amount, 0);
+          showNotification(`✅ Added ${newPayments.length} payment${newPayments.length > 1 ? 's' : ''}! Total: ${formatCurrency(totalAmount, '$')}`, 'success');
           renderPaymentEmailsView();
         } else {
           showNotification('✅ All payments already synced', 'success');
         }
         
       } catch (error) {
-        console.error('Error during full sync:', error);
-        showNotification('❌ Full sync failed: ' + error.message, 'error');
+        console.error('❌ Full sync error:', error);
+        showNotification(`❌ Sync failed: ${error.message}`, 'error');
       } finally {
         btn.disabled = false;
         text.textContent = 'Full Sync';
