@@ -3711,6 +3711,13 @@
         .replace(/\s*(The money is ready for use right now\.?|Pay it forward!?|If you'd rather not follow links.*|Thanks for using Zelle.*|You can add a note.*|View transaction details.*)/gi, '')
         .trim();
       
+      // If the message is ONLY footer text or generic content, return empty string
+      if (!cleaned || 
+          cleaned.length < 3 || 
+          /^(The money|Pay it|If you|Thanks|You can|View|—|-)+$/i.test(cleaned)) {
+        return '';
+      }
+      
       return cleaned;
     }
     
