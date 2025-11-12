@@ -11240,11 +11240,20 @@
       const groups = window.groupsCache || window.globalData?.groups || [];
       const payments = PaymentStore.getAll();
       
+      console.log('📊 CALENDAR DEBUG:', {
+        studentsCount: students.length,
+        groupsCount: groups.length,
+        paymentsCount: payments.length,
+        groups: groups.map(g => ({ name: g.name, schedule: g.schedule }))
+      });
+      
       // Filter active students
       const activeStudents = students.filter(s => {
         const status = (s.status || 'active').toLowerCase();
         return status === 'active' && s.isActive !== false;
       });
+      
+      console.log('👥 Active students:', activeStudents.length);
       
       // Map students to their schedules
       const scheduleMap = {};
@@ -11252,13 +11261,25 @@
       
       activeStudents.forEach(student => {
         const groupName = student.group || '';
-        if (!groupName.trim()) return;
+        if (!groupName.trim()) {
+          console.log('⚠️ Student has no group:', student.name);
+          return;
+        }
         
         const group = groups.find(g => g.name === groupName);
-        if (!group || !group.schedule) return;
+        if (!group) {
+          console.log('⚠️ Group not found for student:', student.name, 'Group:', groupName);
+          return;
+        }
+        
+        if (!group.schedule) {
+          console.log('⚠️ Group has no schedule:', group.name);
+          return;
+        }
         
         // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
         const scheduleDays = parseScheduleDays(group.schedule);
+        console.log('📅 Parsed schedule for', student.name, ':', { group: groupName, schedule: group.schedule, days: scheduleDays });
         
         if (!scheduleMap[student.id]) {
           scheduleMap[student.id] = {
