@@ -12126,6 +12126,20 @@
         // Check if payerName matches (for cases where parent pays)
         if (paymentPayerName === studentNameLower) return true;
         
+        // SMART MATCHING: Check if payer name contains student's last name
+        // This handles cases like "Husikyan Consulting" → "Sona Husikyan"
+        const studentLastName = studentNameLower.split(' ').pop(); // Get last word as last name
+        if (studentLastName && studentLastName.length > 3) { // Only match if last name is significant
+          if (paymentPayerName.includes(studentLastName)) {
+            console.log(`💡 Smart match: "${paymentPayerName}" contains "${studentLastName}" (${student.name})`);
+            return true;
+          }
+          if (paymentStudentName.includes(studentLastName)) {
+            console.log(`💡 Smart match: "${paymentStudentName}" contains "${studentLastName}" (${student.name})`);
+            return true;
+          }
+        }
+        
         // Check if payment matches any student alias
         if (student.aliases && Array.isArray(student.aliases)) {
           return student.aliases.some(alias => {
