@@ -15,8 +15,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
     // VERSION CHECK - This should appear FIRST in console
-    console.log('🔥 CACHE BUSTER: Version 2.2.0 - Build 20251112-0400');
-    console.log('🔥 Code Cleanup: Removed duplicates, validated syntax');
+    console.log('🔥 CACHE BUSTER: Version 2.2.1 - Build 20251112-0420');
+    console.log('🔥 Fixed: Unpaid classes modal now only shows dates with actual class records');
     
     // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -12100,7 +12100,14 @@
           return snapshot.students[studentId];
         }
         // If no snapshot exists for this past date, it means no class was scheduled
-        // Return as if no class (will not render)
+        // or student wasn't enrolled yet - mark as hidden
+        return {
+          status: 'hidden',
+          paid: false,
+          amount: 0,
+          balance: 0,
+          message: 'No class record (student not enrolled or class not held)'
+        };
       }
       
       // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
