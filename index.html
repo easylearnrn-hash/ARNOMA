@@ -2048,8 +2048,8 @@
       ℹ️ Students' payments will automatically roll over to the next scheduled class. The skipped session will be grayed out in the calendar.
     </div>
     <div class="dialog-actions">
-      <button class="dialog-btn dialog-btn-cancel" onclick="SkipClassManager.cancelSkip()">Cancel</button>
-      <button class="dialog-btn dialog-btn-confirm" onclick="SkipClassManager.confirmSkip()">Skip Class</button>
+      <button class="dialog-btn dialog-btn-cancel" id="skipDialogCancelBtn">Cancel</button>
+      <button class="dialog-btn dialog-btn-confirm" id="skipDialogConfirmBtn">Skip Class</button>
     </div>
   </div>
   <!-- ========== END SKIP CLASS DIALOG ========== -->
@@ -11285,6 +11285,7 @@
 
       // Show skip confirmation dialog
       function showSkipDialog(classData) {
+        console.log('[SkipClassManager] showSkipDialog called with:', classData);
         pendingSkip = classData;
         
         const dialog = document.getElementById('skipClassDialog');
@@ -11297,13 +11298,19 @@
           return;
         }
         
+        console.log('[SkipClassManager] Dialog elements found, populating...');
+        
         // Populate dialog
         classNameEl.textContent = classData.groupName;
         classTimeEl.textContent = `${classData.dayName} at ${classData.laTime}`;
         
+        console.log('[SkipClassManager] Showing dialog...');
+        
         // Show dialog
         overlay.classList.add('show');
         dialog.classList.add('show');
+        
+        console.log('[SkipClassManager] Dialog shown');
       }
 
       // Hide skip dialog
@@ -11369,6 +11376,26 @@
       // Initialize - attach double-click handlers to timer items
       function init() {
         console.log('[SkipClassManager] Initializing...');
+        
+        // Attach button event listeners
+        const cancelBtn = document.getElementById('skipDialogCancelBtn');
+        const confirmBtn = document.getElementById('skipDialogConfirmBtn');
+        const overlay = document.getElementById('skipClassOverlay');
+        
+        if (cancelBtn) {
+          cancelBtn.addEventListener('click', cancelSkip);
+          console.log('[SkipClassManager] Cancel button listener attached');
+        }
+        
+        if (confirmBtn) {
+          confirmBtn.addEventListener('click', confirmSkip);
+          console.log('[SkipClassManager] Confirm button listener attached');
+        }
+        
+        if (overlay) {
+          overlay.addEventListener('click', cancelSkip);
+          console.log('[SkipClassManager] Overlay click listener attached');
+        }
         
         // Wait for timer to be rendered, then attach handlers
         const attachHandlers = () => {
