@@ -11368,26 +11368,46 @@
 
       // Initialize - attach double-click handlers to timer items
       function init() {
+        console.log('[SkipClassManager] Initializing...');
+        
         // Wait for timer to be rendered, then attach handlers
         const attachHandlers = () => {
           const timerElement = document.getElementById('enhancedCountdownTimer');
-          if (!timerElement) return;
+          if (!timerElement) {
+            console.log('[SkipClassManager] Timer element not found, will retry...');
+            return;
+          }
+          
+          // Remove existing listener if any
+          if (timerElement._skipHandlerAttached) {
+            console.log('[SkipClassManager] Handler already attached');
+            return;
+          }
           
           // Use event delegation for dynamic timer items
           timerElement.addEventListener('dblclick', (e) => {
+            console.log('[SkipClassManager] Double-click detected', e.target);
             const classItem = e.target.closest('.timer-class-item');
-            if (!classItem || classItem.classList.contains('skipped')) return;
+            if (!classItem) {
+              console.log('[SkipClassManager] Not a class item');
+              return;
+            }
+            if (classItem.classList.contains('skipped')) {
+              console.log('[SkipClassManager] Already skipped');
+              return;
+            }
             
             // Extract class data from the element
-            const groupNameEl = classItem.querySelector('.timer-class-group');
-            const dayNameEl = classItem.querySelector('.timer-class-day');
-            const timeEl = classItem.querySelector('.timer-class-time');
+            const groupName = classItem.getAttribute('data-group');
+            const dayName = classItem.getAttribute('data-day');
+            const laTime = classItem.getAttribute('data-time');
             
-            if (!groupNameEl || !dayNameEl || !timeEl) return;
+            console.log('[SkipClassManager] Class data:', { groupName, dayName, laTime });
             
-            const groupName = groupNameEl.textContent.trim();
-            const dayName = dayNameEl.textContent.trim();
-            const laTime = timeEl.textContent.replace(' LA', '').trim();
+            if (!groupName || !dayName || !laTime) {
+              console.error('[SkipClassManager] Missing class data attributes');
+              return;
+            }
             
             const classData = {
               groupName,
@@ -11395,16 +11415,27 @@
               laTime
             };
             
+            console.log('[SkipClassManager] Showing skip dialog for:', classData);
             showSkipDialog(classData);
           });
+          
+          timerElement._skipHandlerAttached = true;
+          console.log('[SkipClassManager] Double-click handler attached successfully');
         };
         
         // Try attaching handlers after a short delay
         setTimeout(attachHandlers, 500);
+        setTimeout(attachHandlers, 1500); // Retry after 1.5s
         
         // Also attach when timer is reinitialized
-        window.addEventListener('groups:updated', () => setTimeout(attachHandlers, 600));
-        window.addEventListener('schedules:updated', () => setTimeout(attachHandlers, 600));
+        window.addEventListener('groups:updated', () => {
+          console.log('[SkipClassManager] Groups updated, reattaching handlers');
+          setTimeout(attachHandlers, 600);
+        });
+        window.addEventListener('schedules:updated', () => {
+          console.log('[SkipClassManager] Schedules updated, reattaching handlers');
+          setTimeout(attachHandlers, 600);
+        });
         
         console.log('[SkipClassManager] Initialized');
       }
