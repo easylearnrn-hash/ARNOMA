@@ -4344,14 +4344,13 @@
       console.log('🔐 Current page URL:', window.location.href);
       console.log('🔐 Using redirect URI:', redirectUri);
       
-      // Enhanced OAuth flow with offline access and consent prompt
+      // Implicit OAuth flow for browser-based apps
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
         `client_id=${GMAIL_CLIENT_ID}&` +
         `redirect_uri=${encodeURIComponent(redirectUri)}&` +
         `response_type=token&` +
         `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
-        `access_type=offline&` +           // Request offline access for refresh tokens
-        `prompt=consent`;                   // Force consent screen to get refresh token
+        `prompt=select_account`;           // Allow account selection
       
       console.log('📋 Full auth URL:', authUrl);
       console.log('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
