@@ -5500,7 +5500,7 @@
           const escapedName = String(s.name).replace(/'/g, "\\'");
           const escapedEmail = String(s.email || '').replace(/'/g, "\\'");
           
-          return `<div class="student-search-item" data-student-id="${escapedId}" data-student-name="${s.name.toLowerCase()}" data-student-email="${(s.email || '').toLowerCase()}" onclick="selectStudentFromSearch('${escapedId}')" style="padding: 12px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; border-radius: 6px; margin-bottom: 4px; pointer-events: auto;" onmouseover="this.style.background='rgba(138,180,255,0.15)'" onmouseout="this.style.background='transparent'">
+          return `<div class="student-search-item" data-student-id="${escapedId}" data-student-name="${s.name.toLowerCase()}" data-student-email="${(s.email || '').toLowerCase()}" onclick="event.stopPropagation(); selectStudentFromSearch('${escapedId}')" style="padding: 12px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; border-radius: 6px; margin-bottom: 4px; pointer-events: auto;" onmouseover="this.style.background='rgba(138,180,255,0.15)'" onmouseout="this.style.background='transparent'">
           <div style="color: white; font-weight: 600; font-size: 14px;">${s.name}</div>
           ${s.email ? `<div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">${s.email}</div>` : ''}
         </div>`;
