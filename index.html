@@ -144,14 +144,8 @@
       
       // Setup click-outside-to-close
       setupOutsideClick(popup) {
-        // Find or create backdrop
+        // Find backdrop by ID (reliable method)
         let backdrop = document.getElementById(popup.id + 'Backdrop');
-        if (!backdrop) {
-          backdrop = popup.previousElementSibling;
-          if (!backdrop || !backdrop.style.background?.includes('rgba')) {
-            backdrop = null;
-          }
-        }
         
         if (backdrop) {
           // Remove old listener if exists
@@ -3096,7 +3090,7 @@
     }
     
     // Recompute resolution for all payments
-    function recomputePaymentResolutions() {
+    async function recomputePaymentResolutions() {
       const payments = PaymentStore.getAll();
     const students = getCachedStudents();
       let updated = false;
@@ -3126,7 +3120,7 @@
       });
       
       if (updated) {
-        PaymentStore.save(payments);
+        await PaymentStore.save(payments);
       }
     }
     
@@ -3692,7 +3686,7 @@
         const paymentDate = new Date(emailDate);
         if (isNaN(paymentDate.getTime())) return;
         
-        const monthKey = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth()).padStart(2, '0')}`;
+        const monthKey = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
         monthsSet.add(monthKey);
       });
       
@@ -3701,7 +3695,7 @@
       
       // Build options
       const now = new Date();
-      const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth()).padStart(2, '0')}`;
+      const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
       
       let html = '<option value="current">This Month</option>';
       
@@ -4360,10 +4354,10 @@
         if (payments.length > 0) {
           // Save new payments at the beginning (so newest are first)
           const allPayments = [...payments, ...existingPayments];
-          PaymentStore.save(allPayments);
+          await PaymentStore.save(allPayments);
           
           // Recompute resolutions to populate group information
-          recomputePaymentResolutions();
+          await recomputePaymentResolutions();
           
           // Data automatically synced to Supabase via PaymentStore.save()
           console.log('✅ Payments auto-saved to Supabase cloud');
@@ -4476,8 +4470,8 @@
         
         if (payments.length > 0) {
           const allPayments = [...payments, ...existingPayments];
-          PaymentStore.save(allPayments);
-          recomputePaymentResolutions();
+          await PaymentStore.save(allPayments);
+          await recomputePaymentResolutions();
           
           showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`, 'success');
           renderPaymentEmailsView();
@@ -4524,24 +4518,56 @@
         
         if (!amount || !senderName) return null;
         
-        // Try to match student from Student Manager using memo
+        // Enhanced student matching using memo and sender name
         const students = getCachedStudents();
         let matchedStudent = null;
         let studentEmail = '';
         let groupId = '';
         
-        if (memo) {
-          // Try exact name match first
+        if (memo || senderName) {
+          const searchText = (memo || senderName).toLowerCase().trim();
+          const senderLower = senderName.toLowerCase().trim();
+          
+          // Priority 1: Exact name match (memo or sender)
           matchedStudent = students.find(s => 
-            s.name.toLowerCase() === memo.toLowerCase()
+            s.name.toLowerCase() === searchText || 
+            s.name.toLowerCase() === senderLower
           );
           
-          // Try partial match if exact fails
+          // Priority 2: Alias match (check if memo/sender matches any alias)
           if (!matchedStudent) {
-            matchedStudent = students.find(s => 
-              s.name.toLowerCase().includes(memo.toLowerCase()) ||
-              memo.toLowerCase().includes(s.name.toLowerCase())
-            );
+            matchedStudent = students.find(s => {
+              if (!s.aliases || s.aliases.length === 0) return false;
+              return s.aliases.some(alias => 
+                alias.toLowerCase().trim() === searchText ||
+                alias.toLowerCase().trim() === senderLower
+              );
+            });
+          }
+          
+          // Priority 3: Partial name match (contains)
+          if (!matchedStudent) {
+            matchedStudent = students.find(s => {
+              const nameLower = s.name.toLowerCase();
+              return nameLower.includes(searchText) || 
+                     searchText.includes(nameLower) ||
+                     nameLower.includes(senderLower) ||
+                     senderLower.includes(nameLower);
+            });
+          }
+          
+          // Priority 4: Partial alias match
+          if (!matchedStudent) {
+            matchedStudent = students.find(s => {
+              if (!s.aliases || s.aliases.length === 0) return false;
+              return s.aliases.some(alias => {
+                const aliasLower = alias.toLowerCase().trim();
+                return aliasLower.includes(searchText) || 
+                       searchText.includes(aliasLower) ||
+                       aliasLower.includes(senderLower) ||
+                       senderLower.includes(aliasLower);
+              });
+            });
           }
           
           if (matchedStudent) {
@@ -5577,10 +5603,10 @@
         
         if (payments.length > 0) {
           const allPayments = [...existingPayments, ...payments];
-          PaymentStore.save(allPayments);
+          await PaymentStore.save(allPayments);
           
           // Recompute resolutions to populate group information
-          recomputePaymentResolutions();
+          await recomputePaymentResolutions();
           
           const totalAmount = payments.reduce((sum, p) => sum + p.amount, 0);
           showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!\n💰 Total: ${formatCurrency(totalAmount, '$')}`, 'success');
