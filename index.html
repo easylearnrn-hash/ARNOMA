@@ -11429,7 +11429,11 @@
       
       // Check for direct payment on this specific date
       const paymentOnDate = studentPayments.find(p => {
-        const paymentDate = toLADate(new Date(p.timestamp));
+        // Use emailDate or date field (both are ISO strings)
+        const paymentTimestamp = p.emailDate || p.date || p.timestamp;
+        if (!paymentTimestamp) return false;
+        
+        const paymentDate = toLADate(new Date(paymentTimestamp));
         const paymentDateStr = formatDateYYYYMMDD(paymentDate);
         return paymentDateStr === dateStr;
       });
