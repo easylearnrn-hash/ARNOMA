@@ -5895,8 +5895,10 @@
         // Set fromDate to start of day (00:00:00)
         fromDate.setHours(0, 0, 0, 0);
         
-        // Set toDate to END of day (23:59:59) to include all emails on that date
+        // Set toDate to END of day - add 1 day for Gmail's exclusive 'before:' parameter
         toDate.setHours(23, 59, 59, 999);
+        const toDatePlusOne = new Date(toDate);
+        toDatePlusOne.setDate(toDatePlusOne.getDate() + 1);
         
         // Gmail API expects YYYY/MM/DD format for after: and before:
         const formatGmailDate = (date) => {
@@ -5907,12 +5909,13 @@
         };
         
         const fromDateFormatted = formatGmailDate(fromDate);
-        const toDateFormatted = formatGmailDate(toDate);
+        const toDateFormatted = formatGmailDate(toDatePlusOne); // Use +1 day since before: is exclusive
         
         // Debug: Log the exact query being sent
         console.log('📅 Full Sync Date Range:');
-        console.log('  From:', fromDate.toString(), '| Gmail format:', fromDateFormatted);
-        console.log('  To:', toDate.toString(), '| Gmail format:', toDateFormatted);
+        console.log('  From (inclusive):', fromDate.toString(), '| Gmail format:', fromDateFormatted);
+        console.log('  To (inclusive):', toDate.toString());
+        console.log('  To (exclusive for before:):', toDatePlusOne.toString(), '| Gmail format:', toDateFormatted);
         
         const query = `from:usbank@notifications.usbank.com subject:Zelle after:${fromDateFormatted} before:${toDateFormatted}`;
         console.log('  Gmail Query:', query);
