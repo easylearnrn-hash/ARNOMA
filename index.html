@@ -2076,6 +2076,18 @@
       </div>
       
       <div style="margin-bottom: 20px;">
+        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #eab308; font-size: 14px;">💰 Credit Balance</label>
+        <div style="margin-bottom: 8px; font-size: 12px; color: #94a3b8; line-height: 1.4;">
+          Credit will auto-apply to upcoming classes until it reaches $0
+        </div>
+        <div style="position: relative;">
+          <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #eab308; font-weight: 700; font-size: 16px;">$</span>
+          <input type="number" id="studentBalance" placeholder="0.00" step="0.01" min="0" style="width: 100%; padding: 12px 12px 12px 32px; background: rgba(234,179,8,.1); border: 2px solid rgba(234,179,8,.3); border-radius: 8px; color: #eab308; font-size: 16px; font-weight: 700;" onkeydown="if(event.key==='Enter'){saveStudent();}">
+        </div>
+        <div id="currentBalanceDisplay" style="margin-top: 8px; font-size: 11px; color: #6b7280;"></div>
+      </div>
+      
+      <div style="margin-bottom: 20px;">
         <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Phone</label>
         <input type="tel" id="studentPhone" placeholder="(555) 123-4567" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
       </div>
@@ -7304,11 +7316,20 @@
             <label>Pay Per Class</label>
             <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px;">
               <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 25)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 25 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 25 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 25 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$25</button>
-              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 50)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 50 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 50 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 50 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$50</button>
+              <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 50)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 50 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 50 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 50 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;}">$50</button>
               <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 75)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 75 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 75 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 75 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$75</button>
               <button class="pay-select-btn-inline" onclick="event.preventDefault(); selectInlinePayAmount(this, '${student.id}', 100)" style="padding: 6px 12px; background: ${Number(student.payPerClass) === 100 ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'rgba(255,255,255,.05)'}; color: ${Number(student.payPerClass) === 100 ? 'white' : '#6b7280'}; border: 2px solid ${Number(student.payPerClass) === 100 ? '#22c55e' : 'rgba(255,255,255,.2)'}; border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 12px;">$100</button>
             </div>
             <input type="number" id="inline-pay-${student.id}" value="${student.payPerClass || 0}" placeholder="Custom amount" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
+          </div>
+
+          <div class="inline-form-group">
+            <label style="color: #eab308; font-weight: 700;">💰 Credit Balance</label>
+            <div style="margin-bottom: 6px; font-size: 11px; color: #94a3b8;">Auto-applies to upcoming classes</div>
+            <div style="position: relative;">
+              <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #eab308; font-weight: 700;">$</span>
+              <input type="number" id="inline-balance-${student.id}" value="${(studentBalances[student.id] || 0)}" placeholder="0.00" step="0.01" min="0" style="padding-left: 28px; background: rgba(234,179,8,.1); border: 2px solid rgba(234,179,8,.3); color: #eab308; font-weight: 700;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
+            </div>
           </div>
 
           <div class="inline-form-group">
@@ -7616,6 +7637,7 @@
       const nameInput = document.getElementById(`inline-name-${studentId}`);
       const groupInput = document.getElementById(`inline-group-${studentId}`);
       const payInput = document.getElementById(`inline-pay-${studentId}`);
+      const balanceInput = document.getElementById(`inline-balance-${studentId}`);
       const phoneInput = document.getElementById(`inline-phone-${studentId}`);
       const emailInput = document.getElementById(`inline-email-${studentId}`);
       const aliasesInputEl = document.getElementById(`inline-aliases-${studentId}`);
@@ -7629,6 +7651,7 @@
       const name = nameInput.value.trim();
       const group = groupInput.value.trim();
       const payPerClass = parseFloat(payInput.value) || 0;
+      const balance = parseFloat(balanceInput.value) || 0;
       const phone = phoneInput.value.trim();
       const email = emailInput.value.trim();
       const aliasesInput = aliasesInputEl.value.trim();
@@ -7651,6 +7674,17 @@
 
       // Save only this student to Supabase
       await saveStudent(student);
+      
+      // Save balance to localStorage
+      const balances = loadStudentBalances();
+      if (balance > 0) {
+        balances[numericId] = balance;
+        console.log(`💰 Set balance for student ${numericId}: $${balance}`);
+      } else {
+        delete balances[numericId];
+        console.log(`💰 Removed balance for student ${numericId}`);
+      }
+      saveStudentBalances(balances);
       
       // Update cache
       window.studentsCache = students;
@@ -7767,10 +7801,12 @@
       document.getElementById('studentName').value = '';
       document.getElementById('customGroups').value = '';
       document.getElementById('studentPay').value = '';
+      document.getElementById('studentBalance').value = '';
       document.getElementById('studentPhone').value = '';
       document.getElementById('studentEmail').value = '';
       document.getElementById('studentAliases').value = '';
       document.getElementById('studentNotes').value = '';
+      document.getElementById('currentBalanceDisplay').textContent = '';
       
       // Clear group selections
       document.querySelectorAll('.group-select-btn').forEach(btn => btn.classList.remove('selected'));
@@ -7864,6 +7900,7 @@
     async function saveStudentFromModal() {
       const name = document.getElementById('studentName').value.trim();
       const payPerClass = parseFloat(document.getElementById('studentPay').value) || 0;
+      const balance = parseFloat(document.getElementById('studentBalance').value) || 0;
       const phone = document.getElementById('studentPhone').value.trim();
       const email = document.getElementById('studentEmail').value.trim();
       const notes = document.getElementById('studentNotes').value.trim();
@@ -7925,6 +7962,19 @@
       }
 
       console.log('✅ Student saved to Supabase:', savedRecord);
+      
+      // Save balance to localStorage
+      if (balance > 0) {
+        const balances = loadStudentBalances();
+        balances[savedRecord.id] = balance;
+        saveStudentBalances(balances);
+        console.log(`💰 Set balance for student ${savedRecord.id}: $${balance}`);
+      } else {
+        // Remove balance if set to 0
+        const balances = loadStudentBalances();
+        delete balances[savedRecord.id];
+        saveStudentBalances(balances);
+      }
       
       if (!editingStudentId) {
         students.push(savedRecord);
