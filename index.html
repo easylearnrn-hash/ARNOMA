@@ -11530,14 +11530,29 @@
         return false;
       });
       
-      // Check for direct payment on this specific date
+      // Check for payment on this date OR any recent payment that can cover this class
+      // If checking a past date, allow payments from up to 7 days after the class
       const paymentOnDate = studentPayments.find(p => {
         const paymentTimestamp = p.emailDate || p.date || p.timestamp;
         if (!paymentTimestamp) return false;
         
         const paymentDate = toLADate(new Date(paymentTimestamp));
         const paymentDateStr = formatDateYYYYMMDD(paymentDate);
-        return paymentDateStr === dateStr;
+        
+        // Exact date match
+        if (paymentDateStr === dateStr) return true;
+        
+        // For past classes: allow payment from up to 7 days after the class
+        if (dateStr < todayStr) {
+          const classDate = new Date(dateStr);
+          const payDate = new Date(paymentDateStr);
+          const daysDiff = Math.floor((payDate - classDate) / (1000 * 60 * 60 * 24));
+          
+          // Payment can be up to 7 days after the class date
+          if (daysDiff > 0 && daysDiff <= 7) return true;
+        }
+        
+        return false;
       });
       
       if (paymentOnDate) {
