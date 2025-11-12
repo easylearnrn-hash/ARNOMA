@@ -7574,7 +7574,9 @@
     async function saveInlineEdit(studentId) {
       console.log('💾 saveInlineEdit called for:', studentId);
       
-      const student = students.find(s => s.id === studentId);
+      // Convert to number for comparison (passed as string from onclick)
+      const numericId = parseInt(studentId);
+      const student = students.find(s => s.id === numericId);
       if (!student) {
         console.error('❌ Student not found:', studentId);
         return;
