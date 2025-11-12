@@ -5890,8 +5890,34 @@
     }
     
     async function performFullSync() {
-      const fromDateStr = document.getElementById('fullSyncFromDate').value;
-      const toDateStr = document.getElementById('fullSyncToDate').value;
+      const fromDateInput = document.getElementById('fullSyncFromDate');
+      const toDateInput = document.getElementById('fullSyncToDate');
+      
+      if (!fromDateInput || !toDateInput) {
+        console.error('Date input elements not found');
+        showNotification('❌ UI error: Date inputs missing', 'error');
+        return;
+      }
+      
+      let fromDateStr = fromDateInput.value;
+      let toDateStr = toDateInput.value;
+      
+      // DEFENSIVE FIX: Ensure inputs have values with smart defaults
+      if (!fromDateStr || !toDateStr) {
+        // If toDate is missing, default to today
+        if (!toDateStr) {
+          toDateStr = new Date().toISOString().split('T')[0];
+          toDateInput.value = toDateStr;
+        }
+        // If fromDate is missing, default to one month ago
+        if (!fromDateStr) {
+          const defaultFrom = new Date();
+          defaultFrom.setMonth(defaultFrom.getMonth() - 1);
+          fromDateStr = defaultFrom.toISOString().split('T')[0];
+          fromDateInput.value = fromDateStr;
+        }
+        console.log('📅 Applied default dates - From:', fromDateStr, 'To:', toDateStr);
+      }
       
       if (!fromDateStr || !toDateStr) {
         showNotification('⚠️ Please select both dates', 'warning');
