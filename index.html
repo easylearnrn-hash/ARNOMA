@@ -5649,14 +5649,18 @@
       
       try {
   const students = getCachedStudents();
-        console.log('🔍 Looking for student ID:', studentId);
+        console.log('🔍 Looking for student ID:', studentId, '(type:', typeof studentId, ')');
         console.log('📋 Available students:', students.length);
         console.log('📋 Available student IDs:', students.map(s => s.id));
         
-        const student = students.find(s => s.id === studentId);
+        // Convert studentId to number for comparison (it comes from HTML as string)
+        const studentIdNum = parseInt(studentId, 10);
+        console.log('🔍 Converted student ID to number:', studentIdNum);
+        
+        const student = students.find(s => s.id === studentIdNum);
         
         if (!student) {
-          console.error('❌ Student not found. ID:', studentId, 'Available:', students.map(s => ({ id: s.id, name: s.name })));
+          console.error('❌ Student not found. ID:', studentIdNum, 'Available:', students.map(s => ({ id: s.id, name: s.name })));
           showNotification('❌ Student not found', 'error');
           return;
         }
