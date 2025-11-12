@@ -11195,6 +11195,10 @@
     
     // Storage key for balances
     const BALANCE_STORAGE_KEY = 'firestone:student-balances:v1';
+    const CALENDAR_SNAPSHOT_KEY = 'firestone:calendar-snapshots:v1';
+    
+    // Calendar start date - November 1, 2025
+    const CALENDAR_START_DATE = new Date('2025-11-01T00:00:00');
     
     // Load balances from localStorage
     function loadStudentBalances() {
@@ -11206,6 +11210,42 @@
     function saveStudentBalances(balances) {
       localStorage.setItem(BALANCE_STORAGE_KEY, JSON.stringify(balances));
       studentBalances = balances;
+    }
+    
+    // Load calendar snapshots (frozen historical data)
+    function loadCalendarSnapshots() {
+      const stored = localStorage.getItem(CALENDAR_SNAPSHOT_KEY);
+      return stored ? JSON.parse(stored) : {};
+    }
+    
+    // Save calendar snapshot for a specific date
+    function saveCalendarSnapshot(dateStr, studentData) {
+      const snapshots = loadCalendarSnapshots();
+      
+      // Initialize snapshot for this date if it doesn't exist
+      if (!snapshots[dateStr]) {
+        snapshots[dateStr] = {
+          students: {},
+          frozenAt: new Date().toISOString()
+        };
+      }
+      
+      // Merge student data (don't overwrite existing students)
+      snapshots[dateStr].students = {
+        ...snapshots[dateStr].students,
+        ...studentData
+      };
+      
+      // Update frozen timestamp
+      snapshots[dateStr].frozenAt = new Date().toISOString();
+      
+      localStorage.setItem(CALENDAR_SNAPSHOT_KEY, JSON.stringify(snapshots));
+    }
+    
+    // Get snapshot for a date if it exists
+    function getCalendarSnapshot(dateStr) {
+      const snapshots = loadCalendarSnapshots();
+      return snapshots[dateStr] || null;
     }
     
     // Initialize balances
@@ -11401,8 +11441,31 @@
       const dateStr = formatDateYYYYMMDD(classDate);
       const studentId = student.id;
       const laToday = getLADate();
+      const todayStr = formatDateYYYYMMDD(laToday);
       
-      // Check if student has balance
+      // RULE 1: Skip dates before November 1, 2025
+      if (classDate < CALENDAR_START_DATE) {
+        return {
+          status: 'hidden',
+          paid: false,
+          amount: 0,
+          balance: 0,
+          message: 'Before calendar start date'
+        };
+      }
+      
+      // RULE 2: Historical Freeze - Use snapshot for past dates
+      if (classDate < laToday) {
+        const snapshot = getCalendarSnapshot(dateStr);
+        if (snapshot && snapshot.students && snapshot.students[studentId]) {
+          // Return frozen data
+          return snapshot.students[studentId];
+        }
+        // If no snapshot exists for this past date, it means no class was scheduled
+        // Return as if no class (will not render)
+      }
+      
+      // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
       const balance = studentBalances[studentId] || 0;
       
       // Find all payments for this student (by name or alias match)
@@ -11410,7 +11473,6 @@
         if (p.ignored) return false;
         
         // Use studentName from payment (not payerName which is the sender)
-        // Match by student name or any alias
         const paymentStudentName = (p.studentName || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
         
@@ -11429,7 +11491,6 @@
       
       // Check for direct payment on this specific date
       const paymentOnDate = studentPayments.find(p => {
-        // Use emailDate or date field (both are ISO strings)
         const paymentTimestamp = p.emailDate || p.date || p.timestamp;
         if (!paymentTimestamp) return false;
         
@@ -11441,41 +11502,56 @@
       if (paymentOnDate) {
         const paymentAmount = parseFloat(paymentOnDate.amount) || 0;
         
-        // If payment is more than one class, add remainder to balance
         if (paymentAmount > pricePerClass) {
           const remainder = paymentAmount - pricePerClass;
           const newBalance = balance + remainder;
           studentBalances[studentId] = newBalance;
           saveStudentBalances(studentBalances);
           
-          return {
+          const result = {
             status: 'paid',
             paid: true,
             amount: paymentAmount,
             balance: newBalance,
             message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
           };
+          
+          // Freeze today's data at end of day
+          if (dateStr === todayStr) {
+            saveCalendarSnapshot(dateStr, {
+              [studentId]: result
+            });
+          }
+          
+          return result;
         } else {
-          return {
+          const result = {
             status: 'paid',
             paid: true,
             amount: paymentAmount,
             balance: balance,
             message: `Paid ${formatCurrency(paymentAmount, '$')}`
           };
+          
+          if (dateStr === todayStr) {
+            saveCalendarSnapshot(dateStr, {
+              [studentId]: result
+            });
+          }
+          
+          return result;
         }
       }
       
-      // Check if can deduct from balance (only for past/current dates)
-      if (balance >= pricePerClass && classDate <= laToday) {
+      // Check if can deduct from balance (only for TODAY, not future)
+      if (balance >= pricePerClass && dateStr === todayStr) {
         const newBalance = balance - pricePerClass;
         studentBalances[studentId] = newBalance;
         saveStudentBalances(studentBalances);
         
-        // Check if low balance alert needed
         const lowBalance = newBalance > 0 && newBalance < pricePerClass;
         
-        return {
+        const result = {
           status: lowBalance ? 'low-balance' : 'deducted',
           paid: true,
           amount: pricePerClass,
@@ -11483,6 +11559,12 @@
           message: `From Balance (${formatCurrency(newBalance, '$')} remaining)`,
           alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
         };
+        
+        saveCalendarSnapshot(dateStr, {
+          [studentId]: result
+        });
+        
+        return result;
       }
       
       // Check if marked absent
@@ -11490,13 +11572,21 @@
       const isAbsent = localStorage.getItem(absentKey) === 'true';
       
       if (isAbsent) {
-        return {
+        const result = {
           status: 'absent',
           paid: false,
           amount: 0,
           balance: balance,
           message: 'Marked Absent'
         };
+        
+        if (dateStr === todayStr) {
+          saveCalendarSnapshot(dateStr, {
+            [studentId]: result
+          });
+        }
+        
+        return result;
       }
       
       // Future class - show as pending if has balance
@@ -11510,14 +11600,26 @@
         };
       }
       
-      // Unpaid
+      // RULE 4: Red dots only for TODAY's unpaid classes
+      if (dateStr === todayStr) {
+        return {
+          status: 'unpaid',
+          paid: false,
+          amount: 0,
+          balance: balance,
+          message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
+          showActions: true
+        };
+      }
+      
+      // Future unpaid - no red dot, just gray/empty
       return {
-        status: 'unpaid',
+        status: 'future-unpaid',
         paid: false,
         amount: 0,
         balance: balance,
-        message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
-        showActions: classDate <= laToday // Only show actions for past/current dates
+        message: 'Not yet due',
+        showActions: false
       };
     }
     
@@ -11575,6 +11677,11 @@
       dayData.studentsWithClass.forEach((classInfo, index) => {
         const { student, status } = classInfo;
         
+        // Skip hidden status (before November 1, 2025)
+        if (status === 'hidden') {
+          return;
+        }
+        
         let dotColor;
         
         switch (status) {
@@ -11590,15 +11697,21 @@
             dotColor = '#94a3b8'; // Gray - Absent
             break;
           case 'unpaid':
+            dotColor = '#ef4444'; // Red - Unpaid (today only)
+            break;
+          case 'future-unpaid':
+            dotColor = '#cbd5e1'; // Light gray - Future unpaid (no red dot)
+            break;
           default:
-            dotColor = '#ef4444'; // Red - Unpaid
+            dotColor = '#ef4444'; // Red - Default to unpaid
             break;
         }
         
         const dateStr = formatDateYYYYMMDD(dayData.date);
         const statusText = status === 'paid' || status === 'deducted' ? 'Paid' : 
                           status === 'pending' ? 'Future' :
-                          status === 'absent' ? 'Absent' : 'Unpaid';
+                          status === 'absent' ? 'Absent' :
+                          status === 'future-unpaid' ? 'Not yet due' : 'Unpaid';
         
         html += `
           <div class="calendar-dot" 
@@ -11634,6 +11747,11 @@
       dayData.studentsWithClass.forEach((classInfo, index) => {
         const { student, status, message, balance, pricePerClass } = classInfo;
         
+        // Skip hidden status (before November 1, 2025)
+        if (status === 'hidden') {
+          return;
+        }
+        
         let statusColor, statusText, statusIcon;
         switch (status) {
           case 'paid':
@@ -11652,6 +11770,16 @@
             statusColor = '#94a3b8';
             statusText = 'Absent';
             statusIcon = '⚪';
+            break;
+          case 'future-unpaid':
+            statusColor = '#cbd5e1';
+            statusText = 'Not yet due';
+            statusIcon = '⏳';
+            break;
+          case 'unpaid':
+            statusColor = '#ef4444';
+            statusText = 'Unpaid';
+            statusIcon = '❌';
             break;
           default:
             statusColor = '#ef4444';
