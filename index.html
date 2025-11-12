@@ -15,7 +15,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
     // VERSION CHECK - This should appear FIRST in console
-    console.log('🔥 CACHE BUSTER: Version 2.1.1 - Build 20251112-0300');
+    console.log('🔥 CACHE BUSTER: Version 2.1.2 - Build 20251112-0310');
     console.log('🔥 If you see this, the new code is loading!');
     
     // Supabase Client Initialization
@@ -12749,8 +12749,14 @@
       const today = getLADate();
       const startDate = new Date(CALENDAR_START_DATE);
       
-      // Check classes from calendar start date to 30 days in future
-      for (let d = new Date(startDate); d <= new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000); d.setDate(d.getDate() + 1)) {
+      // Check classes from calendar start date to TODAY ONLY (not future)
+      // Set today to end of day for proper comparison
+      const endOfToday = new Date(today);
+      endOfToday.setHours(23, 59, 59, 999);
+      
+      console.log('[UnpaidClassesModal] Scanning from', formatDateYYYYMMDD(startDate), 'to', formatDateYYYYMMDD(today), '(today)');
+      
+      for (let d = new Date(startDate); d <= endOfToday; d.setDate(d.getDate() + 1)) {
         const dateStr = formatDateYYYYMMDD(d);
         const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][d.getDay()];
         
