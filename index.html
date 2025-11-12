@@ -6128,8 +6128,35 @@
         console.log(`   Invalid/filtered: ${invalidEmails}`);
         
         if (newPayments.length > 0) {
+          // Debug: Log all new payment Gmail IDs before saving
+          console.log('🔍 NEW PAYMENTS TO BE SAVED:');
+          newPayments.forEach((p, idx) => {
+            console.log(`  ${idx + 1}. ${p.payerName} ($${p.amount}) - Gmail ID: ${p.gmailId}`);
+          });
+          
           // Save new payments
           const allPayments = [...existingPayments, ...newPayments];
+          
+          // Debug: Check for Gmail ID duplicates in the combined array
+          const gmailIdCounts = {};
+          allPayments.forEach(p => {
+            if (p.gmailId) {
+              gmailIdCounts[p.gmailId] = (gmailIdCounts[p.gmailId] || 0) + 1;
+            }
+          });
+          
+          const duplicateGmailIds = Object.entries(gmailIdCounts).filter(([_, count]) => count > 1);
+          if (duplicateGmailIds.length > 0) {
+            console.error('❌ DUPLICATE GMAIL IDs DETECTED BEFORE SAVE:');
+            duplicateGmailIds.forEach(([gmailId, count]) => {
+              console.error(`   Gmail ID ${gmailId} appears ${count} times`);
+              const dupes = allPayments.filter(p => p.gmailId === gmailId);
+              dupes.forEach((p, idx) => {
+                console.error(`     ${idx + 1}. ${p.payerName} ($${p.amount}) - Payment ID: ${p.id}`);
+              });
+            });
+          }
+          
           await PaymentStore.save(allPayments);
           
           // Recompute resolutions
