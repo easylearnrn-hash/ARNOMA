@@ -11409,17 +11409,18 @@
       const studentPayments = payments.filter(p => {
         if (p.ignored) return false;
         
+        // Use studentName from payment (not payerName which is the sender)
         // Match by student name or any alias
-        const payerName = (p.payerName || '').toLowerCase().trim();
+        const paymentStudentName = (p.studentName || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
         
         // Check exact name match
-        if (payerName === studentNameLower) return true;
+        if (paymentStudentName === studentNameLower) return true;
         
-        // Check aliases (now using ||| delimiter)
+        // Check if payment matches any student alias
         if (student.aliases && Array.isArray(student.aliases)) {
           return student.aliases.some(alias => 
-            alias.toLowerCase().trim() === payerName
+            alias.toLowerCase().trim() === paymentStudentName
           );
         }
         
