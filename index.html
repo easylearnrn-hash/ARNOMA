@@ -4518,7 +4518,7 @@
         today.setHours(0, 0, 0, 0);
         const afterDate = Math.floor(today.getTime() / 1000);
         
-        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
+        const query = `from:hrachfilm@gmail.com subject:Zelle after:${afterDate}`;
         const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
         
         const searchResponse = await fetch(searchUrl, {
@@ -4647,7 +4647,7 @@
         today.setHours(0, 0, 0, 0);
         const afterDate = Math.floor(today.getTime() / 1000);
         
-        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
+        const query = `from:hrachfilm@gmail.com subject:Zelle after:${afterDate}`;
         const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
         
         const searchResponse = await fetch(searchUrl, {
@@ -5982,7 +5982,7 @@
         showNotification(`🔍 Syncing ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`, 'info');
         
         // Build Gmail search query
-        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
+        const query = `from:hrachfilm@gmail.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
         console.log('   Query string:', query);
         
         // Fetch all messages with pagination
