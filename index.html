@@ -5465,14 +5465,23 @@
     async function linkPaymentToStudent() {
       console.log('🔗 linkPaymentToStudent() called');
       console.log('🔍 Current payment data:', currentPaymentPopupData);
+      console.log('🔍 typeof currentPaymentPopupData:', typeof currentPaymentPopupData);
+      console.log('🔍 currentPaymentPopupData is null?', currentPaymentPopupData === null);
+      console.log('🔍 currentPaymentPopupData is undefined?', currentPaymentPopupData === undefined);
       
       if (!currentPaymentPopupData) {
         console.error('❌ No payment selected in currentPaymentPopupData');
-        showNotification('❌ No payment selected', 'error');
+        console.error('❌ This means the popup was closed or data was cleared');
+        showNotification('❌ No payment selected. Please double-click a payment row first.', 'error');
         return;
       }
       
       console.log('✅ Payment selected, payment ID:', currentPaymentPopupData.paymentId);
+      console.log('✅ Payment details:', {
+        id: currentPaymentPopupData.paymentId,
+        payer: currentPaymentPopupData.payerName,
+        amount: currentPaymentPopupData.amount
+      });
       
       // Get list of students
   const students = getCachedStudents();
