@@ -3,14 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARNOMA - Student Management</title>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>ARNOMA - Student Management [v2.1.0]</title>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
+  <meta http-equiv="Expires" content="-1">
+  
+  <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
+  <meta name="version" content="2.1.0-20251112-0240">
   
   <!-- Supabase Configuration -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
+    // VERSION CHECK - This should appear FIRST in console
+    console.log('🔥 CACHE BUSTER: Version 2.1.0 - Build 20251112-0240');
+    console.log('🔥 If you see this, the new code is loading!');
+    
     // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
