@@ -5445,13 +5445,21 @@
     
     // BEGIN POPUP BACK & EXIT FIX
     async function linkPaymentToStudent() {
+      console.log('🔗 linkPaymentToStudent() called');
+      console.log('🔍 Current payment data:', currentPaymentPopupData);
+      
       if (!currentPaymentPopupData) {
+        console.error('❌ No payment selected in currentPaymentPopupData');
         showNotification('❌ No payment selected', 'error');
         return;
       }
       
+      console.log('✅ Payment selected, payment ID:', currentPaymentPopupData.paymentId);
+      
       // Get list of students
   const students = getCachedStudents();
+      
+      console.log('📋 Students loaded:', students.length);
       
       if (!students || students.length === 0) {
         showNotification('⚠️ No students found. Create students first.', 'warning');
@@ -5577,6 +5585,7 @@
     // END SEARCH FIX
     
     function selectStudentFromSearch(studentId) {
+      console.log('👆 Student clicked, ID:', studentId);
       confirmLinkStudent(studentId);
     }
     
