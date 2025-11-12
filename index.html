@@ -4734,6 +4734,24 @@
           return null;
         }
         
+        // DEVELOPER COMMAND: Only fetch Zelle emails credited to account 7073
+        const bodyTextLower = bodyText.toLowerCase();
+        
+        // ✅ Only fetch messages credited to your account (ending in 7073)
+        const isCreditedTo7073 = bodyTextLower.includes('credited to account ending in: 7073');
+        
+        // ❌ Skip all others
+        const isSentFrom7073 = bodyTextLower.includes('sent from account ending in: 7073');
+        const isGenericDeposit = bodyTextLower.includes('your deposit of');
+        const isGenericTransaction = bodyTextLower.includes('your transaction of');
+        
+        if (!isCreditedTo7073 || isSentFrom7073 || isGenericDeposit || isGenericTransaction) {
+          console.log(`⚠️ Skipped non-Zelle or outgoing payment email (not credited to 7073): ${messageData.id}`);
+          return null;
+        }
+        
+        console.log('✅ Valid Zelle deposit credited to account 7073');
+        
         // Parse amount - universal pattern
         const amountMatch = bodyText.match(/\$[\d,]+\.\d{2}/);
         const amount = amountMatch ? parseFloat(amountMatch[0].replace(/[$,]/g, '')) : 0;
