@@ -10174,6 +10174,9 @@
       if (window.ClassCountdownTimer && window.ClassCountdownTimer.init) {
         window.ClassCountdownTimer.init();
         showNotification('Countdown timer active', 'success');
+        
+        // Dispatch event for Skip Manager to attach handlers
+        window.dispatchEvent(new CustomEvent('timerOpened'));
       } else {
         // Fallback to legacy implementation
         overlay = document.createElement('div');
@@ -11453,6 +11456,13 @@
         // Try attaching handlers after a short delay
         setTimeout(attachHandlers, 500);
         setTimeout(attachHandlers, 1500); // Retry after 1.5s
+        setTimeout(attachHandlers, 3000); // Retry after 3s
+        
+        // Listen for timer being opened
+        window.addEventListener('timerOpened', () => {
+          console.log('[SkipClassManager] Timer opened event received');
+          setTimeout(attachHandlers, 200);
+        });
         
         // Also attach when timer is reinitialized
         window.addEventListener('groups:updated', () => {
