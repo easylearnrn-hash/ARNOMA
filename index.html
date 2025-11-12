@@ -12843,13 +12843,18 @@
       
       // Create a payment for each selected date
       selectedDates.forEach(dateStr => {
+        // Create date in LA timezone to avoid timezone shift issues
+        // dateStr is in format "YYYY-MM-DD"
+        const [year, month, day] = dateStr.split('-').map(Number);
+        const laDate = new Date(year, month - 1, day, 12, 0, 0); // Use noon to avoid timezone edge cases
+        
         const payment = {
           id: 'cal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
           payerName: student.name,
           studentName: student.name,
           amount: pricePerClass.toString(),
-          emailDate: new Date(dateStr).toISOString(),
-          timestamp: new Date(dateStr).toISOString(),
+          emailDate: laDate.toISOString(),
+          timestamp: laDate.toISOString(),
           note: 'Added from Calendar - Unpaid Classes Selection',
           ignored: false,
           source: 'calendar'
