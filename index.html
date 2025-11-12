@@ -12729,12 +12729,14 @@
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; font-weight: 600;">Quick Actions:</div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button onclick="event.stopPropagation(); quickAddPayment('${studentId}', '${dateStr}', ${classInfo.pricePerClass})" style="padding: 8px 14px; background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); border-radius: 8px; color: #22c55e; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,0.3)'" onmouseout="this.style.background='rgba(34,197,94,0.2)'">
-                ➕ Add Payment
-              </button>
               <button onclick="event.stopPropagation(); markAsAbsent('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(100,116,139,0.2); border: 1px solid rgba(100,116,139,0.4); border-radius: 8px; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(100,116,139,0.3)'" onmouseout="this.style.background='rgba(100,116,139,0.2)'">
                 ⚪ Mark Absent
               </button>
+            </div>
+            <div style="margin-top: 8px; padding: 8px; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 6px;">
+              <div style="font-size: 10px; color: rgba(251,191,36,0.9);">
+                ⚠️ Payments can only be added via Gmail sync. The calendar is read-only.
+              </div>
             </div>
           </div>
         `;
@@ -12802,208 +12804,9 @@
       document.body.appendChild(overlay);
     }
     
-    function quickAddPayment(studentId, dateStr, amount) {
-      debug('[QuickAddPayment] Called with:', { studentId, dateStr, amount });
-      
-      // Close detail popup
-      const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.click();
-      
-      // Show unpaid classes selection modal
-      debug('[QuickAddPayment] Opening unpaid classes modal...');
-      showUnpaidClassesModal(studentId, dateStr);
-    }
-    
-    function showUnpaidClassesModal(studentId, initialDateStr) {
-      debug('[UnpaidClassesModal] Opening modal for:', { studentId, initialDateStr });
-      
-      const students = getCachedStudents();
-      debug('[UnpaidClassesModal] Total students in cache:', students.length);
-      debug('[UnpaidClassesModal] Looking for student ID:', studentId, 'Type:', typeof studentId);
-      
-      // Use loose equality to handle string/number mismatch
-      const student = students.find(s => s.id == studentId);
-      if (!student) {
-        console.error('[UnpaidClassesModal] Student not found:', studentId);
-        debug('[UnpaidClassesModal] Available student IDs:', students.slice(0, 10).map(s => `${s.id} (${typeof s.id})`));
-        debug('[UnpaidClassesModal] Checking with parseInt:', students.find(s => s.id === parseInt(studentId)));
-        return;
-      }
-      
-      debug('[UnpaidClassesModal] Student found:', student.name);
-      
-      // Get calendar data by regenerating it
-      // This uses the SAME logic as the calendar rendering
-      const today = getLADate();
-      const currentYear = today.getFullYear();
-      const currentMonth = today.getMonth();
-      
-      // Find all unpaid classes by scanning rendered calendar data
-      const unpaidClasses = [];
-      
-      // Scan from calendar start date to current month
-      const startDate = new Date(CALENDAR_START_DATE);
-      const startYear = startDate.getFullYear();
-      const startMonth = startDate.getMonth();
-      
-      // Generate calendar data for each month from start to current
-      for (let year = startYear; year <= currentYear; year++) {
-        const monthStart = (year === startYear) ? startMonth : 0;
-        const monthEnd = (year === currentYear) ? currentMonth : 11;
-        
-        for (let month = monthStart; month <= monthEnd; month++) {
-          const calendarData = generateCalendarData(year, month);
-          
-          // Check each day in this month
-          calendarData.days.forEach(dayData => {
-            const dateStr = formatDateYYYYMMDD(dayData.date);
-            
-            // Only include dates up to today
-            if (dayData.date > today) return;
-            
-            // Find this student in the day's data
-            const studentClass = dayData.studentsWithClass.find(sc => sc.student.id == studentId);
-            
-            // Only include if student has class and it's unpaid
-            if (studentClass && studentClass.status === 'unpaid') {
-              const dateDisplay = dayData.date.toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              });
-              
-              unpaidClasses.push({
-                date: dayData.date,
-                dateStr: dateStr,
-                dayName: dayData.dayName,
-                groupName: student.group,
-                status: 'unpaid',
-                pricePerClass: studentClass.pricePerClass,
-                dateDisplay: dateDisplay
-              });
-            }
-          });
-        }
-      }
-      
-      debug('[UnpaidClassesModal] Found', unpaidClasses.length, 'unpaid classes');
-      
-      if (unpaidClasses.length === 0) {
-        showToast('✅ No unpaid classes found');
-        return;
-      }
-      
-      // Generate HTML for unpaid classes list
-      let classesHTML = '';
-      unpaidClasses.forEach((cls, index) => {
-        const dateDisplay = cls.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-        const isInitial = cls.dateStr === initialDateStr;
-        
-        classesHTML += `
-          <label style="display: flex; align-items: center; padding: 12px; background: ${isInitial ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isInitial ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.1)'; this.style.borderColor='rgba(138,180,255,0.3)';" onmouseout="this.style.background='${isInitial ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)'}'; this.style.borderColor='${isInitial ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}';">
-            <input type="checkbox" class="unpaid-class-checkbox" data-date="${cls.dateStr}" ${isInitial ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; margin-right: 12px; accent-color: #22c55e;">
-            <div style="flex: 1;">
-              <div style="font-size: 14px; font-weight: 700; color: white; margin-bottom: 2px;">${dateDisplay}</div>
-              <div style="font-size: 11px; color: #94a3b8;">Group ${escapeHtml(cls.groupName)} • <span style="color: #ef4444; font-weight: 600;">🔴 Unpaid</span></div>
-            </div>
-            <div style="font-size: 13px; font-weight: 900; color: #22c55e;">${formatCurrency(cls.pricePerClass, '$')}</div>
-          </label>
-        `;
-      });
-      
-      const modalHTML = `
-        <div id="unpaidClassesModal" onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 29000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; min-width: 500px; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
-            <div>
-              <h3 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; color: white;">Select Unpaid Classes</h3>
-              <p style="margin: 0; font-size: 13px; color: #94a3b8;">${escapeHtml(student.name)} • Group ${escapeHtml(student.group || 'N/A')}</p>
-            </div>
-            <button onclick="closeUnpaidClassesModal()" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
-          </div>
-          
-          <div style="margin-bottom: 16px; padding: 12px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px;">
-            <div style="font-size: 12px; color: #22c55e; font-weight: 700;">ℹ️ Select one or more unpaid classes to apply payment</div>
-          </div>
-          
-          <div style="flex: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 8px;">
-            ${classesHTML}
-          </div>
-          
-          <div style="display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <button onclick="closeUnpaidClassesModal()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
-            <button onclick="applyPaymentToSelected('${studentId}')" style="flex: 2; padding: 12px; background: rgba(34,197,94,0.8); border: 1px solid rgba(34,197,94,1); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,1)'" onmouseout="this.style.background='rgba(34,197,94,0.8)'">Apply Payment to Selected</button>
-          </div>
-        </div>
-      `;
-      
-      // Add overlay
-      const modalOverlay = document.createElement('div');
-      modalOverlay.id = 'unpaidClassesOverlay';
-      modalOverlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 28500; backdrop-filter: blur(6px);';
-      modalOverlay.onclick = closeUnpaidClassesModal;
-      
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-      document.body.appendChild(modalOverlay);
-      
-      debug('[UnpaidClassesModal] ✅ Modal created and displayed');
-    }
-    
-    function closeUnpaidClassesModal() {
-      const modal = document.getElementById('unpaidClassesModal');
-      const overlay = document.getElementById('unpaidClassesOverlay');
-      if (modal) modal.remove();
-      if (overlay) overlay.remove();
-    }
-    
-    function applyPaymentToSelected(studentId) {
-      const checkboxes = document.querySelectorAll('.unpaid-class-checkbox:checked');
-      if (checkboxes.length === 0) {
-        showToast('⚠️ Please select at least one class');
-        return;
-      }
-      
-      const students = getCachedStudents();
-      // Use loose equality to handle string/number mismatch
-      const student = students.find(s => s.id == studentId);
-      if (!student) return;
-      
-      const selectedDates = Array.from(checkboxes).map(cb => cb.dataset.date);
-      const pricePerClass = parseFloat(student.payPerClass) || 0;
-      const totalAmount = selectedDates.length * pricePerClass;
-      
-      const confirmed = confirm(`Apply payment of ${formatCurrency(totalAmount, '$')} to ${selectedDates.length} class${selectedDates.length !== 1 ? 'es' : ''}?\n\nThis will mark the selected classes as paid.`);
-      if (!confirmed) return;
-      
-      const payments = PaymentStore.getAll();
-      
-      // Create a payment for each selected date
-      selectedDates.forEach(dateStr => {
-        // Create date in LA timezone to avoid timezone shift issues
-        // dateStr is in format "YYYY-MM-DD"
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const laDate = new Date(year, month - 1, day, 12, 0, 0); // Use noon to avoid timezone edge cases
-        
-        const payment = {
-          id: 'cal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-          payerName: student.name,
-          studentName: student.name,
-          amount: pricePerClass.toString(),
-          emailDate: laDate.toISOString(),
-          timestamp: laDate.toISOString(),
-          note: 'Added from Calendar - Unpaid Classes Selection',
-          ignored: false,
-          source: 'calendar'
-        };
-        payments.push(payment);
-      });
-      
-      PaymentStore.save(payments);
-      
-      showToast(`✅ Payment applied to ${selectedDates.length} class${selectedDates.length !== 1 ? 'es' : ''}`);
-      closeUnpaidClassesModal();
-      renderCalendar();
-    }
+    // REMOVED: Payment creation functions
+    // The calendar is READ-ONLY and can NEVER create payments
+    // Only Gmail-fetched payments are allowed in the system
     
     function markAsAbsent(studentId, dateStr) {
       // Convert to number for consistency
