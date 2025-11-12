@@ -2907,6 +2907,7 @@
         ...record,
         group: record.group_name ?? record.group ?? null,
         payPerClass: record.price_per_class ?? record.payPerClass ?? null,
+        balance: record.balance ?? 0,
         status: normalizeStudentStatusValue(record.status),
         showInGrid: record.show_in_grid ?? record.showInGrid ?? true,
         isActive: record.is_active ?? (record.isActive ?? true),
@@ -2949,6 +2950,7 @@
         name: studentData.name,
         group_name: studentData.group || studentData.group_name || null,
         price_per_class: studentData.price_per_class ?? studentData.payPerClass ?? null,
+        balance: studentData.balance ?? 0,
         status: normalizeStudentStatusValue(studentData.status),
         status_changed_date: studentData.statusChangedDate ?? null
       };
@@ -7328,7 +7330,7 @@
             <div style="margin-bottom: 6px; font-size: 11px; color: #94a3b8;">Auto-applies to upcoming classes</div>
             <div style="position: relative;">
               <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #eab308; font-weight: 700;">$</span>
-              <input type="number" id="inline-balance-${student.id}" value="${(studentBalances[student.id] || 0)}" placeholder="0.00" step="0.01" min="0" style="padding-left: 28px; background: rgba(234,179,8,.1); border: 2px solid rgba(234,179,8,.3); color: #eab308; font-weight: 700;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
+              <input type="number" id="inline-balance-${student.id}" value="${(student.balance || 0)}" placeholder="0.00" step="0.01" min="0" style="padding-left: 28px; background: rgba(234,179,8,.1); border: 2px solid rgba(234,179,8,.3); color: #eab308; font-weight: 700;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
             </div>
           </div>
 
@@ -7667,6 +7669,7 @@
       student.name = name;
       student.group = group;
       student.payPerClass = payPerClass;
+      student.balance = balance;
       student.phone = phone;
       student.email = email;
       student.aliases = aliases;
@@ -7675,16 +7678,7 @@
       // Save only this student to Supabase
       await saveStudent(student);
       
-      // Save balance to localStorage
-      const balances = loadStudentBalances();
-      if (balance > 0) {
-        balances[numericId] = balance;
-        console.log(`💰 Set balance for student ${numericId}: $${balance}`);
-      } else {
-        delete balances[numericId];
-        console.log(`💰 Removed balance for student ${numericId}`);
-      }
-      saveStudentBalances(balances);
+      // No longer need localStorage for balance - it's in Supabase now
       
       // Update cache
       window.studentsCache = students;
@@ -7930,6 +7924,7 @@
           student.name = name;
           student.group = group;
           student.payPerClass = payPerClass;
+          student.balance = balance;
           student.phone = phone;
           student.email = email;
           student.aliases = aliases;
@@ -7942,6 +7937,7 @@
           name,
           group,
           payPerClass,
+          balance,
           phone,
           email,
           aliases,
@@ -7963,18 +7959,8 @@
 
       console.log('✅ Student saved to Supabase:', savedRecord);
       
-      // Save balance to localStorage
-      if (balance > 0) {
-        const balances = loadStudentBalances();
-        balances[savedRecord.id] = balance;
-        saveStudentBalances(balances);
-        console.log(`💰 Set balance for student ${savedRecord.id}: $${balance}`);
-      } else {
-        // Remove balance if set to 0
-        const balances = loadStudentBalances();
-        delete balances[savedRecord.id];
-        saveStudentBalances(balances);
-      }
+      // No longer need to save balance to localStorage - it's in Supabase now
+      // Remove localStorage balance management code
       
       if (!editingStudentId) {
         students.push(savedRecord);
@@ -11516,7 +11502,7 @@
       }
       
       // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
-      const balance = studentBalances[studentId] || 0;
+      const balance = student.balance || 0;
       
       // Find all payments for this student (by name or alias match)
       // Check BOTH studentName AND payerName fields
@@ -11560,8 +11546,10 @@
         if (paymentAmount > pricePerClass) {
           const remainder = paymentAmount - pricePerClass;
           const newBalance = balance + remainder;
-          studentBalances[studentId] = newBalance;
-          saveStudentBalances(studentBalances);
+          
+          // Update student balance in memory and Supabase
+          student.balance = newBalance;
+          saveStudent(student); // Save to Supabase asynchronously
           
           const result = {
             status: 'paid',
@@ -11602,8 +11590,10 @@
       // Only deduct for TODAY or FUTURE (not past dates - those use snapshots)
       if (balance >= pricePerClass && dateStr >= todayStr) {
         const newBalance = balance - pricePerClass;
-        studentBalances[studentId] = newBalance;
-        saveStudentBalances(studentBalances);
+        
+        // Update student balance in memory and Supabase
+        student.balance = newBalance;
+        saveStudent(student); // Save to Supabase asynchronously
         
         const lowBalance = newBalance > 0 && newBalance < pricePerClass;
         
