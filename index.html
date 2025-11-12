@@ -282,6 +282,37 @@
       box-sizing: border-box;
     }
     
+    /* Calendar dot tooltip */
+    .calendar-dot {
+      position: relative;
+    }
+    
+    .calendar-dot::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%) scale(0.9);
+      opacity: 0;
+      pointer-events: none;
+      white-space: nowrap;
+      background: rgba(0, 0, 0, 0.95);
+      color: white;
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      transition: all 0.2s ease;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .calendar-dot:hover::after {
+      opacity: 1;
+      transform: translateX(-50%) scale(1);
+    }
+    
     @keyframes modalSlideIn {
       from {
         opacity: 0;
@@ -11240,20 +11271,11 @@
       const groups = window.groupsCache || window.globalData?.groups || [];
       const payments = PaymentStore.getAll();
       
-      console.log('📊 CALENDAR DEBUG:', {
-        studentsCount: students.length,
-        groupsCount: groups.length,
-        paymentsCount: payments.length,
-        groups: groups.map(g => ({ name: g.name, schedule: g.schedule }))
-      });
-      
       // Filter active students
       const activeStudents = students.filter(s => {
         const status = (s.status || 'active').toLowerCase();
         return status === 'active' && s.isActive !== false;
       });
-      
-      console.log('👥 Active students:', activeStudents.length);
       
       // Map students to their schedules
       const scheduleMap = {};
@@ -11261,25 +11283,13 @@
       
       activeStudents.forEach(student => {
         const groupName = student.group || '';
-        if (!groupName.trim()) {
-          console.log('⚠️ Student has no group:', student.name);
-          return;
-        }
+        if (!groupName.trim()) return;
         
         const group = groups.find(g => g.name === groupName);
-        if (!group) {
-          console.log('⚠️ Group not found for student:', student.name, 'Group:', groupName);
-          return;
-        }
-        
-        if (!group.schedule) {
-          console.log('⚠️ Group has no schedule:', group.name);
-          return;
-        }
+        if (!group || !group.schedule) return;
         
         // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
         const scheduleDays = parseScheduleDays(group.schedule);
-        console.log('📅 Parsed schedule for', student.name, ':', { group: groupName, schedule: group.schedule, days: scheduleDays });
         
         if (!scheduleMap[student.id]) {
           scheduleMap[student.id] = {
@@ -11288,15 +11298,6 @@
             pricePerClass: parseFloat(student.payPerClass) || 0
           };
         }
-      });
-      
-      console.log('📋 Schedule Map:', {
-        count: Object.keys(scheduleMap).length,
-        entries: Object.values(scheduleMap).map(s => ({
-          student: s.student.name,
-          days: s.scheduleDays,
-          price: s.pricePerClass
-        }))
       });
       
       // Build day data
@@ -11310,7 +11311,6 @@
         const studentsWithClass = [];
         
         Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
-          console.log(`🔍 Checking ${student.name} for ${dayName}:`, { scheduleDays, includes: scheduleDays.includes(dayName) });
           if (scheduleDays.includes(dayName)) {
             const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
             studentsWithClass.push({
@@ -11381,7 +11381,6 @@
         }
       });
       
-      console.log('🔍 parseScheduleDays:', { input: scheduleString, cleaned: cleanedSchedule, output: days });
       return days;
     }
     
@@ -11492,23 +11491,32 @@
       
       // Empty cells before first day
       for (let i = 0; i < calendarData.firstDay; i++) {
-        html += '<div style="min-height: 100px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;"></div>';
+        html += '<div style="min-height: 80px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;"></div>';
       }
       
-      // Day cells
+      // Day cells with dot-based view
       calendarData.days.forEach(dayData => {
         const isToday = isDateToday(dayData.date);
         const hasClasses = dayData.studentsWithClass.length > 0;
+        const dateStr = formatDateYYYYMMDD(dayData.date);
         
         html += `
-          <div style="min-height: 100px; background: ${isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)'}; border: 1px solid ${isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)'}; border-radius: 8px; padding: 8px; display: flex; flex-direction: column; overflow: hidden;">
-            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : 'white'}; margin-bottom: 6px;">
+          <div onclick="openDayDetails('${dateStr}', ${JSON.stringify(dayData).replace(/"/g, '&quot;')})" 
+               style="min-height: 80px; background: ${isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)'}; 
+                      border: 1px solid ${isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)'}; 
+                      border-radius: 8px; padding: 8px; display: flex; flex-direction: column; 
+                      cursor: ${hasClasses ? 'pointer' : 'default'}; 
+                      transition: all 0.2s;"
+               onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
+               onmouseout="this.style.background='${isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)'}'; this.style.borderColor='${isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)'}';">
+            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : 'white'}; margin-bottom: 8px;">
               ${dayData.day}
               ${isToday ? '<span style="font-size: 9px; color: #8ab4ff; margin-left: 4px;">TODAY</span>' : ''}
             </div>
-            <div style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px;">
-              ${hasClasses ? renderDayClasses(dayData) : ''}
+            <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;">
+              ${hasClasses ? renderDayDots(dayData) : ''}
             </div>
+            ${hasClasses ? `<div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: center;">${dayData.studentsWithClass.length} class${dayData.studentsWithClass.length !== 1 ? 'es' : ''}</div>` : ''}
           </div>
         `;
       });
@@ -11516,47 +11524,45 @@
       grid.innerHTML = html;
     }
     
-    function renderDayClasses(dayData) {
+    function renderDayDots(dayData) {
       let html = '';
       
-      dayData.studentsWithClass.forEach(classInfo => {
-        const { student, status, message, balance, alert, showActions } = classInfo;
+      dayData.studentsWithClass.forEach((classInfo, index) => {
+        const { student, status } = classInfo;
         
-        let bgColor, borderColor, icon;
+        let dotColor;
         
         switch (status) {
           case 'paid':
-            bgColor = 'rgba(34,197,94,0.15)';
-            borderColor = 'rgba(34,197,94,0.4)';
-            icon = '✅';
-            break;
           case 'deposit':
-            bgColor = 'rgba(234,179,8,0.15)';
-            borderColor = 'rgba(234,179,8,0.4)';
-            icon = '💰';
-            break;
           case 'deducted':
-            bgColor = 'rgba(34,197,94,0.12)';
-            borderColor = 'rgba(34,197,94,0.3)';
-            icon = '✓';
-            break;
           case 'low-balance':
-            bgColor = 'rgba(234,179,8,0.15)';
-            borderColor = 'rgba(234,179,8,0.4)';
-            icon = '⚠️';
+            dotColor = '#22c55e'; // Green
             break;
           case 'absent':
-            bgColor = 'rgba(100,116,139,0.15)';
-            borderColor = 'rgba(100,116,139,0.4)';
-            icon = '🚫';
+            dotColor = '#94a3b8'; // Gray
             break;
           case 'unpaid':
           default:
-            bgColor = 'rgba(239,68,68,0.15)';
-            borderColor = 'rgba(239,68,68,0.4)';
-            icon = '❌';
+            dotColor = '#ef4444'; // Red
             break;
         }
+        
+        const dateStr = formatDateYYYYMMDD(dayData.date);
+        
+        html += `
+          <div class="calendar-dot" 
+               onclick="event.stopPropagation(); showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
+               data-tooltip="${escapeHtml(student.name)} — ${status === 'paid' || status === 'deposit' || status === 'deducted' ? 'Paid' : status === 'absent' ? 'Absent' : 'Unpaid'}"
+               style="width: 8px; height: 8px; border-radius: 50%; background: ${dotColor}; 
+                      cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
+               onmouseover="this.style.transform='scale(1.5)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.5)';"
+               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.3)';"></div>
+        `;
+      });
+      
+      return html;
+    }
         
         const dateStr = formatDateYYYYMMDD(dayData.date);
         
@@ -11583,6 +11589,112 @@
       return date.getDate() === today.getDate() &&
              date.getMonth() === today.getMonth() &&
              date.getFullYear() === today.getFullYear();
+    }
+    
+    // Open day details panel showing all students scheduled that day
+    function openDayDetails(dateStr, dayData) {
+      const dateObj = new Date(dateStr);
+      const dateDisplay = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      
+      if (!dayData.studentsWithClass || dayData.studentsWithClass.length === 0) {
+        return; // No classes this day
+      }
+      
+      let studentsHTML = '';
+      dayData.studentsWithClass.forEach((classInfo, index) => {
+        const { student, status, message, balance, pricePerClass } = classInfo;
+        
+        let statusColor, statusText, statusIcon;
+        switch (status) {
+          case 'paid':
+          case 'deposit':
+          case 'deducted':
+          case 'low-balance':
+            statusColor = '#22c55e';
+            statusText = 'Paid';
+            statusIcon = '✅';
+            break;
+          case 'absent':
+            statusColor = '#94a3b8';
+            statusText = 'Absent';
+            statusIcon = '🚫';
+            break;
+          default:
+            statusColor = '#ef4444';
+            statusText = 'Unpaid';
+            statusIcon = '❌';
+            break;
+        }
+        
+        studentsHTML += `
+          <div style="padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; margin-bottom: 10px; transition: all 0.2s; cursor: pointer;"
+               onclick="showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
+               onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(138,180,255,0.3)';"
+               onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.08)';">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 15px; font-weight: 700; color: white; margin-bottom: 4px;">${escapeHtml(student.name)}</div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Group ${student.group || 'N/A'} • ${formatCurrency(pricePerClass, '$')}/class</div>
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="font-size: 18px;">${statusIcon}</span>
+                <span style="font-size: 13px; font-weight: 700; color: ${statusColor};">${statusText}</span>
+              </div>
+            </div>
+            ${balance > 0 ? `<div style="margin-top: 8px; font-size: 10px; color: #eab308;">💰 Balance: ${formatCurrency(balance, '$')}</div>` : ''}
+          </div>
+        `;
+      });
+      
+      const panelHTML = `
+        <div id="dayDetailsOverlay" onclick="closeDayDetails()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 28000; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;"></div>
+        <div id="dayDetailsPanel" onclick="event.stopPropagation()" style="position: fixed; right: -500px; top: 0; bottom: 0; width: 450px; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border-left: 2px solid rgba(138,180,255,0.3); z-index: 28001; backdrop-filter: blur(20px); box-shadow: -10px 0 40px rgba(0,0,0,0.5); transition: right 0.3s ease; overflow-y: auto;">
+          <div style="padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); z-index: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <h3 style="margin: 0; font-size: 20px; font-weight: 900; color: white;">${dateDisplay}</h3>
+                <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">${dayData.studentsWithClass.length} scheduled class${dayData.studentsWithClass.length !== 1 ? 'es' : ''}</p>
+              </div>
+              <button onclick="closeDayDetails()" style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 20px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">×</button>
+            </div>
+          </div>
+          <div style="padding: 24px;">
+            ${studentsHTML}
+          </div>
+        </div>
+      `;
+      
+      document.body.insertAdjacentHTML('beforeend', panelHTML);
+      
+      // Animate in
+      requestAnimationFrame(() => {
+        document.getElementById('dayDetailsOverlay').style.opacity = '1';
+        document.getElementById('dayDetailsPanel').style.right = '0';
+      });
+    }
+    
+    function closeDayDetails() {
+      const overlay = document.getElementById('dayDetailsOverlay');
+      const panel = document.getElementById('dayDetailsPanel');
+      
+      if (overlay && panel) {
+        overlay.style.opacity = '0';
+        panel.style.right = '-500px';
+        
+        setTimeout(() => {
+          overlay.remove();
+          panel.remove();
+        }, 300);
+      }
+    }
+    
+    // Show individual student class details (when clicking a dot)
+    function showStudentClassDetails(studentId, dateStr, classInfo) {
+      // Close day details if open
+      closeDayDetails();
+      
+      // Reuse existing showClassDetails function
+      showClassDetails(studentId, dateStr, classInfo);
     }
     
     function showClassDetails(studentId, dateStr, classInfo) {
