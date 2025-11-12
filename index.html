@@ -4591,7 +4591,18 @@
         
       } catch (error) {
         console.error('Error refreshing payments:', error);
-        showNotification('❌ Error: ' + error.message, 'error');
+        
+        // Check if it's a network error
+        if (error.message === 'Load failed' || error.message.includes('Failed to fetch')) {
+          console.error('Network error details:', {
+            message: error.message,
+            tokenExists: !!gmailAccessToken,
+            tokenExpiry: localStorage.getItem(STORAGE_KEYS.GMAIL_EXPIRY)
+          });
+          showNotification('❌ Network error. Check your internet connection and Gmail token.', 'error');
+        } else {
+          showNotification('❌ Error: ' + error.message, 'error');
+        }
       } finally {
         btn.classList.remove('spinning');
         btn.disabled = false;
