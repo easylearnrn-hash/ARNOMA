@@ -2603,10 +2603,11 @@
       },
       save: async function(payments) {
         try {
-          // Remove fields that might not be in Supabase schema yet
+          // Strip fields to match minimal Supabase schema
           const paymentsForSupabase = payments.map(p => {
             const { 
-              createdAt, 
+              createdAt,
+              emailDate,
               derivedStudentId, 
               linkedStudentId, 
               resolvedStudentName, 
@@ -2620,6 +2621,8 @@
             return rest;
           });
           
+          console.log('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
+          
           // For bulk save, we'll upsert all payments
           // Supabase upsert uses 'id' as conflict resolution by default
           const { data, error } = await supabase
@@ -2632,6 +2635,7 @@
             return;
           }
           
+          console.log('✅ Saved successfully:', data?.length || 0, 'payments');
           window.paymentsCache = data || payments;
           dispatchPaymentsUpdated(payments);
           
