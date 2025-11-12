@@ -4708,16 +4708,28 @@
         let studentNameFromMessage = '';
         
         // Pattern 1: "Message from [Payer]: [Student Name]" (US Bank specific - extract student name)
-        let messageFromMatch = bodyText.match(/Message\s+from\s+[^:]+:\s*([A-Za-z\s'\-]+)/i);
+        // STOP BEFORE footer text like "The money is ready", "Pay it forward", etc.
+        let messageFromMatch = bodyText.match(
+          /Message\s+from\s+[^:]+:\s*([A-Za-z\s,'"\-]+?)(?=\s*(?:The money|Pay it forward|If you'd|Thanks|You can add|View transaction|\n\n|$))/i
+        );
         if (messageFromMatch) {
           studentNameFromMessage = messageFromMatch[1].trim();
+          
+          // Extra safety filter to remove any footer fragments
+          studentNameFromMessage = studentNameFromMessage
+            .replace(/(The money.*|Pay it forward.*|If you'd.*|Thanks.*|You can add.*|View transaction.*)/i, '')
+            .trim();
+          
           memo = studentNameFromMessage; // Use as memo too
           console.log('📩 Extracted student name from message:', studentNameFromMessage);
+          console.log('🧩 Stopped before footer text (clean extraction)');
         } else {
           // Pattern 2: "Memo:" or "Message:" or "Note:" (text/plain format)
           let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
           if (memoMatch) {
             memo = memoMatch[1].trim();
+            // Clean footer from memo as well
+            memo = memo.replace(/(The money.*|Pay it forward.*|If you'd.*|Thanks.*|You can add.*|View transaction.*)/i, '').trim();
           }
         }
         
