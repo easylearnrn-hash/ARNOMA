@@ -729,8 +729,21 @@ ARNOMA Team"></textarea>
 
   <script>
     // ============================================================================
-    // GMAIL API INTEGRATION
+    // EMAIL SENDING CONFIGURATION
     // ============================================================================
+    // ============================================================================
+    
+    // Supabase + Resend Configuration (Production Email System)
+    const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4Njc2MjgsImV4cCI6MjA0NjQ0MzYyOH0.5eHRjEEyJjdkEY-ACaVA7X_BNQfvF-u8jBPj76QN_2w';
+    const EMAIL_FROM = 'ARNOMA <info@mail.arnoma.us>';
+    
+    // Email sending method preference
+    let useSupabaseEmail = true; // Set to false to use Gmail instead
+    
+    // ============================================================================
+    // GMAIL API INTEGRATION (Fallback)
+
     
     const GMAIL_CLIENT_ID = '67231383915-4kpdv0k6u517admvhl7jlejku7qtbsjj.apps.googleusercontent.com';
     const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.send';
@@ -859,7 +872,7 @@ ARNOMA Team"></textarea>
     
     // Send email via Gmail API
     async function sendEmailViaGmail(to, subject, htmlBody) {
-      if (!isGmailConnected()) {
+      if (!useSupabaseEmail && !isGmailConnected()) {
         showNotification('❌ Please connect Gmail first', 'error');
         return false;
       }
@@ -919,9 +932,52 @@ ARNOMA Team"></textarea>
       }
     }
     
+    
+    // Send email via Supabase + Resend
+    async function sendEmailViaSupabase(to, subject, htmlBody) {
+      try {
+        console.log('📧 Sending email via Supabase + Resend...');
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            to: to,
+            subject: subject,
+            html: htmlBody,
+            from: EMAIL_FROM
+          })
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          throw new Error(result.error || 'Failed to send email');
+        }
+        
+        console.log('✅ Email sent successfully:', result);
+        return true;
+      } catch (error) {
+        console.error('Supabase send error:', error);
+        showNotification(`❌ Failed to send: ${error.message}`, 'error');
+        return false;
+      }
+    }
+    
+    // Universal email sending function
+    async function sendEmail(to, subject, htmlBody) {
+      if (useSupabaseEmail) {
+        return await sendEmailViaSupabase(to, subject, htmlBody);
+      } else {
+        return await sendEmailViaGmail(to, subject, htmlBody);
+      }
+    }
     // Send email to multiple recipients
     async function sendBulkEmails(recipients, subject, htmlBody) {
-      if (!isGmailConnected()) {
+      if (!useSupabaseEmail && !isGmailConnected()) {
         showNotification('❌ Please connect Gmail first', 'error');
         return;
       }
@@ -930,7 +986,7 @@ ARNOMA Team"></textarea>
       let failCount = 0;
       
       for (const email of recipients) {
-        const success = await sendEmailViaGmail(email, subject, htmlBody);
+        const success = await sendEmail(email, subject, htmlBody);
         if (success) {
           successCount++;
         } else {
@@ -1903,7 +1959,7 @@ ARNOMA Team"></textarea>
 
     // Send automation emails now
     async function sendAutomationNow(automationId) {
-      if (!isGmailConnected()) {
+      if (!useSupabaseEmail && !isGmailConnected()) {
         showNotification('❌ Please connect Gmail first', 'error');
         return;
       }
