@@ -10371,7 +10371,8 @@
       let updateInterval = null;
       let currentClassData = null;
       let isPinned = false;
-      let timerTimeZone = 'LA'; // 'LA' or 'EVN' - controls which Quick View tab data to use
+      // Load saved timezone preference or default to LA
+      let timerTimeZone = localStorage.getItem('timer-timezone') || 'LA'; // 'LA' or 'EVN' - controls which Quick View tab data to use
 
       /**
        * Timezone Utilities
@@ -10667,9 +10668,18 @@
                 // New string format - schedule is in LA time, convert if needed
                 const parsedSessions = parseScheduleString(group.schedule);
                 if (useYerevan) {
+                  // When converting to Yerevan, we need to adjust the day as well
                   sessions = parsedSessions.map(s => {
                     const converted = TimezoneUtils.convertLATimeToYerevan(s.time);
-                    return { day: s.day, time: converted.time };
+                    // Apply day shift if the time crosses midnight
+                    let adjustedDay = s.day;
+                    if (converted.dayShift !== 0) {
+                      const dayIndex = dayNames.indexOf(s.day);
+                      const newDayIndex = (dayIndex + converted.dayShift + 7) % 7;
+                      adjustedDay = dayNames[newDayIndex];
+                      debug(`[Timer] Day shift: ${s.day} ${s.time} LA → ${adjustedDay} ${converted.time} Yerevan (shift: ${converted.dayShift})`);
+                    }
+                    return { day: adjustedDay, time: converted.time };
                   });
                 } else {
                   sessions = parsedSessions;
@@ -10801,6 +10811,15 @@
             const zone = btn.dataset.zone;
             setTimerTimeZone(zone);
           });
+          
+          // Set initial button state based on saved preference
+          if (btn.dataset.zone === timerTimeZone) {
+            btn.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
+            btn.style.color = 'white';
+          } else {
+            btn.style.background = 'rgba(255,255,255,0.1)';
+            btn.style.color = 'rgba(255,255,255,0.6)';
+          }
         });
 
         // Add click-outside-to-close functionality
@@ -10923,9 +10942,18 @@
                 // New string format: "Mon/Wed 8:00 AM, Fri 9:00 AM"
                 const parsedSessions = parseScheduleString(group.schedule);
                 if (useYerevan) {
+                  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                   sessions = parsedSessions.map(s => {
                     const converted = TimezoneUtils.convertLATimeToYerevan(s.time);
-                    return { day: s.day, time: converted.time };
+                    // Apply day shift if the time crosses midnight
+                    let adjustedDay = s.day;
+                    if (converted.dayShift !== 0) {
+                      const dayIndex = dayNames.indexOf(s.day);
+                      const newDayIndex = (dayIndex + converted.dayShift + 7) % 7;
+                      adjustedDay = dayNames[newDayIndex];
+                      debug(`[Timer getAllClasses] Day shift: ${s.day} ${s.time} LA → ${adjustedDay} ${converted.time} Yerevan (shift: ${converted.dayShift})`);
+                    }
+                    return { day: adjustedDay, time: converted.time };
                   });
                 } else {
                   sessions = parsedSessions;
@@ -11156,6 +11184,9 @@
 
         timerTimeZone = zone;
         debug('[ClassCountdownTimer] Timezone changed to:', zone);
+
+        // Save preference to localStorage
+        localStorage.setItem('timer-timezone', zone);
 
         // Update button styles
         if (timerElement) {
