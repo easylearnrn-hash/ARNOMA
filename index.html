@@ -10385,12 +10385,30 @@
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
         getCurrentTimeInZone(timezone) {
-          // CRITICAL: We need the ACTUAL current time in the target timezone
-          // Not the browser's local time formatted as that timezone
+          // CRITICAL WORKAROUND: Safari/WebKit has bugs with Asia/Yerevan timezone
+          // Solution: Use UTC offset calculation instead of relying on toLocaleString
           
           const now = new Date();
           
-          // Get the time string in target timezone with 12-hour format
+          if (timezone === 'Asia/Yerevan') {
+            // Yerevan is UTC+4 (no DST)
+            const utcTime = now.getTime();
+            const yerevanTime = new Date(utcTime + (4 * 60 * 60 * 1000)); // Add 4 hours to UTC
+            
+            const hours = yerevanTime.getUTCHours();
+            const minutes = yerevanTime.getUTCMinutes();
+            const seconds = yerevanTime.getUTCSeconds();
+            const day = yerevanTime.getUTCDate();
+            const month = yerevanTime.getUTCMonth() + 1;
+            const year = yerevanTime.getUTCFullYear();
+            const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][yerevanTime.getUTCDay()];
+            
+            console.log('[TimezoneUtils] Yerevan time via UTC+4:', { hours, minutes, seconds, dayOfWeek, day, month, year });
+            
+            return { hours, minutes, seconds, day, month, year, dayOfWeek };
+          }
+          
+          // For other timezones (like LA), use toLocaleString
           const timeString = now.toLocaleString("en-US", { 
             timeZone: timezone,
             hour12: true,
