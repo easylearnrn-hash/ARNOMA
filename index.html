@@ -12441,11 +12441,14 @@
       // Sort by status first (active before paused), then by name within each status
       studentData.sort((a, b) => {
         // Active students come before paused students
-        if (a.status === 'active' && b.status !== 'active') return -1;
-        if (a.status !== 'active' && b.status === 'active') return 1;
+        if (a.status === 'active' && b.status === 'paused') return -1;
+        if (a.status === 'paused' && b.status === 'active') return 1;
         // Within same status, sort alphabetically by name
         return a.name.localeCompare(b.name);
       });
+      
+      // Debug: Log the sorted order
+      console.log('📊 Student Breakdown Order:', studentData.map(s => `${s.name} (${s.status})`));
       
       // Generate HTML
       studentData.forEach(data => {
