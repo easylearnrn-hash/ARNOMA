@@ -2588,30 +2588,26 @@
               ☁️ Reload from Supabase Cloud
             </div>
             
-            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">LA Timezone Correction</div>
-            <div style="padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 12px; line-height: 1.4;">
-                When in Yerevan, Gmail timestamps appear 11-12 hours ahead of LA time. Toggle correction based on LA season:
-              </div>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer;" onclick="toggleLAOffset(12)">
-                <span style="color: white; font-size: 13px; font-weight: 600;">❄️ Winter (–12 Hours)</span>
-                <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
-                  <input type="checkbox" id="laOffset12Toggle" onchange="toggleLAOffset(12)" style="opacity: 0; width: 0; height: 0;">
-                  <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 24px; border: 1px solid rgba(255,255,255,0.2);"></span>
-                  <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
+            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Gmail Timezone Fix</div>
+            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div style="font-size: 10px; color: #94a3b8; margin-bottom: 8px;">When in Yerevan, correct Gmail timestamps:</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span style="color: white; font-size: 12px; font-weight: 500;">❄️ Winter (–12h)</span>
+                <label style="position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;">
+                  <input type="checkbox" id="laOffset12Toggle" onchange="event.stopPropagation(); toggleLAOffset(12)" style="opacity: 0; width: 0; height: 0;">
+                  <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 22px; border: 1px solid rgba(255,255,255,0.2);"></span>
+                  <span class="toggle-knob" style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
                 </label>
               </div>
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer;" onclick="toggleLAOffset(11)">
-                <span style="color: white; font-size: 13px; font-weight: 600;">☀️ Summer (–11 Hours DST)</span>
-                <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
-                  <input type="checkbox" id="laOffset11Toggle" onchange="toggleLAOffset(11)" style="opacity: 0; width: 0; height: 0;">
-                  <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 24px; border: 1px solid rgba(255,255,255,0.2);"></span>
-                  <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+                <span style="color: white; font-size: 12px; font-weight: 500;">☀️ Summer (–11h)</span>
+                <label style="position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;">
+                  <input type="checkbox" id="laOffset11Toggle" onchange="event.stopPropagation(); toggleLAOffset(11)" style="opacity: 0; width: 0; height: 0;">
+                  <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 22px; border: 1px solid rgba(255,255,255,0.2);"></span>
+                  <span class="toggle-knob" style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
                 </label>
               </div>
-              <div style="font-size: 10px; color: #6b7280; margin-top: 8px; line-height: 1.3;">
-                💡 In LA? Turn both OFF. Only one can be active at a time.
-              </div>
+              <div style="font-size: 9px; color: #6b7280; margin-top: 4px;">💡 In LA? Keep both OFF</div>
             </div>
           </div>
         </div>
