@@ -10372,7 +10372,7 @@
       let currentClassData = null;
       let isPinned = false;
       // Load saved timezone preference or default to LA
-      let timerTimeZone = localStorage.getItem('timer-timezone') || 'LA'; // 'LA' or 'EVN' - controls which Quick View tab data to use
+      let timerTimeZone = localStorage.getItem('timer-timezone') || 'LA'; // 'LA' or 'EVN' - display preference only, calculation always uses LA
 
       /**
        * Timezone Utilities
@@ -10527,8 +10527,20 @@
 
       // DST-aware LA to Yerevan conversion (legacy - kept for compatibility)
       // NOTE: This uses dynamic offset calculation via TimezoneUtils
-      function convertLAToYerevanTime(laTimeStr) {
-        return TimezoneUtils.convertLATimeToYerevan(laTimeStr);
+      function convertLAToYerevanTime(laTimeStr, laDayName) {
+        const result = TimezoneUtils.convertLATimeToYerevan(laTimeStr);
+        
+        // If day shifts (crosses midnight), adjust the day name
+        if (laDayName && result.dayShift !== 0) {
+          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const dayIndex = dayNames.indexOf(laDayName);
+          const newDayIndex = (dayIndex + result.dayShift + 7) % 7;
+          result.day = dayNames[newDayIndex];
+        } else {
+          result.day = laDayName;
+        }
+        
+        return result;
       }
 
       // Original implementation preserved below for reference
@@ -10886,9 +10898,9 @@
 
           debug('[ClassCountdownTimer] Found', groups.length, 'groups');
 
-          // Get current time based on selected timezone source
-          const useYerevan = (timerTimeZone === 'EVN');
-          const timezone = useYerevan ? 'Asia/Yerevan' : 'America/Los_Angeles';
+          // CRITICAL: Calendar times are ALWAYS stored in LA timezone
+          // So we MUST calculate using LA time, regardless of display preference
+          const timezone = 'America/Los_Angeles';
           const nowTime = TimezoneUtils.getCurrentTimeInZone(timezone);
           const timezoneOffset = TimezoneUtils.getTimezoneOffset(timezone);
           
@@ -10942,25 +10954,8 @@
                 });
               } else if (typeof group.schedule === 'string') {
                 // New string format: "Mon/Wed 8:00 AM, Fri 9:00 AM"
-                const parsedSessions = parseScheduleString(group.schedule);
-                if (useYerevan) {
-                  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-                  sessions = parsedSessions.map(s => {
-                    const converted = TimezoneUtils.convertLATimeToYerevan(s.time);
-                    // Apply day shift if the time crosses midnight
-                    let adjustedDay = s.day;
-                    if (converted.dayShift !== 0) {
-                      const dayIndex = dayNames.indexOf(s.day);
-                      const newDayIndex = (dayIndex + converted.dayShift + 7) % 7;
-                      adjustedDay = dayNames[newDayIndex];
-                      console.log(`[Timer] ${group.name}: ${s.day} ${s.time} LA → ${adjustedDay} ${converted.time} Yerevan (shift: ${converted.dayShift})`);
-                      debug(`[Timer getAllClasses] Day shift: ${s.day} ${s.time} LA → ${adjustedDay} ${converted.time} Yerevan (shift: ${converted.dayShift})`);
-                    }
-                    return { day: adjustedDay, time: converted.time };
-                  });
-                } else {
-                  sessions = parsedSessions;
-                }
+                // Calendar stores LA times, so just parse directly - NO CONVERSION
+                sessions = parseScheduleString(group.schedule);
               } else if (Array.isArray(group.sessions)) {
                 // Some imports might store sessions separately
                 sessions = group.sessions
@@ -11087,7 +11082,7 @@
 
         let html = '';
         allClasses.forEach((classData, index) => {
-          const yerevanData = convertLAToYerevanTime(classData.laTime);
+          const yerevanData = convertLAToYerevanTime(classData.laTime, classData.dayName);
           const countdown = formatCountdown(classData.secondsRemaining);
           
           // Check if this class is skipped
@@ -11136,11 +11131,19 @@
                 <span class="timer-class-countdown">${countdown}</span>
               </div>
               <div class="timer-class-details">
+                ${timerTimeZone === 'EVN' ? `
+                <span class="timer-class-day">${yerevanData.day}</span>
+                <span class="timer-class-separator">•</span>
+                <span class="timer-class-time">${yerevanData.time} Yerevan</span>
+                <span class="timer-class-separator">•</span>
+                <span class="timer-class-time-secondary">${classData.laTime} LA</span>
+                ` : `
                 <span class="timer-class-day">${classData.dayName}</span>
                 <span class="timer-class-separator">•</span>
                 <span class="timer-class-time">${classData.laTime} LA</span>
                 <span class="timer-class-separator">•</span>
-                <span class="timer-class-time">${yerevanData.time} Yerevan</span>
+                <span class="timer-class-time-secondary">${yerevanData.time} Yerevan</span>
+                `}
               </div>
             </div>
           `;
