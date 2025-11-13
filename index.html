@@ -13480,14 +13480,37 @@
         
         showToast(`✅ Applied ${formatCurrency(pricePerClass, '$')} from credit\nNew Balance: ${formatCurrency(newBalance, '$')}`, 'success');
         
-        // Close the detail modal
-        const modal = document.getElementById('classDetailModal');
-        if (modal) modal.remove();
-        const overlay = document.getElementById('calendarDetailOverlay');
-        if (overlay) overlay.remove();
+        console.log('🔍 Checking for panels to close after credit apply...');
         
+        // Close the detail modal only (not the sidebar)
+        const modal = document.getElementById('classDetailModal');
+        if (modal) {
+          console.log('❌ Closing classDetailModal');
+          modal.remove();
+        }
+        const overlay = document.getElementById('calendarDetailOverlay');
+        if (overlay) {
+          console.log('❌ Closing calendarDetailOverlay');
+          overlay.remove();
+        }
+        
+        console.log('🔄 Calling renderCalendar after credit apply...');
         // Refresh calendar to update dot colors
         renderCalendar();
+        
+        console.log('📋 Checking for sidebar panel after credit apply...');
+        // Update the day details sidebar immediately if it's open
+        const dayPanel = document.getElementById('dayDetailsPanel');
+        if (dayPanel) {
+          console.log('✅ Sidebar panel found, updating after credit apply...');
+          // Re-fetch the day data with updated status and update content
+          const dayData = getDayData(dateStr);
+          if (dayData) {
+            openDayDetails(dateStr, dayData);
+          }
+        } else {
+          console.log('⚠️ No sidebar panel found after credit apply');
+        }
       } catch (error) {
         console.error('Failed to apply credit:', error);
         showToast('❌ Failed to apply credit', 'error');
