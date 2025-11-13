@@ -12113,6 +12113,68 @@
       };
     }
     
+    // Get data for a specific day (used when refreshing day details sidebar)
+    function getDayData(dateStr) {
+      const date = new Date(dateStr);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const day = date.getDate();
+      const dayOfWeek = date.getDay();
+      const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
+      
+      // Load data from Supabase cache
+      const students = window.studentsCache || window.globalData?.students || [];
+      const groups = window.groupsCache || window.globalData?.groups || [];
+      const payments = PaymentStore.getAll();
+      
+      // Filter active students
+      const activeStudents = students.filter(s => {
+        const status = (s.status || 'active').toLowerCase();
+        return status === 'active' && s.isActive !== false;
+      });
+      
+      // Map students to their schedules
+      const scheduleMap = {};
+      activeStudents.forEach(student => {
+        const groupName = student.group || '';
+        if (!groupName.trim()) return;
+        
+        const group = groups.find(g => g.name === groupName);
+        if (!group || !group.schedule) return;
+        
+        // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
+        const scheduleDays = parseScheduleDays(group.schedule);
+        
+        if (!scheduleMap[student.id]) {
+          scheduleMap[student.id] = {
+            student: student,
+            scheduleDays: scheduleDays,
+            pricePerClass: parseFloat(student.payPerClass) || 0
+          };
+        }
+      });
+      
+      // Check which students have class on this day
+      const studentsWithClass = [];
+      Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
+        if (scheduleDays.includes(dayName)) {
+          const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
+          studentsWithClass.push({
+            student,
+            pricePerClass,
+            ...paymentStatus
+          });
+        }
+      });
+      
+      return {
+        day,
+        date,
+        dayName,
+        studentsWithClass
+      };
+    }
+    
     function parseScheduleDays(scheduleString) {
       // Parse "Tue 8:00 PM, Thu 8:00 PM" or "Monday 8:00 PM, Wednesday 8:00 PM" → ["Tuesday", "Thursday"]
       if (!scheduleString || !scheduleString.trim()) return [];
@@ -12875,7 +12937,20 @@
       // Refresh calendar to update dot colors
       renderCalendar();
       
-      // Note: Day panel stays open for marking multiple absences
+      // Update the day details sidebar if it's open
+      const dayPanel = document.getElementById('dayDetailsPanel');
+      if (dayPanel) {
+        // Re-fetch the day data with updated status
+        const dateObj = new Date(dateStr);
+        const dayData = getDayData(dateStr);
+        if (dayData) {
+          // Close and reopen the day panel with updated data
+          closeDayDetails();
+          setTimeout(() => {
+            openDayDetails(dateStr, dayData);
+          }, 100);
+        }
+      }
     }
     
     function unmarkAbsent(studentId, dateStr) {
@@ -12896,7 +12971,20 @@
       // Refresh calendar to update dot colors
       renderCalendar();
       
-      // Note: Day panel stays open for marking multiple absences
+      // Update the day details sidebar if it's open
+      const dayPanel = document.getElementById('dayDetailsPanel');
+      if (dayPanel) {
+        // Re-fetch the day data with updated status
+        const dateObj = new Date(dateStr);
+        const dayData = getDayData(dateStr);
+        if (dayData) {
+          // Close and reopen the day panel with updated data
+          closeDayDetails();
+          setTimeout(() => {
+            openDayDetails(dateStr, dayData);
+          }, 100);
+        }
+      }
     }
     
     // Listen for payment/student updates to refresh calendar
