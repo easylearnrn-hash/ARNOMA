@@ -10586,6 +10586,8 @@
           });
         });
         
+        console.log('[Timer EVN] getClassesFromQuickViewYerevan() found', classes.length, 'classes:', classes);
+        
         return classes;
       }
 
@@ -10969,6 +10971,8 @@
         const nowTime = TimezoneUtils.getCurrentTimeInZone(timezone);
         if (!nowTime) return [];
         
+        console.log('[Timer EVN] Current Yerevan time:', nowTime.dayOfWeek, nowTime.hours + ':' + nowTime.minutes + ':' + nowTime.seconds);
+        
         const currentTimeInSeconds = nowTime.hours * 3600 + nowTime.minutes * 60 + nowTime.seconds;
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         
@@ -10986,6 +10990,8 @@
           
           yerevanClasses.forEach(classData => {
             if (classData.dayName !== checkDayName) return;
+            
+            console.log('[Timer EVN] Checking class:', classData.groupName, 'on', checkDayName, 'at', classData.time, '(days ahead:', daysAhead + ')');
             
             // Parse time
             const match = classData.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
@@ -11009,6 +11015,7 @@
             
             // Skip if more than 2 hours past
             if (totalDiffSeconds >= -7200 && totalDiffSeconds <= 604800) {
+              console.log('[Timer EVN] ✅ Adding class:', classData.groupName, classData.dayName, classData.time, '- countdown:', (totalDiffSeconds / 3600).toFixed(1) + 'h');
               allClasses.push({
                 groupName: classData.groupName,
                 dayName: classData.dayName,
@@ -11016,9 +11023,13 @@
                 yerevanTime: classData.time,
                 secondsRemaining: totalDiffSeconds
               });
+            } else {
+              console.log('[Timer EVN] ❌ Skipping class:', classData.groupName, '- out of range, diff:', (totalDiffSeconds / 3600).toFixed(1) + 'h');
             }
           });
         }
+        
+        console.log('[Timer EVN] Total classes found before dedup:', allClasses.length);
         
         // Sort by time remaining and remove duplicates
         allClasses.sort((a, b) => a.secondsRemaining - b.secondsRemaining);
