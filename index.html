@@ -10593,7 +10593,7 @@
         Object.keys(daySchedule).forEach(day => {
           daySchedule[day].forEach(session => {
             classes.push({
-              groupName: session.group,
+              groupName: session.group && session.group.length === 1 ? `Group ${session.group}` : session.group,
               dayName: day,
               time: session.yerevanTime,
               laTime: session.laTime
@@ -10984,9 +10984,12 @@
         if (!now) return [];
 
         const yerevanClasses = getClassesFromQuickViewYerevan();
+        console.log('[Timer EVN] Found classes from Quick View:', yerevanClasses);
+        console.log('[Timer EVN] Current Yerevan time:', now.dayOfWeek, now.hours + ':' + now.minutes);
 
         const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
         const currentDayIndex = dayNames.indexOf(now.dayOfWeek);
+        console.log('[Timer EVN] Current day index:', currentDayIndex, 'from', now.dayOfWeek);
 
         yerevanClasses.forEach(classData => {
 
@@ -11015,14 +11018,27 @@
 
           // If it's today and the time already passed, move to next week
           const nowDate = new Date(now.year, now.month - 1, now.day, now.hours, now.minutes, now.seconds);
+          
+          console.log(`[Timer EVN] Checking ${classData.groupName} ${classData.dayName} ${classData.time}:`, {
+            classDayIndex,
+            currentDayIndex,
+            daysAhead,
+            candidate: candidate.toString(),
+            nowDate: nowDate.toString(),
+            candidateBeforeNow: candidate <= nowDate
+          });
+          
           if (candidate <= nowDate) {
             candidate.setDate(candidate.getDate() + 7);
+            console.log(`[Timer EVN] ✅ Class time passed, moved to next week:`, candidate.toString());
           }
 
           const secondsRemaining = Math.floor((candidate - nowDate) / 1000);
+          console.log(`[Timer EVN] ${classData.groupName} seconds remaining:`, secondsRemaining, `(${(secondsRemaining/3600).toFixed(1)}h)`);
 
           // Only show upcoming 7 days
           if (secondsRemaining >= 0 && secondsRemaining <= 604800) {
+            console.log(`[Timer EVN] ✅ Adding ${classData.groupName} to list`);
             allClasses.push({
               groupName: classData.groupName,
               dayName: classData.dayName,
@@ -11030,10 +11046,13 @@
               yerevanTime: classData.time,
               secondsRemaining
             });
+          } else {
+            console.log(`[Timer EVN] ❌ Skipping ${classData.groupName} - out of range:`, secondsRemaining);
           }
         });
 
         allClasses.sort((a,b) => a.secondsRemaining - b.secondsRemaining);
+        console.log('[Timer EVN] Final sorted classes:', allClasses.map(c => `${c.groupName} ${c.dayName} ${c.yerevanTime} (${(c.secondsRemaining/3600).toFixed(1)}h)`));
         return allClasses.slice(0,10);
       }
 
