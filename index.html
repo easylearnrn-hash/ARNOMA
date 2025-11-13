@@ -4771,17 +4771,10 @@
       }
       // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       
-      const btn = document.getElementById('navRefreshBtn');
-      if (!btn) {
-        console.error('navRefreshBtn element not found');
-        return;
-      }
-      btn.classList.add('spinning');
-      btn.disabled = true;
+      // Show loading notification (no refresh button anymore)
+      showNotification('🔍 Checking for new payment emails...', 'info');
       
       try {
-        showNotification('🔍 Checking for new payment emails...', 'info');
-        
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const afterDate = Math.floor(today.getTime() / 1000);
@@ -4883,10 +4876,8 @@
         } else {
           showNotification('❌ Error: ' + error.message, 'error');
         }
-      } finally {
-        btn.classList.remove('spinning');
-        btn.disabled = false;
       }
+      // Note: No button cleanup needed - refresh button removed from navbar
     }
     
     async function fetchTodaysEmails() {
