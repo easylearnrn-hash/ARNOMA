@@ -48,24 +48,36 @@
     // ============================================================================
     const LA_TIMEZONE = 'America/Los_Angeles';
     
-    // Get current date/time in LA timezone
-    function getNowLA() {
-      return new Date(new Date().toLocaleString('en-US', { timeZone: LA_TIMEZONE }));
+    // Get current date/time in LA timezone using TimeAPI
+    async function getNowLA() {
+      const laTime = await window.TimeAPI.getCurrentTime('America/Los_Angeles');
+      if (!laTime) {
+        console.error('[getNowLA] Failed to get LA time from API');
+        return null;
+      }
+      // Return a Date object constructed from API data
+      return new Date(laTime.year, laTime.month - 1, laTime.day, laTime.hours, laTime.minutes, laTime.seconds);
     }
     
     // Get today's date string in LA timezone (YYYY-MM-DD)
-    function getTodayLA() {
-      const now = getNowLA();
-      return now.toISOString().slice(0, 10);
+    async function getTodayLA() {
+      const now = await getNowLA();
+      if (!now) return null;
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const day = String(now.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     }
     
-    // Convert any date to LA timezone
+    // Convert any date to LA timezone (deprecated - use TimeAPI)
     function toLA(date) {
+      console.warn('[toLA] This function uses device clock - prefer TimeAPI');
       return new Date(date.toLocaleString('en-US', { timeZone: LA_TIMEZONE }));
     }
     
-    // Format date in LA timezone
+    // Format date in LA timezone (deprecated - use TimeAPI)
     function formatDateLA(date, options = {}) {
+      console.warn('[formatDateLA] This function uses device clock - prefer TimeAPI');
       return new Date(date).toLocaleString('en-US', { 
         timeZone: LA_TIMEZONE,
         ...options 
@@ -6918,11 +6930,11 @@
      * Initialize Daily Auto Backup
      * Automatically creates backups once per day
      */
-    function initializeDailyAutoBackup() {
+    async function initializeDailyAutoBackup() {
       try {
         // Check last auto backup date
         const lastAutoBackupDate = localStorage.getItem('lastAutoBackupDate');
-        const today = getTodayLA(); // YYYY-MM-DD in LA timezone
+        const today = await getTodayLA(); // YYYY-MM-DD in LA timezone
         
         // If no backup today, create one
         if (lastAutoBackupDate !== today) {
@@ -6930,8 +6942,8 @@
         }
         
         // Set up interval to check daily (every hour)
-        setInterval(() => {
-          const currentDate = new Date().toISOString().slice(0, 10);
+        setInterval(async () => {
+          const currentDate = await getTodayLA();
           const lastBackupDate = localStorage.getItem('lastAutoBackupDate');
           
           if (lastBackupDate !== currentDate) {
@@ -6948,7 +6960,7 @@
      * Perform Daily Auto Backup
      * Creates a silent backup in localStorage
      */
-    function performDailyAutoBackup() {
+    async function performDailyAutoBackup() {
       try {
         // Gather all data
         const backup = {
@@ -6968,7 +6980,7 @@
         createAutoBackup(backup);
         
         // Update last backup date
-        const today = getTodayLA();
+        const today = await getTodayLA();
         localStorage.setItem('lastAutoBackupDate', today);
         
         debug('Daily auto backup completed:', today);
@@ -12309,24 +12321,32 @@
     studentBalances = loadStudentBalances();
     
     // Helper function to get current date in LA timezone
-    function getLADate() {
-      const now = new Date();
-      const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-      return laTime;
+    async function getLADate() {
+      const laTime = await window.TimeAPI.getCurrentTime('America/Los_Angeles');
+      if (!laTime) {
+        console.error('[getLADate] Failed to get LA time from API');
+        return null;
+      }
+      return new Date(laTime.year, laTime.month - 1, laTime.day, laTime.hours, laTime.minutes, laTime.seconds);
     }
     
     // Helper function to convert any date to LA timezone
-    function toLADate(date) {
-      const laTime = new Date(date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-      return laTime;
+    async function toLADate(date) {
+      // This function is deprecated - calendar should use getLADate() instead
+      console.warn('[toLADate] Deprecated function - use getLADate()');
+      return await getLADate();
     }
     
-    function openSmartCalendar() {
+    async function openSmartCalendar() {
       const modal = document.getElementById('smartCalendarModal');
       if (!modal) return;
       
-      currentCalendarDate = getLADate();
-      renderCalendar();
+      currentCalendarDate = await getLADate();
+      if (!currentCalendarDate) {
+        alert('⚠️ Cannot open calendar: Unable to fetch current LA time from API');
+        return;
+      }
+      await renderCalendar();
       
       modal.style.display = 'block';
       requestAnimationFrame(() => {
@@ -12344,12 +12364,12 @@
       }, 300);
     }
     
-    function changeCalendarMonth(delta) {
+    async function changeCalendarMonth(delta) {
       currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
-      renderCalendar();
+      await renderCalendar();
     }
     
-    function renderCalendar() {
+    async function renderCalendar() {
       const year = currentCalendarDate.getFullYear();
       const month = currentCalendarDate.getMonth();
       
@@ -12358,8 +12378,15 @@
                          'July', 'August', 'September', 'October', 'November', 'December'];
       document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
       
-      // Get calendar data
-      const calendarData = generateCalendarData(year, month);
+      // Get current LA date from API for payment status checks
+      const laToday = await getLADate();
+      if (!laToday) {
+        alert('⚠️ Cannot render calendar: Unable to fetch current LA time from API');
+        return;
+      }
+      
+      // Get calendar data (pass laToday to avoid repeated API calls)
+      const calendarData = generateCalendarData(year, month, laToday);
       
       // Update subtitle
       const totalClasses = calendarData.totalScheduledClasses;
@@ -12367,8 +12394,8 @@
       document.getElementById('calendarSubtitle').textContent = 
         `${activeStudentCount} active student${activeStudentCount !== 1 ? 's' : ''} • ${totalClasses} scheduled class${totalClasses !== 1 ? 'es' : ''}`;
       
-      // Render grid
-      renderCalendarGrid(calendarData);
+      // Render grid (pass laToday to avoid repeated API calls)
+      renderCalendarGrid(calendarData, laToday);
       
       // Save any balance changes to Supabase after rendering is complete
       saveBalanceUpdates();
@@ -12418,7 +12445,7 @@
       }, 1000);
     }
     
-    function generateCalendarData(year, month) {
+    function generateCalendarData(year, month, laToday) {
       // Get first day of month and number of days
       const firstDay = new Date(year, month, 1).getDay();
       const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -12469,7 +12496,7 @@
         
         Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
           if (scheduleDays.includes(dayName)) {
-            const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
+            const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments, laToday);
             studentsWithClass.push({
               student,
               pricePerClass,
@@ -12541,10 +12568,9 @@
       return days;
     }
     
-    function checkPaymentStatus(student, classDate, pricePerClass, payments) {
+    function checkPaymentStatus(student, classDate, pricePerClass, payments, laToday) {
       const dateStr = formatDateYYYYMMDD(classDate);
       const studentId = student.id;
-      const laToday = getLADate();
       const todayStr = formatDateYYYYMMDD(laToday);
       
       // CHECK: Is this class skipped?
@@ -12804,7 +12830,7 @@
       return `${year}-${month}-${day}`;
     }
     
-    function renderCalendarGrid(calendarData) {
+    function renderCalendarGrid(calendarData, laToday) {
       const grid = document.getElementById('calendarGrid');
       if (!grid) return;
       
@@ -12817,7 +12843,7 @@
       
       // Day cells with dot-based view
       calendarData.days.forEach(dayData => {
-        const isToday = isDateToday(dayData.date);
+        const isToday = isDateToday(dayData.date, laToday);
         const hasClasses = dayData.studentsWithClass.length > 0;
         const dateStr = formatDateYYYYMMDD(dayData.date);
         
@@ -12925,11 +12951,10 @@
       return html;
     }
     
-    function isDateToday(date) {
-      const today = getLADate();
-      return date.getDate() === today.getDate() &&
-             date.getMonth() === today.getMonth() &&
-             date.getFullYear() === today.getFullYear();
+    function isDateToday(date, laToday) {
+      return date.getDate() === laToday.getDate() &&
+             date.getMonth() === laToday.getMonth() &&
+             date.getFullYear() === laToday.getFullYear();
     }
     
     // Open day details panel showing all students scheduled that day
@@ -13138,7 +13163,7 @@
       document.body.appendChild(overlay);
     }
     
-    function reviewUnpaidClasses(studentId, dateStr) {
+    async function reviewUnpaidClasses(studentId, dateStr) {
       debug('[CalendarPayments] Reviewing unpaid classes for:', { studentId, dateStr });
       
       // Close detail popup to prevent stacked modals
@@ -13146,10 +13171,10 @@
       if (overlay) overlay.click();
       
       // Open unpaid classes viewer (read-only)
-      showUnpaidClassesModal(studentId, dateStr);
+      await showUnpaidClassesModal(studentId, dateStr);
     }
     
-    function showUnpaidClassesModal(studentId, initialDateStr) {
+    async function showUnpaidClassesModal(studentId, initialDateStr) {
       debug('[UnpaidClassesModal] Opening modal for:', { studentId, initialDateStr });
       
       const students = getCachedStudents();
@@ -13169,7 +13194,11 @@
       
       // Get calendar data by regenerating it
       // This uses the SAME logic as the calendar rendering
-      const today = getLADate();
+      const today = await getLADate();
+      if (!today) {
+        alert('⚠️ Cannot load unpaid classes: Unable to fetch current LA time from API');
+        return;
+      }
       const currentYear = today.getFullYear();
       const currentMonth = today.getMonth();
       
@@ -13187,7 +13216,7 @@
         const monthEnd = (year === currentYear) ? currentMonth : 11;
         
         for (let month = monthStart; month <= monthEnd; month++) {
-          const calendarData = generateCalendarData(year, month);
+          const calendarData = generateCalendarData(year, month, today);
           
           // Check each day in this month
           calendarData.days.forEach(dayData => {
