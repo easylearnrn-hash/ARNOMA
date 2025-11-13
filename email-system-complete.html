@@ -2009,8 +2009,9 @@ ARNOMA Team"></textarea>
     emailSystem.init();
     
     // Check Gmail connection on load
-    handleGmailOAuthCallback();
-    if (isGmailConnected()) {
+    if (!useSupabaseEmail) { handleGmailOAuthCallback(); }
+    else { console.log("✅ Using Supabase + Resend email system (no Gmail required)"); }
+    if (!useSupabaseEmail && isGmailConnected()) {
       updateGmailButtonState(true);
     }
   </script>
