@@ -12358,9 +12358,17 @@
     // STUDENT BREAKDOWN MODAL
     // ============================================================================
     
-    function openStudentBreakdown() {
+    async function openStudentBreakdown() {
       const modal = document.getElementById('studentBreakdownModal');
       if (!modal) return;
+      
+      // Reload students from Supabase to get latest status
+      try {
+        window.studentsCache = await loadStudents();
+        console.log('🔄 Reloaded students from Supabase for breakdown');
+      } catch (error) {
+        console.error('Error reloading students:', error);
+      }
       
       // Calculate and display breakdown
       updateStudentBreakdown();
@@ -12438,6 +12446,9 @@
         });
       });
       
+      // Debug: Log BEFORE sorting
+      console.log('📊 BEFORE sort:', studentData.map(s => `${s.name} = status:"${s.status}"`));
+      
       // Sort by status first (active before paused), then by name within each status
       studentData.sort((a, b) => {
         // Active students come before paused students
@@ -12447,8 +12458,8 @@
         return a.name.localeCompare(b.name);
       });
       
-      // Debug: Log the sorted order
-      console.log('📊 Student Breakdown Order:', studentData.map(s => `${s.name} (${s.status})`));
+      // Debug: Log AFTER sorting
+      console.log('📊 AFTER sort:', studentData.map(s => `${s.name} (${s.status})`));
       
       // Generate HTML
       studentData.forEach(data => {
