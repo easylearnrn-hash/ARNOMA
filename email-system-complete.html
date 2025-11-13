@@ -1237,14 +1237,14 @@ ARNOMA Team"></textarea>
             subject: 'Payment Reminder - ARNOMA NCLEX-RN',
             body: generateEmailHTML(
               'Payment Reminder',
-              `<p>Dear <strong>{{StudentName}}</strong>,</p>
-              <p>This is a friendly reminder about pending payment for your recent classes.</p>
+              `<p>Hello <strong>{{StudentName}}</strong>,</p>
+              <p>This is a quick, automated check regarding your recent classes:</p>
               <div class="info-box">
-                <p><strong>📋 Unpaid Classes:</strong></p>
-                <p>{{UnpaidClasses}}</p>
-                <p><strong>💰 Amount Due:</strong> {{PaymentAmount}}</p>
+                <p><strong>{{UnpaidClasses}}</strong></p>
               </div>
-              <p><strong>If you have already paid</strong>, please reply with your payment confirmation.</p>
+              <p>Our records show that your payment hasn't been posted yet.</p>
+              <p><strong>If you have already paid:</strong> Great! Please simply reply with the screenshot of your transfer. That's all we need to update our log and ensure you don't receive any more reminders.</p>
+              <p><strong>If you still plan to pay:</strong> Please submit the payment at your earliest convenience. The system can only process and send your notes once payment is confirmed.</p>
               <div class="payment-frame">
                 <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;">
                   <strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong>
@@ -1261,21 +1261,13 @@ ARNOMA Team"></textarea>
                   <strong style="color: #764ba2;">Zelle</strong>
                 </p>
               </div>
-              <p>Thank you for your prompt attention!</p>
-              <p>Best regards,<br><strong>ARNOMA NCLEX-RN Team</strong></p>
-              <div class="divider"></div>
-              <p style="color: #7f8c8d; font-size: 14px; text-align: center;">
-                <em>Need help? Simply reply to this email and we'll assist you promptly.</em>
-              </p>`
+              <p>Thank you for your prompt attention to this!</p>
+              <p>Best regards,<br><strong>ARNOMA Team</strong></p>`
             ),
             trigger: 'manual',
             active: true
           }
-        ];
-      },
-      
-      renderTemplates() {
-        const grid = document.getElementById('templatesGrid');
+
         
         if (this._templates.length === 0) {
           grid.innerHTML = `
