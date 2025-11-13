@@ -12153,7 +12153,22 @@
       const laToday = getLADate();
       const todayStr = formatDateYYYYMMDD(laToday);
       
-      // CHECK: Is this class skipped?
+      // CHECK 1: Is this student marked absent?
+      const absentKey = `absent:${studentId}:${dateStr}`;
+      const isAbsent = localStorage.getItem(absentKey) === 'true';
+      
+      if (isAbsent) {
+        console.log('⚪ Absent check - Student is marked absent:', { studentId, dateStr });
+        return {
+          status: 'absent',
+          paid: false,
+          amount: 0,
+          balance: student.balance || 0,
+          message: 'Marked Absent'
+        };
+      }
+      
+      // CHECK 2: Is this class skipped?
       const groupName = student.group;
       if (groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr)) {
         return {
@@ -12200,6 +12215,16 @@
         const paymentPayerName = (p.payerName || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
         
+        // DEBUG: Log first match attempt for Nov 12, 2025
+        if (dateStr === '2025-11-12' && studentNameLower === 'stella ghazaryan') {
+          console.log('🔍 DEBUG Nov 12 - Stella:', {
+            paymentStudentName,
+            paymentPayerName,
+            studentNameLower,
+            matches: paymentStudentName === studentNameLower
+          });
+        }
+        
         // Check if studentName matches
         if (paymentStudentName === studentNameLower) return true;
         
@@ -12216,6 +12241,11 @@
         
         return false;
       });
+      
+      // DEBUG: Log filtered payments
+      if (dateStr === '2025-11-12' && student.name === 'Stella Ghazaryan') {
+        console.log('🔍 Found payments for Stella on Nov 12:', studentPayments.length);
+      }
       
       // Check for payment on this date OR any recent payment that can cover this class
       // If checking a past date, allow payments from up to 7 days after the class
@@ -12316,27 +12346,7 @@
         return result;
       }
       
-      // Check if marked absent
-      const absentKey = `absent:${studentId}:${dateStr}`;
-      const isAbsent = localStorage.getItem(absentKey) === 'true';
-      
-      if (isAbsent) {
-        const result = {
-          status: 'absent',
-          paid: false,
-          amount: 0,
-          balance: balance,
-          message: 'Marked Absent'
-        };
-        
-        if (dateStr === todayStr) {
-          saveCalendarSnapshot(dateStr, {
-            [studentId]: result
-          });
-        }
-        
-        return result;
-      }
+      // Absent check moved to top of function - this duplicate removed
       
       // Future class - show as pending if has balance
       if (classDate > laToday && balance >= pricePerClass) {
@@ -12757,6 +12767,8 @@
       
       const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.setItem(absentKey, 'true');
+      
+      console.log('✅ Marked absent:', { studentId: numericId, dateStr, key: absentKey });
       
       showToast('⚪ Marked as absent');
       
