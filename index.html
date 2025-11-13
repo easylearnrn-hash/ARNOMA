@@ -12013,14 +12013,48 @@
     // Helper function to get current date in LA timezone
     function getLADate() {
       const now = new Date();
-      const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-      return laTime;
+      const laDateStr = now.toLocaleString('en-US', { 
+        timeZone: 'America/Los_Angeles',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      // Parse: "MM/DD/YYYY, HH:mm:ss"
+      const [datePart, timePart] = laDateStr.split(', ');
+      const [month, day, year] = datePart.split('/').map(n => parseInt(n));
+      const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+      
+      // Create a new Date object with LA time components
+      const laDate = new Date(year, month - 1, day, hours, minutes, seconds);
+      return laDate;
     }
     
     // Helper function to convert any date to LA timezone
     function toLADate(date) {
-      const laTime = new Date(date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-      return laTime;
+      const laDateStr = date.toLocaleString('en-US', { 
+        timeZone: 'America/Los_Angeles',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      // Parse: "MM/DD/YYYY, HH:mm:ss"
+      const [datePart, timePart] = laDateStr.split(', ');
+      const [month, day, year] = datePart.split('/').map(n => parseInt(n));
+      const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+      
+      // Create a new Date object with LA time components
+      const laDate = new Date(year, month - 1, day, hours, minutes, seconds);
+      return laDate;
     }
     
     function openSmartCalendar() {
