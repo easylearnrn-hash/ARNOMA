@@ -2210,7 +2210,7 @@
             <button onclick="findDuplicates()" style="padding: 10px 18px; background: rgba(251,146,60,.2); border: 2px solid #fb923c; color: #fb923c; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;">
               Find Duplicates
             </button>
-            <button onclick="syncWithCloud()" style="padding: 10px 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer;">
+            <button id="syncCloudBtn" onclick="syncWithCloud()" style="padding: 10px 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer;">
               ☁️ Sync Cloud
             </button>
             <button onclick="closeStudentManager()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; color: white; font-size: 24px; cursor: pointer;">&times;</button>
@@ -7365,6 +7365,12 @@
 
     // ===== CLOUD SYNC (AUTOMATIC VIA SUPABASE) =====
     async function syncWithCloud() {
+      // Find the sync button and add spinning animation
+      const syncButton = document.getElementById('syncCloudBtn');
+      if (syncButton) {
+        syncButton.classList.add('spinning');
+      }
+      
       try {
         showNotificationSimple('Syncing with Supabase...');
 
@@ -7389,6 +7395,11 @@
       } catch (error) {
         console.error('Supabase sync error:', error);
         showNotificationSimple('Sync failed', 'error');
+      } finally {
+        // Remove spinning animation
+        if (syncButton) {
+          syncButton.classList.remove('spinning');
+        }
       }
     }
 
