@@ -10385,37 +10385,31 @@
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
         getCurrentTimeInZone(timezone) {
-          // Create a date string in the target timezone and parse it back
           const now = new Date();
           
-          // Get ISO-like string in target timezone
-          const dateStr = now.toLocaleString('en-US', {
-            timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-          });
+          // WORKAROUND: Use UTC + manual offset calculation since toLocaleString is broken for Asia/Yerevan
+          // Get the timezone offset in minutes
+          const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+          const tzDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+          const offsetMs = tzDate - utcDate;
           
-          // Parse the string: "MM/DD/YYYY, HH:mm:ss"
-          const match = dateStr.match(/(\d+)\/(\d+)\/(\d+),\s+(\d+):(\d+):(\d+)/);
-          if (!match) {
-            console.error('[TimezoneUtils] Failed to parse date:', dateStr);
-            return null;
-          }
+          // Apply offset to current UTC time
+          const targetTime = new Date(now.getTime() + offsetMs);
           
-          const [_, month, day, year, hours, minutes, seconds] = match.map(n => parseInt(n));
+          const hours = targetTime.getUTCHours();
+          const minutes = targetTime.getUTCMinutes();
+          const seconds = targetTime.getUTCSeconds();
+          const day = targetTime.getUTCDate();
+          const month = targetTime.getUTCMonth() + 1;
+          const year = targetTime.getUTCFullYear();
           
-          // Get day of week separately
-          const dayOfWeek = now.toLocaleString('en-US', {
-            timeZone: timezone,
+          // Get day of week
+          const dayOfWeek = targetTime.toLocaleString('en-US', {
+            timeZone: 'UTC',
             weekday: 'long'
           });
           
-          console.log('[TimezoneUtils] getCurrentTimeInZone:', timezone, '→', dateStr, '| Parsed:', year, month, day, hours, minutes, seconds, dayOfWeek);
+          console.log('[TimezoneUtils] getCurrentTimeInZone:', timezone, '| UTC:', now.toUTCString(), '| Offset:', offsetMs / 1000 / 60, 'min | Result:', year, month, day, hours, minutes, seconds, dayOfWeek);
           
           return {
             hours,
