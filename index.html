@@ -12005,9 +12005,13 @@
       });
       
       // AUTO-APPLY PAYMENTS (November 1, 2025+)
-      const monthStart = new Date(year, month, 1);
-      const monthEnd = new Date(year, month + 1, 0);
-      const autoAppliedData = autoApplyPaymentsToCalendar(activeStudents, payments, monthStart, monthEnd);
+      // CRITICAL: Always process from Nov 1, 2025 onwards, not just the current month
+      const nov1_2025 = new Date('2025-11-01T00:00:00');
+      const laToday = getLADate();
+      const futureDate = new Date(laToday);
+      futureDate.setMonth(futureDate.getMonth() + 6); // Process 6 months into future
+      
+      const autoAppliedData = autoApplyPaymentsToCalendar(activeStudents, payments, nov1_2025, futureDate);
       
       // Store unmatched payments for user assignment
       if (autoAppliedData.unmatchedPayments.length > 0) {
