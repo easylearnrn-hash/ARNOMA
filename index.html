@@ -12331,10 +12331,12 @@
     }
     
     // Helper function to convert any date to LA timezone
-    async function toLADate(date) {
-      // This function is deprecated - calendar should use getLADate() instead
-      console.warn('[toLADate] Deprecated function - use getLADate()');
-      return await getLADate();
+    // NOTE: Since device clock is unreliable, this just returns the date object as-is
+    // Payment timestamps are stored in ISO format and should be parsed correctly
+    function toLADate(date) {
+      console.warn('[toLADate] Deprecated function - payment times may be inaccurate with device clock issues');
+      // Just return the date object - calendar should use getLADate() for current time
+      return date;
     }
     
     async function openSmartCalendar() {
