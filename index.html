@@ -4039,7 +4039,7 @@
       // Check 1: Gmail ID already exists
       const gmailIdExists = existingPayments.some(p => p.gmailId === gmailId || p.emailId === gmailId);
       if (gmailIdExists) {
-        console.log(`⚠️ Skipped duplicate email payment (Gmail ID exists): ${gmailId}`);
+        // Removed verbose log - only log summary at end of fetch
         return true;
       }
       
@@ -4053,7 +4053,7 @@
       });
       
       if (compositeExists) {
-        console.log(`⚠️ Skipped duplicate email payment from ${payment.payerName} ($${payment.amount})`);
+        // Removed verbose log - only log summary at end of fetch
         return true;
       }
       
@@ -5063,7 +5063,7 @@
             .trim();
           
           memo = studentNameFromMessage; // Use as memo too
-          console.log('🧩 Stopped before footer text (clean extraction)');
+          // Removed verbose log - footer extraction is normal operation
         } else {
           // Pattern 2: "Memo:" or "Message:" or "Note:" (text/plain format)
           let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
