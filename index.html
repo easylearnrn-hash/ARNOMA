@@ -10527,6 +10527,68 @@
 
       // DST-aware LA to Yerevan conversion (legacy - kept for compatibility)
       // NOTE: This uses dynamic offset calculation via TimezoneUtils
+      // Helper function to get classes from Quick View Yerevan tab data
+      function getClassesFromQuickViewYerevan() {
+        const classes = [];
+        const groups = getAllGroups();
+        if (!groups || groups.length === 0) return classes;
+        
+        const dayMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
+        const daySchedule = {};
+        
+        // Parse schedules exactly like Quick View does
+        groups.forEach(group => {
+          const scheduleText = (group.schedule || '').trim();
+          if (!scheduleText) return;
+          
+          const parts = scheduleText.split(',').map(p => p.trim()).filter(p => p);
+          parts.forEach(part => {
+            const match = part.match(/^([\w/]+)\s+(.+)$/);
+            if (!match) return;
+            
+            const daysStr = match[1].toLowerCase();
+            const laTime = match[2];
+            const laTimeAMPM = ensureAMPMFormatLocal(laTime);
+            const conversionResult = TimezoneUtils.convertLATimeToYerevan(laTimeAMPM);
+            
+            // Handle slash-separated days
+            const dayTokens = daysStr.split('/').map(d => d.trim());
+            dayTokens.forEach(token => {
+              const laWeekday = dayMap[token];
+              if (!laWeekday) return;
+              
+              // Calculate Yerevan weekday with day shift
+              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+              const dayIndex = dayNames.indexOf(laWeekday);
+              const yerevanDayIndex = (dayIndex + conversionResult.dayShift + 7) % 7;
+              const yerevanWeekday = dayNames[yerevanDayIndex];
+              
+              if (!daySchedule[yerevanWeekday]) daySchedule[yerevanWeekday] = [];
+              daySchedule[yerevanWeekday].push({
+                group: group.name,
+                yerevanTime: conversionResult.time,
+                laTime: laTimeAMPM,
+                day: yerevanWeekday
+              });
+            });
+          });
+        });
+        
+        // Convert to array format
+        Object.keys(daySchedule).forEach(day => {
+          daySchedule[day].forEach(session => {
+            classes.push({
+              groupName: session.group,
+              dayName: day,
+              time: session.yerevanTime,
+              laTime: session.laTime
+            });
+          });
+        });
+        
+        return classes;
+      }
+
       function convertLAToYerevanTime(laTimeStr, laDayName) {
         const result = TimezoneUtils.convertLATimeToYerevan(laTimeStr);
         
@@ -10886,6 +10948,97 @@
       // Get all classes for the next 7 days
       function getAllUpcomingClasses() {
         try {
+          // CRITICAL FORK: Different data sources based on timezone mode
+          if (timerTimeZone === 'EVN') {
+            return getAllUpcomingClassesYerevan();
+          } else {
+            return getAllUpcomingClassesLA();
+          }
+        } catch (error) {
+          console.error('[ClassCountdownTimer] Error getting all classes:', error);
+          return [];
+        }
+      }
+
+      // Get classes using Yerevan timezone (reads from Quick View Yerevan data)
+      function getAllUpcomingClassesYerevan() {
+        const allClasses = [];
+        
+        // Get current time in Yerevan
+        const timezone = 'Asia/Yerevan';
+        const nowTime = TimezoneUtils.getCurrentTimeInZone(timezone);
+        if (!nowTime) return [];
+        
+        const currentTimeInSeconds = nowTime.hours * 3600 + nowTime.minutes * 60 + nowTime.seconds;
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        
+        // Get classes from Quick View Yerevan structure
+        const yerevanClasses = getClassesFromQuickViewYerevan();
+        
+        // Check each day for the next 7 days
+        for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
+          const checkDate = new Date();
+          checkDate.setDate(checkDate.getDate() + daysAhead);
+          const checkDayName = checkDate.toLocaleString('en-US', { 
+            timeZone: timezone, 
+            weekday: 'long' 
+          });
+          
+          yerevanClasses.forEach(classData => {
+            if (classData.dayName !== checkDayName) return;
+            
+            // Parse time
+            const match = classData.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return;
+            
+            let hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const period = match[3].toUpperCase();
+            
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+            
+            const classTimeInSeconds = hours * 3600 + minutes * 60;
+            
+            let totalDiffSeconds;
+            if (daysAhead === 0) {
+              totalDiffSeconds = classTimeInSeconds - currentTimeInSeconds;
+            } else {
+              totalDiffSeconds = (daysAhead * 86400) - currentTimeInSeconds + classTimeInSeconds;
+            }
+            
+            // Skip if more than 2 hours past
+            if (totalDiffSeconds >= -7200 && totalDiffSeconds <= 604800) {
+              allClasses.push({
+                groupName: classData.groupName,
+                dayName: classData.dayName,
+                laTime: classData.laTime,
+                yerevanTime: classData.time,
+                secondsRemaining: totalDiffSeconds
+              });
+            }
+          });
+        }
+        
+        // Sort by time remaining and remove duplicates
+        allClasses.sort((a, b) => a.secondsRemaining - b.secondsRemaining);
+        
+        const uniqueClasses = [];
+        const seen = new Set();
+        allClasses.forEach(c => {
+          const key = `${c.groupName}-${c.dayName}-${c.yerevanTime}`;
+          if (!seen.has(key)) {
+            seen.add(key);
+            uniqueClasses.push(c);
+          }
+        });
+        
+        return uniqueClasses.slice(0, 10);
+      }
+
+      // Get classes using LA timezone (original calendar data)
+      function getAllUpcomingClassesLA() {
+        try {
           const allClasses = [];
           
           // Load groups from Supabase cache or global groups variable
@@ -11082,7 +11235,18 @@
 
         let html = '';
         allClasses.forEach((classData, index) => {
-          const yerevanData = convertLAToYerevanTime(classData.laTime, classData.dayName);
+          // For EVN mode, yerevanTime is already in classData
+          // For LA mode, convert it
+          let yerevanData;
+          if (timerTimeZone === 'EVN') {
+            yerevanData = {
+              time: classData.yerevanTime || classData.laTime,
+              day: classData.dayName
+            };
+          } else {
+            yerevanData = convertLAToYerevanTime(classData.laTime, classData.dayName);
+          }
+          
           const countdown = formatCountdown(classData.secondsRemaining);
           
           // Check if this class is skipped
