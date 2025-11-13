@@ -12013,7 +12013,9 @@
     // Helper function to get current date in LA timezone
     function getLADate() {
       const now = new Date();
-      const laDateStr = now.toLocaleString('en-US', { 
+      
+      // Get LA time components using Intl.DateTimeFormat for accuracy
+      const formatter = new Intl.DateTimeFormat('en-US', {
         timeZone: 'America/Los_Angeles',
         year: 'numeric',
         month: '2-digit',
@@ -12024,19 +12026,30 @@
         hour12: false
       });
       
-      // Parse: "MM/DD/YYYY, HH:mm:ss"
-      const [datePart, timePart] = laDateStr.split(', ');
-      const [month, day, year] = datePart.split('/').map(n => parseInt(n));
-      const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+      const parts = formatter.formatToParts(now);
+      const partsObj = {};
+      parts.forEach(part => {
+        if (part.type !== 'literal') {
+          partsObj[part.type] = part.value;
+        }
+      });
       
-      // Create a new Date object with LA time components
-      const laDate = new Date(year, month - 1, day, hours, minutes, seconds);
+      // Create date with UTC constructor to avoid local timezone interpretation
+      const laDate = new Date(Date.UTC(
+        parseInt(partsObj.year),
+        parseInt(partsObj.month) - 1,
+        parseInt(partsObj.day),
+        parseInt(partsObj.hour),
+        parseInt(partsObj.minute),
+        parseInt(partsObj.second)
+      ));
+      
       return laDate;
     }
     
     // Helper function to convert any date to LA timezone
     function toLADate(date) {
-      const laDateStr = date.toLocaleString('en-US', { 
+      const formatter = new Intl.DateTimeFormat('en-US', {
         timeZone: 'America/Los_Angeles',
         year: 'numeric',
         month: '2-digit',
@@ -12047,13 +12060,24 @@
         hour12: false
       });
       
-      // Parse: "MM/DD/YYYY, HH:mm:ss"
-      const [datePart, timePart] = laDateStr.split(', ');
-      const [month, day, year] = datePart.split('/').map(n => parseInt(n));
-      const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+      const parts = formatter.formatToParts(date);
+      const partsObj = {};
+      parts.forEach(part => {
+        if (part.type !== 'literal') {
+          partsObj[part.type] = part.value;
+        }
+      });
       
-      // Create a new Date object with LA time components
-      const laDate = new Date(year, month - 1, day, hours, minutes, seconds);
+      // Create date with UTC constructor to avoid local timezone interpretation
+      const laDate = new Date(Date.UTC(
+        parseInt(partsObj.year),
+        parseInt(partsObj.month) - 1,
+        parseInt(partsObj.day),
+        parseInt(partsObj.hour),
+        parseInt(partsObj.minute),
+        parseInt(partsObj.second)
+      ));
+      
       return laDate;
     }
     
