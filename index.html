@@ -12447,7 +12447,11 @@
             <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;">
               ${hasClasses ? renderDayDots(dayData, dateStr) : ''}
             </div>
-            ${hasClasses ? `<div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: center;">${dayData.studentsWithClass.length} class${dayData.studentsWithClass.length !== 1 ? 'es' : ''}</div>` : ''}
+            ${hasClasses ? (() => {
+              const uniqueGroups = new Set(dayData.studentsWithClass.map(c => c.student.group || 'No Group'));
+              const groupCount = uniqueGroups.size;
+              return `<div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: center;">${dayData.studentsWithClass.length} student${dayData.studentsWithClass.length !== 1 ? 's' : ''} · ${groupCount} class${groupCount !== 1 ? 'es' : ''}</div>`;
+            })() : ''}
           </div>
         `;
       });
