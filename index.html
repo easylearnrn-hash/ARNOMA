@@ -10978,77 +10978,63 @@
       // Get classes using Yerevan timezone (reads from Quick View Yerevan data)
       function getAllUpcomingClassesYerevan() {
         const allClasses = [];
-        
-        // Get current time in Yerevan
+
         const timezone = 'Asia/Yerevan';
-        const nowTime = TimezoneUtils.getCurrentTimeInZone(timezone);
-        if (!nowTime) return [];
-        
-        const currentTimeInSeconds = nowTime.hours * 3600 + nowTime.minutes * 60 + nowTime.seconds;
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        // Get classes from Quick View Yerevan structure
+        const now = TimezoneUtils.getCurrentTimeInZone(timezone);
+        if (!now) return [];
+
         const yerevanClasses = getClassesFromQuickViewYerevan();
-        
-        // Check each day for the next 7 days
-        for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
-          const checkDate = new Date();
-          checkDate.setDate(checkDate.getDate() + daysAhead);
-          const checkDayName = checkDate.toLocaleString('en-US', { 
-            timeZone: timezone, 
-            weekday: 'long' 
-          });
-          
-          yerevanClasses.forEach(classData => {
-            if (classData.dayName !== checkDayName) return;
-            
-            // Parse time
-            const match = classData.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-            if (!match) return;
-            
-            let hours = parseInt(match[1]);
-            const minutes = parseInt(match[2]);
-            const period = match[3].toUpperCase();
-            
-            if (period === 'PM' && hours !== 12) hours += 12;
-            if (period === 'AM' && hours === 12) hours = 0;
-            
-            const classTimeInSeconds = hours * 3600 + minutes * 60;
-            
-            let totalDiffSeconds;
-            if (daysAhead === 0) {
-              totalDiffSeconds = classTimeInSeconds - currentTimeInSeconds;
-            } else {
-              totalDiffSeconds = (daysAhead * 86400) - currentTimeInSeconds + classTimeInSeconds;
-            }
-            
-            // Skip if more than 2 hours past
-            if (totalDiffSeconds >= -7200 && totalDiffSeconds <= 604800) {
-              allClasses.push({
-                groupName: classData.groupName,
-                dayName: classData.dayName,
-                laTime: classData.laTime,
-                yerevanTime: classData.time,
-                secondsRemaining: totalDiffSeconds
-              });
-            }
-          });
-        }
-        
-        // Sort by time remaining and remove duplicates
-        allClasses.sort((a, b) => a.secondsRemaining - b.secondsRemaining);
-        
-        const uniqueClasses = [];
-        const seen = new Set();
-        allClasses.forEach(c => {
-          const key = `${c.groupName}-${c.dayName}-${c.yerevanTime}`;
-          if (!seen.has(key)) {
-            seen.add(key);
-            uniqueClasses.push(c);
+
+        const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+        const currentDayIndex = dayNames.indexOf(now.dayOfWeek);
+
+        yerevanClasses.forEach(classData => {
+
+          // Parse the EVN time (example: "8:00 AM")
+          const t = classData.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+          if (!t) return;
+
+          let hour = parseInt(t[1]);
+          const minutes = parseInt(t[2]);
+          const period = t[3].toUpperCase();
+
+          if (period === 'PM' && hour !== 12) hour += 12;
+          if (period === 'AM' && hour === 12) hour = 0;
+
+          const classDayIndex = dayNames.indexOf(classData.dayName);
+          if (classDayIndex === -1) return;
+
+          // Correct way to find next occurrence of this EVN weekday
+          let daysAhead = classDayIndex - currentDayIndex;
+          if (daysAhead < 0) daysAhead += 7;
+
+          // Build candidate date for that weekday
+          const candidate = new Date(now.year, now.month - 1, now.day);
+          candidate.setDate(candidate.getDate() + daysAhead);
+          candidate.setHours(hour, minutes, 0, 0);
+
+          // If it's today and the time already passed, move to next week
+          const nowDate = new Date(now.year, now.month - 1, now.day, now.hours, now.minutes, now.seconds);
+          if (candidate <= nowDate) {
+            candidate.setDate(candidate.getDate() + 7);
+          }
+
+          const secondsRemaining = Math.floor((candidate - nowDate) / 1000);
+
+          // Only show upcoming 7 days
+          if (secondsRemaining >= 0 && secondsRemaining <= 604800) {
+            allClasses.push({
+              groupName: classData.groupName,
+              dayName: classData.dayName,
+              laTime: classData.laTime,
+              yerevanTime: classData.time,
+              secondsRemaining
+            });
           }
         });
-        
-        return uniqueClasses.slice(0, 10);
+
+        allClasses.sort((a,b) => a.secondsRemaining - b.secondsRemaining);
+        return allClasses.slice(0,10);
       }
 
       // Get classes using LA timezone (original calendar data)
