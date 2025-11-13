@@ -10377,53 +10377,47 @@
       },
       
       async fetchRealTime(timezone) {
-        // Use WorldTimeAPI - reliable and free
+        // Try timeapi.io first (more reliable than worldtimeapi.org)
         try {
-          const response = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`, {
+          const tzQuery = encodeURIComponent(timezone);
+          const response = await fetch(`https://timeapi.io/api/Time/current/zone?timeZone=${tzQuery}`, {
             cache: 'no-store',
-            signal: AbortSignal.timeout(5000) // 5 second timeout
+            signal: AbortSignal.timeout(5000)
           });
           
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
           
           const data = await response.json();
           
-          // Parse the datetime string properly
-          const dt = new Date(data.datetime);
-          
           const result = {
-            hours: dt.getHours(),
-            minutes: dt.getMinutes(),
-            seconds: dt.getSeconds(),
-            day: dt.getDate(),
-            month: dt.getMonth() + 1,
-            year: dt.getFullYear(),
-            dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dt.getDay()],
-            timestamp: data.unixtime * 1000,
+            hours: data.hour,
+            minutes: data.minute,
+            seconds: data.seconds,
+            day: data.day,
+            month: data.month,
+            year: data.year,
+            dayOfWeek: data.dayOfWeek,
+            timestamp: Date.now(),
             timezone: timezone
           };
           
-          console.log(`[TimeAPI] Fetched ${timezone}:`, result);
+          console.log(`[TimeAPI] Fetched ${timezone} from timeapi.io:`, result);
           return result;
           
         } catch (error) {
-          console.warn(`[TimeAPI] WorldTimeAPI failed for ${timezone}, trying fallback:`, error);
+          console.warn(`[TimeAPI] timeapi.io failed for ${timezone}, trying worldtimeapi:`, error);
           
-          // CRITICAL: If API fails, we CANNOT trust device clock
-          // Return null to force error rather than show wrong time
-          console.error(`[TimeAPI] Cannot get reliable time for ${timezone} - API unavailable and device clock is unreliable`);
-          
-          // Last resort: try one more time with longer timeout
+          // Fallback to worldtimeapi.org
           try {
-            const retryResponse = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`, {
+            const response2 = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`, {
               cache: 'no-store',
-              signal: AbortSignal.timeout(10000) // 10 second timeout
+              signal: AbortSignal.timeout(5000)
             });
             
-            if (!retryResponse.ok) throw new Error(`HTTP ${retryResponse.status}`);
+            if (!response2.ok) throw new Error(`HTTP ${response2.status}`);
             
-            const retryData = await retryResponse.json();
-            const dt = new Date(retryData.datetime);
+            const data2 = await response2.json();
+            const dt = new Date(data2.datetime);
             
             const result = {
               hours: dt.getHours(),
@@ -10433,16 +10427,16 @@
               month: dt.getMonth() + 1,
               year: dt.getFullYear(),
               dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dt.getDay()],
-              timestamp: retryData.unixtime * 1000,
+              timestamp: data2.unixtime * 1000,
               timezone: timezone
             };
             
-            console.log(`[TimeAPI] Retry successful for ${timezone}:`, result);
+            console.log(`[TimeAPI] Fetched ${timezone} from worldtimeapi.org:`, result);
             return result;
             
-          } catch (retryError) {
-            console.error(`[TimeAPI] All methods failed for ${timezone}:`, retryError);
-            alert(`⚠️ Cannot connect to time server. Timer requires internet connection to show accurate ${timezone === 'Asia/Yerevan' ? 'Yerevan' : 'Los Angeles'} time. Please check your connection.`);
+          } catch (error2) {
+            console.error(`[TimeAPI] All time APIs failed for ${timezone}`);
+            alert(`⚠️ Cannot connect to time server. Timer requires internet connection to show accurate ${timezone === 'Asia/Yerevan' ? 'Yerevan' : 'Los Angeles'} time. Please check your connection and refresh the page.`);
             return null;
           }
         }
