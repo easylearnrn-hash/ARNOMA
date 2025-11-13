@@ -734,12 +734,14 @@ ARNOMA Team"></textarea>
     
     const GMAIL_CLIENT_ID = '67231383915-4kpdv0k6u517admvhl7jlejku7qtbsjj.apps.googleusercontent.com';
     const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.send';
+    const GMAIL_CONNECTION_KEY = 'gmail-connection';
     
     let gmailAccessToken = null;
     let gmailTokenExpiry = null;
     
-    // Get Gmail connection from parent window (main app)
+    // Get Gmail connection from parent window or localStorage
     function getGmailConnectionFromParent() {
+      // Try parent window first
       try {
         if (window.parent && window.parent !== window) {
           const parentConnection = window.parent.getGmailConnection?.();
@@ -750,8 +752,30 @@ ARNOMA Team"></textarea>
           }
         }
       } catch (e) {
-        console.error('Cannot access parent window Gmail connection:', e);
+        console.log('Cannot access parent window, trying localStorage:', e);
       }
+      
+      // Fallback to localStorage (same origin as parent)
+      try {
+        const stored = localStorage.getItem(GMAIL_CONNECTION_KEY);
+        if (stored) {
+          const connection = JSON.parse(stored);
+          // Check if token is expired
+          if (connection.expiry_date && Date.now() >= connection.expiry_date) {
+            console.log('Gmail token expired');
+            localStorage.removeItem(GMAIL_CONNECTION_KEY);
+            return false;
+          }
+          if (connection.access_token) {
+            gmailAccessToken = connection.access_token;
+            gmailTokenExpiry = connection.expiry_date;
+            return true;
+          }
+        }
+      } catch (e) {
+        console.error('Error reading Gmail connection from localStorage:', e);
+      }
+      
       return false;
     }
     
@@ -785,6 +809,13 @@ ARNOMA Team"></textarea>
         gmailAccessToken = params.get('access_token');
         const expiresIn = parseInt(params.get('expires_in') || '3600');
         gmailTokenExpiry = Date.now() + (expiresIn * 1000);
+        
+        // Save to localStorage
+        const connection = {
+          access_token: gmailAccessToken,
+          expiry_date: gmailTokenExpiry
+        };
+        localStorage.setItem(GMAIL_CONNECTION_KEY, JSON.stringify(connection));
         
         // Clear hash from URL
         window.history.replaceState(null, null, window.location.pathname);
