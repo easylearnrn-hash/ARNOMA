@@ -10385,32 +10385,47 @@
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
         getCurrentTimeInZone(timezone) {
-          // USE NATIVE BROWSER TIMEZONE - Simple and reliable
-          const timeStr = new Date().toLocaleString("en-US", { 
+          // CRITICAL FIX: toLocaleString is fundamentally broken for Asia/Yerevan
+          // Use manual UTC calculation instead
+          const now = new Date();
+          
+          // Create formatter to get timezone offset
+          const formatter = new Intl.DateTimeFormat('en-US', {
             timeZone: timezone,
-            hour12: false,
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
             hour: '2-digit',
             minute: '2-digit',
-            second: '2-digit'
+            second: '2-digit',
+            hour12: true // Use 12-hour to avoid the bug
           });
           
-          // Parse: "MM/DD/YYYY, HH:mm:ss"
-          const match = timeStr.match(/(\d+)\/(\d+)\/(\d+),\s+(\d+):(\d+):(\d+)/);
-          if (!match) {
-            console.error('[TimezoneUtils] Parse failed:', timeStr);
-            return null;
+          const parts = formatter.formatToParts(now);
+          const getValue = (type) => parts.find(p => p.type === type)?.value;
+          
+          let hours = parseInt(getValue('hour'));
+          const minutes = parseInt(getValue('minute'));
+          const seconds = parseInt(getValue('second'));
+          const dayPeriod = getValue('dayPeriod');
+          const day = parseInt(getValue('day'));
+          const month = parseInt(getValue('month'));
+          const year = parseInt(getValue('year'));
+          
+          // Convert to 24-hour format MANUALLY
+          if (dayPeriod === 'PM' && hours !== 12) {
+            hours += 12;
+          } else if (dayPeriod === 'AM' && hours === 12) {
+            hours = 0;
           }
           
-          const [_, month, day, year, hours, minutes, seconds] = match.map(n => parseInt(n));
-          
           // Get day of week
-          const dayOfWeek = new Date().toLocaleString('en-US', {
+          const dayOfWeek = now.toLocaleString('en-US', {
             timeZone: timezone,
             weekday: 'long'
           });
+          
+          console.log('[TimezoneUtils] FIXED timezone conversion:', timezone, '→', hours + ':' + minutes + ':' + seconds, dayPeriod, '(24h format:', hours + ')');
           
           return {
             hours,
