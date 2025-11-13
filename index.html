@@ -425,9 +425,8 @@
       transform: scale(1.1);
     }
     
-    .control-btn.spinning, .spinning {
+    .control-btn.spinning {
       animation: spin 1s linear infinite;
-      cursor: default !important;
     }
     
     @keyframes spin {
@@ -7370,9 +7369,6 @@
       const syncButton = document.getElementById('syncCloudBtn');
       if (syncButton) {
         syncButton.classList.add('spinning');
-        syncButton.disabled = true;
-        syncButton.style.pointerEvents = 'none';
-        syncButton.style.cursor = 'default';
       }
       
       try {
@@ -7400,12 +7396,9 @@
         console.error('Supabase sync error:', error);
         showNotificationSimple('Sync failed', 'error');
       } finally {
-        // Remove spinning animation and re-enable button
+        // Remove spinning animation
         if (syncButton) {
           syncButton.classList.remove('spinning');
-          syncButton.disabled = false;
-          syncButton.style.pointerEvents = '';
-          syncButton.style.cursor = '';
         }
       }
     }
@@ -10281,12 +10274,6 @@
     /**
      * Redo action (browser history forward)
      */
-    function redoAction() {
-      // Note: Browser history forward is tricky without state management
-      console.info('Redo: Feature requires state tracking');
-      showNotification('Redo not available', 'info');
-    }
-
     /**
      * Refresh current UI view
      */
@@ -12383,7 +12370,6 @@
       // Reload students from Supabase to get latest status
       try {
         window.studentsCache = await loadStudents();
-        console.log('🔄 Reloaded students from Supabase for breakdown');
       } catch (error) {
         console.error('Error reloading students:', error);
       }
@@ -12464,9 +12450,6 @@
         });
       });
       
-      // Debug: Log BEFORE sorting
-      console.log('📊 BEFORE sort:', studentData.map(s => `${s.name} = status:"${s.status}"`));
-      
       // Sort by status first (active before paused), then by name within each status
       studentData.sort((a, b) => {
         // Active students come before paused students
@@ -12475,9 +12458,6 @@
         // Within same status, sort alphabetically by name
         return a.name.localeCompare(b.name);
       });
-      
-      // Debug: Log AFTER sorting
-      console.log('📊 AFTER sort:', studentData.map(s => `${s.name} (${s.status})`));
       
       // Generate HTML
       studentData.forEach(data => {
@@ -13648,44 +13628,33 @@
       // Convert to number for consistency
       const numericId = parseInt(studentId);
       
-      console.log('🎯 markAsAbsent called:', { studentId: numericId, dateStr });
-      
       // Use AbsentManager for cloud sync
       if (window.AbsentManager) {
         window.AbsentManager.markAbsent(numericId, dateStr).then(() => {
           debugLog('Marked absent (Supabase):', { studentId: numericId, dateStr });
           showToast('⚪ Marked as absent');
           
-          console.log('🔍 Checking for panels to close...');
-          
           // Close the detail modal only (not the sidebar)
           const modal = document.getElementById('classDetailModal');
           if (modal) {
-            console.log('❌ Closing classDetailModal');
             modal.remove();
           }
           const overlay = document.getElementById('calendarDetailOverlay');
           if (overlay) {
-            console.log('❌ Closing calendarDetailOverlay');
             overlay.remove();
           }
           
-          console.log('🔄 Calling renderCalendar...');
           // Refresh calendar to update dot colors
           renderCalendar();
           
-          console.log('📋 Checking for sidebar panel...');
           // Update the day details sidebar immediately if it's open
           const dayPanel = document.getElementById('dayDetailsPanel');
           if (dayPanel) {
-            console.log('✅ Sidebar panel found, updating...');
             // Re-fetch the day data with updated status and update content
             const dayData = getDayData(dateStr);
             if (dayData) {
               openDayDetails(dateStr, dayData);
             }
-          } else {
-            console.log('⚠️ No sidebar panel found');
           }
         }).catch(err => {
           console.error('Error marking absent:', err);
