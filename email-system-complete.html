@@ -741,41 +741,48 @@ ARNOMA Team"></textarea>
     
     // Get Gmail connection from parent window or localStorage
     function getGmailConnectionFromParent() {
+      console.log('🔍 Looking for Gmail connection...');
+      
       // Try parent window first
       try {
         if (window.parent && window.parent !== window) {
           const parentConnection = window.parent.getGmailConnection?.();
           if (parentConnection && parentConnection.access_token) {
+            console.log('✅ Found token from parent window');
             gmailAccessToken = parentConnection.access_token;
             gmailTokenExpiry = parentConnection.expiry_date;
             return true;
           }
         }
       } catch (e) {
-        console.log('Cannot access parent window, trying localStorage:', e);
+        console.log('⚠️ Cannot access parent window, trying localStorage:', e);
       }
       
       // Fallback to localStorage (same origin as parent)
       try {
         const stored = localStorage.getItem(GMAIL_CONNECTION_KEY);
+        console.log('LocalStorage check:', stored ? 'Found' : 'Not found');
         if (stored) {
           const connection = JSON.parse(stored);
+          console.log('Connection expiry:', connection.expiry_date ? new Date(connection.expiry_date).toLocaleString() : 'none');
           // Check if token is expired
           if (connection.expiry_date && Date.now() >= connection.expiry_date) {
-            console.log('Gmail token expired');
+            console.log('❌ Gmail token expired');
             localStorage.removeItem(GMAIL_CONNECTION_KEY);
             return false;
           }
           if (connection.access_token) {
+            console.log('✅ Found valid token from localStorage');
             gmailAccessToken = connection.access_token;
             gmailTokenExpiry = connection.expiry_date;
             return true;
           }
         }
       } catch (e) {
-        console.error('Error reading Gmail connection from localStorage:', e);
+        console.error('❌ Error reading Gmail connection from localStorage:', e);
       }
       
+      console.log('❌ No Gmail connection found');
       return false;
     }
     
@@ -854,6 +861,18 @@ ARNOMA Team"></textarea>
     async function sendEmailViaGmail(to, subject, htmlBody) {
       if (!isGmailConnected()) {
         showNotification('❌ Please connect Gmail first', 'error');
+        return false;
+      }
+      
+      // Log token status for debugging
+      console.log('📧 Attempting to send email...');
+      console.log('Token exists:', !!gmailAccessToken);
+      console.log('Token length:', gmailAccessToken?.length);
+      console.log('Token expiry:', gmailTokenExpiry ? new Date(gmailTokenExpiry).toLocaleString() : 'none');
+      console.log('Token expired:', gmailTokenExpiry ? Date.now() > gmailTokenExpiry : 'N/A');
+      
+      if (!gmailAccessToken) {
+        showNotification('❌ No Gmail token found. Please click "Connect Gmail" button above.', 'error');
         return false;
       }
       
