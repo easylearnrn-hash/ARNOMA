@@ -12364,9 +12364,9 @@
         };
       }
       
-      // CRITICAL: Red dots ONLY for CURRENT DAY (not past, not future)
-      if (dateStr === todayStr) {
-        // Current day unpaid - show red dot
+      // CRITICAL: Red dots for TODAY and PAST unpaid classes (not future)
+      if (dateStr <= todayStr) {
+        // Current or past unpaid - show red dot
         const result = {
           status: 'unpaid',
           paid: false,
@@ -12376,10 +12376,12 @@
           showActions: true
         };
         
-        // Save snapshot for today's unpaid classes
-        saveCalendarSnapshot(dateStr, {
-          [studentId]: result
-        });
+        // Save snapshot for dates older than 2 weeks
+        if (classDate < twoWeeksAgo) {
+          saveCalendarSnapshot(dateStr, {
+            [studentId]: result
+          });
+        }
         
         return result;
       }
