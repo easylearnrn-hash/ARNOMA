@@ -10412,8 +10412,6 @@
             weekday: 'long'
           });
           
-          console.log('[TimezoneUtils] Native browser time:', timezone, '→', timeStr, '| hour:', hours, '| day:', dayOfWeek);
-          
           return {
             hours,
             minutes,
@@ -10886,7 +10884,6 @@
             return [];
           }
 
-          console.log('[Timer getAllClasses] Using timezone:', timerTimeZone, '| Found', groups.length, 'groups');
           debug('[ClassCountdownTimer] Found', groups.length, 'groups');
 
           // Get current time based on selected timezone source
@@ -10895,7 +10892,6 @@
           const nowTime = TimezoneUtils.getCurrentTimeInZone(timezone);
           const timezoneOffset = TimezoneUtils.getTimezoneOffset(timezone);
           
-          console.log('[Timer getAllClasses] Current time in', timezone, ':', nowTime.toLocaleString(), '| Day:', nowTime.dayOfWeek, '| Hour:', nowTime.hours);
           debug('[ClassCountdownTimer] Current time (' + timezone + '):', nowTime.toLocaleString(), '(UTC offset:', timezoneOffset, 'hours)');
           debug('[ClassCountdownTimer] Time breakdown - hours:', nowTime.hours, 'minutes:', nowTime.minutes, 'day:', nowTime.dayOfWeek);
           
@@ -11221,7 +11217,6 @@
           return;
         }
 
-        console.log('[Timer Init] Starting timer with timezone:', timerTimeZone);
         createElement();
         updateDisplay();
 
