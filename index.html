@@ -11011,30 +11011,32 @@
           let daysAhead = classDayIndex - currentDayIndex;
           if (daysAhead < 0) daysAhead += 7;
 
-          // Build candidate date for that weekday
-          const candidate = new Date(now.year, now.month - 1, now.day);
-          candidate.setDate(candidate.getDate() + daysAhead);
-          candidate.setHours(hour, minutes, 0, 0);
-
-          // If it's today and the time already passed, move to next week
-          const nowDate = new Date(now.year, now.month - 1, now.day, now.hours, now.minutes, now.seconds);
+          // Build Yerevan timestamps by calculating total seconds
+          const nowTotalSeconds = now.hours * 3600 + now.minutes * 60 + now.seconds;
+          const classTotalSeconds = hour * 3600 + minutes * 60;
+          
+          let secondsRemaining;
+          if (daysAhead === 0) {
+            // Same day - just compare times
+            secondsRemaining = classTotalSeconds - nowTotalSeconds;
+            // If class time already passed today, move to next week
+            if (secondsRemaining < 0) {
+              secondsRemaining += (7 * 86400); // Add 7 days in seconds
+            }
+          } else {
+            // Future day - add full days then adjust for time of day
+            secondsRemaining = (daysAhead * 86400) - nowTotalSeconds + classTotalSeconds;
+          }
           
           console.log(`[Timer EVN] Checking ${classData.groupName} ${classData.dayName} ${classData.time}:`, {
             classDayIndex,
             currentDayIndex,
             daysAhead,
-            candidate: candidate.toString(),
-            nowDate: nowDate.toString(),
-            candidateBeforeNow: candidate <= nowDate
+            nowTotalSeconds,
+            classTotalSeconds,
+            secondsRemaining,
+            hoursRemaining: (secondsRemaining/3600).toFixed(1)
           });
-          
-          if (candidate <= nowDate) {
-            candidate.setDate(candidate.getDate() + 7);
-            console.log(`[Timer EVN] ✅ Class time passed, moved to next week:`, candidate.toString());
-          }
-
-          const secondsRemaining = Math.floor((candidate - nowDate) / 1000);
-          console.log(`[Timer EVN] ${classData.groupName} seconds remaining:`, secondsRemaining, `(${(secondsRemaining/3600).toFixed(1)}h)`);
 
           // Only show upcoming 7 days
           if (secondsRemaining >= 0 && secondsRemaining <= 604800) {
