@@ -11280,37 +11280,120 @@
     /* END CLASS COUNTDOWN TIMER */
 
     // ============================================================================
-    // SKIP CLASS MANAGER - Smart Calendar + Timer Integration
+    // SKIP CLASS MANAGER - Smart Calendar + Timer Integration ☁️ CLOUD SYNC
     // ============================================================================
     /**
-     * Skip Class Manager
+     * Skip Class Manager - Supabase Cloud Sync Version
      * - Double-click timer class items to skip
      * - Automatic payment roll-over
      * - Calendar integration with visual feedback
      * - Undo functionality
+     * - ☁️ CLOUD SYNC - Works across all devices via Supabase
      */
     window.SkipClassManager = (function() {
       // Skipped classes data structure: { groupName: { 'YYYY-MM-DD': true } }
-      let skippedClasses = loadSkippedClasses();
+      let skippedClasses = {};
       let pendingSkip = null;
+      let isInitialized = false;
 
-      // Load skipped classes from localStorage
-      function loadSkippedClasses() {
+      // Load skipped classes from Supabase
+      async function loadSkippedClasses() {
+        try {
+          const { data, error } = await supabase
+            .from('skipped_classes')
+            .select('*');
+          
+          if (error) {
+            console.error('[SkipClassManager] ❌ Error loading from Supabase:', error);
+            return loadSkippedClassesFromLocalStorage(); // Fallback
+          }
+          
+          // Convert array to nested object structure
+          const skipped = {};
+          (data || []).forEach(record => {
+            if (!skipped[record.group_name]) {
+              skipped[record.group_name] = {};
+            }
+            skipped[record.group_name][record.class_date] = true;
+          });
+          
+          console.log('✅ [SkipClassManager] Loaded', Object.keys(skipped).length, 'groups from Supabase');
+          return skipped;
+        } catch (error) {
+          console.error('[SkipClassManager] ❌ Exception loading skipped classes:', error);
+          return loadSkippedClassesFromLocalStorage(); // Fallback
+        }
+      }
+
+      // Fallback: Load from localStorage if Supabase fails
+      function loadSkippedClassesFromLocalStorage() {
         try {
           const data = localStorage.getItem('skipped-classes:v1');
+          console.log('📦 [SkipClassManager] Loaded from localStorage (fallback)');
           return data ? JSON.parse(data) : {};
         } catch (error) {
-          console.error('[SkipClassManager] Error loading skipped classes:', error);
+          console.error('[SkipClassManager] ❌ Error loading from localStorage:', error);
           return {};
         }
       }
 
-      // Save skipped classes to localStorage
-      function saveSkippedClasses() {
+      // Save skipped classes to Supabase
+      async function saveSkippedClasses() {
+        try {
+          // Convert nested object to array of records
+          const records = [];
+          Object.keys(skippedClasses).forEach(groupName => {
+            Object.keys(skippedClasses[groupName]).forEach(classDate => {
+              records.push({
+                group_name: groupName,
+                class_date: classDate,
+                skipped_at: new Date().toISOString()
+              });
+            });
+          });
+          
+          // Delete all existing records (full replace strategy for simplicity)
+          const { error: deleteError } = await supabase
+            .from('skipped_classes')
+            .delete()
+            .neq('id', 0); // Delete all rows
+          
+          if (deleteError) {
+            console.error('[SkipClassManager] ❌ Error clearing Supabase:', deleteError);
+          }
+          
+          // Insert new records
+          if (records.length > 0) {
+            const { error: insertError } = await supabase
+              .from('skipped_classes')
+              .insert(records);
+            
+            if (insertError) {
+              console.error('[SkipClassManager] ❌ Error saving to Supabase:', insertError);
+              saveSkippedClassesToLocalStorage(); // Fallback
+              return;
+            }
+            
+            console.log('✅ [SkipClassManager] Saved', records.length, 'skipped classes to Supabase');
+          } else {
+            console.log('✅ [SkipClassManager] Cleared all skipped classes from Supabase');
+          }
+          
+          // Also save to localStorage as backup
+          saveSkippedClassesToLocalStorage();
+        } catch (error) {
+          console.error('[SkipClassManager] ❌ Exception saving skipped classes:', error);
+          saveSkippedClassesToLocalStorage(); // Fallback
+        }
+      }
+
+      // Fallback: Save to localStorage
+      function saveSkippedClassesToLocalStorage() {
         try {
           localStorage.setItem('skipped-classes:v1', JSON.stringify(skippedClasses));
+          console.log('📦 [SkipClassManager] Saved to localStorage (backup)');
         } catch (error) {
-          console.error('[SkipClassManager] Error saving skipped classes:', error);
+          console.error('[SkipClassManager] ❌ Error saving to localStorage:', error);
         }
       }
 
@@ -11501,7 +11584,19 @@
       }
 
       // Initialize - attach double-click handlers to timer items
-      function init() {
+      async function init() {
+        if (isInitialized) {
+          console.log('⚠️ [SkipClassManager] Already initialized, skipping');
+          return;
+        }
+        
+        console.log('🚀 [SkipClassManager] Initializing with Supabase cloud sync...');
+        
+        // Load skipped classes from Supabase
+        skippedClasses = await loadSkippedClasses();
+        isInitialized = true;
+        
+        console.log('✅ [SkipClassManager] Initialized with', Object.keys(skippedClasses).length, 'groups');
         
         // Attach button event listeners
         const cancelBtn = document.getElementById('skipDialogCancelBtn');
@@ -11593,7 +11688,25 @@
         unskipClass,
         confirmSkip,
         cancelSkip,
-        getSkippedClasses: () => ({ ...skippedClasses })
+        getSkippedClasses: () => ({ ...skippedClasses }),
+        reloadFromSupabase: async () => {
+          console.log('🔄 [SkipClassManager] Reloading from Supabase...');
+          skippedClasses = await loadSkippedClasses();
+          console.log('✅ [SkipClassManager] Reloaded', Object.keys(skippedClasses).length, 'groups');
+          
+          // Refresh UI if calendar or timer is visible
+          if (typeof renderCalendar === 'function') {
+            try {
+              renderCalendar();
+            } catch (e) {
+              console.warn('[SkipClassManager] Could not refresh calendar:', e);
+            }
+          }
+          if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
+            window.ClassCountdownTimer.destroy();
+            setTimeout(() => window.ClassCountdownTimer.init(), 100);
+          }
+        }
       };
     })();
 
