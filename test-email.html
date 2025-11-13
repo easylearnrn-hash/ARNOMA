@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Test ARNOMA Email System</title>
+  <style>
+    body { font-family: Arial; max-width: 600px; margin: 50px auto; padding: 20px; }
+    button { background: #4CAF50; color: white; border: none; padding: 12px 24px; cursor: pointer; border-radius: 4px; font-size: 16px; }
+    button:hover { background: #45a049; }
+    .result { margin-top: 20px; padding: 15px; border-radius: 4px; }
+    .success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    input { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Test ARNOMA Email System</h1>
+  <p>Testing Supabase Edge Function + Resend integration</p>
+  
+  <div>
+    <label>Your Email:</label>
+    <input type="email" id="testEmail" placeholder="your-email@example.com" value="">
+  </div>
+  
+  <button onclick="testEmailSystem()">Send Test Email</button>
+  
+  <div id="result"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
+
+    async function testEmailSystem() {
+      const emailInput = document.getElementById('testEmail');
+      const resultDiv = document.getElementById('result');
+      const email = emailInput.value.trim();
+      
+      if (!email) {
+        resultDiv.innerHTML = '<div class="error">Please enter your email address</div>';
+        return;
+      }
+      
+      resultDiv.innerHTML = '<div>Sending email...</div>';
+      
+      try {
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            to: email,
+            subject: 'ARNOMA Email System Test',
+            html: `
+              <h1>✅ Success!</h1>
+              <p>Your ARNOMA email system is working perfectly!</p>
+              <p><strong>System Details:</strong></p>
+              <ul>
+                <li>Sender: ARNOMA &lt;info@arnoma.us&gt;</li>
+                <li>Backend: Supabase Edge Functions</li>
+                <li>Email Provider: Resend</li>
+                <li>Test Time: ${new Date().toLocaleString()}</li>
+              </ul>
+              <p>You can now send payment reminders and notifications to your students!</p>
+            `,
+            from: 'ARNOMA <info@arnoma.us>'
+          })
+        });
+
+        const result = await response.json();
+        
+        if (response.ok) {
+          resultDiv.innerHTML = `
+            <div class="success">
+              <strong>✅ Email sent successfully!</strong>
+              <p>Check your inbox: ${email}</p>
+              <p>Email ID: ${result.data.id}</p>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div class="error">
+              <strong>❌ Error:</strong> ${result.error}
+            </div>
+          `;
+        }
+        
+      } catch (error) {
+        resultDiv.innerHTML = `
+          <div class="error">
+            <strong>❌ Network Error:</strong> ${error.message}
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
