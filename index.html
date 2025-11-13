@@ -12519,35 +12519,52 @@
     function renderDayDots(dayData, dateStr) {
       let html = '';
       
-      dayData.studentsWithClass.forEach((classInfo, index) => {
-        const { student, status } = classInfo;
-        
-        // Skip hidden status (before November 1, 2025)
-        if (status === 'hidden') {
-          return;
+      // Group students by their group name
+      const studentsByGroup = {};
+      dayData.studentsWithClass.forEach((classInfo) => {
+        const groupName = classInfo.student.group || 'No Group';
+        if (!studentsByGroup[groupName]) {
+          studentsByGroup[groupName] = [];
         }
+        studentsByGroup[groupName].push(classInfo);
+      });
+      
+      // Get sorted group names
+      const groupNames = Object.keys(studentsByGroup).sort();
+      
+      groupNames.forEach((groupName, groupIndex) => {
+        const studentsInGroup = studentsByGroup[groupName];
         
-        // Check if this class is skipped
-        const groupName = window.groupsCache?.find(g => g.name === student.group)?.name;
-        const isSkipped = groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
-        
-        let dotColor;
-        
-        if (isSkipped) {
-          dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped classes
-        } else {
-          switch (status) {
-            case 'paid':
-            case 'deducted':
-            case 'low-balance':
-              dotColor = '#22c55e'; // Green - Paid
-              break;
-            case 'pending':
-              dotColor = '#3b82f6'; // Blue - Future class with balance
-              break;
-            case 'absent':
-              dotColor = '#94a3b8'; // Gray - Absent
-              break;
+        // Render dots for each student in this group
+        studentsInGroup.forEach((classInfo) => {
+          const { student, status } = classInfo;
+          
+          // Skip hidden status (before November 1, 2025)
+          if (status === 'hidden') {
+            return;
+          }
+          
+          // Check if this class is skipped
+          const groupNameForCheck = window.groupsCache?.find(g => g.name === student.group)?.name;
+          const isSkipped = groupNameForCheck && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupNameForCheck, dateStr);
+          
+          let dotColor;
+          
+          if (isSkipped) {
+            dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped classes
+          } else {
+            switch (status) {
+              case 'paid':
+              case 'deducted':
+              case 'low-balance':
+                dotColor = '#22c55e'; // Green - Paid
+                break;
+              case 'pending':
+                dotColor = '#3b82f6'; // Blue - Future class with balance
+                break;
+              case 'absent':
+                dotColor = '#94a3b8'; // Gray - Absent
+                break;
             case 'unpaid':
               dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
               break;
@@ -12576,6 +12593,14 @@
                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.3)';"></div>
         `;
       });
+      
+      // Add separator between groups (except after the last group)
+      if (groupIndex < groupNames.length - 1) {
+        html += `
+          <div style="width: 100%; height: 1px; background: rgba(255,255,255,0.1); margin: 4px 0;"></div>
+        `;
+      }
+    });
       
       return html;
     }
