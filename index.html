@@ -12078,6 +12078,9 @@
       const year = currentCalendarDate.getFullYear();
       const month = currentCalendarDate.getMonth();
       
+      // Reset balance tracker for fresh calculation
+      window.calendarBalanceTracker = {};
+      
       // Update header
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
                          'July', 'August', 'September', 'October', 'November', 'December'];
@@ -12281,7 +12284,19 @@
       }
       
       // RULE 3: Dynamic calculation for TODAY, recent past (< 2 weeks), and FUTURE dates
-      const balance = student.balance || 0;
+      
+      // Use a running balance that tracks deductions for this calendar render
+      // Initialize from actual balance, then check what's been deducted already
+      if (!window.calendarBalanceTracker) {
+        window.calendarBalanceTracker = {};
+      }
+      
+      // Initialize this student's balance tracker if not exists
+      if (window.calendarBalanceTracker[studentId] === undefined) {
+        window.calendarBalanceTracker[studentId] = student.balance || 0;
+      }
+      
+      const balance = window.calendarBalanceTracker[studentId];
       
       // Find all payments for this student (by name or alias match)
       // Check BOTH studentName AND payerName fields
@@ -12365,6 +12380,7 @@
           // Only add to balance if not already applied
           if (!alreadyApplied) {
             newBalance = balance + remainder;
+            window.calendarBalanceTracker[studentId] = newBalance;
             student.balance = newBalance;
             student.balanceChanged = true;
             
@@ -12423,7 +12439,10 @@
         if (!alreadyDeducted) {
           const newBalance = balance - pricePerClass;
           
-          // Update student balance in memory and mark for Supabase sync
+          // Update balance tracker for this render cycle
+          window.calendarBalanceTracker[studentId] = newBalance;
+          
+          // Update student balance and mark for Supabase sync
           student.balance = newBalance;
           student.balanceChanged = true;
           
