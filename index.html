@@ -11205,18 +11205,21 @@
           const nowTime = await TimezoneUtils.getCurrentTimeInZone(timezone);
           const timezoneOffset = TimezoneUtils.getTimezoneOffset(timezone);
           
-          debug('[ClassCountdownTimer] Current time (' + timezone + '):', nowTime.toLocaleString(), '(UTC offset:', timezoneOffset, 'hours)');
+          debug('[ClassCountdownTimer] Current time (' + timezone + '):', `${nowTime.month}/${nowTime.day}/${nowTime.year} ${nowTime.hours}:${nowTime.minutes}:${nowTime.seconds}`, '(UTC offset:', timezoneOffset, 'hours)');
           debug('[ClassCountdownTimer] Time breakdown - hours:', nowTime.hours, 'minutes:', nowTime.minutes, 'day:', nowTime.dayOfWeek);
           
           // Get current time in seconds since midnight
           const currentTimeInSeconds = nowTime.hours * 3600 + nowTime.minutes * 60 + nowTime.seconds;
           debug('[ClassCountdownTimer] Current time in seconds since midnight:', currentTimeInSeconds, `(${(currentTimeInSeconds/3600).toFixed(2)} hours)`);
           
+          // Get current day index from dayOfWeek string
+          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const currentDayIndex = dayNames.indexOf(nowTime.dayOfWeek);
+          
           // Check each day for the next 7 days
           for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
             // Calculate the day we're checking
-            const checkDayIndex = (nowTime.getDay() + daysAhead) % 7;
-            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+            const checkDayIndex = (currentDayIndex + daysAhead) % 7;
             const checkDayName = dayNames[checkDayIndex];
 
             groups.forEach(group => {
