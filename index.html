@@ -2754,14 +2754,9 @@
         <button onclick="changeCalendarMonth(-1)" style="padding: 10px 18px; background: rgba(138,180,255,0.1); border: 1px solid rgba(138,180,255,0.3); border-radius: 10px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.2)'" onmouseout="this.style.background='rgba(138,180,255,0.1)'">
           ← Previous
         </button>
-        <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
-          <div>
-            <div id="calendarMonthYear" style="font-size: 20px; font-weight: 900; color: white; letter-spacing: -0.5px;">December 2024</div>
-            <div id="calendarSubtitle" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Loading schedule...</div>
-          </div>
-          <button onclick="recalculateAllBalances()" style="padding: 6px 14px; background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: 8px; color: #eab308; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(234,179,8,0.2)'" onmouseout="this.style.background='rgba(234,179,8,0.1)'">
-            🔄 Apply Balance to Unpaid
-          </button>
+        <div style="text-align: center;">
+          <div id="calendarMonthYear" style="font-size: 20px; font-weight: 900; color: white; letter-spacing: -0.5px;">December 2024</div>
+          <div id="calendarSubtitle" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Loading schedule...</div>
         </div>
         <button onclick="changeCalendarMonth(1)" style="padding: 10px 18px; background: rgba(138,180,255,0.1); border: 1px solid rgba(138,180,255,0.3); border-radius: 10px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.2)'" onmouseout="this.style.background='rgba(138,180,255,0.1)'">
           Next →
@@ -12045,41 +12040,9 @@
       }
     }
     
-    /**
-     * Recalculates all student balances by clearing tracking keys.
-     * This allows balance to auto-apply to unpaid classes.
-     */
-    function recalculateAllBalances() {
-      const confirmMsg = "This will clear balance tracking and re-apply student credit to unpaid classes. Continue?";
-      if (!confirm(confirmMsg)) return;
-      
-      console.log('🔄 Clearing all balance tracking keys...');
-      
-      // Clear all balance-related tracking keys from localStorage
-      const keysToRemove = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith('balance-applied:') || key.startsWith('balance-deducted:'))) {
-          keysToRemove.push(key);
-        }
-      }
-      
-      keysToRemove.forEach(key => localStorage.removeItem(key));
-      console.log(`✓ Removed ${keysToRemove.length} tracking keys`);
-      
-      // Force re-render calendar
-      console.log('🔄 Recalculating calendar...');
-      renderCalendar();
-      
-      alert(`Balance recalculation complete! Cleared ${keysToRemove.length} tracking entries.`);
-    }
-    
     function renderCalendar() {
       const year = currentCalendarDate.getFullYear();
       const month = currentCalendarDate.getMonth();
-      
-      // Reset balance tracker for fresh calculation
-      window.calendarBalanceTracker = {};
       
       // Update header
       const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
@@ -12246,6 +12209,21 @@
         };
       }
       
+      // CHECK 1b: Was credit applied to this class?
+      const creditPaymentKey = `credit-payment:${studentId}:${dateStr}`;
+      const creditPayment = localStorage.getItem(creditPaymentKey);
+      
+      if (creditPayment) {
+        const creditData = JSON.parse(creditPayment);
+        return {
+          status: 'deducted',
+          paid: true,
+          amount: creditData.amount,
+          balance: student.balance || 0,
+          message: `Paid from Credit (${formatCurrency(student.balance || 0, '$')} remaining)`
+        };
+      }
+      
       // CHECK 2: Is this class skipped?
       const groupName = student.group;
       if (groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr)) {
@@ -12284,19 +12262,7 @@
       }
       
       // RULE 3: Dynamic calculation for TODAY, recent past (< 2 weeks), and FUTURE dates
-      
-      // Use a running balance that tracks deductions for this calendar render
-      // Initialize from actual balance, then check what's been deducted already
-      if (!window.calendarBalanceTracker) {
-        window.calendarBalanceTracker = {};
-      }
-      
-      // Initialize this student's balance tracker if not exists
-      if (window.calendarBalanceTracker[studentId] === undefined) {
-        window.calendarBalanceTracker[studentId] = student.balance || 0;
-      }
-      
-      const balance = window.calendarBalanceTracker[studentId];
+      const balance = student.balance || 0;
       
       // Find all payments for this student (by name or alias match)
       // Check BOTH studentName AND payerName fields
@@ -12369,25 +12335,11 @@
         
         if (paymentAmount > pricePerClass) {
           const remainder = paymentAmount - pricePerClass;
+          const newBalance = balance + remainder;
           
-          // CRITICAL: Check if this payment has already been applied to balance
-          // Track using payment ID + date to prevent duplicate balance additions
-          const balanceTrackingKey = `balance-applied:${paymentOnDate.id}:${dateStr}`;
-          const alreadyApplied = localStorage.getItem(balanceTrackingKey) === 'true';
-          
-          let newBalance = balance;
-          
-          // Only add to balance if not already applied
-          if (!alreadyApplied) {
-            newBalance = balance + remainder;
-            window.calendarBalanceTracker[studentId] = newBalance;
-            student.balance = newBalance;
-            student.balanceChanged = true;
-            
-            // Mark this payment as applied to prevent future duplicate additions
-            localStorage.setItem(balanceTrackingKey, 'true');
-            console.log(`💰 Added $${remainder} to ${student.name}'s balance from payment ${paymentOnDate.id}`);
-          }
+          // Add overpayment to balance
+          student.balance = newBalance;
+          student.balanceChanged = true;
           
           const result = {
             status: 'paid',
@@ -12427,52 +12379,7 @@
         }
       }
       
-      // Check if can deduct from balance (for ANY unpaid class - past, today, or future)
-      // Balance automatically pays oldest unpaid classes first
-      if (balance >= pricePerClass) {
-        // CRITICAL: Check if this class has already been paid from balance
-        // Track using student ID + date to prevent duplicate deductions
-        const deductionTrackingKey = `balance-deducted:${studentId}:${dateStr}`;
-        const alreadyDeducted = localStorage.getItem(deductionTrackingKey) === 'true';
-        
-        // Only deduct if not already deducted
-        if (!alreadyDeducted) {
-          const newBalance = balance - pricePerClass;
-          
-          // Update balance tracker for this render cycle
-          window.calendarBalanceTracker[studentId] = newBalance;
-          
-          // Update student balance and mark for Supabase sync
-          student.balance = newBalance;
-          student.balanceChanged = true;
-          
-          // Mark this class as paid from balance to prevent future duplicate deductions
-          localStorage.setItem(deductionTrackingKey, 'true');
-          console.log(`💳 Deducted $${pricePerClass} from ${student.name}'s balance for ${dateStr}`);
-          
-          const lowBalance = newBalance > 0 && newBalance < pricePerClass;
-          
-          const result = {
-            status: lowBalance ? 'low-balance' : 'deducted',
-            paid: true,
-            amount: pricePerClass,
-            balance: newBalance,
-            message: `From Balance (${formatCurrency(newBalance, '$')} remaining)`,
-            alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
-          };
-          
-          // Save snapshot for dates older than 2 weeks
-          if (classDate < twoWeeksAgo) {
-            saveCalendarSnapshot(dateStr, {
-              [studentId]: result
-            });
-          }
-          
-          return result;
-        }
-      }
-      
-      // Absent check moved to top of function - this duplicate removed
+      // No payment found - check class timing for status
       
       // Future class - show as pending if has balance
       if (classDate > laToday && balance >= pricePerClass) {
@@ -12812,6 +12719,9 @@
               <button onclick="event.stopPropagation(); quickAddPayment('${studentId}', '${dateStr}', ${classInfo.pricePerClass})" style="padding: 8px 14px; background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); border-radius: 8px; color: #22c55e; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,0.3)'" onmouseout="this.style.background='rgba(34,197,94,0.2)'">
                 ➕ Add Payment
               </button>
+              <button onclick="event.stopPropagation(); applyFromCredit('${studentId}', '${dateStr}', ${classInfo.pricePerClass})" style="padding: 8px 14px; background: rgba(234,179,8,0.2); border: 1px solid rgba(234,179,8,0.4); border-radius: 8px; color: #eab308; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(234,179,8,0.3)'" onmouseout="this.style.background='rgba(234,179,8,0.2)'">
+                💳 Apply from Credit
+              </button>
               <button onclick="event.stopPropagation(); markAsAbsent('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(100,116,139,0.2); border: 1px solid rgba(100,116,139,0.4); border-radius: 8px; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(100,116,139,0.3)'" onmouseout="this.style.background='rgba(100,116,139,0.2)'">
                 ⚪ Mark Absent
               </button>
@@ -12912,6 +12822,65 @@
       
       showToast('✅ Payment added successfully', 'success');
       renderCalendar();
+    }
+    
+    async function applyFromCredit(studentId, dateStr, pricePerClass) {
+      // Convert to number for consistency
+      const numericId = parseInt(studentId);
+      
+      // Get student from cache
+      const students = getCachedStudents();
+      const student = students.find(s => s.id === numericId);
+      
+      if (!student) {
+        showToast('❌ Student not found', 'error');
+        return;
+      }
+      
+      const currentBalance = parseFloat(student.balance) || 0;
+      
+      // Check if student has enough credit
+      if (currentBalance < pricePerClass) {
+        alert(`❌ Insufficient credit!\n\nStudent: ${student.name}\nCurrent Balance: ${formatCurrency(currentBalance, '$')}\nClass Price: ${formatCurrency(pricePerClass, '$')}\n\nNeed ${formatCurrency(pricePerClass - currentBalance, '$')} more.`);
+        return;
+      }
+      
+      // Confirm deduction
+      const confirmMsg = `Apply credit to this class?\n\nStudent: ${student.name}\nClass Date: ${dateStr}\nClass Price: ${formatCurrency(pricePerClass, '$')}\n\nCurrent Balance: ${formatCurrency(currentBalance, '$')}\nNew Balance: ${formatCurrency(currentBalance - pricePerClass, '$')}`;
+      
+      if (!confirm(confirmMsg)) return;
+      
+      // Deduct from balance
+      const newBalance = currentBalance - pricePerClass;
+      student.balance = newBalance;
+      
+      // Save to Supabase
+      try {
+        await saveStudent(student);
+        
+        // Store a marker that this class was paid from credit (like a payment)
+        const creditPaymentKey = `credit-payment:${numericId}:${dateStr}`;
+        localStorage.setItem(creditPaymentKey, JSON.stringify({
+          studentId: numericId,
+          date: dateStr,
+          amount: pricePerClass,
+          appliedAt: new Date().toISOString()
+        }));
+        
+        showToast(`✅ Applied ${formatCurrency(pricePerClass, '$')} from credit\nNew Balance: ${formatCurrency(newBalance, '$')}`, 'success');
+        
+        // Close the detail modal
+        const modal = document.getElementById('classDetailModal');
+        if (modal) modal.remove();
+        const overlay = document.getElementById('calendarDetailOverlay');
+        if (overlay) overlay.remove();
+        
+        // Refresh calendar to update dot colors
+        renderCalendar();
+      } catch (error) {
+        console.error('Failed to apply credit:', error);
+        showToast('❌ Failed to apply credit', 'error');
+      }
     }
     
     function markAsAbsent(studentId, dateStr) {
