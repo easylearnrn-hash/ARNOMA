@@ -11340,6 +11340,21 @@
           
           const countdown = formatCountdown(classData.secondsRemaining);
           
+          // Convert day name to Today/Tomorrow for first two classes
+          let displayDay;
+          if (timerTimeZone === 'EVN') {
+            displayDay = yerevanData.day;
+          } else {
+            displayDay = classData.dayName;
+          }
+          
+          // Show "Today" or "Tomorrow" for the first two upcoming classes
+          if (index === 0 && hoursRemaining <= 24) {
+            displayDay = 'Today';
+          } else if (index === 1 && hoursRemaining <= 48) {
+            displayDay = 'Tomorrow';
+          }
+          
           // Check if this class is skipped
           const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
           const isSkipped = window.SkipClassManager && window.SkipClassManager.isClassSkipped(classData.groupName, dateStr);
@@ -11387,11 +11402,11 @@
               </div>
               <div class="timer-class-details">
                 ${timerTimeZone === 'EVN' ? `
-                <span class="timer-class-day">${yerevanData.day}</span>
+                <span class="timer-class-day">${displayDay}</span>
                 <span class="timer-class-separator">•</span>
                 <span class="timer-class-time">${yerevanData.time}</span>
                 ` : `
-                <span class="timer-class-day">${classData.dayName}</span>
+                <span class="timer-class-day">${displayDay}</span>
                 <span class="timer-class-separator">•</span>
                 <span class="timer-class-time">${classData.laTime}</span>
                 `}
