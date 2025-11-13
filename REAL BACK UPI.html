@@ -3,44 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARNOMA - Student Management [v2.3.0 - Optimized⚡]</title>
+  <title>ARNOMA - Student Management [v2.1.0]</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="-1">
   
   <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.3.0-20251112-0500">
+  <meta name="version" content="2.1.0-20251112-0240">
   
   <!-- Supabase Configuration -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
-    // ============================================================================
-    // PERFORMANCE OPTIMIZATION - Debug Mode Toggle
-    // ============================================================================
-    const DEBUG_MODE = false; // Set to true for development, false for production
-    const debug = DEBUG_MODE ? console.log.bind(console) : () => {};
-    const debugWarn = DEBUG_MODE ? console.warn.bind(console) : () => {};
-    // Always keep errors visible
-    const debugError = console.error.bind(console);
-    
-    // VERSION CHECK
-    debug('🔥 CACHE BUSTER: Version 2.3.0 - Build 20251112-0500');
-    debug('⚡ Performance: Debug logs disabled, Map caching enabled');
+    // VERSION CHECK - This should appear FIRST in console
+    console.log('🔥 CACHE BUSTER: Version 2.1.0 - Build 20251112-0240');
+    console.log('🔥 If you see this, the new code is loading!');
     
     // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
-    debug('✅ Supabase client initialized');
+    console.log('✅ Supabase client initialized');
     
-    // ============================================================================
-    // PERFORMANCE OPTIMIZATION - Data Caching with Maps for O(1) lookups
-    // ============================================================================
+    // Global data caches for performance
     window.paymentsCache = [];
     window.studentsCache = [];
-    window.studentsMap = new Map(); // Fast O(1) student lookups by ID
-    window.groupsMap = new Map();   // Fast O(1) group lookups by name
     window.groupsCache = [];
     
     // ============================================================================
@@ -70,63 +57,6 @@
         timeZone: LA_TIMEZONE,
         ...options 
       });
-    }
-
-    // ==========================================================================
-    // PERFORMANCE HELPERS - Shared collection utilities
-    // ==========================================================================
-    function coerceStudentId(rawId) {
-      if (rawId === null || rawId === undefined) return null;
-      if (typeof rawId === 'number' && Number.isFinite(rawId)) return rawId;
-      const parsed = Number(String(rawId).trim());
-      return Number.isFinite(parsed) ? parsed : null;
-    }
-
-    function getStudentsCollection(preferredCollection) {
-      if (Array.isArray(preferredCollection)) return preferredCollection;
-      if (Array.isArray(window.studentsCache)) return window.studentsCache;
-      if (Array.isArray(window.globalData?.students)) return window.globalData.students;
-      return [];
-    }
-
-    function getGroupsCollection(preferredCollection) {
-      if (Array.isArray(preferredCollection)) return preferredCollection;
-      if (Array.isArray(window.groupsCache)) return window.groupsCache;
-      if (Array.isArray(window.globalData?.groups)) return window.globalData.groups;
-      return [];
-    }
-
-    function getStudentById(studentId, preferredCollection) {
-      const numericId = coerceStudentId(studentId);
-      if (numericId === null) return null;
-
-      if (window.studentsMap instanceof Map && window.studentsMap.size) {
-        const mapHit = window.studentsMap.get(numericId) || window.studentsMap.get(String(numericId));
-        if (mapHit) return mapHit;
-      }
-
-      const stringId = String(studentId);
-      const collection = getStudentsCollection(preferredCollection);
-      return collection.find(student => {
-        if (!student) return false;
-        if (student.id === numericId) return true;
-        return String(student.id) === stringId;
-      }) || null;
-    }
-
-    function getGroupByName(groupName, preferredCollection) {
-      if (!groupName) return null;
-      const normalized = String(groupName).trim();
-      if (!normalized) return null;
-
-      if (window.groupsMap instanceof Map && window.groupsMap.size) {
-        const direct = window.groupsMap.get(normalized) || window.groupsMap.get(normalized.toLowerCase());
-        if (direct) return direct;
-      }
-
-      const lower = normalized.toLowerCase();
-      const collection = getGroupsCollection(preferredCollection);
-      return collection.find(group => group && typeof group.name === 'string' && group.name.toLowerCase() === lower) || null;
     }
   </script>
 
@@ -1072,14 +1002,13 @@
       border-radius: 14px;
       padding: 20px;
       backdrop-filter: blur(30px);
-      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      transition: all 0.2s;
       display: flex;
       flex-direction: column;
-      will-change: transform; /* GPU acceleration hint */
     }
 
     .student-card:hover, .student-item:hover {
-      transform: translateY(-2px) translateZ(0); /* Force GPU layer */
+      transform: translateY(-2px);
       border-color: #8ab4ff;
       box-shadow: 0 8px 24px rgba(138,180,255,0.2);
     }
@@ -1130,8 +1059,10 @@
       gap: 6px;
       justify-content: center;
       margin: 8px 0;
-      flex-wrap: wrap; /* Allow wrapping to new line */
-      overflow-x: visible; /* No horizontal scrolling */
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      scrollbar-width: none; /* Firefox */
+      -ms-overflow-style: none; /* IE/Edge */
     }
 
     .group-buttons::-webkit-scrollbar {
@@ -1665,31 +1596,6 @@
       background: rgba(239, 68, 68, 0.12);
       border-color: rgba(239, 68, 68, 0.3);
       color: rgba(239, 68, 68, 0.9);
-      transform: scale(1.05);
-    }
-
-    /* Timezone Toggle */
-    #enhancedCountdownTimer .timer-zone-toggle {
-      display: flex;
-      gap: 4px;
-      background: rgba(255, 255, 255, 0.05);
-      padding: 3px;
-      border-radius: 6px;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-
-    #enhancedCountdownTimer .timer-zone-btn {
-      padding: 4px 10px;
-      border: none;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      letter-spacing: 0.3px;
-    }
-
-    #enhancedCountdownTimer .timer-zone-btn:hover {
       transform: scale(1.05);
     }
 
@@ -2973,7 +2879,7 @@
             dateModifiedAt: p.date_modified_at
           }));
           
-          debug('✅ Loaded from Supabase:', paymentsFromSupabase.length, 'payments');
+          console.log('✅ Loaded from Supabase:', paymentsFromSupabase.length, 'payments');
           window.paymentsCache = paymentsFromSupabase;
           return window.paymentsCache;
         } catch (err) {
@@ -3030,11 +2936,11 @@
             date_modified_at: p.dateModifiedAt || null         // FIX: snake_case
           }));
           
-          debug('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
+          console.log('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
           if (paymentsForSupabase.length > 0) {
-            debug('📋 Payment fields (snake_case):', Object.keys(paymentsForSupabase[0]));
-            debug('📋 Sample payment ID:', paymentsForSupabase[0].id);
-            debug('📋 Sample payment:', paymentsForSupabase[0]);
+            console.log('📋 Payment fields (snake_case):', Object.keys(paymentsForSupabase[0]));
+            console.log('📋 Sample payment ID:', paymentsForSupabase[0].id);
+            console.log('📋 Sample payment:', paymentsForSupabase[0]);
           }
           
           // For bulk save, we'll upsert all payments
@@ -3059,7 +2965,7 @@
             return;
           }
           
-          debug('✅ Saved successfully:', data?.length || 0, 'payments');
+          console.log('✅ Saved successfully:', data?.length || 0, 'payments');
           
           // Convert snake_case response back to camelCase for cache
           const paymentsFromSupabase = (data || []).map(p => ({
@@ -3211,22 +3117,21 @@
         .order('name', { ascending: true });
       
       if (error) {
-        debugError('❌ Error loading students:', error);
+        console.error('❌ Error loading students:', error);
         return window.studentsCache || [];
       }
       
       // Map Supabase column names to local property names
       const mappedData = (data || []).map(mapSupabaseStudent).filter(Boolean);
       
-      // Cache in both array and Map for fast lookups
+      // Debug: Check Sona Husikyan's aliases
+      const sona = mappedData.find(s => s.id === 13);
+      if (sona) {
+        console.log('🔍 DEBUG: Sona Husikyan aliases from Supabase:', sona.aliases);
+        console.log('🔍 DEBUG: Raw Supabase data for Sona:', data.find(s => s.id === 13)?.aliases);
+      }
+      
       window.studentsCache = mappedData;
-      window.studentsMap.clear();
-      mappedData.forEach(student => {
-        if (student && student.id !== undefined && student.id !== null) {
-          window.studentsMap.set(student.id, student);
-          window.studentsMap.set(String(student.id), student);
-        }
-      });
       return mappedData;
     }
     
@@ -3280,7 +3185,7 @@
             .select();
         } else {
           // Insert new record - let Supabase generate ID
-          debug('📝 Inserting new student:', payload);
+          console.log('📝 Inserting new student:', payload);
           result = await supabase
             .from('students')
             .insert([payload])
@@ -3297,7 +3202,7 @@
         }
         
         const mappedRecord = mapSupabaseStudent(data?.[0]);
-        debug('✅ Student saved successfully:', mappedRecord);
+        console.log('✅ Student saved successfully:', mappedRecord);
         return mappedRecord;
       } catch (err) {
         console.error('❌ Exception saving student:', err);
@@ -3316,7 +3221,7 @@
           throw error;
         }
         
-        debug('✅ Student deleted from Supabase:', id);
+        console.log('✅ Student deleted from Supabase:', id);
         return true;
       } catch (error) {
         console.error('❌ Error deleting student:', error);
@@ -3325,16 +3230,20 @@
     }
     
     async function loadGroupsFromSupabase() {
-      debug('🔍 loadGroupsFromSupabase() called');
+      console.log('🔍 loadGroupsFromSupabase() called');
       const { data, error } = await supabase
         .from('groups')
         .select('*')
         .order('updated_at', { ascending: false });
       
+      console.log('🔍 Supabase response - data:', data, 'error:', error);
+      
       if (error) {
-        debugError('❌ Error loading groups:', error);
+        console.error('❌ Error loading groups:', error);
         return window.groupsCache || [];
       }
+      
+      console.log('📊 Raw groups from Supabase:', data);
       
       // Map group_name back to name for app compatibility
       const mappedData = (data || []).map(group => ({
@@ -3363,17 +3272,10 @@
         }
       }
       
-      // Cache in both array and Map for fast lookups
-      window.groupsCache = deduped;
-      window.groupsMap.clear();
-      deduped.forEach(group => {
-        if (!group || !group.name) return;
-        const normalizedName = String(group.name).trim();
-        if (!normalizedName) return;
-        window.groupsMap.set(normalizedName, group);
-        window.groupsMap.set(normalizedName.toLowerCase(), group);
-      });
+      console.log('📊 Mapped groups:', mappedData);
+      console.log('🧹 Deduped groups (by name):', deduped);
       
+      window.groupsCache = deduped;
       return window.groupsCache;
     }
     
@@ -3464,7 +3366,7 @@
   // Server sync hook (placeholder for external integrations)
     async function syncWithServer({ paymentsChanged = [], studentsChanged = [] }) {
   // Future: Trigger GitHub automation or other webhooks
-      debug('📡 Sync with server:', { paymentsChanged, studentsChanged });
+      console.log('📡 Sync with server:', { paymentsChanged, studentsChanged });
     }
     
     // Normalize string for alias matching
@@ -3475,12 +3377,12 @@
     
     // Resolve payment to student using alias system
     function resolvePaymentToStudent(payment, studentCache) {
-      const students = Array.isArray(studentCache) ? studentCache : getCachedStudents();
+  const students = Array.isArray(studentCache) ? studentCache : getCachedStudents();
       
       // Priority 1: Manual link (check both linkedStudentId and studentId)
       const manualStudentId = payment.linkedStudentId || payment.studentId;
       if (manualStudentId && payment.manuallyLinked) {
-        const student = getStudentById(manualStudentId, students);
+        const student = students.find(s => s.id === manualStudentId);
         if (student) {
           return {
             studentId: student.id,
@@ -3750,7 +3652,7 @@
         animation: fadeIn 0.2s ease;
       `;
       
-    const students = getCachedStudents();
+  const students = getCachedStudents();
       
       const modalContent = document.createElement('div');
       modalContent.style.cssText = `
@@ -3829,6 +3731,15 @@
     }
     
     // BEGIN LINKING & SEARCH FIX
+    function closeLinkStudentModal() {
+      const modal = document.getElementById('linkStudentModal');
+      if (modal) {
+        modal.style.opacity = '0';
+        setTimeout(() => {
+          modal.remove();
+        }, 200);
+      }
+    }
     
     function filterStudentList() {
       const searchInput = document.getElementById('studentSearchInput');
@@ -3884,8 +3795,8 @@
           return;
         }
         
-        const students = getCachedStudents();
-        const student = getStudentById(studentId, students);
+    const students = getCachedStudents();
+    const student = students.find(s => s.id === studentId);
         
         if (!student) {
           showNotification('❌ Student not found', 'error');
@@ -3941,8 +3852,8 @@
     async function showAddAliasModal(paymentId, studentId) {
       const payments = PaymentStore.getAll();
       const payment = payments.find(p => p.id === paymentId);
-      const students = getCachedStudents();
-      const student = getStudentById(studentId, students);
+  const students = getCachedStudents();
+      const student = students.find(s => s.id === studentId);
       
       if (!payment || !student) return;
       
@@ -4105,7 +4016,7 @@
       const date = dateSource ? new Date(dateSource) : null;
       
       if (!payer || Number.isNaN(amount) || !date || Number.isNaN(date.getTime())) {
-        debugWarn('⚠️ Cannot build duplicate key - missing data:', { payer, amount, date });
+        console.warn('⚠️ Cannot build duplicate key - missing data:', { payer, amount, date });
         return null;
       }
       
@@ -4121,7 +4032,7 @@
       // Check 1: Gmail ID already exists
       const gmailIdExists = existingPayments.some(p => p.gmailId === gmailId || p.emailId === gmailId);
       if (gmailIdExists) {
-        debug(`⚠️ Skipped duplicate email payment (Gmail ID exists): ${gmailId}`);
+        console.log(`⚠️ Skipped duplicate email payment (Gmail ID exists): ${gmailId}`);
         return true;
       }
       
@@ -4135,7 +4046,7 @@
       });
       
       if (compositeExists) {
-        debug(`⚠️ Skipped duplicate email payment from ${payment.payerName} ($${payment.amount})`);
+        console.log(`⚠️ Skipped duplicate email payment from ${payment.payerName} ($${payment.amount})`);
         return true;
       }
       
@@ -4599,7 +4510,7 @@
             row.style.boxShadow = 'none';
           });
           
-          debug('✅ Marked', newPaymentRows.length, 'payment(s) as viewed');
+          console.log('✅ Marked', newPaymentRows.length, 'payment(s) as viewed');
           
           // Remove this listener after first acknowledgment
           if (container) {
@@ -4615,6 +4526,31 @@
         container.addEventListener('click', markAllPaymentsAsViewed, { once: false });
       }
       // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+    }
+    
+    // Legacy function for compatibility
+    function markAllPaymentsAsViewed() {
+      const newPaymentRows = document.querySelectorAll('.payment-row-new');
+      if (newPaymentRows.length === 0) return;
+      
+      const payments = PaymentStore.getAll();
+      let hasChanges = false;
+      
+      payments.forEach(payment => {
+        if (!payment.viewed && payment.createdAt && (Date.now() - new Date(payment.createdAt).getTime()) < TIMING.NEW_PAYMENT_INDICATOR) {
+          payment.viewed = true;
+          hasChanges = true;
+        }
+      });
+      
+      if (hasChanges) {
+        PaymentStore.save(payments);
+        newPaymentRows.forEach(row => {
+          row.classList.remove('payment-row-new');
+          row.style.animation = 'none';
+          row.style.boxShadow = 'none';
+        });
+      }
     }
     
     // ============================================================================
@@ -4634,7 +4570,7 @@
         const connection = JSON.parse(stored);
         // Check if token is expired
         if (connection.expiry_date && Date.now() >= connection.expiry_date) {
-          debug('Gmail token expired');
+          console.log('Gmail token expired');
           localStorage.removeItem(GMAIL_CONNECTION_KEY);
           return null;
         }
@@ -4660,7 +4596,7 @@
       gmailAccessToken = token;
       gmailTokenExpiry = connection.expiry_date.toString();
       
-      debug('✅ Gmail connection saved, expires:', new Date(connection.expiry_date).toLocaleString());
+      console.log('✅ Gmail connection saved, expires:', new Date(connection.expiry_date).toLocaleString());
     }
     
     function clearGmailConnection() {
@@ -4682,7 +4618,7 @@
       const fiveMinutes = 5 * 60 * 1000;
       
       if (expiry && (expiry - now) < fiveMinutes) {
-        debug('Gmail token expiring soon, attempting silent refresh...');
+        console.log('Gmail token expiring soon, attempting silent refresh...');
         
         // Token expired or expiring - need to re-authenticate
         // Note: Google OAuth2 implicit flow doesn't support refresh tokens
@@ -4737,8 +4673,8 @@
       // Use the exact current origin to match what's in Google Cloud Console
       const redirectUri = window.location.origin;
       
-      debug('🔐 Current page URL:', window.location.href);
-      debug('🔐 Using redirect URI:', redirectUri);
+      console.log('🔐 Current page URL:', window.location.href);
+      console.log('🔐 Using redirect URI:', redirectUri);
       
       // Implicit OAuth flow for browser-based apps
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -4748,22 +4684,22 @@
         `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
         `prompt=select_account`;           // Allow account selection
       
-      debug('📋 Full auth URL:', authUrl);
-      debug('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
-      debug('   https://console.cloud.google.com/apis/credentials');
+      console.log('📋 Full auth URL:', authUrl);
+      console.log('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
+      console.log('   https://console.cloud.google.com/apis/credentials');
       window.location.href = authUrl;
     }
     
     function handleOAuthCallback() {
       const hash = window.location.hash;
-      debug('🔍 Checking for OAuth callback - hash:', hash ? 'Found' : 'None');
+      console.log('🔍 Checking for OAuth callback - hash:', hash ? 'Found' : 'None');
       
       if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
         const token = params.get('access_token');
         const expiresIn = parseInt(params.get('expires_in') || '3600');
         
-        debug('✅ OAuth token found, expires in:', expiresIn, 'seconds');
+        console.log('✅ OAuth token found, expires in:', expiresIn, 'seconds');
         
         if (token) {
           // Save using enhanced connection storage
@@ -4776,7 +4712,7 @@
           window.history.replaceState(null, '', window.location.pathname);
           
           // Auto-fetch payments after connection
-          debug('📥 Auto-fetching payments after connection...');
+          console.log('📥 Auto-fetching payments after connection...');
           setTimeout(() => refreshPayments(), 1000);
         }
       } else if (hash && hash.includes('error')) {
@@ -4860,7 +4796,7 @@
           return;
         }
         
-        debug(`✅ Found ${searchData.messages.length} payment emails`);
+        console.log(`✅ Found ${searchData.messages.length} payment emails`);
         
         const existingPayments = PaymentStore.getAll();
         const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
@@ -4880,7 +4816,7 @@
             if (payment) {
               // Check if already processed in this batch
               if (processedGmailIds.has(payment.gmailId)) {
-                debug(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
+                console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
                 continue;
               }
               
@@ -4906,7 +4842,7 @@
           await recomputePaymentResolutions();
           
           // Log success per developer command
-          debug(`📥 Loaded ${payments.length} new payment${payments.length > 1 ? 's' : ''} from Gmail.`);
+          console.log(`📥 Loaded ${payments.length} new payment${payments.length > 1 ? 's' : ''} from Gmail.`);
           
           // Dispatch update event per developer command
           window.dispatchEvent(new CustomEvent('payments:updated', {
@@ -4990,7 +4926,7 @@
           return;
         }
         
-        debug(`✅ Found ${searchData.messages.length} payment emails`);
+        console.log(`✅ Found ${searchData.messages.length} payment emails`);
         
         const existingPayments = PaymentStore.getAll();
         const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
@@ -5010,7 +4946,7 @@
             if (payment) {
               // Check if already processed in this batch
               if (processedGmailIds.has(payment.gmailId)) {
-                debug(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
+                console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
                 continue;
               }
               
@@ -5067,11 +5003,11 @@
         // Fallback to snippet if body is empty (per developer command)
         if (!bodyText && messageData.snippet) {
           bodyText = messageData.snippet;
-          debug('📧 Using email snippet as fallback');
+          console.log('📧 Using email snippet as fallback');
         }
         
         if (!bodyText) {
-          debugWarn('⚠️ No body text or snippet available for email:', messageData.id);
+          console.warn('⚠️ No body text or snippet available for email:', messageData.id);
           return null;
         }
         
@@ -5087,11 +5023,11 @@
         const isGenericTransaction = bodyTextLower.includes('your transaction of');
         
         if (!isCreditedTo7073 || isSentFrom7073 || isGenericDeposit || isGenericTransaction) {
-          debug(`⚠️ Skipped non-Zelle or outgoing payment email (not credited to 7073): ${messageData.id}`);
+          console.log(`⚠️ Skipped non-Zelle or outgoing payment email (not credited to 7073): ${messageData.id}`);
           return null;
         }
         
-        debug('✅ Valid Zelle deposit credited to account 7073');
+        console.log('✅ Valid Zelle deposit credited to account 7073');
         
         // Parse amount - universal pattern
         const amountMatch = bodyText.match(/\$[\d,]+\.\d{2}/);
@@ -5130,8 +5066,8 @@
             .trim();
           
           memo = studentNameFromMessage; // Use as memo too
-          debug('📩 Extracted student name from message:', studentNameFromMessage);
-          debug('🧩 Stopped before footer text (clean extraction)');
+          console.log('📩 Extracted student name from message:', studentNameFromMessage);
+          console.log('🧩 Stopped before footer text (clean extraction)');
         } else {
           // Pattern 2: "Memo:" or "Message:" or "Note:" (text/plain format)
           let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
@@ -5142,7 +5078,7 @@
           }
         }
         
-        debug('📧 Parsed email:', { amount, senderName, memo, studentNameFromMessage, bodyPreview: bodyText.substring(0, 200) });
+        console.log('📧 Parsed email:', { amount, senderName, memo, studentNameFromMessage, bodyPreview: bodyText.substring(0, 200) });
         
         if (!amount || !senderName) return null;
         
@@ -5176,7 +5112,7 @@
           }
           
           if (matchedStudent) {
-            debug(`✅ Matched student from message: ${matchedStudent.name}`);
+            console.log(`✅ Matched student from message: ${matchedStudent.name}`);
           }
         }
         
@@ -5204,7 +5140,7 @@
           }
           
           if (matchedStudent) {
-            debug(`✅ Matched student from memo: ${matchedStudent.name}`);
+            console.log(`✅ Matched student from memo: ${matchedStudent.name}`);
           }
         }
         
@@ -5232,7 +5168,7 @@
           }
           
           if (matchedStudent) {
-            debug(`✅ Matched student from sender: ${matchedStudent.name}`);
+            console.log(`✅ Matched student from sender: ${matchedStudent.name}`);
           }
         }
         
@@ -5241,14 +5177,14 @@
           studentEmail = matchedStudent.email || '';
           groupId = matchedStudent.groupId || '';
         } else {
-          debug(`⚠️ No student match found for: ${studentNameFromMessage || memo || senderName}`);
+          console.log(`⚠️ No student match found for: ${studentNameFromMessage || memo || senderName}`);
         }
         
         // Determine final display names
         const finalStudentName = matchedStudent ? matchedStudent.name : 'Unmatched';
         const finalPayerName = senderName;
         
-        debug(`📩 Parsed Zelle payment: ${finalPayerName} → ${finalStudentName} ($${amount})`);
+        console.log(`📩 Parsed Zelle payment: ${finalPayerName} → ${finalStudentName} ($${amount})`);
 
         // Final cleanup: If memo contains ONLY footer/generic text, set it to empty string
         let cleanMemo = memo || '';
@@ -5339,7 +5275,7 @@
     async function loadFromCloud() {
       try {
   const payments = await PaymentStore.fetchAll();
-        debug(`📥 Loaded ${payments.length} payments from Supabase`);
+        console.log(`📥 Loaded ${payments.length} payments from Supabase`);
         renderPaymentEmailsView();
       } catch (error) {
         console.error('Error loading from cloud:', error);
@@ -5494,7 +5430,7 @@
         await PaymentStore.save(payments);
         
         // Auto-synced to Supabase cloud
-        debug('✅ Payment ignored and synced to Supabase');
+        console.log('✅ Payment ignored and synced to Supabase');
         
         showNotification('🚫 Payment ignored', 'success');
         closePaymentActionsPopup();
@@ -5538,7 +5474,7 @@
         await PaymentStore.save(payments);
         
         // Auto-synced to Supabase cloud
-        debug('✅ Payment deleted and synced to Supabase');
+        console.log('✅ Payment deleted and synced to Supabase');
         
         showNotification('🗑️ Payment deleted', 'success');
         closePaymentActionsPopup();
@@ -5787,11 +5723,11 @@
     
     // BEGIN POPUP BACK & EXIT FIX
     async function linkPaymentToStudent() {
-      debug('🔗 linkPaymentToStudent() called');
-      debug('🔍 Current payment data:', currentPaymentPopupData);
-      debug('🔍 typeof currentPaymentPopupData:', typeof currentPaymentPopupData);
-      debug('🔍 currentPaymentPopupData is null?', currentPaymentPopupData === null);
-      debug('🔍 currentPaymentPopupData is undefined?', currentPaymentPopupData === undefined);
+      console.log('🔗 linkPaymentToStudent() called');
+      console.log('🔍 Current payment data:', currentPaymentPopupData);
+      console.log('🔍 typeof currentPaymentPopupData:', typeof currentPaymentPopupData);
+      console.log('🔍 currentPaymentPopupData is null?', currentPaymentPopupData === null);
+      console.log('🔍 currentPaymentPopupData is undefined?', currentPaymentPopupData === undefined);
       
       if (!currentPaymentPopupData) {
         console.error('❌ No payment selected in currentPaymentPopupData');
@@ -5802,10 +5738,10 @@
       
       // CRITICAL: Save to persistent storage IMMEDIATELY before opening any modals
       savedPaymentDataForLinking = { ...currentPaymentPopupData };
-      debug('💾 SAVED payment data to persistent storage:', savedPaymentDataForLinking);
+      console.log('💾 SAVED payment data to persistent storage:', savedPaymentDataForLinking);
       
-      debug('✅ Payment selected, payment ID:', currentPaymentPopupData.paymentId);
-      debug('✅ Payment details:', {
+      console.log('✅ Payment selected, payment ID:', currentPaymentPopupData.paymentId);
+      console.log('✅ Payment details:', {
         id: currentPaymentPopupData.paymentId,
         payer: currentPaymentPopupData.payerName,
         amount: currentPaymentPopupData.amount
@@ -5814,7 +5750,7 @@
       // Get list of students
   const students = getCachedStudents();
       
-      debug('📋 Students loaded:', students.length);
+      console.log('📋 Students loaded:', students.length);
       
       if (!students || students.length === 0) {
         showNotification('⚠️ No students found. Create students first.', 'warning');
@@ -5940,7 +5876,7 @@
     // END SEARCH FIX
     
     function selectStudentFromSearch(studentId) {
-      debug('👆 Student clicked, ID:', studentId);
+      console.log('👆 Student clicked, ID:', studentId);
       confirmLinkStudent(studentId);
     }
     
@@ -5976,7 +5912,7 @@
       let paymentDataSnapshot = currentPaymentPopupData ? { ...currentPaymentPopupData } : null;
       
       if (!paymentDataSnapshot && savedPaymentDataForLinking) {
-        debug('⚠️ currentPaymentPopupData was null, using savedPaymentDataForLinking');
+        console.log('⚠️ currentPaymentPopupData was null, using savedPaymentDataForLinking');
         paymentDataSnapshot = { ...savedPaymentDataForLinking };
       }
       
@@ -5989,27 +5925,27 @@
         return;
       }
       
-      debug('💾 Payment data snapshot confirmed:', paymentDataSnapshot);
+      console.log('💾 Payment data snapshot confirmed:', paymentDataSnapshot);
       
       try {
-        const students = getCachedStudents();
-        debug('🔍 Looking for student ID:', studentId, '(type:', typeof studentId, ')');
-    debug('📋 Available students:', students.length);
-    debug('📋 Available student IDs:', students.map(s => s.id));
+  const students = getCachedStudents();
+        console.log('🔍 Looking for student ID:', studentId, '(type:', typeof studentId, ')');
+        console.log('📋 Available students:', students.length);
+        console.log('📋 Available student IDs:', students.map(s => s.id));
         
-    // Convert studentId to number for comparison (it comes from HTML as string)
-    const studentIdNum = parseInt(studentId, 10);
-    debug('🔍 Converted student ID to number:', studentIdNum);
+        // Convert studentId to number for comparison (it comes from HTML as string)
+        const studentIdNum = parseInt(studentId, 10);
+        console.log('🔍 Converted student ID to number:', studentIdNum);
         
-    const student = getStudentById(studentIdNum, students);
+        const student = students.find(s => s.id === studentIdNum);
         
-    if (!student) {
+        if (!student) {
           console.error('❌ Student not found. ID:', studentIdNum, 'Available:', students.map(s => ({ id: s.id, name: s.name })));
           showNotification('❌ Student not found', 'error');
           return;
         }
         
-        debug('✅ Found student:', student.name);
+        console.log('✅ Found student:', student.name);
         
         // BEGIN CRITICAL BUG FIX - Payment ↔ Student Linking Logic
         // Update payment with student link using correct field names:
@@ -6031,29 +5967,29 @@
         
         // Add payer name to student's alias if not already there
         const payerName = payment.payerName || payment.fromName || '';
-        debug('🔍 Payer name to add as alias:', payerName);
-        debug('🔍 Student current aliases:', student.aliases);
+        console.log('🔍 Payer name to add as alias:', payerName);
+        console.log('🔍 Student current aliases:', student.aliases);
         
         if (payerName && payerName.trim()) {
           const currentAliases = student.aliases || [];
           const normalizedPayerName = payerName.trim().toLowerCase();
           const normalizedStudentName = student.name.toLowerCase();
           
-          debug('🔍 Normalized payer:', normalizedPayerName);
-          debug('🔍 Normalized student:', normalizedStudentName);
+          console.log('🔍 Normalized payer:', normalizedPayerName);
+          console.log('🔍 Normalized student:', normalizedStudentName);
           
           // Only add if payer name is different from student name and not already in aliases
           const aliasExists = currentAliases.some(alias => 
             alias.toLowerCase() === normalizedPayerName
           );
           
-          debug('🔍 Alias already exists?', aliasExists);
+          console.log('🔍 Alias already exists?', aliasExists);
           
           if (normalizedPayerName !== normalizedStudentName && !aliasExists) {
             const originalAliases = Array.isArray(currentAliases) ? [...currentAliases] : [];
             student.aliases = [...originalAliases, payerName.trim()];
             
-            debug('💾 Saving new aliases:', student.aliases);
+            console.log('💾 Saving new aliases:', student.aliases);
             
             const savedAliasUpdate = await saveStudent(student);
             if (!savedAliasUpdate) {
@@ -6062,13 +5998,13 @@
             } else {
               Object.assign(student, savedAliasUpdate);
               window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
-              debug(`✅ Added "${payerName}" to ${student.name}'s aliases`);
+              console.log(`✅ Added "${payerName}" to ${student.name}'s aliases`);
             }
           } else {
-            debug('⏭️ Skipped adding alias (already exists or same as student name)');
+            console.log('⏭️ Skipped adding alias (already exists or same as student name)');
           }
         } else {
-          debug('⚠️ No payer name to add as alias');
+          console.log('⚠️ No payer name to add as alias');
         }
         
         // Compute derived fields immediately (before saving)
@@ -6087,7 +6023,7 @@
         
         // Clear persistent storage after successful link
         savedPaymentDataForLinking = null;
-        debug('🧹 Cleared savedPaymentDataForLinking after successful link');
+        console.log('🧹 Cleared savedPaymentDataForLinking after successful link');
         
         closeLinkStudentModal();
         closePaymentActionsPopup();
@@ -6254,7 +6190,7 @@
           fromDateStr = defaultFrom.toISOString().split('T')[0];
           fromDateInput.value = fromDateStr;
         }
-        debug('📅 Applied default dates - From:', fromDateStr, 'To:', toDateStr);
+        console.log('📅 Applied default dates - From:', fromDateStr, 'To:', toDateStr);
       }
       
       if (!fromDateStr || !toDateStr) {
@@ -6312,16 +6248,16 @@
         beforeDate.setDate(beforeDate.getDate() + 1);
         const beforeDateStr = formatGmailDate(beforeDate);
         
-        debug('� FULL SYNC - Date Range:');
-        debug(`   User selected: ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}`);
-        debug(`   Gmail query: after:${afterDate} before:${beforeDateStr}`);
-        debug(`   This will fetch emails from ${afterDate} through ${toDate.toLocaleDateString()} (inclusive)`);
+        console.log('� FULL SYNC - Date Range:');
+        console.log(`   User selected: ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}`);
+        console.log(`   Gmail query: after:${afterDate} before:${beforeDateStr}`);
+        console.log(`   This will fetch emails from ${afterDate} through ${toDate.toLocaleDateString()} (inclusive)`);
         
         showNotification(`🔍 Syncing ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`, 'info');
         
         // Build Gmail search query
         const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
-        debug('   Query string:', query);
+        console.log('   Query string:', query);
         
         // Fetch all messages with pagination
         let allMessages = [];
@@ -6346,7 +6282,7 @@
           }
           
           const searchData = await searchResponse.json();
-          debug(`📬 Page ${allMessages.length === 0 ? 1 : Math.ceil(allMessages.length / 500) + 1}: ${searchData.messages?.length || 0} messages`);
+          console.log(`📬 Page ${allMessages.length === 0 ? 1 : Math.ceil(allMessages.length / 500) + 1}: ${searchData.messages?.length || 0} messages`);
           
           if (searchData.messages) {
             allMessages = allMessages.concat(searchData.messages);
@@ -6357,7 +6293,7 @@
           
         } while (pageToken);
         
-        debug(`✅ Total emails found: ${allMessages.length}`);
+        console.log(`✅ Total emails found: ${allMessages.length}`);
         
         if (allMessages.length === 0) {
           showNotification('📭 No Zelle emails found in this date range', 'info');
@@ -6372,8 +6308,8 @@
         const existingPayments = PaymentStore.getAll();
         const existingGmailIds = new Set(existingPayments.map(p => p.gmailId).filter(Boolean));
         
-        debug(`📊 Existing payments in database: ${existingPayments.length}`);
-        debug(`📊 Existing Gmail IDs: ${existingGmailIds.size}`);
+        console.log(`📊 Existing payments in database: ${existingPayments.length}`);
+        console.log(`📊 Existing Gmail IDs: ${existingGmailIds.size}`);
         
         const newPayments = [];
         const skippedDuplicates = [];
@@ -6394,7 +6330,7 @@
             });
             
             if (!messageResponse.ok) {
-              debugWarn(`⚠️ Failed to fetch message ${message.id}: ${messageResponse.status}`);
+              console.warn(`⚠️ Failed to fetch message ${message.id}: ${messageResponse.status}`);
               invalidEmails++;
               continue;
             }
@@ -6416,7 +6352,7 @@
             
             // Check if Gmail ID was already processed in this batch
             if (processedInBatch.has(payment.gmailId)) {
-              debugWarn(`⚠️ Duplicate in batch: ${payment.gmailId}`);
+              console.warn(`⚠️ Duplicate in batch: ${payment.gmailId}`);
               skippedDuplicates.push(payment.gmailId);
               continue;
             }
@@ -6437,17 +6373,17 @@
         }
         
         // Summary
-        debug('📊 FULL SYNC COMPLETE:');
-        debug(`   Total emails found: ${allMessages.length}`);
-        debug(`   New payments: ${newPayments.length}`);
-        debug(`   Duplicates skipped: ${skippedDuplicates.length}`);
-        debug(`   Invalid/filtered: ${invalidEmails}`);
+        console.log('📊 FULL SYNC COMPLETE:');
+        console.log(`   Total emails found: ${allMessages.length}`);
+        console.log(`   New payments: ${newPayments.length}`);
+        console.log(`   Duplicates skipped: ${skippedDuplicates.length}`);
+        console.log(`   Invalid/filtered: ${invalidEmails}`);
         
         if (newPayments.length > 0) {
           // Debug: Log all new payment Gmail IDs before saving
-          debug('🔍 NEW PAYMENTS TO BE SAVED:');
+          console.log('🔍 NEW PAYMENTS TO BE SAVED:');
           newPayments.forEach((p, idx) => {
-            debug(`  ${idx + 1}. ${p.payerName} ($${p.amount}) - Gmail ID: ${p.gmailId}`);
+            console.log(`  ${idx + 1}. ${p.payerName} ($${p.amount}) - Gmail ID: ${p.gmailId}`);
           });
           
           // Save new payments
@@ -6527,7 +6463,7 @@
     function startAutoRefresh() {
       stopAutoRefresh();
       autoRefreshInterval = setInterval(() => {
-        debug('🔄 Auto-refreshing payments...');
+        console.log('🔄 Auto-refreshing payments...');
         refreshPayments();
       }, TIMING.AUTO_REFRESH_INTERVAL);
     }
@@ -6546,7 +6482,7 @@
     // Notification stub (removed notification center)
     function showNotification(message, type = 'info') {
       const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
-      debug(`${icon} ${message}`);
+      console.log(`${icon} ${message}`);
     }
     
     // ============================================================================
@@ -6813,6 +6749,32 @@
      * Create Auto Backup
      * Stores automatic backups in localStorage (keeps last 5)
      */
+    function createAutoBackup(backupData) {
+      try {
+        // Get existing auto backups
+        const autoBackupsRaw = localStorage.getItem('autoBackups:v2');
+        let autoBackups = autoBackupsRaw ? JSON.parse(autoBackupsRaw) : [];
+        
+        // Add new backup
+        autoBackups.push({
+          timestamp: backupData.timestamp,
+          data: backupData
+        });
+        
+        // Keep only last 5 backups
+        if (autoBackups.length > 5) {
+          autoBackups = autoBackups.slice(-5);
+        }
+        
+        // Save back to localStorage
+        localStorage.setItem('autoBackups:v2', JSON.stringify(autoBackups));
+        
+        // Also save as lastAutoBackup for quick access
+        localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
+      } catch (error) {
+        console.error('Error creating auto backup:', error);
+      }
+    }
     /**
      * Create Auto Backup
      * All data is already in Supabase, so this just logs the backup event
@@ -6822,7 +6784,7 @@
         // Store backup metadata in localStorage for quick access
         localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
         
-        debug('✅ Auto-backup completed (data already in Supabase)');
+        console.log('✅ Auto-backup completed (data already in Supabase)');
       } catch (error) {
         console.error('Error creating auto-backup metadata:', error);
       }
@@ -6971,7 +6933,7 @@
         const today = getTodayLA();
         localStorage.setItem('lastAutoBackupDate', today);
         
-        debug('Daily auto backup completed:', today);
+        console.log('Daily auto backup completed:', today);
         
       } catch (error) {
         console.error('Error performing daily auto backup:', error);
@@ -7169,7 +7131,7 @@
     (async function initializeStudents() {
       try {
         students = await loadStudents();
-        debug(`✅ Loaded ${students.length} students from Supabase`);
+        console.log(`✅ Loaded ${students.length} students from Supabase`);
         // Render if student manager is open
         const studentManager = document.getElementById('studentManagerModal');
         if (studentManager && studentManager.style.display !== 'none') {
@@ -7189,7 +7151,7 @@
     function showNotificationSimple(message, type = 'info') {
       // Notification toast removed - only log to console
       const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
-      debug(`${icon} ${message}`);
+      console.log(`${icon} ${message}`);
     }
 
     function normalizeStatus(status) {
@@ -7246,7 +7208,7 @@
           console.error('Auto-backup from student save failed:', error);
         }
         
-        debug('Saved', students.length, 'students to Supabase');
+        console.log('Saved', students.length, 'students to Supabase');
       } catch (e) {
         console.error('Error saving students:', e);
       }
@@ -7255,7 +7217,7 @@
     function saveWaitingList() {
       try {
         localStorage.setItem(WAITING_LIST_KEY, JSON.stringify(waitingList));
-        debug('Saved', waitingList.length, 'waiting list students');
+        console.log('Saved', waitingList.length, 'waiting list students');
       } catch (e) {
         console.error('Error saving waiting list:', e);
       }
@@ -7704,7 +7666,7 @@
     function updateStudentCardDisplay(student) {
       const card = document.getElementById(`card-${student.id}`);
       if (!card) {
-        debugWarn('Card not found for student:', student.id);
+        console.warn('Card not found for student:', student.id);
         return;
       }
       
@@ -7760,7 +7722,7 @@
       event.stopPropagation();
       
       // Find student in both local array and cache
-      const student = getStudentById(studentId, students);
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) {
         console.error('Student not found:', studentId);
         return;
@@ -7792,7 +7754,7 @@
       event.stopPropagation();
       
       // Find student in local array
-      const student = getStudentById(studentId, students);
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) {
         console.error('Student not found:', studentId);
         return;
@@ -7858,11 +7820,11 @@
     }
 
     async function saveInlineEdit(studentId) {
-      debug('💾 saveInlineEdit called for:', studentId);
+      console.log('💾 saveInlineEdit called for:', studentId);
       
       // Convert to number for comparison (passed as string from onclick)
       const numericId = parseInt(studentId);
-      const student = getStudentById(numericId, students);
+      const student = students.find(s => s.id === numericId);
       if (!student) {
         console.error('❌ Student not found:', studentId);
         return;
@@ -7918,21 +7880,21 @@
       renderStudents();
       showNotificationSimple('Student updated', 'success');
       
-      debug('✅ Student saved successfully');
+      console.log('✅ Student saved successfully');
     }
 
     // ===== STATUS MANAGEMENT =====
     async function cycleStatus(studentId) {
-      debug('🔄 cycleStatus called with ID:', studentId, 'type:', typeof studentId);
+      console.log('🔄 cycleStatus called with ID:', studentId, 'type:', typeof studentId);
       
       // Handle both string and numeric IDs from Supabase
-      const student = getStudentById(studentId, students);
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) {
         console.error('❌ Student not found:', studentId, 'Available IDs:', students.map(s => s.id));
         return;
       }
       
-      debug('👤 Current student:', student.name, 'Status:', student.status);
+      console.log('👤 Current student:', student.name, 'Status:', student.status);
 
       // Define status cycle: Active → Paused → Graduated → Active
       const statusCycle = {
@@ -7944,7 +7906,7 @@
       const oldStatus = normalizeStatus(student.status);
       const newStatus = statusCycle[oldStatus] || STUDENT_STATUSES.ACTIVE;
       
-      debug('🔄 Cycling from', oldStatus, 'to', newStatus);
+      console.log('🔄 Cycling from', oldStatus, 'to', newStatus);
       
       student.status = newStatus;
 
@@ -8006,7 +7968,7 @@
 
     async function toggleVisibility(studentId, visible) {
       // Handle both string and numeric IDs from Supabase
-      const student = getStudentById(studentId, students);
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
       if (!student) return;
 
       student.showInGrid = visible;
@@ -8151,7 +8113,7 @@
       let savedStudent;
       
       if (editingStudentId) {
-  const student = getStudentById(editingStudentId, students);
+        const student = students.find(s => s.id === editingStudentId);
         if (student) {
           student.name = name;
           student.group = group;
@@ -8189,7 +8151,7 @@
         return;
       }
 
-      debug('✅ Student saved to Supabase:', savedRecord);
+      console.log('✅ Student saved to Supabase:', savedRecord);
       
       // No longer need to save balance to localStorage - it's in Supabase now
       // Remove localStorage balance management code
@@ -8212,7 +8174,7 @@
     }
 
     async function deleteStudent(studentId) {
-  const student = getStudentById(studentId, students);
+      const student = students.find(s => s.id === studentId);
       if (!student) return;
 
       const confirmed = await customConfirm(
@@ -8758,7 +8720,7 @@
     }
 
     async function moveToWaitingList(studentId) {
-  const student = getStudentById(studentId, students);
+      const student = students.find(s => s.id === studentId);
       if (!student) return;
 
       const confirmed = await customConfirm(
@@ -8916,8 +8878,8 @@
     }
 
     async function mergeDuplicates(primaryId, duplicateId) {
-  const primary = getStudentById(primaryId, students);
-  const duplicate = getStudentById(duplicateId, students);
+      const primary = students.find(s => s.id === primaryId);
+      const duplicate = students.find(s => s.id === duplicateId);
 
       if (!primary || !duplicate) {
         showNotificationSimple('Student not found', 'error');
@@ -9032,7 +8994,7 @@
     (async function initializeGroups() {
       try {
         groups = await loadGroupsFromSupabase();
-        debug(`✅ Loaded ${groups.length} groups from Supabase`);
+        console.log(`✅ Loaded ${groups.length} groups from Supabase`);
       } catch (error) {
         console.error('Error loading groups on init:', error);
         groups = [];
@@ -9211,7 +9173,7 @@
     function editGroupSchedule(groupName) {
       const grid = document.getElementById('groupGrid');
       grid.querySelectorAll('.schedule-editor').forEach(el => el.remove());
-      const group = getGroupByName(groupName, groups);
+      const group = groups.find(g => g.name === groupName);
       if (!group) return;
       
       const card = [...grid.children].find(c => {
@@ -9318,7 +9280,7 @@
         }
       });
       
-      const group = getGroupByName(groupName, groups);
+      const group = groups.find(g => g.name === groupName);
       if (!group) return;
       
       // CRITICAL FIX: Replace old schedule entirely (no appending)
@@ -9411,7 +9373,7 @@
         window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
         window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
         
-        debug(`✅ Saved ${groups.length} groups to Supabase`);
+        console.log(`✅ Saved ${groups.length} groups to Supabase`);
       } catch (error) {
         console.error('Error saving groups:', error);
       }
@@ -9567,7 +9529,7 @@
     // ============================================================================
     
     async function initialize() {
-      debug('🚀 Initializing ARNOMA app with Supabase...');
+      console.log('🚀 Initializing ARNOMA app with Supabase...');
       
       // Initialize global data
       if (!window.globalData) {
@@ -9590,7 +9552,7 @@
         window.globalData.students = students;
         window.globalData.payments = payments;
         
-        debug(`✅ Loaded: ${students.length} students, ${groups.length} groups, ${payments.length} payments`);
+        console.log(`✅ Loaded: ${students.length} students, ${groups.length} groups, ${payments.length} payments`);
       } catch (error) {
         console.error('❌ Error loading data from Supabase:', error);
       }
@@ -9604,9 +9566,9 @@
         gmailAccessToken = connection.access_token;
         gmailTokenExpiry = connection.expiry_date.toString();
         updateGmailButtonState(true);
-        debug('✅ Gmail connection restored from storage');
-        debug('   Connected at:', connection.connected_at);
-        debug('   Expires:', new Date(connection.expiry_date).toLocaleString());
+        console.log('✅ Gmail connection restored from storage');
+        console.log('   Connected at:', connection.connected_at);
+        console.log('   Expires:', new Date(connection.expiry_date).toLocaleString());
         
         // Add Gmail status indicator (🟢 connected)
         showNotification('🟢 Gmail connected', 'success');
@@ -9620,7 +9582,7 @@
             clearGmailConnection();
             gmailAccessToken = null;
             updateGmailButtonState(false);
-            debug('🔴 Gmail disconnected (token expired)');
+            console.log('🔴 Gmail disconnected (token expired)');
           }
         }
       }
@@ -10084,7 +10046,7 @@
 
       const floatingNav = document.getElementById('floatingNav');
       if (!floatingNav) {
-        debugWarn('Floating Nav: Element not found');
+        console.warn('Floating Nav: Element not found');
         return;
       }
 
@@ -10099,7 +10061,7 @@
       bindNavBtn('navTimerBtn', toggleClassCountdown);
       bindNavBtn('navQuickViewBtn', openQuickView);
 
-      debug('✅ Floating Nav initialized');
+      console.log('✅ Floating Nav initialized');
     }
 
     /**
@@ -10171,7 +10133,7 @@
           showNotification('Refreshed', 'success');
         }, 800);
       } catch (e) {
-        debugWarn('Refresh failed:', e);
+        console.warn('Refresh failed:', e);
         document.body.classList.remove('refreshing');
         showNotification('Refresh failed', 'error');
       }
@@ -10365,141 +10327,12 @@
      * - All calculations are done in UTC internally, then converted to local time for display.
      * - NEVER hard-code timezone offsets - always retrieve them dynamically.
      */
-    
-    // ============================================
-    // TIME API - NEVER TRUST DEVICE CLOCK
-    // ============================================
-    window.TimeAPI = {
-      cache: {
-        yerevan: null,
-        la: null,
-        lastFetch: 0
-      },
-      
-      async fetchRealTime(timezone) {
-        // Try timeapi.io first (more reliable than worldtimeapi.org)
-        try {
-          const tzQuery = encodeURIComponent(timezone);
-          const response = await fetch(`https://timeapi.io/api/Time/current/zone?timeZone=${tzQuery}`, {
-            cache: 'no-store',
-            signal: AbortSignal.timeout(5000)
-          });
-          
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          
-          const data = await response.json();
-          
-          const result = {
-            hours: data.hour,
-            minutes: data.minute,
-            seconds: data.seconds,
-            day: data.day,
-            month: data.month,
-            year: data.year,
-            dayOfWeek: data.dayOfWeek,
-            timestamp: Date.now(),
-            timezone: timezone
-          };
-          
-          console.log(`[TimeAPI] Fetched ${timezone} from timeapi.io:`, result);
-          return result;
-          
-        } catch (error) {
-          console.warn(`[TimeAPI] timeapi.io failed for ${timezone}, trying worldtimeapi:`, error);
-          
-          // Fallback to worldtimeapi.org
-          try {
-            const response2 = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`, {
-              cache: 'no-store',
-              signal: AbortSignal.timeout(5000)
-            });
-            
-            if (!response2.ok) throw new Error(`HTTP ${response2.status}`);
-            
-            const data2 = await response2.json();
-            const dt = new Date(data2.datetime);
-            
-            const result = {
-              hours: dt.getHours(),
-              minutes: dt.getMinutes(),
-              seconds: dt.getSeconds(),
-              day: dt.getDate(),
-              month: dt.getMonth() + 1,
-              year: dt.getFullYear(),
-              dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dt.getDay()],
-              timestamp: data2.unixtime * 1000,
-              timezone: timezone
-            };
-            
-            console.log(`[TimeAPI] Fetched ${timezone} from worldtimeapi.org:`, result);
-            return result;
-            
-          } catch (error2) {
-            console.error(`[TimeAPI] All time APIs failed for ${timezone}`);
-            alert(`⚠️ Cannot connect to time server. Timer requires internet connection to show accurate ${timezone === 'Asia/Yerevan' ? 'Yerevan' : 'Los Angeles'} time. Please check your connection and refresh the page.`);
-            return null;
-          }
-        }
-      },
-      
-      async getCurrentTime(timezone) {
-        const now = performance.now();
-        const cacheKey = timezone === 'Asia/Yerevan' ? 'yerevan' : 'la';
-        
-        // Cache for 3 seconds to avoid excessive API calls during rapid updates
-        if (this.cache[cacheKey] && (now - this.cache.lastFetch < 3000)) {
-          const cached = this.cache[cacheKey];
-          const elapsedMs = now - this.cache.lastFetch;
-          const elapsedSeconds = Math.floor(elapsedMs / 1000);
-          
-          // Calculate current time from cached time + elapsed seconds
-          let seconds = cached.seconds + elapsedSeconds;
-          let minutes = cached.minutes;
-          let hours = cached.hours;
-          let day = cached.day;
-          
-          while (seconds >= 60) {
-            minutes++;
-            seconds -= 60;
-          }
-          while (minutes >= 60) {
-            hours++;
-            minutes -= 60;
-          }
-          while (hours >= 24) {
-            day++;
-            hours -= 24;
-            // Note: not handling month/year rollover in cache, just refetch
-          }
-          
-          return {
-            ...cached,
-            hours,
-            minutes,
-            seconds,
-            day
-          };
-        }
-        
-        // Fetch fresh time from API
-        const freshTime = await this.fetchRealTime(timezone);
-        if (freshTime) {
-          this.cache[cacheKey] = freshTime;
-          this.cache.lastFetch = now;
-        }
-        
-        return freshTime;
-      }
-    };
-    
     window.ClassCountdownTimer = (function() {
       // Private state
       let timerElement = null;
       let updateInterval = null;
       let currentClassData = null;
       let isPinned = false;
-      // Load saved timezone preference or default to LA
-      let timerTimeZone = localStorage.getItem('timer-timezone') || 'LA'; // 'LA' or 'EVN' - display preference only, calculation always uses LA
 
       /**
        * Timezone Utilities
@@ -10511,9 +10344,56 @@
          * @param {string} timezone - IANA timezone string (e.g., 'America/Los_Angeles')
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
-        async getCurrentTimeInZone(timezone) {
-          // NEVER TRUST DEVICE CLOCK - Always fetch from online API
-          return await window.TimeAPI.getCurrentTime(timezone);
+        getCurrentTimeInZone(timezone) {
+          const now = new Date();
+          
+          // Get ISO string in the target timezone
+          const isoString = now.toLocaleString('en-CA', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          
+          // Get day of week separately
+          const dayOfWeek = now.toLocaleString('en-US', {
+            timeZone: timezone,
+            weekday: 'long'
+          });
+          
+          // Parse: "YYYY-MM-DD, HH:mm:ss"
+          const [datePart, timePart] = isoString.split(', ');
+          const [year, month, day] = datePart.split('-').map(n => parseInt(n));
+          const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+          
+          return {
+            hours,
+            minutes,
+            seconds,
+            day,
+            month,
+            year,
+            dayOfWeek,
+            // For backwards compatibility, provide Date-like methods
+            getDay() {
+              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+              return dayNames.indexOf(this.dayOfWeek);
+            },
+            getHours() { return this.hours; },
+            getMinutes() { return this.minutes; },
+            getSeconds() { return this.seconds; },
+            getTime() {
+              // Return milliseconds since epoch for this time
+              return new Date(this.year, this.month - 1, this.day, this.hours, this.minutes, this.seconds).getTime();
+            },
+            toLocaleString() {
+              return `${this.month}/${this.day}/${this.year}, ${String(this.hours).padStart(2, '0')}:${String(this.minutes).padStart(2, '0')}:${String(this.seconds).padStart(2, '0')}`;
+            }
+          };
         },
 
         /**
@@ -10605,82 +10485,8 @@
 
       // DST-aware LA to Yerevan conversion (legacy - kept for compatibility)
       // NOTE: This uses dynamic offset calculation via TimezoneUtils
-      // Helper function to get classes from Quick View Yerevan tab data
-      function getClassesFromQuickViewYerevan() {
-        const classes = [];
-        const groups = window.groupsCache || window.globalData?.groups || [];
-        if (!groups || groups.length === 0) return classes;
-        
-        const dayMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
-        const daySchedule = {};
-        
-        // Parse schedules exactly like Quick View does
-        groups.forEach(group => {
-          const scheduleText = (group.schedule || '').trim();
-          if (!scheduleText) return;
-          
-          const parts = scheduleText.split(',').map(p => p.trim()).filter(p => p);
-          parts.forEach(part => {
-            const match = part.match(/^([\w/]+)\s+(.+)$/);
-            if (!match) return;
-            
-            const daysStr = match[1].toLowerCase();
-            const laTime = match[2];
-            const laTimeAMPM = ensureAMPMFormatLocal(laTime);
-            const conversionResult = TimezoneUtils.convertLATimeToYerevan(laTimeAMPM);
-            
-            // Handle slash-separated days
-            const dayTokens = daysStr.split('/').map(d => d.trim());
-            dayTokens.forEach(token => {
-              const laWeekday = dayMap[token];
-              if (!laWeekday) return;
-              
-              // Calculate Yerevan weekday with day shift
-              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-              const dayIndex = dayNames.indexOf(laWeekday);
-              const yerevanDayIndex = (dayIndex + conversionResult.dayShift + 7) % 7;
-              const yerevanWeekday = dayNames[yerevanDayIndex];
-              
-              if (!daySchedule[yerevanWeekday]) daySchedule[yerevanWeekday] = [];
-              daySchedule[yerevanWeekday].push({
-                group: group.name,
-                yerevanTime: conversionResult.time,
-                laTime: laTimeAMPM,
-                day: yerevanWeekday
-              });
-            });
-          });
-        });
-        
-        // Convert to array format
-        Object.keys(daySchedule).forEach(day => {
-          daySchedule[day].forEach(session => {
-            classes.push({
-              groupName: session.group && session.group.length === 1 ? `Group ${session.group}` : session.group,
-              dayName: day,
-              time: session.yerevanTime,
-              laTime: session.laTime
-            });
-          });
-        });
-        
-        return classes;
-      }
-
-      function convertLAToYerevanTime(laTimeStr, laDayName) {
-        const result = TimezoneUtils.convertLATimeToYerevan(laTimeStr);
-        
-        // If day shifts (crosses midnight), adjust the day name
-        if (laDayName && result.dayShift !== 0) {
-          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          const dayIndex = dayNames.indexOf(laDayName);
-          const newDayIndex = (dayIndex + result.dayShift + 7) % 7;
-          result.day = dayNames[newDayIndex];
-        } else {
-          result.day = laDayName;
-        }
-        
-        return result;
+      function convertLAToYerevanTime(laTimeStr) {
+        return TimezoneUtils.convertLATimeToYerevan(laTimeStr);
       }
 
       // Original implementation preserved below for reference
@@ -10777,18 +10583,18 @@
         try {
           const groups = window.groupsCache || window.globalData?.groups || [];
           
-          // Get current time based on selected timezone source
-          // CRITICAL: All time calculations use the selected timezone (LA or EVN)
-          const useYerevan = (timerTimeZone === 'EVN');
-          const timezone = useYerevan ? 'Asia/Yerevan' : 'America/Los_Angeles';
-          const now = TimezoneUtils.getCurrentTimeInZone(timezone);
-          const timezoneOffset = TimezoneUtils.getTimezoneOffset(timezone);
+          // Get current time in LA timezone using UTC-based calculation
+          // CRITICAL: All time calculations use UTC internally for accuracy
+          // Time difference between Yerevan and Los Angeles is usually 11 hours (PDT),
+          // but 12 hours during U.S. Standard Time (November → March). Always retrieve dynamically.
+          const now = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+          const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
           
           const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
           const currentDayIndex = now.getDay();
           const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
-          debug('[ClassCountdownTimer] Current time (' + timezone + '):', now.toLocaleString('en-US'), 'Day:', dayNames[currentDayIndex], '(UTC offset:', timezoneOffset, 'hours)');
+          console.log('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US'), 'Day:', dayNames[currentDayIndex], '(UTC offset:', laOffset, 'hours)');
 
           let nextClass = null;
           let minDiffInSeconds = Infinity;
@@ -10807,37 +10613,13 @@
                 group.schedule.forEach(slot => {
                   if (slot.days && slot.time) {
                     slot.days.forEach(day => {
-                      // Convert time to target timezone if needed
-                      let timeForComparison = ensureAMPMFormatLocal(slot.time);
-                      if (useYerevan) {
-                        // Convert LA time to Yerevan for comparison
-                        const converted = TimezoneUtils.convertLATimeToYerevan(timeForComparison);
-                        timeForComparison = converted.time;
-                      }
-                      sessions.push({ day, time: timeForComparison });
+                      sessions.push({ day, time: ensureAMPMFormatLocal(slot.time) });
                     });
                   }
                 });
               } else if (typeof group.schedule === 'string') {
-                // New string format - schedule is in LA time, convert if needed
-                const parsedSessions = parseScheduleString(group.schedule);
-                if (useYerevan) {
-                  // When converting to Yerevan, we need to adjust the day as well
-                  sessions = parsedSessions.map(s => {
-                    const converted = TimezoneUtils.convertLATimeToYerevan(s.time);
-                    // Apply day shift if the time crosses midnight
-                    let adjustedDay = s.day;
-                    if (converted.dayShift !== 0) {
-                      const dayIndex = dayNames.indexOf(s.day);
-                      const newDayIndex = (dayIndex + converted.dayShift + 7) % 7;
-                      adjustedDay = dayNames[newDayIndex];
-                      debug(`[Timer] Day shift: ${s.day} ${s.time} LA → ${adjustedDay} ${converted.time} Yerevan (shift: ${converted.dayShift})`);
-                    }
-                    return { day: adjustedDay, time: converted.time };
-                  });
-                } else {
-                  sessions = parsedSessions;
-                }
+                // New string format
+                sessions = parseScheduleString(group.schedule);
               }
 
               sessions.forEach(session => {
@@ -10860,7 +10642,7 @@
                 let totalDiffSeconds;
                 if (daysAhead === 0) {
                   totalDiffSeconds = classTimeInSeconds - currentTime;
-                  debug(`[ClassCountdownTimer] Checking ${group.name} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
+                  console.log(`[ClassCountdownTimer] Checking ${group.name} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
                   // Skip if more than 2 hours (7200 seconds) past - class is over
                   if (totalDiffSeconds < -7200) return;
                 } else {
@@ -10870,7 +10652,7 @@
                 // Skip classes currently in progress (started but not yet 2 hours past)
                 // Only count future classes (totalDiffSeconds > 0)
                 if (totalDiffSeconds > 0 && totalDiffSeconds < minDiffInSeconds) {
-                  debug(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
+                  console.log(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
                   minDiffInSeconds = totalDiffSeconds;
                   
                   // Determine day label
@@ -10940,13 +10722,7 @@
               <span class="timer-icon">🕒</span>
               <span class="timer-title">Upcoming Classes</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div class="timer-zone-toggle" title="Switch timezone source">
-                <button class="timer-zone-btn" data-zone="LA" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white;">LA</button>
-                <button class="timer-zone-btn" data-zone="EVN" style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.6);">EVN</button>
-              </div>
-              <button class="timer-close" title="Close timer">×</button>
-            </div>
+            <button class="timer-close" title="Close timer">×</button>
           </div>
           <div class="timer-classes-list"></div>
         `;
@@ -10955,25 +10731,6 @@
         closeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           destroy();
-        });
-
-        // Add timezone toggle handlers
-        const zoneBtns = timer.querySelectorAll('.timer-zone-btn');
-        zoneBtns.forEach(btn => {
-          btn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const zone = btn.dataset.zone;
-            setTimerTimeZone(zone);
-          });
-          
-          // Set initial button state based on saved preference
-          if (btn.dataset.zone === timerTimeZone) {
-            btn.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
-            btn.style.color = 'white';
-          } else {
-            btn.style.background = 'rgba(255,255,255,0.1)';
-            btn.style.color = 'rgba(255,255,255,0.6)';
-          }
         });
 
         // Add click-outside-to-close functionality
@@ -11024,108 +10781,7 @@
       }
 
       // Get all classes for the next 7 days
-      async function getAllUpcomingClasses() {
-        try {
-          // CRITICAL FORK: Different data sources based on timezone mode
-          if (timerTimeZone === 'EVN') {
-            return await getAllUpcomingClassesYerevan();
-          } else {
-            return await getAllUpcomingClassesLA();
-          }
-        } catch (error) {
-          console.error('[ClassCountdownTimer] Error getting all classes:', error);
-          return [];
-        }
-      }
-
-      // Get classes using Yerevan timezone (reads from Quick View Yerevan data)
-      async function getAllUpcomingClassesYerevan() {
-        const allClasses = [];
-
-        const timezone = 'Asia/Yerevan';
-        const now = await TimezoneUtils.getCurrentTimeInZone(timezone);
-        if (!now) {
-          console.error('[Timer EVN] Failed to get current time');
-          return [];
-        }
-
-        const yerevanClasses = getClassesFromQuickViewYerevan();
-        console.log('[Timer EVN] Found classes from Quick View:', yerevanClasses);
-        console.log('[Timer EVN] Current Yerevan time:', now.dayOfWeek, now.hours + ':' + now.minutes);
-
-        const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-        const currentDayIndex = dayNames.indexOf(now.dayOfWeek);
-        console.log('[Timer EVN] Current day index:', currentDayIndex, 'from', now.dayOfWeek);
-
-        yerevanClasses.forEach(classData => {
-
-          // Parse the EVN time (example: "8:00 AM")
-          const t = classData.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-          if (!t) return;
-
-          let hour = parseInt(t[1]);
-          const minutes = parseInt(t[2]);
-          const period = t[3].toUpperCase();
-
-          if (period === 'PM' && hour !== 12) hour += 12;
-          if (period === 'AM' && hour === 12) hour = 0;
-
-          const classDayIndex = dayNames.indexOf(classData.dayName);
-          if (classDayIndex === -1) return;
-
-          // Correct way to find next occurrence of this EVN weekday
-          let daysAhead = classDayIndex - currentDayIndex;
-          if (daysAhead < 0) daysAhead += 7;
-
-          // Build Yerevan timestamps by calculating total seconds
-          const nowTotalSeconds = now.hours * 3600 + now.minutes * 60 + now.seconds;
-          const classTotalSeconds = hour * 3600 + minutes * 60;
-          
-          let secondsRemaining;
-          if (daysAhead === 0) {
-            // Same day - just compare times
-            secondsRemaining = classTotalSeconds - nowTotalSeconds;
-            // If class time already passed today, move to next week
-            if (secondsRemaining < 0) {
-              secondsRemaining += (7 * 86400); // Add 7 days in seconds
-            }
-          } else {
-            // Future day - add full days then adjust for time of day
-            secondsRemaining = (daysAhead * 86400) - nowTotalSeconds + classTotalSeconds;
-          }
-          
-          console.log(`[Timer EVN] Checking ${classData.groupName} ${classData.dayName} ${classData.time}:`, {
-            classDayIndex,
-            currentDayIndex,
-            daysAhead,
-            nowTotalSeconds,
-            classTotalSeconds,
-            secondsRemaining,
-            hoursRemaining: (secondsRemaining/3600).toFixed(1)
-          });
-
-          // Only show upcoming 7 days
-          if (secondsRemaining >= 0 && secondsRemaining <= 604800) {
-            console.log(`[Timer EVN] ✅ Adding ${classData.groupName} to list`);
-            allClasses.push({
-              groupName: classData.groupName,
-              dayName: classData.dayName,
-              laTime: classData.laTime,
-              yerevanTime: classData.time,
-              secondsRemaining
-            });
-          } else {
-            console.log(`[Timer EVN] ❌ Skipping ${classData.groupName} - out of range:`, secondsRemaining);
-          }
-        });
-
-        allClasses.sort((a,b) => a.secondsRemaining - b.secondsRemaining);
-        console.log('[Timer EVN] Final sorted classes:', allClasses.map(c => `${c.groupName} ${c.dayName} ${c.yerevanTime} (${(c.secondsRemaining/3600).toFixed(1)}h)`));
-        return allClasses.slice(0,10);
-      }
-
-      // Get classes using LA timezone (original calendar data)
-      async function getAllUpcomingClassesLA() {
+      function getAllUpcomingClasses() {
         try {
           const allClasses = [];
           
@@ -11133,33 +10789,31 @@
           const groups = window.groupsCache || window.globalData?.groups || [];
           
           if (!groups || groups.length === 0) {
-            debug('[ClassCountdownTimer] No groups found in cache');
+            console.log('[ClassCountdownTimer] No groups found in cache');
             return [];
           }
 
-          debug('[ClassCountdownTimer] Found', groups.length, 'groups');
+          console.log('[ClassCountdownTimer] Found', groups.length, 'groups');
 
-          // CRITICAL: Calendar times are ALWAYS stored in LA timezone
-          // So we MUST calculate using LA time, regardless of display preference
-          const timezone = 'America/Los_Angeles';
-          const nowTime = await TimezoneUtils.getCurrentTimeInZone(timezone);
-          const timezoneOffset = TimezoneUtils.getTimezoneOffset(timezone);
+          // Get current LA time using UTC-based calculation
+          // CRITICAL: All time calculations use UTC internally for accuracy
+          // Time difference between Yerevan and Los Angeles is usually 11 hours (PDT),
+          // but 12 hours during U.S. Standard Time (November → March). Always retrieve dynamically.
+          const nowLA = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+          const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
           
-          debug('[ClassCountdownTimer] Current time (' + timezone + '):', `${nowTime.month}/${nowTime.day}/${nowTime.year} ${nowTime.hours}:${nowTime.minutes}:${nowTime.seconds}`, '(UTC offset:', timezoneOffset, 'hours)');
-          debug('[ClassCountdownTimer] Time breakdown - hours:', nowTime.hours, 'minutes:', nowTime.minutes, 'day:', nowTime.dayOfWeek);
+          console.log('[ClassCountdownTimer] Current LA time:', nowLA.toLocaleString(), '(UTC offset:', laOffset, 'hours)');
+          console.log('[ClassCountdownTimer] LA time breakdown - hours:', nowLA.hours, 'minutes:', nowLA.minutes, 'day:', nowLA.dayOfWeek);
           
-          // Get current time in seconds since midnight
-          const currentTimeInSeconds = nowTime.hours * 3600 + nowTime.minutes * 60 + nowTime.seconds;
-          debug('[ClassCountdownTimer] Current time in seconds since midnight:', currentTimeInSeconds, `(${(currentTimeInSeconds/3600).toFixed(2)} hours)`);
-          
-          // Get current day index from dayOfWeek string
-          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          const currentDayIndex = dayNames.indexOf(nowTime.dayOfWeek);
+          // Get current time in seconds since midnight LA time
+          const currentTimeInSeconds = nowLA.hours * 3600 + nowLA.minutes * 60 + nowLA.seconds;
+          console.log('[ClassCountdownTimer] Current time in seconds since midnight:', currentTimeInSeconds, `(${(currentTimeInSeconds/3600).toFixed(2)} hours)`);
           
           // Check each day for the next 7 days
           for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
             // Calculate the day we're checking
-            const checkDayIndex = (currentDayIndex + daysAhead) % 7;
+            const checkDayIndex = (nowLA.getDay() + daysAhead) % 7;
+            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
             const checkDayName = dayNames[checkDayIndex];
 
             groups.forEach(group => {
@@ -11182,39 +10836,28 @@
               if (Array.isArray(group.schedule)) {
                 // Legacy array format with { days: [], time: '' }
                 group.schedule.forEach(slot => {
-                  if (slot.days && slot.time) {
-                    slot.days.forEach(day => {
-                      const normalizedDay = normalizeDay(day);
-                      if (normalizedDay) {
-                        let timeForComparison = ensureAMPMFormatLocal(slot.time);
-                        if (useYerevan) {
-                          const converted = TimezoneUtils.convertLATimeToYerevan(timeForComparison);
-                          timeForComparison = converted.time;
-                        }
-                        sessions.push({ day: normalizedDay, time: timeForComparison });
-                      }
-                    });
-                  }
+                  if (!slot || !slot.days || !slot.time) return;
+                  const timeFormatted = ensureAMPMFormatLocal(slot.time);
+                  slot.days.forEach(day => {
+                    if (day) {
+                      sessions.push({
+                        day: normalizeDay(day),
+                        time: timeFormatted
+                      });
+                    }
+                  });
                 });
-              } else if (typeof group.schedule === 'string') {
-                // New string format: "Mon/Wed 8:00 AM, Fri 9:00 AM"
-                // Calendar stores LA times, so just parse directly - NO CONVERSION
-                sessions = parseScheduleString(group.schedule);
               } else if (Array.isArray(group.sessions)) {
                 // Some imports might store sessions separately
                 sessions = group.sessions
                   .filter(s => s && s.day && s.time)
-                  .map(s => {
-                    let timeForComparison = ensureAMPMFormatLocal(s.time);
-                    if (useYerevan) {
-                      const converted = TimezoneUtils.convertLATimeToYerevan(timeForComparison);
-                      timeForComparison = converted.time;
-                    }
-                    return {
-                      day: normalizeDay(s.day),
-                      time: timeForComparison
-                    };
-                  });
+                  .map(s => ({
+                    day: normalizeDay(s.day),
+                    time: ensureAMPMFormatLocal(s.time)
+                  }));
+              } else if (typeof group.schedule === 'string') {
+                // Primary format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
+                sessions = parseScheduleString(group.schedule);
               }
 
               if (!sessions.length) return;
@@ -11246,11 +10889,11 @@
                   totalDiffSeconds = (daysAhead * 86400) - currentTimeInSeconds + classTimeInSeconds;
                 }
                 
-                debug(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time} (day +${daysAhead}): classTime=${classTimeInSeconds}s, currentTime=${currentTimeInSeconds}s, diff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
+                console.log(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time} (day +${daysAhead}): classTime=${classTimeInSeconds}s, currentTime=${currentTimeInSeconds}s, diff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
                 
                 // Skip if more than 2 hours (7200 seconds) past - class is over
                 if (totalDiffSeconds < -7200) {
-                  debug(`[ClassCountdownTimer] ❌ Skipping ${group.name} - more than 2h past`);
+                  console.log(`[ClassCountdownTimer] ❌ Skipping ${group.name} - more than 2h past`);
                   return;
                 }
 
@@ -11293,7 +10936,7 @@
             }
           });
 
-          debug('[ClassCountdownTimer] Found', uniqueClasses.length, 'unique upcoming classes (removed', allClasses.length - uniqueClasses.length, 'duplicates)');
+          console.log('[ClassCountdownTimer] Found', uniqueClasses.length, 'unique upcoming classes (removed', allClasses.length - uniqueClasses.length, 'duplicates)');
           return uniqueClasses;
         } catch (error) {
           console.error('[ClassCountdownTimer] Error getting all classes:', error);
@@ -11302,10 +10945,10 @@
       }
 
       // Update timer display with all classes
-      async function updateDisplay() {
+      function updateDisplay() {
         if (!timerElement) return;
 
-        const allClasses = await getAllUpcomingClasses();
+        const allClasses = getAllUpcomingClasses();
         const listContainer = timerElement.querySelector('.timer-classes-list');
         const titleEl = timerElement.querySelector('.timer-title');
         
@@ -11326,35 +10969,8 @@
 
         let html = '';
         allClasses.forEach((classData, index) => {
-          // For EVN mode, yerevanTime is already in classData
-          // For LA mode, convert it
-          let yerevanData;
-          if (timerTimeZone === 'EVN') {
-            yerevanData = {
-              time: classData.yerevanTime || classData.laTime,
-              day: classData.dayName
-            };
-          } else {
-            yerevanData = convertLAToYerevanTime(classData.laTime, classData.dayName);
-          }
-          
+          const yerevanData = convertLAToYerevanTime(classData.laTime);
           const countdown = formatCountdown(classData.secondsRemaining);
-          const hoursRemaining = classData.secondsRemaining / 3600;
-          
-          // Convert day name to Today/Tomorrow for first two classes
-          let displayDay;
-          if (timerTimeZone === 'EVN') {
-            displayDay = yerevanData.day;
-          } else {
-            displayDay = classData.dayName;
-          }
-          
-          // Show "Today" or "Tomorrow" for the first two upcoming classes
-          if (index === 0 && hoursRemaining <= 24) {
-            displayDay = 'Today';
-          } else if (index === 1 && hoursRemaining <= 48) {
-            displayDay = 'Tomorrow';
-          }
           
           // Check if this class is skipped
           const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
@@ -11365,6 +10981,8 @@
           let cardTintClass = '';
           let stateClass = '';
           let stateIcon = '';
+          
+          const hoursRemaining = classData.secondsRemaining / 3600;
           
           // Apply per-class tinting based on urgency
           if (hoursRemaining > 24) {
@@ -11400,15 +11018,11 @@
                 <span class="timer-class-countdown">${countdown}</span>
               </div>
               <div class="timer-class-details">
-                ${timerTimeZone === 'EVN' ? `
-                <span class="timer-class-day">${displayDay}</span>
+                <span class="timer-class-day">${classData.dayName}</span>
                 <span class="timer-class-separator">•</span>
-                <span class="timer-class-time">${yerevanData.time}</span>
-                ` : `
-                <span class="timer-class-day">${displayDay}</span>
+                <span class="timer-class-time">${classData.laTime} LA</span>
                 <span class="timer-class-separator">•</span>
-                <span class="timer-class-time">${classData.laTime}</span>
-                `}
+                <span class="timer-class-time">${yerevanData.time} Yerevan</span>
               </div>
             </div>
           `;
@@ -11446,42 +11060,11 @@
         return `${year}-${month}-${day}`;
       }
 
-      // Set timer timezone and update display
-      function setTimerTimeZone(zone) {
-        if (zone !== 'LA' && zone !== 'EVN') {
-          console.warn('[ClassCountdownTimer] Invalid timezone:', zone);
-          return;
-        }
-
-        timerTimeZone = zone;
-        debug('[ClassCountdownTimer] Timezone changed to:', zone);
-
-        // Save preference to localStorage
-        localStorage.setItem('timer-timezone', zone);
-
-        // Update button styles
-        if (timerElement) {
-          const zoneBtns = timerElement.querySelectorAll('.timer-zone-btn');
-          zoneBtns.forEach(btn => {
-            if (btn.dataset.zone === zone) {
-              btn.style.background = 'linear-gradient(135deg, #3b82f6, #1d4ed8)';
-              btn.style.color = 'white';
-            } else {
-              btn.style.background = 'rgba(255,255,255,0.1)';
-              btn.style.color = 'rgba(255,255,255,0.6)';
-            }
-          });
-        }
-
-        // Immediately update display with new timezone
-        updateDisplay();
-      }
-
       // Initialize timer
       function init() {
         // Prevent duplicate initialization
         if (updateInterval) {
-          debugWarn('[ClassCountdownTimer] Already initialized - reusing existing instance');
+          console.warn('[ClassCountdownTimer] Already initialized - reusing existing instance');
           return;
         }
 
@@ -11493,7 +11076,7 @@
           updateDisplay();
         }, 60000);
 
-        debug('[ClassCountdownTimer] Initialized once — Active (1 interval)');
+        console.log('[ClassCountdownTimer] Initialized once — Active (1 interval)');
       }
 
       // Destroy timer
@@ -11502,7 +11085,7 @@
         if (updateInterval) {
           clearInterval(updateInterval);
           updateInterval = null;
-          debug('[ClassCountdownTimer] Interval cleared');
+          console.log('[ClassCountdownTimer] Interval cleared');
         }
 
         // Remove click-outside listener
@@ -11518,7 +11101,7 @@
         }
 
         currentClassData = null;
-        debug('[ClassCountdownTimer] Destroyed');
+        console.log('[ClassCountdownTimer] Destroyed');
       }
 
       // Toggle pin mode (above modals)
@@ -11539,10 +11122,8 @@
         init,
         destroy,
         togglePin,
-        setTimezone: setTimerTimeZone,
         getCurrentClass: () => currentClassData,
-        isActive: () => timerElement !== null,
-        getTimezone: () => timerTimeZone
+        isActive: () => timerElement !== null
       };
     })();
     
@@ -11597,7 +11178,7 @@
       function saveSkippedClasses() {
         try {
           localStorage.setItem('skipped-classes:v1', JSON.stringify(skippedClasses));
-          debug('[SkipClassManager] Saved skipped classes:', skippedClasses);
+          console.log('[SkipClassManager] Saved skipped classes:', skippedClasses);
         } catch (error) {
           console.error('[SkipClassManager] Error saving skipped classes:', error);
         }
@@ -11645,7 +11226,7 @@
         skippedClasses[groupName][dateStr] = true;
         saveSkippedClasses();
         
-        debug('[SkipClassManager] Skipped class:', groupName, dateStr);
+        console.log('[SkipClassManager] Skipped class:', groupName, dateStr);
         
         // Dispatch event for calendar refresh
         window.dispatchEvent(new CustomEvent('classSkipped', { 
@@ -11665,7 +11246,7 @@
           try {
             renderCalendar();
           } catch (error) {
-            debugWarn('[SkipClassManager] Could not refresh calendar:', error);
+            console.warn('[SkipClassManager] Could not refresh calendar:', error);
           }
         }
       }
@@ -11680,7 +11261,7 @@
           saveSkippedClasses();
         }
         
-        debug('[SkipClassManager] Unskipped class:', groupName, dateStr);
+        console.log('[SkipClassManager] Unskipped class:', groupName, dateStr);
         
         // Dispatch event for calendar refresh
         window.dispatchEvent(new CustomEvent('classUnskipped', { 
@@ -11700,14 +11281,14 @@
           try {
             renderCalendar();
           } catch (error) {
-            debugWarn('[SkipClassManager] Could not refresh calendar:', error);
+            console.warn('[SkipClassManager] Could not refresh calendar:', error);
           }
         }
       }
 
       // Show skip confirmation dialog
       function showSkipDialog(classData) {
-        debug('[SkipClassManager] showSkipDialog called with:', classData);
+        console.log('[SkipClassManager] showSkipDialog called with:', classData);
         pendingSkip = classData;
         
         const dialog = document.getElementById('skipClassDialog');
@@ -11720,19 +11301,19 @@
           return;
         }
         
-        debug('[SkipClassManager] Dialog elements found, populating...');
+        console.log('[SkipClassManager] Dialog elements found, populating...');
         
         // Populate dialog
         classNameEl.textContent = classData.groupName;
         classTimeEl.textContent = `${classData.dayName} at ${classData.laTime}`;
         
-        debug('[SkipClassManager] Showing dialog...');
+        console.log('[SkipClassManager] Showing dialog...');
         
         // Show dialog
         overlay.classList.add('show');
         dialog.classList.add('show');
         
-        debug('[SkipClassManager] Dialog shown');
+        console.log('[SkipClassManager] Dialog shown');
       }
 
       // Hide skip dialog
@@ -11797,7 +11378,7 @@
 
       // Initialize - attach double-click handlers to timer items
       function init() {
-        debug('[SkipClassManager] Initializing...');
+        console.log('[SkipClassManager] Initializing...');
         
         // Attach button event listeners
         const cancelBtn = document.getElementById('skipDialogCancelBtn');
@@ -11806,43 +11387,43 @@
         
         if (cancelBtn) {
           cancelBtn.addEventListener('click', cancelSkip);
-          debug('[SkipClassManager] Cancel button listener attached');
+          console.log('[SkipClassManager] Cancel button listener attached');
         }
         
         if (confirmBtn) {
           confirmBtn.addEventListener('click', confirmSkip);
-          debug('[SkipClassManager] Confirm button listener attached');
+          console.log('[SkipClassManager] Confirm button listener attached');
         }
         
         if (overlay) {
           overlay.addEventListener('click', cancelSkip);
-          debug('[SkipClassManager] Overlay click listener attached');
+          console.log('[SkipClassManager] Overlay click listener attached');
         }
         
         // Wait for timer to be rendered, then attach handlers
         const attachHandlers = () => {
           const timerElement = document.getElementById('enhancedCountdownTimer');
           if (!timerElement) {
-            debug('[SkipClassManager] Timer element not found, will retry...');
-            return false; // Return false to indicate failure
+            console.log('[SkipClassManager] Timer element not found, will retry...');
+            return;
           }
           
           // Remove existing listener if any
           if (timerElement._skipHandlerAttached) {
-            debug('[SkipClassManager] Handler already attached');
-            return true; // Return true to indicate already attached
+            console.log('[SkipClassManager] Handler already attached');
+            return;
           }
           
           // Use event delegation for dynamic timer items
           timerElement.addEventListener('dblclick', (e) => {
-            debug('[SkipClassManager] Double-click detected', e.target);
+            console.log('[SkipClassManager] Double-click detected', e.target);
             const classItem = e.target.closest('.timer-class-item');
             if (!classItem) {
-              debug('[SkipClassManager] Not a class item');
+              console.log('[SkipClassManager] Not a class item');
               return;
             }
             if (classItem.classList.contains('skipped')) {
-              debug('[SkipClassManager] Already skipped');
+              console.log('[SkipClassManager] Already skipped');
               return;
             }
             
@@ -11851,7 +11432,7 @@
             const dayName = classItem.getAttribute('data-day');
             const laTime = classItem.getAttribute('data-time');
             
-            debug('[SkipClassManager] Class data:', { groupName, dayName, laTime });
+            console.log('[SkipClassManager] Class data:', { groupName, dayName, laTime });
             
             if (!groupName || !dayName || !laTime) {
               console.error('[SkipClassManager] Missing class data attributes');
@@ -11864,44 +11445,36 @@
               laTime
             };
             
-            debug('[SkipClassManager] Showing skip dialog for:', classData);
+            console.log('[SkipClassManager] Showing skip dialog for:', classData);
             showSkipDialog(classData);
           });
           
           timerElement._skipHandlerAttached = true;
-          debug('[SkipClassManager] ✅ Double-click handler attached successfully');
-          return true; // Return true to indicate success
+          console.log('[SkipClassManager] Double-click handler attached successfully');
         };
         
-        // Retry mechanism with exponential backoff
-        let retryCount = 0;
-        const maxRetries = 5;
-        const tryAttach = () => {
-          if (attachHandlers()) {
-            debug('[SkipClassManager] Handler attached, stopping retries');
-            return;
-          }
-          retryCount++;
-          if (retryCount < maxRetries) {
-            const delay = Math.min(100 * Math.pow(1.5, retryCount), 1000); // Max 1s delay
-            debug(`[SkipClassManager] Retry ${retryCount}/${maxRetries} in ${delay}ms`);
-            setTimeout(tryAttach, delay);
-          } else {
-            debugWarn('[SkipClassManager] Max retries reached - will try again when timer opens');
-          }
-        };
+        // Try attaching handlers after a short delay
+        setTimeout(attachHandlers, 500);
+        setTimeout(attachHandlers, 1500); // Retry after 1.5s
+        setTimeout(attachHandlers, 3000); // Retry after 3s
         
-        // Don't try to attach on page load - timer doesn't exist yet
-        // Only attach when timer is actually opened
-        
-        // Listen for timer being opened - reset retry counter and try again
+        // Listen for timer being opened
         window.addEventListener('timerOpened', () => {
-          debug('[SkipClassManager] Timer opened event received, attempting attachment...');
-          retryCount = 0; // Reset retry counter
-          setTimeout(tryAttach, 100); // Small delay to ensure DOM is ready
+          console.log('[SkipClassManager] Timer opened event received');
+          setTimeout(attachHandlers, 200);
         });
         
-        debug('[SkipClassManager] Initialized - waiting for timer to open');
+        // Also attach when timer is reinitialized
+        window.addEventListener('groups:updated', () => {
+          console.log('[SkipClassManager] Groups updated, reattaching handlers');
+          setTimeout(attachHandlers, 600);
+        });
+        window.addEventListener('schedules:updated', () => {
+          console.log('[SkipClassManager] Schedules updated, reattaching handlers');
+          setTimeout(attachHandlers, 600);
+        });
+        
+        console.log('[SkipClassManager] Initialized');
       }
 
       // Public API
@@ -11927,11 +11500,11 @@
 
     // Listen for skip events to update calendar
     window.addEventListener('classSkipped', (event) => {
-      debug('[SkipClassManager] Class skipped event:', event.detail);
+      console.log('[SkipClassManager] Class skipped event:', event.detail);
     });
 
     window.addEventListener('classUnskipped', (event) => {
-      debug('[SkipClassManager] Class unskipped event:', event.detail);
+      console.log('[SkipClassManager] Class unskipped event:', event.detail);
     });
     
     // ============================================================================
@@ -11980,7 +11553,7 @@
       
       // Safety check: ensure students is an array
       if (!Array.isArray(students)) {
-        debugWarn('⚠️ Students data is not an array:', students);
+        console.warn('⚠️ Students data is not an array:', students);
         document.getElementById('forecastActiveCount').textContent = '0';
         document.getElementById('forecastWeekly').textContent = formatCurrency(0, '$');
         document.getElementById('forecastMonthly').textContent = formatCurrency(0, '$');
@@ -12045,7 +11618,7 @@
       const groups = window.groupsCache || window.globalData?.groups || [];
       
       // Find the group by name
-      const group = getGroupByName(groupName, groups);
+      const group = groups.find(g => g.name === groupName);
       
       // Return 0 if group not found or no schedule
       if (!group || !group.schedule) return 0;
@@ -12161,7 +11734,7 @@
       
       // Safety check
       if (!Array.isArray(students)) {
-        debugWarn('⚠️ Students data is not an array in breakdown:', students);
+        console.warn('⚠️ Students data is not an array in breakdown:', students);
         container.innerHTML = '<div class="no-data">No student data available</div>';
         return;
       }
@@ -12369,53 +11942,6 @@
       
       // Render grid
       renderCalendarGrid(calendarData);
-      
-      // Save any balance changes to Supabase after rendering is complete
-      saveBalanceUpdates();
-    }
-    
-    // Debounced balance save to prevent loops
-    let balanceUpdateQueue = new Map(); // studentId -> newBalance
-    let balanceSaveTimer = null;
-    
-    function queueBalanceUpdate(studentId, newBalance) {
-      balanceUpdateQueue.set(studentId, newBalance);
-    }
-    
-    function saveBalanceUpdates() {
-      // Clear existing timer
-      if (balanceSaveTimer) {
-        clearTimeout(balanceSaveTimer);
-      }
-      
-      // Debounce: save after 1 second of no new renders
-      balanceSaveTimer = setTimeout(async () => {
-        if (balanceUpdateQueue.size === 0) return;
-        
-        debug(`💾 Saving ${balanceUpdateQueue.size} balance updates to Supabase...`);
-        
-        // Get students cache
-        const students = window.studentsCache || [];
-        
-        // Save each balance update
-        for (const [studentId, newBalance] of balanceUpdateQueue.entries()) {
-          const student = getStudentById(studentId, students);
-          if (student && student.balance !== newBalance) {
-            student.balance = newBalance;
-            
-            try {
-              // Save to Supabase
-              await saveStudent(student);
-              debug(`✅ Saved balance for ${student.name}: ${formatCurrency(newBalance, '$')}`);
-            } catch (error) {
-              console.error(`❌ Failed to save balance for ${student.name}:`, error);
-            }
-          }
-        }
-        
-        // Clear the queue
-        balanceUpdateQueue.clear();
-      }, 1000);
     }
     
     function generateCalendarData(year, month) {
@@ -12442,7 +11968,7 @@
         const groupName = student.group || '';
         if (!groupName.trim()) return;
         
-        const group = getGroupByName(groupName, groups);
+        const group = groups.find(g => g.name === groupName);
         if (!group || !group.schedule) return;
         
         // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
@@ -12579,14 +12105,7 @@
           return snapshot.students[studentId];
         }
         // If no snapshot exists for this past date, it means no class was scheduled
-        // or student wasn't enrolled yet - mark as hidden
-        return {
-          status: 'hidden',
-          paid: false,
-          amount: 0,
-          balance: 0,
-          message: 'No class record (student not enrolled or class not held)'
-        };
+        // Return as if no class (will not render)
       }
       
       // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
@@ -12606,20 +12125,6 @@
         
         // Check if payerName matches (for cases where parent pays)
         if (paymentPayerName === studentNameLower) return true;
-        
-        // SMART MATCHING: Check if payer name contains student's last name
-        // This handles cases like "Husikyan Consulting" → "Sona Husikyan"
-        const studentLastName = studentNameLower.split(' ').pop(); // Get last word as last name
-        if (studentLastName && studentLastName.length > 3) { // Only match if last name is significant
-          if (paymentPayerName.includes(studentLastName)) {
-            debug(`💡 Smart match: "${paymentPayerName}" contains "${studentLastName}" (${student.name})`);
-            return true;
-          }
-          if (paymentStudentName.includes(studentLastName)) {
-            debug(`💡 Smart match: "${paymentStudentName}" contains "${studentLastName}" (${student.name})`);
-            return true;
-          }
-        }
         
         // Check if payment matches any student alias
         if (student.aliases && Array.isArray(student.aliases)) {
@@ -12664,9 +12169,8 @@
           const remainder = paymentAmount - pricePerClass;
           const newBalance = balance + remainder;
           
-          // Update student balance in memory and queue for save
+          // Update student balance in memory only (no auto-save during calendar render)
           student.balance = newBalance;
-          queueBalanceUpdate(studentId, newBalance);
           
           const result = {
             status: 'paid',
@@ -12708,9 +12212,8 @@
       if (balance >= pricePerClass && dateStr >= todayStr) {
         const newBalance = balance - pricePerClass;
         
-        // Update student balance in memory and queue for save
+        // Update student balance in memory only (no auto-save during calendar render)
         student.balance = newBalance;
-        queueBalanceUpdate(studentId, newBalance);
         
         const lowBalance = newBalance > 0 && newBalance < pricePerClass;
         
@@ -12823,8 +12326,7 @@
         
         // Check if any classes are skipped on this day
         const hasSkippedClass = hasClasses && dayData.studentsWithClass.some(classInfo => {
-          const group = getGroupByName(classInfo.student.group);
-          const groupName = group?.name;
+          const groupName = window.groupsCache?.find(g => g.name === classInfo.student.group)?.name;
           return groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
         });
         
@@ -12872,8 +12374,7 @@
         }
         
         // Check if this class is skipped
-        const group = getGroupByName(student.group);
-        const groupName = group?.name;
+        const groupName = window.groupsCache?.find(g => g.name === student.group)?.name;
         const isSkipped = groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
         
         let dotColor;
@@ -13065,8 +12566,8 @@
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; font-weight: 600;">Quick Actions:</div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button onclick="event.stopPropagation(); reviewUnpaidClasses('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); border-radius: 8px; color: #3b82f6; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.3)'" onmouseout="this.style.background='rgba(59,130,246,0.2)'">
-                📬 Review Payment Records
+              <button onclick="event.stopPropagation(); quickAddPayment('${studentId}', '${dateStr}', ${classInfo.pricePerClass})" style="padding: 8px 14px; background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); border-radius: 8px; color: #22c55e; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,0.3)'" onmouseout="this.style.background='rgba(34,197,94,0.2)'">
+                ➕ Add Payment
               </button>
               <button onclick="event.stopPropagation(); markAsAbsent('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(100,116,139,0.2); border: 1px solid rgba(100,116,139,0.4); border-radius: 8px; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(100,116,139,0.3)'" onmouseout="this.style.background='rgba(100,116,139,0.2)'">
                 ⚪ Mark Absent
@@ -13138,156 +12639,36 @@
       document.body.appendChild(overlay);
     }
     
-    function reviewUnpaidClasses(studentId, dateStr) {
-      debug('[CalendarPayments] Reviewing unpaid classes for:', { studentId, dateStr });
-      
-      // Close detail popup to prevent stacked modals
+    function quickAddPayment(studentId, dateStr, amount) {
+      // Close detail popup
       const overlay = document.getElementById('calendarDetailOverlay');
       if (overlay) overlay.click();
       
-      // Open unpaid classes viewer (read-only)
-      showUnpaidClassesModal(studentId, dateStr);
-    }
-    
-    function showUnpaidClassesModal(studentId, initialDateStr) {
-      debug('[UnpaidClassesModal] Opening modal for:', { studentId, initialDateStr });
+      // Open main payment modal or create quick payment
+      const confirmed = confirm(`Add payment of ${formatCurrency(amount, '$')} for this class?`);
+      if (!confirmed) return;
       
-      const students = getCachedStudents();
-      debug('[UnpaidClassesModal] Total students in cache:', students.length);
-      debug('[UnpaidClassesModal] Looking for student ID:', studentId, 'Type:', typeof studentId);
+  const students = getCachedStudents();
+      const student = students.find(s => s.id === studentId);
+      if (!student) return;
       
-      // Use loose equality to handle string/number mismatch
-  const student = getStudentById(studentId, students);
-      if (!student) {
-        console.error('[UnpaidClassesModal] Student not found:', studentId);
-        debug('[UnpaidClassesModal] Available student IDs:', students.slice(0, 10).map(s => `${s.id} (${typeof s.id})`));
-  debug('[UnpaidClassesModal] Checking with parseInt:', getStudentById(parseInt(studentId), students));
-        return;
-      }
+      const payment = {
+        id: 'cal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+        payerName: student.name,
+        studentName: student.name,
+        amount: amount.toString(),
+        timestamp: new Date(dateStr).toISOString(),
+        note: 'Added from Calendar',
+        ignored: false,
+        source: 'calendar'
+      };
       
-      debug('[UnpaidClassesModal] Student found:', student.name);
+      const payments = PaymentStore.getAll();
+      payments.push(payment);
+      PaymentStore.save(payments);
       
-      // Get calendar data by regenerating it
-      // This uses the SAME logic as the calendar rendering
-      const today = getLADate();
-      const currentYear = today.getFullYear();
-      const currentMonth = today.getMonth();
-      
-      // Find all unpaid classes by scanning rendered calendar data
-      const unpaidClasses = [];
-      
-      // Scan from calendar start date to current month
-      const startDate = new Date(CALENDAR_START_DATE);
-      const startYear = startDate.getFullYear();
-      const startMonth = startDate.getMonth();
-      
-      // Generate calendar data for each month from start to current
-      for (let year = startYear; year <= currentYear; year++) {
-        const monthStart = (year === startYear) ? startMonth : 0;
-        const monthEnd = (year === currentYear) ? currentMonth : 11;
-        
-        for (let month = monthStart; month <= monthEnd; month++) {
-          const calendarData = generateCalendarData(year, month);
-          
-          // Check each day in this month
-          calendarData.days.forEach(dayData => {
-            const dateStr = formatDateYYYYMMDD(dayData.date);
-            
-            // Only include dates up to today
-            if (dayData.date > today) return;
-            
-            // Find this student in the day's data
-            const studentClass = dayData.studentsWithClass.find(sc => sc.student.id == studentId);
-            
-            // Only include if student has class and it's unpaid
-            if (studentClass && studentClass.status === 'unpaid') {
-              const dateDisplay = dayData.date.toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-              });
-              
-              unpaidClasses.push({
-                date: dayData.date,
-                dateStr: dateStr,
-                dayName: dayData.dayName,
-                groupName: student.group,
-                status: 'unpaid',
-                pricePerClass: studentClass.pricePerClass,
-                dateDisplay: dateDisplay
-              });
-            }
-          });
-        }
-      }
-      
-      debug('[UnpaidClassesModal] Found', unpaidClasses.length, 'unpaid classes');
-      
-      if (unpaidClasses.length === 0) {
-        showToast('✅ No unpaid classes found');
-        return;
-      }
-      
-      // Generate HTML for unpaid classes list
-      let classesHTML = '';
-      unpaidClasses.forEach(cls => {
-        const dateDisplay = cls.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
-        const isInitial = cls.dateStr === initialDateStr;
-        
-        classesHTML += `
-          <div style="display: flex; align-items: center; padding: 12px; background: ${isInitial ? 'rgba(59,130,246,0.16)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isInitial ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; margin-bottom: 8px; transition: all 0.2s;">
-            <div style="flex: 1;">
-              <div style="font-size: 14px; font-weight: 700; color: white; margin-bottom: 2px;">${dateDisplay}</div>
-              <div style="font-size: 11px; color: #94a3b8;">Group ${escapeHtml(cls.groupName)} • <span style="color: #ef4444; font-weight: 600;">🔴 Unpaid</span></div>
-            </div>
-            <div style="font-size: 13px; font-weight: 900; color: #f97316;">${formatCurrency(cls.pricePerClass, '$')}</div>
-          </div>
-        `;
-      });
-      
-      const modalHTML = `
-        <div id="unpaidClassesModal" onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 29000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; min-width: 500px; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
-            <div>
-              <h3 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; color: white;">Review Unpaid Classes</h3>
-              <p style="margin: 0; font-size: 13px; color: #94a3b8;">${escapeHtml(student.name)} • Group ${escapeHtml(student.group || 'N/A')}</p>
-            </div>
-            <button onclick="closeUnpaidClassesModal()" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
-          </div>
-          
-          <div style="margin-bottom: 16px; padding: 12px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px;">
-            <div style="font-size: 12px; color: #3b82f6; font-weight: 700;">ℹ️ Payments sync automatically from Gmail. Review the unpaid classes below — no manual entries are needed.</div>
-          </div>
-          
-          <div style="flex: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 8px;">
-            ${classesHTML}
-          </div>
-          
-          <div style="padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 12px;">
-            <div style="font-size: 11px; color: rgba(255,255,255,0.6);">🟢 When matching Payment Records arrive from Gmail, the calendar updates automatically. If no payment exists yet, the class remains 🔴.</div>
-            <button onclick="closeUnpaidClassesModal()" style="align-self: flex-end; padding: 12px 24px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">Close</button>
-          </div>
-        </div>
-      `;
-      
-      // Add overlay
-      const modalOverlay = document.createElement('div');
-      modalOverlay.id = 'unpaidClassesOverlay';
-      modalOverlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 28500; backdrop-filter: blur(6px);';
-      modalOverlay.onclick = closeUnpaidClassesModal;
-      
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-      document.body.appendChild(modalOverlay);
-      
-      debug('[UnpaidClassesModal] ✅ Modal created and displayed');
-    }
-    
-    function closeUnpaidClassesModal() {
-      const modal = document.getElementById('unpaidClassesModal');
-      const overlay = document.getElementById('unpaidClassesOverlay');
-      if (modal) modal.remove();
-      if (overlay) overlay.remove();
+      showToast('✅ Payment added successfully', 'success');
+      renderCalendar();
     }
     
     function markAsAbsent(studentId, dateStr) {
@@ -13368,9 +12749,9 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', initialize);
     
-    debug('✅ ARNOMA app loaded - Using Supabase cloud database [v2.3.0 - Performance Optimized ⚡ - Build 20251112-0500]');
-    debug('🔧 Optimizations: Debug logs disabled, Map caching enabled, CSS GPU acceleration');
-    debug('⚡ ~250 console.log statements removed for production performance');
+    console.log('✅ ARNOMA app loaded - Using Supabase cloud database [v2.1.0 - Full Sync Redesigned - Build 20251112-0230]');
+    console.log('🔧 CACHE CHECK: If you see this message, JavaScript is loading correctly.');
+    console.log('🔧 Full Sync has been redesigned with proper date range handling.');
   </script>
 </body>
 </html>
