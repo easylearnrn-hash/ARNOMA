@@ -2587,6 +2587,32 @@
             <div onclick="restoreFromCloud()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
               ☁️ Reload from Supabase Cloud
             </div>
+            
+            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">LA Timezone Correction</div>
+            <div style="padding: 14px 18px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div style="font-size: 11px; color: #94a3b8; margin-bottom: 12px; line-height: 1.4;">
+                When in Yerevan, Gmail timestamps appear 11-12 hours ahead of LA time. Toggle correction based on LA season:
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer;" onclick="toggleLAOffset(12)">
+                <span style="color: white; font-size: 13px; font-weight: 600;">❄️ Winter (–12 Hours)</span>
+                <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
+                  <input type="checkbox" id="laOffset12Toggle" onchange="toggleLAOffset(12)" style="opacity: 0; width: 0; height: 0;">
+                  <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 24px; border: 1px solid rgba(255,255,255,0.2);"></span>
+                  <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
+                </label>
+              </div>
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 8px; cursor: pointer;" onclick="toggleLAOffset(11)">
+                <span style="color: white; font-size: 13px; font-weight: 600;">☀️ Summer (–11 Hours DST)</span>
+                <label style="position: relative; display: inline-block; width: 44px; height: 24px; cursor: pointer;">
+                  <input type="checkbox" id="laOffset11Toggle" onchange="toggleLAOffset(11)" style="opacity: 0; width: 0; height: 0;">
+                  <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 24px; border: 1px solid rgba(255,255,255,0.2);"></span>
+                  <span style="position: absolute; content: ''; height: 18px; width: 18px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
+                </label>
+              </div>
+              <div style="font-size: 10px; color: #6b7280; margin-top: 8px; line-height: 1.3;">
+                💡 In LA? Turn both OFF. Only one can be active at a time.
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -4987,7 +5013,10 @@
       try {
         const headers = messageData.payload.headers;
         const dateHeader = headers.find(h => h.name === 'Date');
-        const emailDate = dateHeader ? new Date(dateHeader.value) : new Date();
+        let emailDate = dateHeader ? new Date(dateHeader.value) : new Date();
+        
+        // Apply LA timezone offset correction if enabled
+        emailDate = applyLAOffset(emailDate);
         
         // Extract email body (multiple sources)
         let bodyText = '';
@@ -6504,6 +6533,101 @@
         menu.style.display = 'none';
       }
     });
+    
+    // ============================================================================
+    // LA TIMEZONE OFFSET CORRECTION
+    // ============================================================================
+    
+    // Load saved offset settings
+    function getLAOffsetSettings() {
+      const offset12 = localStorage.getItem('la-offset-12') === 'true';
+      const offset11 = localStorage.getItem('la-offset-11') === 'true';
+      return { offset12, offset11 };
+    }
+    
+    // Toggle LA offset (only one can be active)
+    function toggleLAOffset(hours) {
+      const toggle12 = document.getElementById('laOffset12Toggle');
+      const toggle11 = document.getElementById('laOffset11Toggle');
+      
+      if (hours === 12) {
+        const newState = !toggle12.checked;
+        toggle12.checked = newState;
+        localStorage.setItem('la-offset-12', newState.toString());
+        
+        // Turn off the other toggle
+        if (newState) {
+          toggle11.checked = false;
+          localStorage.setItem('la-offset-11', 'false');
+        }
+        
+        // Update toggle styling
+        updateToggleStyle(toggle12, newState);
+        updateToggleStyle(toggle11, false);
+        
+        showNotification(newState ? '❄️ Winter offset enabled: –12 hours' : '✅ Winter offset disabled', 'success');
+      } else if (hours === 11) {
+        const newState = !toggle11.checked;
+        toggle11.checked = newState;
+        localStorage.setItem('la-offset-11', newState.toString());
+        
+        // Turn off the other toggle
+        if (newState) {
+          toggle12.checked = false;
+          localStorage.setItem('la-offset-12', 'false');
+        }
+        
+        // Update toggle styling
+        updateToggleStyle(toggle11, newState);
+        updateToggleStyle(toggle12, false);
+        
+        showNotification(newState ? '☀️ Summer offset enabled: –11 hours (DST)' : '✅ Summer offset disabled', 'success');
+      }
+    }
+    
+    // Update toggle visual styling
+    function updateToggleStyle(toggleElement, isActive) {
+      if (!toggleElement) return;
+      const slider = toggleElement.nextElementSibling;
+      const knob = slider ? slider.nextElementSibling : null;
+      
+      if (slider) {
+        slider.style.background = isActive ? 'rgba(34, 197, 94, 0.6)' : 'rgba(100,116,139,0.4)';
+      }
+      if (knob) {
+        knob.style.transform = isActive ? 'translateX(20px)' : 'translateX(0)';
+      }
+    }
+    
+    // Apply LA offset to a Date object
+    function applyLAOffset(date) {
+      const settings = getLAOffsetSettings();
+      const adjustedDate = new Date(date);
+      
+      if (settings.offset12) {
+        adjustedDate.setHours(adjustedDate.getHours() - 12);
+      } else if (settings.offset11) {
+        adjustedDate.setHours(adjustedDate.getHours() - 11);
+      }
+      
+      return adjustedDate;
+    }
+    
+    // Initialize toggle states on page load
+    function initializeLAOffsetToggles() {
+      const settings = getLAOffsetSettings();
+      const toggle12 = document.getElementById('laOffset12Toggle');
+      const toggle11 = document.getElementById('laOffset11Toggle');
+      
+      if (toggle12) {
+        toggle12.checked = settings.offset12;
+        updateToggleStyle(toggle12, settings.offset12);
+      }
+      if (toggle11) {
+        toggle11.checked = settings.offset11;
+        updateToggleStyle(toggle11, settings.offset11);
+      }
+    }
     
     // ============================================================================
     // BACKUP & RESTORE SYSTEM
@@ -9601,6 +9725,9 @@
       
       // Populate month selector
       populateMonthSelector();
+      
+      // Initialize LA offset toggles
+      initializeLAOffsetToggles();
       
       // Render payments
       renderPaymentEmailsView();
