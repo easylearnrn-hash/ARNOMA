@@ -10542,8 +10542,11 @@
           const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
           const currentDayIndex = now.getDay();
           const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+          
+          // Store the current LA date for comparison (YYYY-MM-DD format)
+          const currentLADate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-          debug('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US'), 'Day:', dayNames[currentDayIndex], '(UTC offset:', laOffset, 'hours)');
+          debug('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US'), 'Day:', dayNames[currentDayIndex], 'Date:', currentLADate, '(UTC offset:', laOffset, 'hours)');
 
           let nextClass = null;
           let minDiffInSeconds = Infinity;
@@ -10552,6 +10555,11 @@
           for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
             const checkDayIndex = (currentDayIndex + daysAhead) % 7;
             const checkDayName = dayNames[checkDayIndex];
+            
+            // Calculate the actual date being checked (in LA timezone)
+            const checkDate = new Date(now);
+            checkDate.setDate(checkDate.getDate() + daysAhead);
+            const checkDateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
 
             groups.forEach(group => {
               let sessions = [];
@@ -10601,17 +10609,24 @@
                 // Skip classes currently in progress (started but not yet 2 hours past)
                 // Only count future classes (totalDiffSeconds > 0)
                 if (totalDiffSeconds > 0 && totalDiffSeconds < minDiffInSeconds) {
-                  debug(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
+                  debug(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} (${checkDateStr}) at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
                   minDiffInSeconds = totalDiffSeconds;
                   
-                  // Determine day label
+                  // Determine day label based on LA date comparison
                   let dayLabel = '';
-                  if (daysAhead === 0) {
+                  if (checkDateStr === currentLADate) {
                     dayLabel = 'Today';
-                  } else if (daysAhead === 1) {
-                    dayLabel = 'Tomorrow';
                   } else {
-                    dayLabel = checkDayName;
+                    // Calculate tomorrow's LA date
+                    const tomorrow = new Date(now);
+                    tomorrow.setDate(tomorrow.getDate() + 1);
+                    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+                    
+                    if (checkDateStr === tomorrowStr) {
+                      dayLabel = 'Tomorrow';
+                    } else {
+                      dayLabel = checkDayName;
+                    }
                   }
 
                   nextClass = {
