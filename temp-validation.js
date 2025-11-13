@@ -1,19 +1,6 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARNOMA - Student Management [v2.1.0]</title>
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="-1">
-  
-  <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.1.0-20251112-0240">
-  
-  <!-- Supabase Configuration -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
-  <script>
+
+
+
     // VERSION CHECK - This should appear FIRST in console
     console.log('🔥 CACHE BUSTER: Version 2.1.0 - Build 20251112-0240');
     
@@ -56,10 +43,9 @@
         ...options 
       });
     }
-  </script>
+  
 
-  <!-- BEGIN POPUP BACK & EXIT FIX -->
-  <script>
+
     // Global Popup Management System
     // Ensures all popups have Back button, click-outside-to-close, and instant responsiveness
     window.PopupManager = {
@@ -260,2552 +246,9 @@
         this.activePopups.forEach(id => this.close(id));
       }
     };
-  </script>
-  <!-- END POPUP BACK & EXIT FIX -->
   
-  <style>
-    :root {
-      --primary: #3b82f6;
-      --secondary: #94a3b8;
-      --ink: #0f172a;
-      --ink-dim: #64748b;
-      --stroke: rgba(148, 163, 184, 0.2);
-      --text: #f8fafc;
-      --background: #0f1419;
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-    
-    /* Calendar dot tooltip */
-    .calendar-dot {
-      position: relative;
-    }
-    
-    .calendar-dot::after {
-      content: attr(data-tooltip);
-      position: absolute;
-      bottom: 120%;
-      left: 50%;
-      transform: translateX(-50%) scale(0.9);
-      opacity: 0;
-      pointer-events: none;
-      white-space: nowrap;
-      background: rgba(0, 0, 0, 0.95);
-      color: white;
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      z-index: 1000;
-      transition: all 0.2s ease;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .calendar-dot:hover::after {
-      opacity: 1;
-      transform: translateX(-50%) scale(1);
-    }
-    
-    @keyframes modalSlideIn {
-      from {
-        opacity: 0;
-        transform: scale(0.95) translateY(-20px);
-      }
-      to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-      }
-    }
-    
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateX(100px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-    
-    body {
-      font-family: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: #0b0b10;
-      color: #e5e7eb;
-      min-height: 100vh;
-      padding: 20px;
-      margin: 0;
-    }
-    
-    .container {
-      max-width: 1540px;
-      margin: 0 auto;
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 18px;
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
-      overflow: hidden;
-      transition: 0.25s ease-in-out;
-    }
-    
-    .header {
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    
-    .header h1 {
-      font-size: 24px;
-      font-weight: 700;
-      color: white;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex: 1;
-    }
-    
-    .header-controls {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    
-    .control-btn {
-      width: 36px;
-      height: 36px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 50%;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s;
-      padding: 0;
-    }
-    
-    .control-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
-      transform: scale(1.1);
-    }
-    
-    .control-btn.spinning {
-      animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
-    }
 
-    
-    .gmail-btn {
-      padding: 8px 16px;
-      background: rgba(255, 255, 255, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-      border-radius: 8px;
-      color: white;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      transition: all 0.2s;
-    }
-    
-    .gmail-btn:hover {
-      background: rgba(255, 255, 255, 0.25);
-    }
-    
-    .gmail-btn.connected {
-      background: rgba(34, 197, 94, 0.2);
-      border-color: rgba(34, 197, 94, 0.4);
-      color: #22c55e;
-    }
-    
-    #autoRefreshToggle.auto-refresh-active {
-      background: rgba(34, 197, 94, 0.2);
-      border-color: rgba(34, 197, 94, 0.4);
-      color: #22c55e;
-    }
-    
-    .stats {
-      font-size: 13px;
-      color: rgba(255,255,255,0.9);
-      font-weight: 600;
-      margin-left: 8px;
-    }
-    
-    .filter-dropdown {
-      padding: 8px 12px;
-      background: rgba(255,255,255,0.1);
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 8px;
-      color: white;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      margin-left: 8px;
-    }
-    
-    .content {
-      padding: 20px;
-      max-height: calc(90vh - 100px);
-      overflow-y: auto;
-    }
-    
-    .date-section {
-      margin-bottom: 24px;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(51, 65, 85, 0.5);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-    
-    .date-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 20px;
-      background: rgba(15, 23, 42, 0.8);
-      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
-    }
-    
-    .date-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: #e2e8f0;
-      letter-spacing: 0.3px;
-    }
-    
-    .date-total {
-      font-size: 14px;
-      font-weight: 600;
-      color: #94a3b8;
-    }
-    
-    .payments-table {
-      background: transparent;
-      border: none;
-      overflow: hidden;
-    }
-    
-    .table-header {
-      display: grid;
-      grid-template-columns: 100px 1fr 1fr 100px 1fr 180px 1fr 40px;
-      gap: 16px;
-      padding: 14px 20px;
-      background: rgba(30, 41, 59, 0.4);
-      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
-      font-size: 11px;
-      font-weight: 700;
-      color: #94a3b8;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-    
-    .table-row {
-      display: grid;
-      grid-template-columns: 100px 1fr 1fr 100px 1fr 180px 1fr 40px;
-      gap: 16px;
-      padding: 16px 20px;
-      border-bottom: 1px solid rgba(51, 65, 85, 0.3);
-      font-size: 13px;
-      color: #e2e8f0;
-      transition: background 0.15s ease;
-    }
-    
-    .table-row:hover {
-      background: rgba(51, 65, 85, 0.25);
-    }
-    
-    .table-row:last-child {
-      border-bottom: none;
-    }
-    
-    .unmatched-badge {
-      padding: 4px 10px;
-      background: rgba(239, 68, 68, 0.2);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      border-radius: 4px;
-      color: #ef4444;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      margin-left: 8px;
-      white-space: nowrap;
-    }
-    
-    .amount-usd {
-      color: #22c55e;
-      font-weight: 700;
-    }
-    
-    .amount-amd {
-      color: #94a3b8;
-    }
-    
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--secondary);
-    }
-    
-    .empty-icon {
-      font-size: 48px;
-      margin-bottom: 10px;
-      opacity: 0.5;
-    }
-    
-    /* BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX */
-    .payment-row-new {
-      animation: blinkGreenTint 1.5s ease-in-out infinite;
-      box-shadow: 0 0 8px rgba(0, 255, 160, 0.3);
-    }
-    
-    @keyframes blinkGreenTint {
-      0%, 100% { 
-        background: rgba(0, 255, 140, 0.12); 
-        border-color: rgba(0, 255, 160, 0.3);
-      }
-      50% { 
-        background: rgba(0, 255, 140, 0.25); 
-        border-color: rgba(0, 255, 160, 0.5);
-      }
-    }
-    /* END PAYMENT RECORDS ORDER & HIGHLIGHT FIX */
-    
-    /* BEGIN BULK ADD STUDENTS FEATURE */
-    #bulkAddStudentsModal {
-      transition: opacity 0.25s ease;
-    }
-    
-    #bulkAddStudentsModal textarea {
-      transition: border-color 0.2s ease;
-    }
-    
-    #bulkAddStudentsModal textarea:focus {
-      outline: none;
-      border-color: rgba(59, 130, 246, 0.5);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-    }
-    /* END BULK ADD STUDENTS FEATURE */
-    
-    /* BEGIN DROPDOWN VISIBILITY FIX */
-    select, option {
-      color: #e8e8f0 !important;
-      background-color: rgba(30, 30, 40, 0.9) !important;
-    }
 
-    select option:hover,
-    select option:focus,
-    select:focus {
-      background-color: rgba(90, 90, 120, 0.95) !important;
-      color: #ffffff !important;
-    }
-
-    select option:checked {
-      background-color: rgba(100, 100, 160, 0.9) !important;
-      color: #ffffff !important;
-    }
-    /* END DROPDOWN VISIBILITY FIX */
-    
-    @keyframes slideIn {
-      from {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-    
-    @keyframes slideOut {
-      from {
-        transform: translateX(0);
-        opacity: 1;
-      }
-      to {
-        transform: translateX(400px);
-        opacity: 0;
-      }
-    }
-    
-    #paymentActionsPopup.active {
-      display: block !important;
-    }
-    
-    /* Overlay for popup */
-    #paymentActionsPopup::before {
-      content: '';
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
-      z-index: -1;
-    }
-    
-    /* Month Total Stats */
-    .month-total-section {
-      background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1));
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      border-radius: 8px;
-      padding: 0;
-      margin: 20px;
-      overflow: hidden;
-    }
-    
-    .month-total-header-row {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 6px 20px;
-    }
-    
-    .month-total-header-left {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    
-    .month-total-values {
-      padding: 0 20px 16px 20px;
-      transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
-      max-height: 200px;
-      opacity: 1;
-      overflow: hidden;
-    }
-
-    .month-total-values.collapsed {
-      max-height: 0;
-      opacity: 0;
-      padding: 0 20px;
-    }
-
-    .month-total-content {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      width: 100%;
-    }
-
-    .month-total-stats {
-      display: flex;
-      align-items: center;
-      gap: 32px;
-      margin-left: auto;
-    }
-    
-    .month-total-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      white-space: nowrap;
-    }
-    
-    .month-total-toggle {
-      background: transparent;
-      border: none;
-      color: var(--text);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      transition: transform 0.2s ease, opacity 0.2s ease;
-      width: auto;
-      height: auto;
-    }
-    
-    .month-total-toggle:hover {
-      opacity: 0.7;
-      transform: scale(1.1);
-    }
-    
-    .month-total-toggle span {
-      font-size: 18px;
-      font-weight: 700;
-    }
-    
-    .month-total-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--secondary);
-      font-weight: 600;
-    }
-    
-    .month-total-value {
-      font-size: 18px;
-      font-weight: 700;
-      color: #22c55e;
-    }
-    
-    .month-selector {
-      padding: 8px 16px;
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
-      border: 1px solid rgba(138, 180, 255, 0.4);
-      border-radius: 10px;
-      color: white;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.3s ease;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-      outline: none;
-      appearance: none;
-      padding-right: 32px;
-      background-image: 
-        linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)),
-        url('data:image/svg+xml;charset=UTF-8,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5L6 6.5L11 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
-      background-repeat: no-repeat, no-repeat;
-      background-position: center, right 10px center;
-    }
-    
-    .month-selector:hover {
-      background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(139, 92, 246, 0.25));
-      border-color: rgba(138, 180, 255, 0.6);
-      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-      transform: translateY(-1px);
-    }
-    
-    .month-selector:focus {
-      border-color: rgba(138, 180, 255, 0.8);
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-    }
-    
-    .month-selector option {
-      background: #1a1f2e;
-      color: white;
-      padding: 10px;
-    }
-    
-    /* Student Manager Styles */
-    .group-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(138, 180, 255, 0.3);
-    }
-    
-    .group-btn.active {
-      background: linear-gradient(135deg, #60a5fa, #a78bfa) !important;
-      border-color: rgba(96,165,250,0.8) !important;
-      color: white !important;
-      box-shadow: 0 4px 20px rgba(96,165,250,0.6) !important;
-      font-weight: 700 !important;
-      transform: scale(1.05) !important;
-    }
-    
-    /* Group Manager Styles */
-    .group-day-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(168, 85, 247, 0.3);
-    }
-    
-    .group-day-btn.active {
-      background: linear-gradient(135deg, #a78bfa, #c084fc) !important;
-      border-color: rgba(167,139,250,0.8) !important;
-      color: white !important;
-      box-shadow: 0 4px 20px rgba(167,139,250,0.6) !important;
-      font-weight: 700 !important;
-      transform: scale(1.05) !important;
-    }
-
-    /* Group Manager Styles */
-    .group-card {
-      background: rgba(255,255,255,.06);
-      backdrop-filter: blur(30px);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 14px;
-      padding: 20px;
-      box-shadow: 0 4px 16px rgba(0,0,0,.1);
-      transition: all 0.2s;
-    }
-
-    .group-card:hover {
-      border-color: rgba(138,180,255,0.4);
-      box-shadow: 0 8px 24px rgba(138,180,255,0.2);
-    }
-
-    .group-title {
-      font-size: 22px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #8ab4ff, #a855f7);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      margin-bottom: 12px;
-    }
-
-    .schedule-display {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin: 12px 0;
-    }
-
-    .schedule-item {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 6px 10px;
-      background: rgba(255,255,255,.04);
-      backdrop-filter: blur(20px);
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 10px;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
-
-    .schedule-item:hover {
-      background: rgba(255,255,255,.08);
-      border-color: rgba(138,180,255,.3);
-    }
-
-    .schedule-item.upcoming-green {
-      background: rgba(34,197,94,.15) !important;
-      border-color: rgba(34,197,94,.4) !important;
-      color: #4ade80 !important;
-      box-shadow: 0 4px 14px rgba(34,197,94,.25);
-    }
-
-    .schedule-item.upcoming-orange {
-      background: rgba(251,191,36,.15) !important;
-      border-color: rgba(251,191,36,.4) !important;
-      color: #fbbf24 !important;
-      box-shadow: 0 4px 14px rgba(251,191,36,.3);
-    }
-
-    .schedule-item.upcoming-red {
-      background: rgba(239,68,68,.18) !important;
-      border-color: rgba(239,68,68,.45) !important;
-      color: #f87171 !important;
-      box-shadow: 0 4px 18px rgba(239,68,68,.35);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.85; }
-    }
-
-    .group-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 12px;
-    }
-
-    .group-actions button {
-      flex: 1;
-      padding: 8px 12px;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.2s;
-      border: none;
-      background: rgba(138,180,255,.15);
-      color: #8ab4ff;
-      border: 1px solid rgba(138,180,255,.3);
-    }
-
-    .group-actions button:hover {
-      background: rgba(138,180,255,.25);
-      transform: translateY(-1px);
-    }
-
-    .schedule-editor {
-      margin-top: 16px;
-      padding: 16px;
-      background: linear-gradient(135deg, rgba(138,180,255,.08), rgba(168,85,247,.08));
-      border: 2px solid rgba(138,180,255,.3);
-      border-radius: 10px;
-      box-shadow: 0 4px 12px rgba(138,180,255,.15);
-      animation: slideIn 0.3s ease;
-    }
-
-    @keyframes slideIn {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .slot-row {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 8px;
-    }
-
-    .slot-row select,
-    .slot-row input[type="time"] {
-      flex: 1;
-      padding: 8px;
-      background: rgba(255,255,255,.08);
-      border: 1px solid rgba(255,255,255,.2);
-      border-radius: 6px;
-      color: white;
-      font-size: 13px;
-    }
-
-    .slot-row button {
-      padding: 8px 10px;
-      background: rgba(244,67,54,.15);
-      color: #f44336;
-      border: 1px solid #f44336;
-      border-radius: 6px;
-      font-weight: 700;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    #toast {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      z-index: 30000;
-      transition: opacity 0.3s;
-    }
-
-    #toast.show {
-      opacity: 1 !important;
-      pointer-events: auto !important;
-    }
-
-    /* Student Manager Styles */
-    .student-card, .student-item {
-      background: rgba(255,255,255,.06);
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 14px;
-      padding: 20px;
-      backdrop-filter: blur(30px);
-      transition: all 0.2s;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .student-card:hover, .student-item:hover {
-      transform: translateY(-2px);
-      border-color: #8ab4ff;
-      box-shadow: 0 8px 24px rgba(138,180,255,0.2);
-    }
-
-    .student-item.editing {
-      border-color: #4ade80;
-      box-shadow: 0 8px 24px rgba(74,222,128,.3);
-    }
-
-    .student-view {
-      cursor: pointer;
-    }
-
-    .student-edit {
-      display: none;
-    }
-
-    .student-item.editing .student-view {
-      display: none;
-    }
-
-    .student-item.editing .student-edit {
-      display: block;
-    }
-
-    .student-name {
-      font-weight: 700;
-      font-size: 20px;
-      color: #f3f4f6;
-      margin-bottom: 4px;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .student-name:hover {
-      color: #8ab4ff;
-    }
-
-    .student-group {
-      font-size: 14px;
-      color: #6b7280;
-      margin-bottom: 16px;
-    }
-
-    /* BEGIN FEATURE 2 - Instant Group Switch Buttons */
-    .group-buttons {
-      display: flex;
-      gap: 6px;
-      justify-content: center;
-      margin: 8px 0;
-      flex-wrap: nowrap;
-      overflow-x: auto;
-      scrollbar-width: none; /* Firefox */
-      -ms-overflow-style: none; /* IE/Edge */
-    }
-
-    .group-buttons::-webkit-scrollbar {
-      display: none; /* Chrome/Safari */
-    }
-
-    .group-btn {
-      padding: 6px 12px;
-      border-radius: 20px;
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.25s ease;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.1);
-      backdrop-filter: blur(10px);
-      color: rgba(255,255,255,0.7);
-      min-width: 36px;
-      white-space: nowrap;
-      flex-shrink: 0;
-    }
-
-    .group-btn:hover {
-      background: rgba(255,255,255,0.2);
-      border-color: rgba(255,255,255,0.3);
-      color: rgba(255,255,255,0.9);
-      transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(138,180,255,0.2);
-    }
-
-    .group-btn.active {
-      background: linear-gradient(135deg, #60a5fa, #a78bfa);
-      border-color: rgba(96,165,250,0.8);
-      color: white;
-      box-shadow: 0 4px 20px rgba(96,165,250,0.6);
-      font-weight: 700;
-      transform: scale(1.05);
-    }
-
-    .group-btn.active:hover {
-      transform: translateY(-1px) scale(1.05);
-      box-shadow: 0 6px 24px rgba(96,165,250,0.8);
-    }
-    /* END FEATURE 2 */
-
-    .student-status {
-      font-size: 0.85rem;
-      opacity: 0.8;
-      margin-bottom: 4px;
-    }
-
-    .price-pill {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      background: linear-gradient(135deg, #8ab4ff, #a855f7);
-      color: #fff;
-      font-weight: 700;
-      margin-top: 8px;
-    }
-
-    .status-pill-single {
-      padding: 6px 16px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.2s;
-      text-transform: uppercase;
-      border: 1px solid;
-      user-select: none;
-    }
-
-    .status-active {
-      background: rgba(76,175,80,.15);
-      border-color: rgba(76,175,80,.4);
-      color: #4caf50;
-    }
-    
-    .status-active:hover {
-      background: rgba(76,175,80,.25);
-      border-color: rgba(76,175,80,.6);
-      transform: scale(1.05);
-    }
-
-    .status-paused {
-      background: rgba(251,191,36,.15);
-      border-color: rgba(251,191,36,.4);
-      color: #fbbf24;
-    }
-    
-    .status-paused:hover {
-      background: rgba(251,191,36,.25);
-      border-color: rgba(251,191,36,.6);
-      transform: scale(1.05);
-    }
-
-    .status-graduated {
-      background: rgba(167,139,250,.15);
-      border-color: rgba(167,139,250,.4);
-      color: #a78bfa; /* Lavender purple for graduated students */
-    }
-    
-    .status-graduated:hover {
-      background: rgba(167,139,250,.25);
-      border-color: rgba(167,139,250,.6);
-      transform: scale(1.05);
-    }
-
-    .mini-toggle {
-      position: relative;
-      display: inline-block;
-      width: 44px;
-      height: 24px;
-    }
-
-    .mini-toggle input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
-    .slider {
-      position: absolute;
-      cursor: pointer;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background-color: rgba(255,255,255,.1);
-      transition: 0.3s;
-      border-radius: 24px;
-      border: 2px solid rgba(255,255,255,.2);
-    }
-
-    .slider:before {
-      position: absolute;
-      content: "";
-      height: 16px;
-      width: 16px;
-      left: 2px;
-      bottom: 2px;
-      background-color: white;
-      transition: 0.3s;
-      border-radius: 50%;
-    }
-
-    input:checked + .slider {
-      background-color: #8ab4ff;
-      border-color: #8ab4ff;
-    }
-
-    input:checked + .slider:before {
-      transform: translateX(20px);
-    }
-
-    .inline-form-group {
-      margin-bottom: 16px;
-    }
-
-    .inline-form-group label {
-      display: block;
-      margin-bottom: 6px;
-      font-weight: 600;
-      color: #f3f4f6;
-      font-size: 12px;
-    }
-
-    .inline-form-group input,
-    .inline-form-group textarea {
-      width: 100%;
-      padding: 10px;
-      background: rgba(255,255,255,.08);
-      border: 2px solid rgba(255,255,255,.2);
-      border-radius: 8px;
-      color: #f3f4f6;
-      font-size: 14px;
-      font-family: inherit;
-    }
-
-    .inline-form-group input:focus,
-    .inline-form-group textarea:focus {
-      outline: none;
-      border-color: #8ab4ff;
-      background: rgba(138,180,255,.12);
-    }
-
-    .inline-form-group textarea {
-      min-height: 60px;
-      resize: vertical;
-    }
-
-    .inline-actions {
-      display: flex;
-      gap: 8px;
-      margin-top: 16px;
-    }
-
-    .action-btn {
-      flex: 1;
-      padding: 10px;
-      border: 2px solid;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      font-size: 13px;
-      transition: all 0.2s;
-    }
-
-    .edit-btn {
-      background: rgba(138,180,255,.15);
-      border-color: #8ab4ff;
-      color: #8ab4ff;
-    }
-
-    .edit-btn:hover {
-      background: rgba(138,180,255,.25);
-    }
-
-    .waiting-btn {
-      background: rgba(168,85,247,.15);
-      border-color: #a855f7;
-      color: #a855f7;
-    }
-
-    .waiting-btn:hover {
-      background: rgba(168,85,247,.25);
-    }
-
-    .delete-btn {
-      background: rgba(244,67,54,.15);
-      border-color: #f44336;
-      color: #f44336;
-    }
-
-    .delete-btn:hover {
-      background: rgba(244,67,54,.25);
-    }
-
-    .group-select-btn.selected {
-      background: #8ab4ff !important;
-      color: white !important;
-      border-color: #8ab4ff !important;
-    }
-
-    .student-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid rgba(255,255,255,.1);
-    }
-
-    .student-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,.05);
-    }
-
-    .info-label {
-      font-size: 12px;
-      color: #6b7280;
-      font-weight: 600;
-    }
-
-    .info-value {
-      font-size: 15px;
-      color: #8ab4ff;
-      font-weight: 700;
-    }
-
-    .info-column {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      padding: 8px 0;
-      border-bottom: 1px solid rgba(255,255,255,.05);
-    }
-
-    .info-text {
-      font-size: 13px;
-      color: #f3f4f6;
-      word-break: break-word;
-    }
-
-    .aliases-container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-    }
-
-    .alias-badge {
-      font-size: 11px;
-      padding: 4px 10px;
-      background: rgba(138,180,255,.15);
-      border: 1px solid rgba(138,180,255,.3);
-      border-radius: 6px;
-      color: #8ab4ff;
-      font-weight: 600;
-    }
-
-    /* ========== BEGIN FLOATING NAV STYLES ========== */
-    .floating-nav {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      z-index: 9999;
-      display: flex;
-      gap: 8px;
-      background: linear-gradient(135deg, rgba(30, 30, 46, 0.95), rgba(42, 42, 62, 0.95));
-      backdrop-filter: blur(16px);
-      border: 1px solid rgba(138, 180, 255, 0.25);
-      border-radius: 20px;
-      padding: 10px 14px;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .floating-nav .nav-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255, 255, 255, 0.06);
-      color: rgba(255, 255, 255, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      cursor: pointer;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      font-size: 18px;
-      font-weight: 400;
-      position: relative;
-    }
-
-    .floating-nav .nav-btn:hover {
-      background: linear-gradient(135deg, rgba(138, 180, 255, 0.2), rgba(168, 85, 247, 0.2));
-      color: #fff;
-      border-color: rgba(138, 180, 255, 0.4);
-      transform: translateY(-3px) scale(1.05);
-      box-shadow: 0 8px 20px rgba(138, 180, 255, 0.4);
-    }
-
-    .floating-nav .nav-btn:active {
-      transform: scale(0.96);
-    }
-
-    .floating-nav .nav-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none !important;
-    }
-
-    /* BEGIN CLASS COUNTDOWN TIMER */
-    /* Class Countdown Overlay - Legacy (kept for backward compatibility) */
-    #classCountdownOverlay {
-      position: fixed;
-      bottom: 80px;
-      right: 20px;
-      padding: 12px 16px;
-      border-radius: 12px;
-      background: linear-gradient(135deg, rgba(30, 30, 46, 0.95), rgba(42, 42, 62, 0.95));
-      backdrop-filter: blur(16px);
-      color: #fff;
-      font-size: 13px;
-      font-weight: 600;
-      z-index: 9998;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(138, 180, 255, 0.3);
-      animation: slideInUp 0.3s ease;
-    }
-
-    /* Enhanced Class Countdown Timer Panel - Liquid Glass Popup Style */
-    #enhancedCountdownTimer {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 560px;
-      max-height: 760px;
-      padding: 0;
-      border-radius: 18px;
-      background: rgba(30, 30, 40, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif;
-      font-size: 13px;
-      z-index: 9999;
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-      user-select: none;
-      display: flex;
-      flex-direction: column;
-      overflow: hidden;
-    }
-
-    /* Time-based color tints */
-    #enhancedCountdownTimer.time-safe {
-      background: rgba(15, 40, 45, 0.95);
-      border-color: rgba(0, 255, 160, 0.95);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 50px rgba(0, 255, 160, 0.8), 0 0 80px rgba(0, 255, 160, 0.4);
-    }
-
-    #enhancedCountdownTimer.time-upcoming {
-      background: rgba(50, 47, 15, 0.95);
-      border-color: rgba(255, 220, 50, 0.95);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 50px rgba(255, 220, 50, 0.8), 0 0 80px rgba(255, 220, 50, 0.4);
-      transition: all 0.8s ease-in-out;
-    }
-
-    #enhancedCountdownTimer.time-warning {
-      background: rgba(55, 40, 15, 0.95);
-      border-color: rgba(255, 160, 50, 0.95);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 55px rgba(255, 160, 50, 0.85), 0 0 85px rgba(255, 160, 50, 0.5);
-      transition: all 0.8s ease-in-out;
-    }
-
-    #enhancedCountdownTimer.time-critical {
-      background: rgba(60, 20, 20, 0.95);
-      border-color: rgba(255, 60, 60, 1);
-      transition: all 1s ease-in-out;
-    }
-
-    /* Gradual blinking for critical state (<6h) */
-    #enhancedCountdownTimer.time-critical.pulse-slow {
-      animation: redPulseSlow 2.5s ease-in-out infinite;
-    }
-
-    #enhancedCountdownTimer.time-critical.pulse-medium {
-      animation: redPulseMedium 1.5s ease-in-out infinite;
-    }
-
-    #enhancedCountdownTimer.time-critical.pulse-fast {
-      animation: redPulseFast 1s ease-in-out infinite;
-    }
-
-    @keyframes redPulseSlow {
-      0%, 100% {
-        border-color: rgba(255, 60, 60, 0.95);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 55px rgba(255, 60, 60, 0.8), 0 0 90px rgba(255, 60, 60, 0.5);
-      }
-      50% {
-        border-color: rgba(255, 60, 60, 1);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 70px rgba(255, 60, 60, 0.9), 0 0 110px rgba(255, 60, 60, 0.6);
-      }
-    }
-
-    @keyframes redPulseMedium {
-      0%, 100% {
-        border-color: rgba(255, 50, 50, 0.95);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 60px rgba(255, 50, 50, 0.85), 0 0 95px rgba(255, 50, 50, 0.55);
-      }
-      50% {
-        border-color: rgba(255, 50, 50, 1);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 75px rgba(255, 50, 50, 0.95), 0 0 115px rgba(255, 50, 50, 0.65);
-      }
-    }
-
-    @keyframes redPulseFast {
-      0%, 100% {
-        border-color: rgba(255, 40, 40, 1);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 65px rgba(255, 40, 40, 0.9), 0 0 100px rgba(255, 40, 40, 0.6);
-      }
-      50% {
-        border-color: rgba(255, 30, 30, 1);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.8), 0 0 80px rgba(255, 30, 30, 1), 0 0 120px rgba(255, 30, 30, 0.7);
-      }
-    }
-
-    #enhancedCountdownTimer:hover {
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-      border-color: rgba(138, 180, 255, 0.4);
-    }
-
-    #enhancedCountdownTimer .timer-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 18px 20px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-      flex-shrink: 0;
-    }
-
-    #enhancedCountdownTimer .timer-icon {
-      font-size: 14px;
-      margin-right: 5px;
-      opacity: 0.9;
-    }
-
-    #enhancedCountdownTimer .timer-title {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--secondary);
-      opacity: 0.9;
-      letter-spacing: 0.2px;
-      flex: 1;
-    }
-
-    #enhancedCountdownTimer .timer-close {
-      width: 20px;
-      height: 20px;
-      border-radius: 4px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      color: rgba(255, 255, 255, 0.5);
-      font-size: 14px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      padding: 0;
-      line-height: 1;
-      font-weight: 300;
-    }
-
-    #enhancedCountdownTimer .timer-close:hover {
-      background: rgba(239, 68, 68, 0.12);
-      border-color: rgba(239, 68, 68, 0.3);
-      color: rgba(239, 68, 68, 0.9);
-      transform: scale(1.05);
-    }
-
-    /* Classes List Container */
-    #enhancedCountdownTimer .timer-classes-list {
-      overflow-y: auto;
-      max-height: 600px;
-      padding: 12px;
-      flex: 1;
-    }
-
-    #enhancedCountdownTimer .timer-classes-list::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    #enhancedCountdownTimer .timer-classes-list::-webkit-scrollbar-track {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 3px;
-    }
-
-    #enhancedCountdownTimer .timer-classes-list::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2);
-      border-radius: 3px;
-    }
-
-    #enhancedCountdownTimer .timer-classes-list::-webkit-scrollbar-thumb:hover {
-      background: rgba(255, 255, 255, 0.3);
-    }
-
-    #enhancedCountdownTimer .timer-no-classes {
-      padding: 60px 20px;
-      text-align: center;
-      color: rgba(255, 255, 255, 0.6);
-      font-size: 14px;
-      line-height: 1.6;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: 200px;
-    }
-
-    /* Individual Class Item */
-    #enhancedCountdownTimer .timer-class-item {
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 12px;
-      padding: 14px 16px;
-      margin-bottom: 10px;
-      transition: transform 0.2s ease;
-    }
-
-    #enhancedCountdownTimer .timer-class-item:last-child {
-      margin-bottom: 0;
-    }
-
-    #enhancedCountdownTimer .timer-class-item:hover {
-      transform: translateX(-2px);
-    }
-    
-    #enhancedCountdownTimer .timer-class-item:not(.class-critical):hover {
-      background: rgba(255, 255, 255, 0.12);
-      border-color: rgba(255, 255, 255, 0.2);
-    }
-
-    /* Next Class Highlight */
-    #enhancedCountdownTimer .timer-class-item.next-class {
-      background: rgba(138, 180, 255, 0.12);
-      border-color: rgba(138, 180, 255, 0.3);
-      box-shadow: 0 2px 8px rgba(138, 180, 255, 0.2);
-    }
-
-    /* State-based styling - Per-Class Card Tinting */
-    /* >24h - Safe green tint */
-    #enhancedCountdownTimer .timer-class-item.class-safe {
-      border-color: rgba(0, 255, 160, 0.5);
-      background: rgba(0, 255, 160, 0.22);
-      box-shadow: 0 0 12px rgba(0, 255, 160, 0.3);
-    }
-
-    /* 12-24h - Yellow tint */
-    #enhancedCountdownTimer .timer-class-item.class-upcoming {
-      border-color: rgba(255, 220, 60, 0.55);
-      background: rgba(255, 220, 60, 0.25);
-      box-shadow: 0 0 14px rgba(255, 220, 60, 0.35);
-    }
-
-    /* 6-12h - Orange tint */
-    #enhancedCountdownTimer .timer-class-item.class-warning {
-      border-color: rgba(255, 160, 40, 0.6);
-      background: rgba(255, 160, 40, 0.28);
-      box-shadow: 0 0 16px rgba(255, 160, 40, 0.4);
-    }
-
-    /* <6h - Red tint with pulse animation */
-    #enhancedCountdownTimer .timer-class-item.class-critical {
-      border-color: rgba(255, 100, 100, 0.7);
-      background: linear-gradient(135deg, rgba(80, 20, 20, 0.5), rgba(120, 30, 30, 0.4));
-      background-color: rgba(200, 60, 60, 0.45) !important;
-      box-shadow: 0 0 18px rgba(255, 100, 100, 0.5);
-      animation: pulseRed 2s ease-in-out infinite !important;
-    }
-
-    /* Pulse animation for red (<6h) classes */
-    @keyframes pulseRed {
-      0%, 100% {
-        border-color: rgba(255, 100, 100, 0.7);
-        box-shadow: 0 0 18px rgba(255, 80, 80, 0.5);
-        transform: scale(1);
-      }
-      50% {
-        border-color: rgba(255, 120, 120, 1);
-        box-shadow: 0 0 32px rgba(255, 80, 80, 0.8), 0 0 16px rgba(255, 40, 40, 0.6);
-        transform: scale(1.01);
-      }
-    }
-
-    /* Legacy state classes for backward compatibility */
-    #enhancedCountdownTimer .timer-class-item.warning {
-      border-color: rgba(251, 191, 36, 0.5);
-      background: rgba(251, 191, 36, 0.12);
-      box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
-    }
-
-    #enhancedCountdownTimer .timer-class-item.urgent {
-      border-color: rgba(239, 68, 68, 0.6);
-      background: rgba(239, 68, 68, 0.15);
-      box-shadow: 0 0 16px rgba(239, 68, 68, 0.25);
-    }
-
-    #enhancedCountdownTimer .timer-class-item.in-progress {
-      border-color: rgba(16, 185, 129, 0.5);
-      background: rgba(16, 185, 129, 0.12);
-      box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
-    }
-
-    /* Class Item Header */
-    #enhancedCountdownTimer .timer-class-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 6px;
-    }
-
-    #enhancedCountdownTimer .timer-class-icon {
-      font-size: 12px;
-      flex-shrink: 0;
-    }
-
-    #enhancedCountdownTimer .timer-class-group {
-      font-size: 15px;
-      font-weight: 600;
-      color: #fff;
-      flex: 1;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    #enhancedCountdownTimer .timer-class-countdown {
-      font-size: 14px;
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.85);
-      flex-shrink: 0;
-    }
-
-    /* Class Item Details */
-    #enhancedCountdownTimer .timer-class-details {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      color: rgba(255, 255, 255, 0.6);
-      flex-wrap: wrap;
-    }
-
-    #enhancedCountdownTimer .timer-class-day {
-      font-weight: 500;
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    #enhancedCountdownTimer .timer-class-separator {
-      opacity: 0.5;
-    }
-
-    #enhancedCountdownTimer .timer-class-time {
-      font-size: 11px;
-    }
-
-    @keyframes scaleInFade {
-      from {
-        opacity: 0;
-        transform: translate(-50%, -50%) scale(0.9);
-      }
-      to {
-        opacity: 1;
-        transform: translate(-50%, -50%) scale(1);
-      }
-    }
-
-    @keyframes slideInUpFade {
-      from {
-        opacity: 0;
-        transform: translateY(25px) scale(0.95);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
-    }
-
-    @keyframes slideInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    /* SKIP CLASS FEATURE */
-    #enhancedCountdownTimer .timer-class-item.skipped {
-      opacity: 0.4;
-      background: rgba(100, 100, 100, 0.15) !important;
-      border-color: rgba(150, 150, 150, 0.3) !important;
-      box-shadow: none !important;
-      animation: none !important;
-      text-decoration: line-through;
-      pointer-events: none;
-    }
-
-    #enhancedCountdownTimer .timer-class-item.skipped .timer-class-group::before {
-      content: "⚫ ";
-      color: rgba(150, 150, 150, 0.7);
-    }
-
-    #enhancedCountdownTimer .timer-class-item {
-      cursor: pointer;
-      user-select: none;
-      position: relative;
-    }
-
-    #enhancedCountdownTimer .timer-class-item:not(.skipped):active {
-      transform: scale(0.98);
-    }
-
-    /* Skip Class Confirmation Dialog */
-    #skipClassDialog {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: rgba(30, 30, 40, 0.98);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 16px;
-      padding: 24px;
-      min-width: 380px;
-      max-width: 90%;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(138, 180, 255, 0.3);
-      backdrop-filter: blur(20px);
-      z-index: 100002;
-      display: none;
-      animation: scaleInFade 0.3s ease-out;
-    }
-
-    #skipClassDialog.show {
-      display: block;
-    }
-
-    #skipClassDialog .dialog-header {
-      font-size: 18px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    #skipClassDialog .dialog-message {
-      font-size: 14px;
-      color: rgba(255, 255, 255, 0.8);
-      line-height: 1.5;
-      margin-bottom: 20px;
-    }
-
-    #skipClassDialog .dialog-class-info {
-      background: rgba(255, 255, 255, 0.08);
-      border-radius: 8px;
-      padding: 12px;
-      margin-bottom: 20px;
-      border-left: 3px solid rgba(255, 180, 50, 0.6);
-    }
-
-    #skipClassDialog .dialog-class-name {
-      font-size: 15px;
-      font-weight: 600;
-      color: #fff;
-      margin-bottom: 4px;
-    }
-
-    #skipClassDialog .dialog-class-time {
-      font-size: 13px;
-      color: rgba(255, 255, 255, 0.7);
-    }
-
-    #skipClassDialog .dialog-warning {
-      font-size: 13px;
-      color: rgba(255, 200, 100, 0.9);
-      margin-bottom: 20px;
-      padding: 10px;
-      background: rgba(255, 200, 100, 0.1);
-      border-radius: 6px;
-      border-left: 3px solid rgba(255, 200, 100, 0.5);
-    }
-
-    #skipClassDialog .dialog-actions {
-      display: flex;
-      gap: 10px;
-      justify-content: flex-end;
-    }
-
-    #skipClassDialog .dialog-btn {
-      padding: 10px 20px;
-      border: none;
-      border-radius: 8px;
-      font-size: 14px;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    #skipClassDialog .dialog-btn-cancel {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    #skipClassDialog .dialog-btn-cancel:hover {
-      background: rgba(255, 255, 255, 0.15);
-    }
-
-    #skipClassDialog .dialog-btn-confirm {
-      background: rgba(255, 100, 100, 0.8);
-      color: #fff;
-    }
-
-    #skipClassDialog .dialog-btn-confirm:hover {
-      background: rgba(255, 100, 100, 1);
-      box-shadow: 0 4px 12px rgba(255, 100, 100, 0.4);
-    }
-
-    #skipClassDialog .dialog-btn-undo {
-      background: rgba(100, 200, 255, 0.8);
-      color: #fff;
-    }
-
-    #skipClassDialog .dialog-btn-undo:hover {
-      background: rgba(100, 200, 255, 1);
-      box-shadow: 0 4px 12px rgba(100, 200, 255, 0.4);
-    }
-
-    #skipClassOverlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.7);
-      z-index: 100001;
-      display: none;
-    }
-
-    #skipClassOverlay.show {
-      display: block;
-    }
-
-    @keyframes slideInRight {
-      from {
-        opacity: 0;
-        transform: translateX(400px);
-      }
-      to {
-        opacity: 1;
-        transform: translateX(0);
-      }
-    }
-    /* END SKIP CLASS FEATURE */
-
-    /* END CLASS COUNTDOWN TIMER */
-    /* Responsive adjustments */
-    @media (max-width: 600px) {
-      .floating-nav {
-        bottom: 12px;
-        right: 12px;
-        padding: 8px 10px;
-        gap: 6px;
-      }
-      .floating-nav .nav-btn {
-        width: 32px;
-        height: 32px;
-        font-size: 14px;
-      }
-      #classCountdownOverlay,
-      #enhancedCountdownTimer {
-        width: calc(100vw - 32px);
-        max-width: 380px;
-        max-height: 70vh;
-      }
-      #enhancedCountdownTimer .timer-class-group {
-        font-size: 13px;
-      }
-      #enhancedCountdownTimer .timer-class-countdown {
-        font-size: 12px;
-      }
-      #enhancedCountdownTimer .timer-class-details {
-        font-size: 10px;
-      }
-    }
-
-    /* Refresh animation */
-    body.refreshing {
-      animation: refreshPulse 0.8s ease;
-    }
-
-    @keyframes refreshPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.95; }
-    }
-    /* ========== END FLOATING NAV STYLES ========== */
-  </style>
-</head>
-<body>
-  <!-- ========== SKIP CLASS DIALOG ========== -->
-  <div id="skipClassOverlay"></div>
-  <div id="skipClassDialog">
-    <div class="dialog-header">
-      <span>⚠️</span>
-      <span>Skip Class Session</span>
-    </div>
-    <div class="dialog-message">
-      Do you want to skip this class for all students in this group?
-    </div>
-    <div class="dialog-class-info">
-      <div class="dialog-class-name" id="skipDialogClassName"></div>
-      <div class="dialog-class-time" id="skipDialogClassTime"></div>
-    </div>
-    <div class="dialog-warning">
-      ℹ️ Students' payments will automatically roll over to the next scheduled class. The skipped session will be grayed out in the calendar.
-    </div>
-    <div class="dialog-actions">
-      <button class="dialog-btn dialog-btn-cancel" id="skipDialogCancelBtn">Cancel</button>
-      <button class="dialog-btn dialog-btn-confirm" id="skipDialogConfirmBtn">Skip Class</button>
-    </div>
-  </div>
-  <!-- ========== END SKIP CLASS DIALOG ========== -->
-
-  <!-- ========== BEGIN FLOATING NAV HTML ========== -->
-  <!-- Floating Navigation Bar -->
-  <div id="floatingNav" class="floating-nav" style="display:none;">
-    <button id="navTopBtn" class="nav-btn" title="Scroll to Top">↑</button>
-    <button id="navUndoBtn" class="nav-btn" title="Undo">←</button>
-    <button id="navRedoBtn" class="nav-btn" title="Redo">→</button>
-    <button id="navRefreshBtn" class="nav-btn" title="Refresh">↻</button>
-    <button id="navTimerBtn" class="nav-btn" title="Class Countdown Timer">◷</button>
-    <button id="navQuickViewBtn" class="nav-btn" title="Quick View – Group Schedules">◈</button>
-  </div>
-  <!-- ========== END FLOATING NAV HTML ========== -->
-
-  <!-- Payment Actions Popup Backdrop -->
-  <div id="paymentActionsBackdrop" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 9999; backdrop-filter: blur(6px);" onclick="closePaymentActionsPopup()"></div>
-  
-  <!-- Payment Actions Popup Modal -->
-  <div id="paymentActionsPopup" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 24px; min-width: 400px; max-width: 500px; max-height: 85vh; overflow-y: auto; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.8); z-index: 10000;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: -24px; background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); padding: 0 0 12px 0; z-index: 1;">
-      <h3 style="margin: 0; color: white; font-size: 18px; font-weight: 700;">Payment Actions</h3>
-      <button onclick="closePaymentActionsPopup()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; opacity: 0.7; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
-    </div>
-    
-    <div style="margin-bottom: 20px; padding: 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;">
-      <div style="margin-bottom: 8px;"><strong style="color: white;">Payer:</strong> <span id="popupPayerName" style="color: #94a3b8;">—</span></div>
-      <div style="margin-bottom: 8px;"><strong style="color: white;">Amount:</strong> <span id="popupPaymentAmount" style="color: #22c55e;">—</span></div>
-      <div><strong style="color: white;">Message:</strong> <span id="popupPaymentMessage" style="color: #94a3b8;">—</span></div>
-    </div>
-    
-    <div style="display: flex; flex-direction: column; gap: 10px;">
-      <button onclick="showCreateAliasForm()" style="width: 100%; padding: 14px; background: transparent; border: 2px solid #22c55e; border-radius: 12px; color: #22c55e; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,0.1)'" onmouseout="this.style.background='transparent'">
-        Create Payer Alias
-      </button>
-      <button onclick="showChangeDateForm()" style="width: 100%; padding: 14px; background: transparent; border: 2px solid #3b82f6; border-radius: 12px; color: #3b82f6; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='transparent'">
-        Change Email Date
-      </button>
-      <button onclick="deleteThisPayment()" style="width: 100%; padding: 14px; background: transparent; border: 2px solid #dc2626; border-radius: 12px; color: #dc2626; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(220,38,38,0.1)'" onmouseout="this.style.background='transparent'">
-        🗑️ Delete This Payment
-      </button>
-      <button onclick="ignoreThisPayment()" style="width: 100%; padding: 14px; background: transparent; border: 2px solid #f59e0b; border-radius: 12px; color: #f59e0b; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(245,158,11,0.1)'" onmouseout="this.style.background='transparent'">
-        Ignore This Payment
-      </button>
-      <button onclick="ignoreAllFromPayer()" style="width: 100%; padding: 14px; background: transparent; border: 2px solid #ef4444; border-radius: 12px; color: #ef4444; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">
-        Ignore All From Payer
-      </button>
-      <button onclick="linkPaymentToStudent()" style="width: 100%; padding: 14px; background: transparent; border: 2px solid #8b5cf6; border-radius: 12px; color: #8b5cf6; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(139,92,246,0.1)'" onmouseout="this.style.background='transparent'">
-        👤 Link to Student
-      </button>
-    </div>
-    
-    <!-- Create Alias Form (hidden by default) -->
-    <div id="createAliasForm" style="display: none; margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-      <h4 style="margin: 0 0 12px 0; color: white; font-size: 14px;">Create Payer Alias</h4>
-      <input type="text" id="aliasStudentName" placeholder="Student name..." style="width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; margin-bottom: 12px;" onkeydown="if(event.key==='Enter'){saveAlias();}">
-      <div style="display: flex; gap: 8px;">
-        <button onclick="saveAlias()" style="flex: 1; padding: 10px; background: #22c55e; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">Save</button>
-        <button onclick="hideCreateAliasForm()" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">Cancel</button>
-      </div>
-    </div>
-    
-    <!-- Change Date Form (hidden by default) -->
-    <div id="changeDateForm" style="display: none; margin-top: 20px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-      <h4 style="margin: 0 0 12px 0; color: white; font-size: 14px;">Change Email Date</h4>
-      <input type="date" id="newEmailDate" style="width: 100%; padding: 10px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; margin-bottom: 12px;" onkeydown="if(event.key==='Enter'){saveNewDate();}">
-      <div style="display: flex; gap: 8px;">
-        <button onclick="saveNewDate()" style="flex: 1; padding: 10px; background: #3b82f6; border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">Save</button>
-        <button onclick="hideChangeDateForm()" style="flex: 1; padding: 10px; background: rgba(255,255,255,0.1); border: none; border-radius: 6px; color: white; font-weight: 600; cursor: pointer;">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Full Sync Date Range Modal -->
-  <div id="fullSyncModal" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(145deg, rgba(20, 20, 30, 0.98), rgba(30, 30, 45, 0.98)); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 32px; min-width: 500px; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.5); z-index: 10001;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-      <h3 style="margin: 0; color: white; font-size: 20px; font-weight: 700;">Full Payment Sync</h3>
-      <button onclick="closeFullSyncDatePicker()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer; padding: 0; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; opacity: 0.9;">&times;</button>
-    </div>
-    
-    <div style="margin-bottom: 24px; padding: 16px; background: linear-gradient(135deg, rgba(231, 76, 60, 0.1), rgba(192, 57, 43, 0.05)); border-left: 4px solid #e74c3c; border-radius: 8px;">
-      <div style="font-weight: 700; color: white; margin-bottom: 6px; font-size: 14px;">Complete Historical Sync</div>
-      <div style="font-size: 13px; color: #94a3b8; line-height: 1.6;">
-        Fetches ALL Zelle payment emails from your Gmail within the specified date range. All payments will be saved automatically to Supabase.
-      </div>
-    </div>
-    
-    <div style="margin-bottom: 16px; display: flex; gap: 8px;">
-      <button onclick="setFullSyncThisWeek()" style="flex: 1; padding: 10px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #60a5fa; font-weight: 600; cursor: pointer; font-size: 13px;">This Week</button>
-      <button onclick="setFullSyncThisMonth()" style="flex: 1; padding: 10px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #60a5fa; font-weight: 600; cursor: pointer; font-size: 13px;">This Month</button>
-      <button onclick="setFullSyncLastMonth()" style="flex: 1; padding: 10px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #60a5fa; font-weight: 600; cursor: pointer; font-size: 13px;">Last Month</button>
-    </div>
-    
-    <div style="margin-bottom: 20px;">
-      <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">From Date *</label>
-      <input type="date" id="fullSyncFromDate" value="2024-07-01" style="width: 100%; padding: 14px 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px;">
-    </div>
-    
-    <div style="margin-bottom: 24px;">
-      <label style="display: block; font-weight: 600; color: white; margin-bottom: 8px; font-size: 14px;">To Date *</label>
-      <input type="date" id="fullSyncToDate" style="width: 100%; padding: 14px 16px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px;">
-    </div>
-    
-    <div style="display: flex; gap: 12px;">
-      <button onclick="closeFullSyncDatePicker()" style="flex: 1; padding: 14px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-weight: 600; cursor: pointer;">Cancel</button>
-      <button onclick="performFullSync()" style="flex: 2; padding: 14px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 10px; color: white; font-weight: 600; cursor: pointer;">
-        Start Full Sync
-      </button>
-    </div>
-  </div>
-
-  <!-- ============================== -->
-  <!-- 🧱 STUDENT MANAGER MODULE -->
-  <!-- ============================== -->
-  <div id="studentManagerModal" onclick="closeStudentManagerOnOutsideClick(event)" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 20000; backdrop-filter: blur(4px);">
-    <div onclick="event.stopPropagation()" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 1400px; max-height: 90vh; background: rgba(15,23,42,0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.8);">
-      
-      <!-- Header -->
-      <div style="background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 20px 24px;">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-          <h1 style="margin: 0; background: linear-gradient(135deg, #8ab4ff, #a855f7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; font-weight: 900;">👩‍⚕️ Student Manager</h1>
-          <div style="display: flex; gap: 12px; align-items: center;">
-            <button onclick="openAddStudent()" style="padding: 10px 18px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">
-              + Add Student
-            </button>
-            <!-- BEGIN BULK ADD STUDENTS FEATURE -->
-            <button onclick="openBulkAddStudents()" style="padding: 10px 18px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
-              📋 Bulk Add
-            </button>
-            <!-- END BULK ADD STUDENTS FEATURE -->
-            <button onclick="openWaitingList()" style="padding: 10px 18px; background: rgba(168,85,247,.2); border: 2px solid #a855f7; color: #a855f7; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;">
-              Waiting List
-            </button>
-            <button onclick="findDuplicates()" style="padding: 10px 18px; background: rgba(251,146,60,.2); border: 2px solid #fb923c; color: #fb923c; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer;">
-              Find Duplicates
-            </button>
-            <button onclick="syncWithCloud()" style="padding: 10px 18px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer;">
-              ☁️ Sync Cloud
-            </button>
-            <button onclick="closeStudentManager()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-          </div>
-        </div>
-        
-        <!-- Filter Controls -->
-        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
-          <input type="text" id="studentSearchInput" placeholder="🔍 Search by name, group, phone, email, notes..." oninput="filterStudents()" style="flex: 1; min-width: 250px; padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 14px;">
-          
-          <select id="filterGroup" onchange="filterStudents()" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; min-width: 150px;">
-            <option value="">All Groups</option>
-            <option value="no-group">No Group</option>
-          </select>
-          
-          <select id="filterStatus" onchange="filterStudents()" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; min-width: 150px;">
-            <option value="">All Statuses</option>
-            <option value="active">Active</option>
-            <option value="paused">Paused</option>
-            <option value="graduated">Graduated</option>
-          </select>
-          
-          <select id="filterPayment" onchange="filterStudents()" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; min-width: 150px;">
-            <option value="">All Payment Status</option>
-            <option value="unpaid">Unpaid Classes</option>
-          </select>
-          
-          <select id="sortPrice" onchange="filterStudents()" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; min-width: 150px;">
-            <option value="">Sort by Price</option>
-            <option value="highest">Price: Highest First</option>
-            <option value="lowest">Price: Lowest First</option>
-          </select>
-          
-          <button onclick="clearFilters()" style="padding: 10px 16px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; cursor: pointer;">
-            Clear Filters
-          </button>
-        </div>
-      </div>
-
-      <!-- Students Grid -->
-      <div id="studentGrid" style="padding: 24px; overflow-y: auto; max-height: calc(90vh - 200px); display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;"></div>
-    </div>
-  </div>
-
-  <!-- Add/Edit Student Modal -->
-  <div id="studentModal" onclick="if(event.target.id==='studentModal'){closeStudentModal();}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 25000; backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
-    <div onclick="event.stopPropagation()" style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 id="modalTitle" style="margin: 0; font-size: 24px; color: var(--primary);">Add New Student</h2>
-        <span onclick="closeStudentModal()" style="font-size: 28px; color: #6b7280; cursor: pointer; transition: all 0.2s;">&times;</span>
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Student Name *</label>
-        <input type="text" id="studentName" placeholder="Enter full name" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Group(s)</label>
-        <div id="groupBtns" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-          <button class="group-select-btn" onclick="toggleGroup(this, 'A')" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">A</button>
-          <button class="group-select-btn" onclick="toggleGroup(this, 'B')" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">B</button>
-          <button class="group-select-btn" onclick="toggleGroup(this, 'C')" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">C</button>
-          <button class="group-select-btn" onclick="toggleGroup(this, 'D')" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">D</button>
-          <button class="group-select-btn" onclick="toggleGroup(this, 'E')" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">E</button>
-          <button class="group-select-btn" onclick="toggleGroup(this, 'F')" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">F</button>
-        </div>
-        <input type="text" id="customGroups" placeholder="Or enter custom groups (comma-separated, optional)" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Pay Per Class</label>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
-          <button class="pay-select-btn" onclick="selectPayAmount(this, 25)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$25</button>
-          <button class="pay-select-btn" onclick="selectPayAmount(this, 50)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$50</button>
-          <button class="pay-select-btn" onclick="selectPayAmount(this, 75)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$75</button>
-          <button class="pay-select-btn" onclick="selectPayAmount(this, 100)" style="padding: 8px 16px; background: rgba(255,255,255,.05); color: #6b7280; border: 2px solid rgba(255,255,255,.2); border-radius: 8px; font-weight: 700; cursor: pointer; transition: all 0.2s; font-size: 14px;">$100</button>
-        </div>
-        <input type="number" id="studentPay" placeholder="Or enter custom amount" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #eab308; font-size: 14px;">💰 Credit Balance</label>
-        <div style="margin-bottom: 8px; font-size: 12px; color: #94a3b8; line-height: 1.4;">
-          Credit will auto-apply to upcoming classes until it reaches $0
-        </div>
-        <div style="position: relative;">
-          <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #eab308; font-weight: 700; font-size: 16px;">$</span>
-          <input type="number" id="studentBalance" placeholder="0.00" step="0.01" min="0" style="width: 100%; padding: 12px 12px 12px 32px; background: rgba(234,179,8,.1); border: 2px solid rgba(234,179,8,.3); border-radius: 8px; color: #eab308; font-size: 16px; font-weight: 700;" onkeydown="if(event.key==='Enter'){saveStudent();}">
-        </div>
-        <div id="currentBalanceDisplay" style="margin-top: 8px; font-size: 11px; color: #6b7280;"></div>
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Phone</label>
-        <input type="tel" id="studentPhone" placeholder="(555) 123-4567" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Email</label>
-        <input type="email" id="studentEmail" placeholder="student@example.com" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Aliases (comma-separated)</label>
-        <input type="text" id="studentAliases" placeholder="Nick, Nickname" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Notes</label>
-        <textarea id="studentNotes" placeholder="Additional notes..." style="width: 100%; min-height: 100px; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px; resize: vertical;"></textarea>
-      </div>
-      
-      <div style="display: flex; gap: 12px; margin-top: 24px;">
-        <button onclick="saveStudentFromModal()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);">Save Student</button>
-        <button onclick="closeStudentModal()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-weight: 600; cursor: pointer;">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BEGIN BULK ADD STUDENTS FEATURE -->
-  <!-- Bulk Add Students Modal -->
-  <div id="bulkAddStudentsModal" onclick="if(event.target.id==='bulkAddStudentsModal'){closeBulkAddStudents();}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 25000; backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
-    <div onclick="event.stopPropagation()" style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(59,130,246,0.4); border-radius: 18px; padding: 30px; max-width: 700px; width: 90%; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.8);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; font-size: 24px; background: linear-gradient(135deg, #3b82f6, #2563eb); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900;">📋 Bulk Add Students — Paste or Type Below</h2>
-        <span onclick="closeBulkAddStudents()" style="font-size: 28px; color: #6b7280; cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='white'" onmouseout="this.style.color='#6b7280'">&times;</span>
-      </div>
-      
-      <div style="margin-bottom: 16px; padding: 12px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; color: #94a3b8; font-size: 13px; line-height: 1.6;">
-        <strong style="color: #3b82f6;">Flexible Format:</strong> One student per line — comma-separated or labeled<br>
-        <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #e5e7eb; font-size: 12px;">Name, Email, Phone, Group, $Amount</code><br>
-        <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: #e5e7eb; font-size: 12px;">Name (Alias), Email, Phone, Group, $Amount</code>
-      </div>
-      
-      <div style="margin-bottom: 12px; padding: 10px; background: rgba(255,255,255,0.03); border-radius: 6px; color: #6b7280; font-size: 12px;">
-        <strong style="color: #94a3b8;">Examples:</strong><br>
-        <span style="font-family: monospace; color: #8ab4ff;">Hasmik Antonova (Level Up), Hasmik.Antonova@gmail.com, 909-555-4321, A, $100</span><br>
-        <span style="font-family: monospace; color: #8ab4ff;">Varduni Nerseyan, Varduni1982@yahoo.com, (818)299-7867, E, $100</span>
-      </div>
-      
-      <textarea 
-        id="bulkStudentInput" 
-        placeholder="Paste student records here (one per line)..." 
-        style="width: 100%; min-height: 250px; padding: 14px; background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); border: 2px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-size: 13px; font-family: monospace; resize: vertical; line-height: 1.8;"
-      ></textarea>
-      
-      <div id="bulkAddValidationMessage" style="margin-top: 12px; padding: 10px; border-radius: 8px; display: none;"></div>
-      
-      <div style="display: flex; gap: 12px; margin-top: 20px;">
-        <button onclick="processBulkAddStudents()" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); transition: all 0.2s;" onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3)'">Add Students</button>
-        <button onclick="closeBulkAddStudents()" style="flex: 1; padding: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">Cancel</button>
-      </div>
-    </div>
-  </div>
-  <!-- END BULK ADD STUDENTS FEATURE -->
-
-  <!-- Waiting List Modal -->
-  <div id="waitingListModal" onclick="if(event.target.id==='waitingListModal'){closeWaitingList();}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 25000; backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
-    <div onclick="event.stopPropagation()" style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 30px; max-width: 1000px; width: 90%; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; font-size: 24px; color: var(--primary);">Student Waiting List</h2>
-        <span onclick="closeWaitingList()" style="font-size: 28px; color: #6b7280; cursor: pointer;">&times;</span>
-      </div>
-      <button onclick="openAddWaitingList()" style="margin-bottom: 20px; width: 100%; padding: 12px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer;">
-        + Add to Waiting List
-      </button>
-      <div id="waitingListContent" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;"></div>
-    </div>
-  </div>
-
-  <!-- Add Waiting List Student Modal -->
-  <div id="addWaitingListModal" onclick="if(event.target.id==='addWaitingListModal'){closeAddWaitingList();}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 26000; backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
-    <div onclick="event.stopPropagation()" style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; font-size: 24px; color: var(--primary);">Add to Waiting List</h2>
-        <span onclick="closeAddWaitingList()" style="font-size: 28px; color: #6b7280; cursor: pointer;">&times;</span>
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Full Name *</label>
-        <input type="text" id="waitingListFullName" placeholder="Enter full name" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Email *</label>
-        <input type="email" id="waitingListEmail" placeholder="Enter email address" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Phone Number *</label>
-        <input type="tel" id="waitingListPhone" placeholder="Enter phone number" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Preferred Language</label>
-        <input type="text" id="waitingListLanguage" placeholder="e.g., English, Spanish, Armenian" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Preferred Start Date</label>
-        <input type="date" id="waitingListStartDate" style="width: 100%; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px;" onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}">
-      </div>
-      
-      <div style="margin-bottom: 20px;">
-        <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px;">Notes</label>
-        <textarea id="waitingListNotes" placeholder="Any additional information..." style="width: 100%; min-height: 100px; padding: 12px; background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.2); border-radius: 8px; color: #f3f4f6; font-size: 14px; resize: vertical;"></textarea>
-      </div>
-      
-      <div style="display: flex; gap: 12px; margin-top: 24px;">
-        <button onclick="saveWaitingListStudent()" style="flex: 1; padding: 12px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer;">Add to List</button>
-        <button onclick="closeAddWaitingList()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; color: white; font-weight: 600; cursor: pointer;">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Duplicate Students Modal -->
-  <div id="duplicatesModal" onclick="if(event.target.id==='duplicatesModal'){closeDuplicatesModal();}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 25000; backdrop-filter: blur(4px); align-items: center; justify-content: center; padding: 20px;">
-    <div onclick="event.stopPropagation()" style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 30px; max-width: 900px; width: 90%; max-height: 90vh; overflow-y: auto;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h2 style="margin: 0; font-size: 24px; color: var(--primary);">Duplicate Students</h2>
-        <span onclick="closeDuplicatesModal()" style="font-size: 28px; color: #6b7280; cursor: pointer;">&times;</span>
-      </div>
-      <div id="duplicatesContent"></div>
-    </div>
-  </div>
-
-  <!-- Group Manager Modal -->
-  <div id="groupManagerModal" onclick="closeGroupManagerOnOutsideClick(event)" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 20000; backdrop-filter: blur(4px);">
-    <div onclick="event.stopPropagation()" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 1200px; max-height: 90vh; background: rgba(15,23,42,0.95); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.8);">
-      
-      <!-- Header -->
-      <div style="background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between;">
-        <h1 style="margin: 0; background: linear-gradient(135deg, #8ab4ff, #a855f7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 28px; font-weight: 900;">📚 Group Manager</h1>
-        <div style="display: flex; gap: 12px; align-items: center;">
-          <!-- BEGIN QUICK VIEW BUTTON -->
-          <button id="quickViewBtn" onclick="openQuickView()" style="padding: 10px 18px; background: linear-gradient(135deg, #10b981, #059669); border: none; border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
-            📅 Quick View
-          </button>
-          <!-- END QUICK VIEW BUTTON -->
-          <button id="addGroupBtn" onclick="addNewGroup()" style="padding: 10px 18px; background: linear-gradient(135deg, #8ab4ff, #a855f7); border: none; border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(138, 180, 255, 0.3);">
-            + Add Group
-          </button>
-          <button onclick="closeGroupManager()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; color: white; font-size: 24px; cursor: pointer;">&times;</button>
-        </div>
-      </div>
-
-      <!-- Groups Grid -->
-      <div id="groupGrid" style="padding: 24px; overflow-y: auto; max-height: calc(90vh - 90px); display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;"></div>
-    </div>
-  </div>
-
-  <!-- Toast Notification -->
-  <div id="toast" style="position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #8ab4ff, #a855f7); color: white; padding: 10px 16px; border-radius: 10px; font-weight: 700; box-shadow: 0 6px 16px rgba(0,0,0,0.3); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 30000;"></div>
-
-  <!-- Countdown Panel -->
-  <div id="countdownPanel" style="display: none; position: fixed; background: rgba(17,24,39,0.95); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 12px 16px; font-size: 0.9rem; color: white; z-index: 25000; box-shadow: 0 8px 24px rgba(0,0,0,0.6);"></div>
-
-  <!-- Custom Confirm Dialog -->
-  <div id="customConfirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 30000; backdrop-filter: blur(6px); align-items: center; justify-content: center;">
-    <div style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 32px; max-width: 480px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.8); animation: modalSlideIn 0.2s ease-out;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div id="confirmIcon" style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
-        <h3 id="confirmTitle" style="margin: 0 0 12px 0; font-size: 20px; font-weight: 700; color: white;">Confirm Action</h3>
-        <p id="confirmMessage" style="margin: 0; color: #94a3b8; font-size: 15px; line-height: 1.6; white-space: pre-line;"></p>
-      </div>
-      <div style="display: flex; gap: 12px;">
-        <button id="confirmCancelBtn" style="flex: 1; padding: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.2s;">
-          Cancel
-        </button>
-        <button id="confirmOkBtn" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
-          Confirm
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- Custom Alert Dialog -->
-  <div id="customAlertModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 30000; backdrop-filter: blur(6px); align-items: center; justify-content: center;">
-    <div style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.8); animation: modalSlideIn 0.2s ease-out;">
-      <div style="text-align: center; margin-bottom: 24px;">
-        <div id="alertIcon" style="font-size: 48px; margin-bottom: 16px;">ℹ️</div>
-        <h3 id="alertTitle" style="margin: 0 0 12px 0; font-size: 20px; font-weight: 700; color: white;">Notice</h3>
-        <p id="alertMessage" style="margin: 0; color: #94a3b8; font-size: 15px; line-height: 1.6; white-space: pre-line;"></p>
-      </div>
-      <button id="alertOkBtn" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #22c55e, #16a34a); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);">
-        OK
-      </button>
-    </div>
-  </div>
-
-  <!-- Custom Prompt Dialog -->
-  <div id="customPromptModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.75); z-index: 30000; backdrop-filter: blur(6px); align-items: center; justify-content: center;">
-    <div style="background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 32px; max-width: 460px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.8); animation: modalSlideIn 0.2s ease-out;">
-      <div style="margin-bottom: 24px;">
-        <div style="text-align: center; font-size: 42px; margin-bottom: 16px;">✏️</div>
-        <h3 id="promptTitle" style="margin: 0 0 12px 0; font-size: 20px; font-weight: 700; color: white; text-align: center;">Input Required</h3>
-        <p id="promptMessage" style="margin: 0 0 16px 0; color: #94a3b8; font-size: 14px; line-height: 1.6; text-align: center; white-space: pre-line;"></p>
-        <input type="text" id="promptInput" style="width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 15px; transition: all 0.2s;" placeholder="Enter value...">
-      </div>
-      <div style="display: flex; gap: 12px;">
-        <button id="promptCancelBtn" style="flex: 1; padding: 14px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-weight: 600; cursor: pointer; font-size: 14px; transition: all 0.2s;">
-          Cancel
-        </button>
-        <button id="promptOkBtn" style="flex: 1; padding: 14px; background: linear-gradient(135deg, #3b82f6, #2563eb); border: none; border-radius: 10px; color: white; font-weight: 700; cursor: pointer; font-size: 14px; transition: all 0.2s; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);">
-          Submit
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BEGIN QUICK VIEW MODAL -->
-  <div id="quickViewModal" onclick="if(event.target.id==='quickViewModal')closeQuickView()" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 21000; backdrop-filter: blur(6px); align-items: center; justify-content: center;">
-    <div onclick="event.stopPropagation()" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 1100px; max-height: 80vh; background: rgba(15,23,42,0.98); backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; overflow: hidden; box-shadow: 0 24px 80px rgba(0,0,0,0.9); display: flex; flex-direction: column;">
-      
-      <!-- Header -->
-      <div style="background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 20px 24px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;">
-        <h1 style="margin: 0; background: linear-gradient(135deg, #10b981, #059669); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 26px; font-weight: 900;">📅 Quick View — Group Schedules</h1>
-        <button onclick="closeQuickView()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; color: white; font-size: 24px; cursor: pointer; flex-shrink: 0;">&times;</button>
-      </div>
-
-      <!-- Tabs -->
-      <div style="background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 16px 24px; display: flex; gap: 12px; flex-shrink: 0;">
-        <button id="tabByGroup" onclick="switchQuickViewTab('byGroup')" style="padding: 10px 20px; background: linear-gradient(135deg, #8ab4ff, #a855f7); border: none; border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(138, 180, 255, 0.3); transition: all 0.2s;">
-          By Group
-        </button>
-        <button id="tabByWeekday" onclick="switchQuickViewTab('byWeekday')" style="padding: 10px 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-          By Weekday (LA)
-        </button>
-        <button id="tabByWeekdayYerevan" onclick="switchQuickViewTab('byWeekdayYerevan')" style="padding: 10px 20px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: rgba(255,255,255,0.7); font-size: 14px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
-          By Weekday (Yerevan)
-        </button>
-      </div>
-
-      <!-- Content -->
-      <div id="quickViewContent" style="padding: 24px; overflow-y: auto; flex: 1;"></div>
-    </div>
-  </div>
-  <!-- END QUICK VIEW MODAL -->
-
-  <!-- Hidden File Input for Backup Import -->
-  <input type="file" id="backupFileInput" accept=".json" style="display: none;">
-
-  <div class="container">
-    <div class="header">
-      <h1>
-        Payment Records
-      </h1>
-      <select id="paymentFilterDropdown" class="filter-dropdown">
-        <option value="all">All Payments</option>
-        <option value="matched">Matched Only</option>
-        <option value="unmatched">Unmatched Only</option>
-        <option value="ignored">Ignored</option>
-      </select>
-      <div class="header-controls">
-        <button id="fullSyncBtn" class="gmail-btn" onclick="openFullSyncDatePicker()" title="Full sync - choose date range to fetch all payments">
-          <span id="fullSyncBtnText">Full Sync</span>
-        </button>
-        <button id="gmailBtn" class="gmail-btn" onclick="toggleGmailConnection()">
-          <span id="gmailBtnText">Gmail</span>
-        </button>
-        <button id="autoRefreshToggle" class="control-btn" onclick="toggleAutoRefresh()" title="Toggle 30-second auto-refresh (currently OFF)" style="font-size: 11px; font-weight: 700;">
-          30s
-        </button>
-        <button id="earningsForecastBtn" class="control-btn" onclick="openEarningsForecast()" title="Earning Forecast">
-          $
-        </button>
-        <button id="syncBtn" class="control-btn" onclick="fetchTodaysEmails()" title="Fetch Today's Payment Emails">
-          ☁️
-        </button>
-        <button id="calendarBtn" class="control-btn" onclick="openSmartCalendar()" title="Smart Payment Calendar">
-          📅
-        </button>
-        <div style="position: relative;">
-          <button id="settingsBtn" class="control-btn" onclick="toggleSettingsMenu()" title="Settings">
-            ⚙️
-          </button>
-          <div id="settingsMenu" style="display: none; position: absolute; top: 44px; right: 0; background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 12px; min-width: 250px; backdrop-filter: blur(20px); box-shadow: 0 8px 32px rgba(0,0,0,0.6); z-index: 1000; overflow: hidden;">
-            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px;">Navigation</div>
-            <div onclick="openStudentManager()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(138,180,255,0.15)'" onmouseout="this.style.background='transparent'">
-              👥 Student Manager
-            </div>
-            <div onclick="openGroupManager()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(168,85,247,0.15)'" onmouseout="this.style.background='transparent'">
-              📅 Group Manager
-            </div>
-            <div onclick="openEmailSystem()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'">
-              📧 Email System
-            </div>
-            
-            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Data Management</div>
-            <div onclick="exportFullBackup()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(34,197,94,0.15)'" onmouseout="this.style.background='transparent'">
-              💾 Export Full Backup
-            </div>
-            <div onclick="triggerImportBackup()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
-              📥 Restore From Backup
-            </div>
-            <div onclick="restoreLastAutoBackup()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(245,158,11,0.15)'" onmouseout="this.style.background='transparent'">
-              ⏮️ Restore Last Auto Backup
-            </div>
-            <div onclick="restoreFromCloud()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
-              ☁️ Reload from Supabase Cloud
-            </div>
-            
-            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Gmail Timezone Fix</div>
-            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05);">
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: white; font-size: 12px; font-weight: 500;">❄️ Winter (–12h)</span>
-                <label id="toggle12Label" for="laOffset12Toggle" style="position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;">
-                  <input type="checkbox" id="laOffset12Toggle" class="la-offset-toggle" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0;">
-                  <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 22px; border: 1px solid rgba(255,255,255,0.2);"></span>
-                  <span class="toggle-knob" style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
-                </label>
-              </div>
-              <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
-                <span style="color: white; font-size: 12px; font-weight: 500;">☀️ Summer (–11h)</span>
-                <label id="toggle11Label" for="laOffset11Toggle" style="position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;">
-                  <input type="checkbox" id="laOffset11Toggle" class="la-offset-toggle" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0;">
-                  <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 22px; border: 1px solid rgba(255,255,255,0.2);"></span>
-                  <span class="toggle-knob" style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
-                </label>
-              </div>
-              <div style="font-size: 9px; color: #6b7280; margin-top: 4px;">💡 In LA? Keep both OFF</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Month Total Stats -->
-    <div class="month-total-section">
-      <div class="month-total-header-row" onclick="toggleMonthTotals()" style="cursor: pointer;">
-        <button type="button" class="month-total-toggle" id="monthTotalsToggle" title="Expand totals">
-          <span id="monthTotalsToggleIcon">▾</span>
-        </button>
-      </div>
-      <div class="month-total-values" id="monthTotalsData">
-        <div class="month-total-content">
-          <div class="month-total-item">
-            <select id="monthSelector" class="month-selector" onchange="updateMonthTotals()" onclick="event.stopPropagation();">
-              <!-- Will be populated dynamically -->
-            </select>
-          </div>
-          <div class="month-total-stats">
-            <div class="month-total-item">
-              <div class="month-total-label">PAYMENTS:</div>
-              <div class="month-total-value" id="monthTotalCount">0</div>
-            </div>
-            <div class="month-total-item">
-              <div class="month-total-label">USD:</div>
-              <div class="month-total-value" id="monthTotalUSD">0 $</div>
-            </div>
-            <div class="month-total-item">
-              <div class="month-total-label">AMD:</div>
-              <div class="month-total-value" style="color: #94a3b8;" id="monthTotalAMD">0 ֏</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    
-    <div class="content" id="paymentEmailsContent">
-      <!-- Payment records will be rendered here -->
-    </div>
-  </div>
-
-  <!-- BEGIN EARNING FORECAST MODAL -->
-  <div id="earningsForecastModal" onclick="if(event.target.id==='earningsForecastModal'){closeEarningsForecast();}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 25000; backdrop-filter: blur(6px); opacity: 0; transition: opacity 0.25s ease;">
-    <div onclick="event.stopPropagation()" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 500px; background: linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,30,50,0.98) 100%); backdrop-filter: blur(24px); border: 2px solid rgba(138,180,255,.3); border-radius: 20px; padding: 32px; box-shadow: 0 24px 80px rgba(0,0,0,0.9);">
-      
-      <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <h2 style="margin: 0; background: linear-gradient(135deg, #a3ffda, #22c55e); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 24px; font-weight: 900;">💰 Earning Forecast Overview</h2>
-        <button onclick="closeEarningsForecast()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; color: white; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">&times;</button>
-      </div>
-
-      <!-- Content -->
-      <div style="border-top: 1px solid rgba(255,255,255,0.1); padding-top: 24px;">
-        
-        <!-- Active Students Count - Clickable -->
-        <div onclick="openStudentBreakdown()" style="margin-bottom: 20px; padding: 16px; background: rgba(138,180,255,0.1); border: 1px solid rgba(138,180,255,0.3); border-radius: 12px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.2)'; this.style.borderColor='rgba(138,180,255,0.5)'" onmouseout="this.style.background='rgba(138,180,255,0.1)'; this.style.borderColor='rgba(138,180,255,0.3)'">
-          <div style="font-size: 12px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Active Students <span style="font-size: 10px; opacity: 0.7;">(click for details)</span></div>
-          <div id="forecastActiveCount" style="font-size: 32px; font-weight: 900; color: white;">0</div>
-        </div>
-
-        <!-- Projected Earnings -->
-        <div style="margin-bottom: 20px;">
-          <div style="font-size: 14px; font-weight: 700; color: #a3ffda; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">📊 Projected Earnings</div>
-          
-          <div style="display: flex; gap: 12px; margin-bottom: 12px;">
-            <div style="flex: 1; padding: 16px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 12px;">
-              <div style="font-size: 11px; font-weight: 700; color: #22c55e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Weekly</div>
-              <div id="forecastWeekly" style="font-size: 24px; font-weight: 900; color: white;">0 $</div>
-            </div>
-            
-            <div style="flex: 1; padding: 16px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.4); border-radius: 12px;">
-              <div style="font-size: 11px; font-weight: 700; color: #22c55e; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Monthly</div>
-              <div id="forecastMonthly" style="font-size: 24px; font-weight: 900; color: white;">0 $</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Actual Earnings -->
-        <div style="padding: 20px; background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(168,85,247,0.15)); border: 2px solid rgba(138,180,255,0.4); border-radius: 12px;">
-          <div style="font-size: 14px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">💵 Actual Received (This Month)</div>
-          <div id="forecastActual" style="font-size: 32px; font-weight: 900; color: white;">0 $</div>
-        </div>
-
-        <!-- Footer Note -->
-        <div style="margin-top: 20px; text-align: center; font-size: 11px; color: #94a3b8; font-style: italic;">
-          Updates automatically as students or payments change
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- END EARNING FORECAST MODAL -->
-
-  <!-- BEGIN STUDENT BREAKDOWN MODAL -->
-  <div id="studentBreakdownModal" onclick="if(event.target.id==='studentBreakdownModal'){closeStudentBreakdown();}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 26000; backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.25s ease;">
-    <div onclick="event.stopPropagation()" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 700px; max-height: 85vh; background: linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,30,50,0.98) 100%); backdrop-filter: blur(24px); border: 2px solid rgba(138,180,255,.3); border-radius: 20px; padding: 32px; box-shadow: 0 24px 80px rgba(0,0,0,0.9); overflow-y: auto;">
-      
-      <!-- Header -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; position: sticky; top: 0; background: linear-gradient(135deg, rgba(15,23,42,0.98) 0%, rgba(30,30,50,0.98) 100%); padding-bottom: 16px; z-index: 10;">
-        <h2 style="margin: 0; background: linear-gradient(135deg, #8ab4ff, #a855f7); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; font-size: 22px; font-weight: 900;">👥 Student Earning Breakdown</h2>
-        <button onclick="closeStudentBreakdown()" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); width: 36px; height: 36px; border-radius: 50%; color: white; font-size: 24px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">&times;</button>
-      </div>
-
-      <!-- Student List -->
-      <div id="studentBreakdownList" style="display: flex; flex-direction: column; gap: 12px;">
-        <!-- Will be populated dynamically -->
-      </div>
-
-      <!-- Total Summary -->
-      <div style="margin-top: 24px; padding: 20px; background: linear-gradient(135deg, rgba(34,197,94,0.15), rgba(22,163,74,0.15)); border: 2px solid rgba(34,197,94,0.4); border-radius: 12px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-          <div style="font-size: 14px; font-weight: 700; color: #22c55e; text-transform: uppercase;">Total Weekly</div>
-          <div id="breakdownTotalWeekly" style="font-size: 24px; font-weight: 900; color: white;">0 $</div>
-        </div>
-        <div style="display: flex; justify-content: space-between; align-items: center;">
-          <div style="font-size: 14px; font-weight: 700; color: #22c55e; text-transform: uppercase;">Total Monthly</div>
-          <div id="breakdownTotalMonthly" style="font-size: 24px; font-weight: 900; color: white;">0 $</div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <!-- END STUDENT BREAKDOWN MODAL -->
-
-  <!-- SMART CALENDAR PAYMENT SYSTEM -->
-  <div id="smartCalendarModal" onclick="if(event.target.id==='smartCalendarModal'){closeSmartCalendar();}" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 27000; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s ease;">
-    <div onclick="event.stopPropagation()" style="position: relative; margin: 2% auto; max-width: 1200px; max-height: 92vh; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 20px; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.6); overflow: hidden; display: flex; flex-direction: column;">
-      
-      <!-- Header -->
-      <div style="padding: 24px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; background: linear-gradient(135deg, rgba(138,180,255,0.1) 0%, rgba(168,85,247,0.1) 100%);">
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="font-size: 28px;">📅</span>
-          <div>
-            <h2 style="margin: 0; font-size: 22px; font-weight: 900; color: white; letter-spacing: -0.5px;">Smart Payment Calendar</h2>
-            <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">Track scheduled classes, payments, and balances</p>
-          </div>
-        </div>
-        <button onclick="closeSmartCalendar()" style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'; this.style.borderColor='rgba(239,68,68,0.4)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)';">×</button>
-      </div>
-
-      <!-- Calendar Navigation -->
-      <div style="padding: 20px 30px; border-bottom: 1px solid rgba(255,255,255,0.1); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.2);">
-        <button onclick="changeCalendarMonth(-1)" style="padding: 10px 18px; background: rgba(138,180,255,0.1); border: 1px solid rgba(138,180,255,0.3); border-radius: 10px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.2)'" onmouseout="this.style.background='rgba(138,180,255,0.1)'">
-          ← Previous
-        </button>
-        <div style="text-align: center;">
-          <div id="calendarMonthYear" style="font-size: 20px; font-weight: 900; color: white; letter-spacing: -0.5px;">December 2024</div>
-          <div id="calendarSubtitle" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Loading schedule...</div>
-        </div>
-        <button onclick="changeCalendarMonth(1)" style="padding: 10px 18px; background: rgba(138,180,255,0.1); border: 1px solid rgba(138,180,255,0.3); border-radius: 10px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.2)'" onmouseout="this.style.background='rgba(138,180,255,0.1)'">
-          Next →
-        </button>
-      </div>
-
-      <!-- Calendar Grid -->
-      <div style="flex: 1; overflow-y: auto; padding: 24px 30px;">
-        <!-- Day Headers -->
-        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 12px;">
-          <div style="text-align: center; font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0;">Sun</div>
-          <div style="text-align: center; font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0;">Mon</div>
-          <div style="text-align: center; font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0;">Tue</div>
-          <div style="text-align: center; font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0;">Wed</div>
-          <div style="text-align: center; font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0;">Thu</div>
-          <div style="text-align: center; font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0;">Fri</div>
-          <div style="text-align: center; font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 0.5px; padding: 8px 0;">Sat</div>
-        </div>
-        
-        <!-- Calendar Cells -->
-        <div id="calendarGrid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; min-height: 400px;">
-          <!-- Generated dynamically -->
-        </div>
-      </div>
-
-      <!-- Legend -->
-      <div style="padding: 20px 30px; border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.2); display: flex; gap: 24px; flex-wrap: wrap;">
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="width: 12px; height: 12px; background: #22c55e; border-radius: 50%; display: inline-block;"></span>
-          <span style="font-size: 12px; color: #94a3b8;">🟢 Paid</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="width: 12px; height: 12px; background: #eab308; border-radius: 50%; display: inline-block;"></span>
-          <span style="font-size: 12px; color: #94a3b8;">🟡 Deposit Active</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="width: 12px; height: 12px; background: #ef4444; border-radius: 50%; display: inline-block;"></span>
-          <span style="font-size: 12px; color: #94a3b8;">🔴 Unpaid</span>
-        </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
-          <span style="width: 12px; height: 12px; background: #64748b; border-radius: 50%; display: inline-block;"></span>
-          <span style="font-size: 12px; color: #94a3b8;">⚪ Absent</span>
-        </div>
-      </div>
-
-    </div>
-  </div>
-  <!-- END SMART CALENDAR -->
-
-  <script>
     // ============================================================================
     // STORAGE & DATA MANAGEMENT
     // ============================================================================
@@ -3486,17 +929,11 @@
         const oldDerivedId = payment.derivedStudentId;
         const oldResolved = payment.resolvedStudentName;
         const oldGroup = payment.derivedStudentGroup;
-        const oldStudentName = payment.studentName;
         
         payment.derivedStudentId = resolution.studentId;
         payment.resolvedStudentName = resolution.studentName;
         payment.derivedStudentGroup = resolution.studentGroup;
         payment.resolutionSource = resolution.source;
-        
-        // Set studentName for calendar lookup (use resolved name)
-        if (resolution.studentName) {
-          payment.studentName = resolution.studentName;
-        }
         
         if (resolution.source === 'conflict') {
           payment.conflictCandidates = resolution.conflicts.map(s => s.id);
@@ -3504,7 +941,7 @@
           delete payment.conflictCandidates;
         }
         
-        if (oldDerivedId !== payment.derivedStudentId || oldResolved !== payment.resolvedStudentName || oldGroup !== payment.derivedStudentGroup || oldStudentName !== payment.studentName) {
+        if (oldDerivedId !== payment.derivedStudentId || oldResolved !== payment.resolvedStudentName || oldGroup !== payment.derivedStudentGroup) {
           updated = true;
         }
       });
@@ -4039,7 +1476,7 @@
       // Check 1: Gmail ID already exists
       const gmailIdExists = existingPayments.some(p => p.gmailId === gmailId || p.emailId === gmailId);
       if (gmailIdExists) {
-        // Removed verbose log - only log summary at end of fetch
+        console.log(`⚠️ Skipped duplicate email payment (Gmail ID exists): ${gmailId}`);
         return true;
       }
       
@@ -4053,7 +1490,7 @@
       });
       
       if (compositeExists) {
-        // Removed verbose log - only log summary at end of fetch
+        console.log(`⚠️ Skipped duplicate email payment from ${payment.payerName} ($${payment.amount})`);
         return true;
       }
       
@@ -4564,7 +2001,7 @@
     // ============================================================================
     
     const GMAIL_CLIENT_ID = '67231383915-4kpdv0k6u517admvhl7jlejku7qtbsjj.apps.googleusercontent.com';
-    const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+    const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
     const GMAIL_CONNECTION_KEY = 'gmail-connection'; // Per developer command spec
     
     // Enhanced Gmail connection with persistent token management
@@ -5063,7 +2500,7 @@
             .trim();
           
           memo = studentNameFromMessage; // Use as memo too
-          // Removed verbose log - footer extraction is normal operation
+          console.log('🧩 Stopped before footer text (clean extraction)');
         } else {
           // Pattern 2: "Memo:" or "Message:" or "Note:" (text/plain format)
           let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
@@ -5721,8 +3158,13 @@
       // CRITICAL: Save to persistent storage IMMEDIATELY before opening any modals
       savedPaymentDataForLinking = { ...currentPaymentPopupData };
       
+        id: currentPaymentPopupData.paymentId,
+        payer: currentPaymentPopupData.payerName,
+        amount: currentPaymentPopupData.amount
+      });
+      
       // Get list of students
-      const students = getCachedStudents();
+  const students = getCachedStudents();
       
       
       if (!students || students.length === 0) {
@@ -5971,18 +3413,12 @@
         payment.derivedStudentId = resolution.studentId;
         payment.resolvedStudentName = resolution.studentName;
         payment.derivedStudentGroup = resolution.studentGroup;
-        payment.studentName = student.name; // Set studentName for calendar lookup
         
         PaymentStore.save(payments);
         // END CRITICAL BUG FIX
         
         // Recompute payment resolutions
         recomputePaymentResolutions();
-        
-        // Fire payments:updated event so calendar refreshes
-        window.dispatchEvent(new CustomEvent('payments:updated', { 
-          detail: payments 
-        }));
         
         showNotification(`✅ Payment linked to ${student.name}`, 'success');
         
@@ -6413,11 +3849,6 @@
     function startAutoRefresh() {
       stopAutoRefresh();
       autoRefreshInterval = setInterval(() => {
-        // Don't auto-refresh if Gmail is not connected
-        if (!getGmailConnection()) {
-          console.log('⏸️ Skipping auto-refresh - Gmail not connected');
-          return;
-        }
         console.log('🔄 Auto-refreshing payments...');
         refreshPayments();
       }, TIMING.AUTO_REFRESH_INTERVAL);
@@ -6459,74 +3890,11 @@
       }
     });
     
-    // Open Email System in modal
-    function openEmailSystem() {
-      // Close settings menu
-      const menu = document.getElementById('settingsMenu');
-      if (menu) menu.style.display = 'none';
-      
-      // Create modal backdrop
-      const backdrop = document.createElement('div');
-      backdrop.id = 'emailSystemBackdrop';
-      backdrop.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 10000; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px;';
-      
-      // Create modal container
-      const modal = document.createElement('div');
-      modal.id = 'emailSystemModal';
-      modal.style.cssText = 'background: white; border-radius: 16px; width: 100%; max-width: 1400px; height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); position: relative;';
-      
-      // Create close button
-      const closeBtn = document.createElement('button');
-      closeBtn.innerHTML = '✕';
-      closeBtn.style.cssText = 'position: absolute; top: 16px; right: 16px; z-index: 10001; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;';
-      closeBtn.onmouseover = () => closeBtn.style.background = 'rgba(0,0,0,0.7)';
-      closeBtn.onmouseout = () => closeBtn.style.background = 'rgba(0,0,0,0.5)';
-      closeBtn.onclick = closeEmailSystem;
-      
-      // Create iframe to load email system
-      const iframe = document.createElement('iframe');
-      iframe.src = 'email-system-complete.html';
-      iframe.style.cssText = 'width: 100%; height: 100%; border: none; border-radius: 16px;';
-      
-      // Assemble modal
-      modal.appendChild(closeBtn);
-      modal.appendChild(iframe);
-      backdrop.appendChild(modal);
-      document.body.appendChild(backdrop);
-      
-      // Close on backdrop click
-      backdrop.addEventListener('click', function(e) {
-        if (e.target === backdrop) {
-          closeEmailSystem();
-        }
-      });
-      
-      // Close on ESC key
-      document.addEventListener('keydown', handleEmailSystemEscape);
-    }
-    
-    function closeEmailSystem() {
-      const backdrop = document.getElementById('emailSystemBackdrop');
-      if (backdrop) {
-        backdrop.style.opacity = '0';
-        setTimeout(() => backdrop.remove(), 200);
-      }
-      document.removeEventListener('keydown', handleEmailSystemEscape);
-    }
-    
-    function handleEmailSystemEscape(e) {
-      if (e.key === 'Escape') {
-        closeEmailSystem();
-      }
-    }
-    
     // ============================================================================
     // LA TIMEZONE OFFSET CORRECTION
     // ============================================================================
     
-  let isUpdatingLAOffset = false;
-    
-  // Load saved offset settings
+    // Load saved offset settings
     function getLAOffsetSettings() {
       const offset12 = localStorage.getItem('la-offset-12') === 'true';
       const offset11 = localStorage.getItem('la-offset-11') === 'true';
@@ -6534,38 +3902,42 @@
     }
     
     // Toggle LA offset (only one can be active)
-    function setLAOffset(hours, isEnabled, { silent = false } = {}) {
+    function toggleLAOffset(hours) {
       const toggle12 = document.getElementById('laOffset12Toggle');
       const toggle11 = document.getElementById('laOffset11Toggle');
       
-      if (hours === 12 && toggle12) {
-        toggle12.checked = isEnabled;
-        localStorage.setItem('la-offset-12', isEnabled.toString());
-        updateToggleStyle(toggle12, isEnabled);
+      if (hours === 12) {
+        const newState = !toggle12.checked;
+        toggle12.checked = newState;
+        localStorage.setItem('la-offset-12', newState.toString());
         
-        if (isEnabled && toggle11) {
+        // Turn off the other toggle
+        if (newState) {
           toggle11.checked = false;
           localStorage.setItem('la-offset-11', 'false');
-          updateToggleStyle(toggle11, false);
         }
         
-        if (!silent) {
-          showNotification(isEnabled ? '❄️ Winter offset enabled: –12 hours' : '✅ Winter offset disabled', 'success');
-        }
-      } else if (hours === 11 && toggle11) {
-        toggle11.checked = isEnabled;
-        localStorage.setItem('la-offset-11', isEnabled.toString());
-        updateToggleStyle(toggle11, isEnabled);
+        // Update toggle styling
+        updateToggleStyle(toggle12, newState);
+        updateToggleStyle(toggle11, false);
         
-        if (isEnabled && toggle12) {
+        showNotification(newState ? '❄️ Winter offset enabled: –12 hours' : '✅ Winter offset disabled', 'success');
+      } else if (hours === 11) {
+        const newState = !toggle11.checked;
+        toggle11.checked = newState;
+        localStorage.setItem('la-offset-11', newState.toString());
+        
+        // Turn off the other toggle
+        if (newState) {
           toggle12.checked = false;
           localStorage.setItem('la-offset-12', 'false');
-          updateToggleStyle(toggle12, false);
         }
         
-        if (!silent) {
-          showNotification(isEnabled ? '☀️ Summer offset enabled: –11 hours (DST)' : '✅ Summer offset disabled', 'success');
-        }
+        // Update toggle styling
+        updateToggleStyle(toggle11, newState);
+        updateToggleStyle(toggle12, false);
+        
+        showNotification(newState ? '☀️ Summer offset enabled: –11 hours (DST)' : '✅ Summer offset disabled', 'success');
       }
     }
     
@@ -6602,33 +3974,14 @@
       const settings = getLAOffsetSettings();
       const toggle12 = document.getElementById('laOffset12Toggle');
       const toggle11 = document.getElementById('laOffset11Toggle');
-
-      const enable12 = Boolean(settings.offset12);
-      const enable11 = !enable12 && Boolean(settings.offset11);
-
-      isUpdatingLAOffset = true;
-      setLAOffset(12, enable12, { silent: true });
-      setLAOffset(11, enable11, { silent: true });
-      if (toggle12) toggle12.checked = enable12;
-      if (toggle11) toggle11.checked = enable11;
-      isUpdatingLAOffset = false;
-
+      
       if (toggle12) {
-        toggle12.addEventListener('change', (event) => {
-          if (isUpdatingLAOffset) return;
-          isUpdatingLAOffset = true;
-          setLAOffset(12, event.target.checked);
-          isUpdatingLAOffset = false;
-        });
+        toggle12.checked = settings.offset12;
+        updateToggleStyle(toggle12, settings.offset12);
       }
-
       if (toggle11) {
-        toggle11.addEventListener('change', (event) => {
-          if (isUpdatingLAOffset) return;
-          isUpdatingLAOffset = true;
-          setLAOffset(11, event.target.checked);
-          isUpdatingLAOffset = false;
-        });
+        toggle11.checked = settings.offset11;
+        updateToggleStyle(toggle11, settings.offset11);
       }
     }
     
@@ -12002,33 +9355,6 @@
       renderCalendar();
     }
     
-    /**
-     * Syncs student balance changes to Supabase after calendar calculations.
-     * Checks which students had balance changes and updates them in database.
-     */
-    async function syncStudentBalancesToSupabase() {
-      const students = getCachedStudents();
-      const changedStudents = students.filter(s => s.balanceChanged);
-      
-      if (changedStudents.length === 0) return;
-      
-      console.log(`Syncing ${changedStudents.length} student balance(s) to Supabase...`);
-      
-      for (const student of changedStudents) {
-        try {
-          // Use existing saveStudent function which includes balance in payload
-          await saveStudent(student);
-          
-          // Clear the change flag
-          delete student.balanceChanged;
-          
-          console.log(`✓ Synced balance for ${student.name}: $${student.balance}`);
-        } catch (error) {
-          console.error(`Failed to sync balance for ${student.name}:`, error);
-        }
-      }
-    }
-    
     function renderCalendar() {
       const year = currentCalendarDate.getFullYear();
       const month = currentCalendarDate.getMonth();
@@ -12049,9 +9375,6 @@
       
       // Render grid
       renderCalendarGrid(calendarData);
-      
-      // Sync student balances to Supabase after calendar calculations
-      syncStudentBalancesToSupabase();
     }
     
     function generateCalendarData(year, month) {
@@ -12183,22 +9506,7 @@
       const laToday = getLADate();
       const todayStr = formatDateYYYYMMDD(laToday);
       
-      // CHECK 1: Is this student marked absent?
-      const absentKey = `absent:${studentId}:${dateStr}`;
-      const isAbsent = localStorage.getItem(absentKey) === 'true';
-      
-      if (isAbsent) {
-        console.log('⚪ Absent check - Student is marked absent:', { studentId, dateStr });
-        return {
-          status: 'absent',
-          paid: false,
-          amount: 0,
-          balance: student.balance || 0,
-          message: 'Marked Absent'
-        };
-      }
-      
-      // CHECK 2: Is this class skipped?
+      // CHECK: Is this class skipped?
       const groupName = student.group;
       if (groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr)) {
         return {
@@ -12222,20 +9530,18 @@
         };
       }
       
-      // RULE 2: Historical Freeze - Use snapshot for dates older than 2 weeks
-      const twoWeeksAgo = new Date(laToday);
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-      
-      if (classDate < twoWeeksAgo) {
+      // RULE 2: Historical Freeze - Use snapshot for past dates
+      if (classDate < laToday) {
         const snapshot = getCalendarSnapshot(dateStr);
         if (snapshot && snapshot.students && snapshot.students[studentId]) {
-          // Return frozen data - immune to student/payment/group changes
+          // Return frozen data
           return snapshot.students[studentId];
         }
-        // If no snapshot exists for this old date, recalculate once and freeze it
+        // If no snapshot exists for this past date, it means no class was scheduled
+        // Return as if no class (will not render)
       }
       
-      // RULE 3: Dynamic calculation for TODAY, recent past (< 2 weeks), and FUTURE dates
+      // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
       const balance = student.balance || 0;
       
       // Find all payments for this student (by name or alias match)
@@ -12246,16 +9552,6 @@
         const paymentStudentName = (p.studentName || '').toLowerCase().trim();
         const paymentPayerName = (p.payerName || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
-        
-        // DEBUG: Log first match attempt for Nov 12, 2025
-        if (dateStr === '2025-11-12' && studentNameLower === 'stella ghazaryan') {
-          console.log('🔍 DEBUG Nov 12 - Stella:', {
-            paymentStudentName,
-            paymentPayerName,
-            studentNameLower,
-            matches: paymentStudentName === studentNameLower
-          });
-        }
         
         // Check if studentName matches
         if (paymentStudentName === studentNameLower) return true;
@@ -12273,11 +9569,6 @@
         
         return false;
       });
-      
-      // DEBUG: Log filtered payments
-      if (dateStr === '2025-11-12' && student.name === 'Stella Ghazaryan') {
-        console.log('🔍 Found payments for Stella on Nov 12:', studentPayments.length);
-      }
       
       // Check for payment on this date OR any recent payment that can cover this class
       // If checking a past date, allow payments from up to 7 days after the class
@@ -12311,9 +9602,8 @@
           const remainder = paymentAmount - pricePerClass;
           const newBalance = balance + remainder;
           
-          // Update student balance in memory and mark for Supabase sync
+          // Update student balance in memory only (no auto-save during calendar render)
           student.balance = newBalance;
-          student.balanceChanged = true;
           
           const result = {
             status: 'paid',
@@ -12323,11 +9613,8 @@
             message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
           };
           
-          // Freeze data for dates older than 2 weeks
-          const twoWeeksAgo = new Date(laToday);
-          twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-          
-          if (classDate < twoWeeksAgo) {
+          // Freeze today's data at end of day
+          if (dateStr === todayStr) {
             saveCalendarSnapshot(dateStr, {
               [studentId]: result
             });
@@ -12343,7 +9630,7 @@
             message: `Paid ${formatCurrency(paymentAmount, '$')}`
           };
           
-          if (classDate < twoWeeksAgo) {
+          if (dateStr === todayStr) {
             saveCalendarSnapshot(dateStr, {
               [studentId]: result
             });
@@ -12353,14 +9640,13 @@
         }
       }
       
-      // Check if can deduct from balance (for ANY unpaid class - past, today, or future)
-      // Balance automatically pays oldest unpaid classes first
-      if (balance >= pricePerClass) {
+      // Check if can deduct from balance (for TODAY and future dates only)
+      // Do NOT deduct for past dates - those should use snapshots or payment records
+      if (balance >= pricePerClass && dateStr >= todayStr) {
         const newBalance = balance - pricePerClass;
         
-        // Update student balance in memory and mark for Supabase sync
+        // Update student balance in memory only (no auto-save during calendar render)
         student.balance = newBalance;
-        student.balanceChanged = true;
         
         const lowBalance = newBalance > 0 && newBalance < pricePerClass;
         
@@ -12373,8 +9659,8 @@
           alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
         };
         
-        // Save snapshot for dates older than 2 weeks
-        if (classDate < twoWeeksAgo) {
+        // Save snapshot only for today
+        if (dateStr === todayStr) {
           saveCalendarSnapshot(dateStr, {
             [studentId]: result
           });
@@ -12383,7 +9669,27 @@
         return result;
       }
       
-      // Absent check moved to top of function - this duplicate removed
+      // Check if marked absent
+      const absentKey = `absent:${studentId}:${dateStr}`;
+      const isAbsent = localStorage.getItem(absentKey) === 'true';
+      
+      if (isAbsent) {
+        const result = {
+          status: 'absent',
+          paid: false,
+          amount: 0,
+          balance: balance,
+          message: 'Marked Absent'
+        };
+        
+        if (dateStr === todayStr) {
+          saveCalendarSnapshot(dateStr, {
+            [studentId]: result
+          });
+        }
+        
+        return result;
+      }
       
       // Future class - show as pending if has balance
       if (classDate > laToday && balance >= pricePerClass) {
@@ -12396,9 +9702,9 @@
         };
       }
       
-      // CRITICAL: Red dots for TODAY and PAST unpaid classes (not future)
-      if (dateStr <= todayStr) {
-        // Current or past unpaid - show red dot
+      // CRITICAL: Red dots ONLY for CURRENT DAY (not past, not future)
+      if (dateStr === todayStr) {
+        // Current day unpaid - show red dot
         const result = {
           status: 'unpaid',
           paid: false,
@@ -12408,12 +9714,10 @@
           showActions: true
         };
         
-        // Save snapshot for dates older than 2 weeks
-        if (classDate < twoWeeksAgo) {
-          saveCalendarSnapshot(dateStr, {
-            [studentId]: result
-          });
-        }
+        // Save snapshot for today's unpaid classes
+        saveCalendarSnapshot(dateStr, {
+          [studentId]: result
+        });
         
         return result;
       }
@@ -12807,8 +10111,6 @@
       const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.setItem(absentKey, 'true');
       
-      console.log('✅ Marked absent:', { studentId: numericId, dateStr, key: absentKey });
-      
       showToast('⚪ Marked as absent');
       
       // Close the detail modal only
@@ -12883,6 +10185,4 @@
     console.log('✅ ARNOMA app loaded - Using Supabase cloud database [v2.1.0 - Full Sync Redesigned - Build 20251112-0230]');
     console.log('🔧 CACHE CHECK: If you see this message, JavaScript is loading correctly.');
     console.log('🔧 Full Sync has been redesigned with proper date range handling.');
-  </script>
-</body>
-</html>
+  

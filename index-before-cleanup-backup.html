@@ -16,12 +16,14 @@
   <script>
     // VERSION CHECK - This should appear FIRST in console
     console.log('🔥 CACHE BUSTER: Version 2.1.0 - Build 20251112-0240');
+    console.log('🔥 If you see this, the new code is loading!');
     
     // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
+    console.log('✅ Supabase client initialized');
     
     // Global data caches for performance
     window.paymentsCache = [];
@@ -2571,9 +2573,6 @@
             <div onclick="openGroupManager()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(168,85,247,0.15)'" onmouseout="this.style.background='transparent'">
               📅 Group Manager
             </div>
-            <div onclick="openEmailSystem()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(239,68,68,0.15)'" onmouseout="this.style.background='transparent'">
-              📧 Email System
-            </div>
             
             <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Data Management</div>
             <div onclick="exportFullBackup()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(34,197,94,0.15)'" onmouseout="this.style.background='transparent'">
@@ -2593,16 +2592,16 @@
             <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.05);">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                 <span style="color: white; font-size: 12px; font-weight: 500;">❄️ Winter (–12h)</span>
-                <label id="toggle12Label" for="laOffset12Toggle" style="position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;">
-                  <input type="checkbox" id="laOffset12Toggle" class="la-offset-toggle" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0;">
+                <label style="position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;">
+                  <input type="checkbox" id="laOffset12Toggle" onchange="event.stopPropagation(); toggleLAOffset(12)" style="opacity: 0; width: 0; height: 0;">
                   <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 22px; border: 1px solid rgba(255,255,255,0.2);"></span>
                   <span class="toggle-knob" style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
                 </label>
               </div>
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
                 <span style="color: white; font-size: 12px; font-weight: 500;">☀️ Summer (–11h)</span>
-                <label id="toggle11Label" for="laOffset11Toggle" style="position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;">
-                  <input type="checkbox" id="laOffset11Toggle" class="la-offset-toggle" style="position: absolute; opacity: 0; width: 1px; height: 1px; margin: 0;">
+                <label style="position: relative; display: inline-block; width: 40px; height: 22px; cursor: pointer;">
+                  <input type="checkbox" id="laOffset11Toggle" onchange="event.stopPropagation(); toggleLAOffset(11)" style="opacity: 0; width: 0; height: 0;">
                   <span class="toggle-slider" style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background: rgba(100,116,139,0.4); transition: 0.3s; border-radius: 22px; border: 1px solid rgba(255,255,255,0.2);"></span>
                   <span class="toggle-knob" style="position: absolute; height: 16px; width: 16px; left: 3px; bottom: 2px; background: white; transition: 0.3s; border-radius: 50%;"></span>
                 </label>
@@ -2901,6 +2900,7 @@
             dateModifiedAt: p.date_modified_at
           }));
           
+          console.log('✅ Loaded from Supabase:', paymentsFromSupabase.length, 'payments');
           window.paymentsCache = paymentsFromSupabase;
           return window.paymentsCache;
         } catch (err) {
@@ -2957,7 +2957,11 @@
             date_modified_at: p.dateModifiedAt || null         // FIX: snake_case
           }));
           
+          console.log('📤 Saving to Supabase:', paymentsForSupabase.length, 'payments');
           if (paymentsForSupabase.length > 0) {
+            console.log('📋 Payment fields (snake_case):', Object.keys(paymentsForSupabase[0]));
+            console.log('📋 Sample payment ID:', paymentsForSupabase[0].id);
+            console.log('📋 Sample payment:', paymentsForSupabase[0]);
           }
           
           // For bulk save, we'll upsert all payments
@@ -2982,6 +2986,7 @@
             return;
           }
           
+          console.log('✅ Saved successfully:', data?.length || 0, 'payments');
           
           // Convert snake_case response back to camelCase for cache
           const paymentsFromSupabase = (data || []).map(p => ({
@@ -3140,6 +3145,12 @@
       // Map Supabase column names to local property names
       const mappedData = (data || []).map(mapSupabaseStudent).filter(Boolean);
       
+      // Debug: Check Sona Husikyan's aliases
+      const sona = mappedData.find(s => s.id === 13);
+      if (sona) {
+        console.log('🔍 DEBUG: Sona Husikyan aliases from Supabase:', sona.aliases);
+        console.log('🔍 DEBUG: Raw Supabase data for Sona:', data.find(s => s.id === 13)?.aliases);
+      }
       
       window.studentsCache = mappedData;
       return mappedData;
@@ -3195,6 +3206,7 @@
             .select();
         } else {
           // Insert new record - let Supabase generate ID
+          console.log('📝 Inserting new student:', payload);
           result = await supabase
             .from('students')
             .insert([payload])
@@ -3211,6 +3223,7 @@
         }
         
         const mappedRecord = mapSupabaseStudent(data?.[0]);
+        console.log('✅ Student saved successfully:', mappedRecord);
         return mappedRecord;
       } catch (err) {
         console.error('❌ Exception saving student:', err);
@@ -3229,6 +3242,7 @@
           throw error;
         }
         
+        console.log('✅ Student deleted from Supabase:', id);
         return true;
       } catch (error) {
         console.error('❌ Error deleting student:', error);
@@ -3237,17 +3251,20 @@
     }
     
     async function loadGroupsFromSupabase() {
+      console.log('🔍 loadGroupsFromSupabase() called');
       const { data, error } = await supabase
         .from('groups')
         .select('*')
         .order('updated_at', { ascending: false });
       
+      console.log('🔍 Supabase response - data:', data, 'error:', error);
       
       if (error) {
         console.error('❌ Error loading groups:', error);
         return window.groupsCache || [];
       }
       
+      console.log('📊 Raw groups from Supabase:', data);
       
       // Map group_name back to name for app compatibility
       const mappedData = (data || []).map(group => ({
@@ -3276,6 +3293,8 @@
         }
       }
       
+      console.log('📊 Mapped groups:', mappedData);
+      console.log('🧹 Deduped groups (by name):', deduped);
       
       window.groupsCache = deduped;
       return window.groupsCache;
@@ -3368,6 +3387,7 @@
   // Server sync hook (placeholder for external integrations)
     async function syncWithServer({ paymentsChanged = [], studentsChanged = [] }) {
   // Future: Trigger GitHub automation or other webhooks
+      console.log('📡 Sync with server:', { paymentsChanged, studentsChanged });
     }
     
     // Normalize string for alias matching
@@ -3486,17 +3506,11 @@
         const oldDerivedId = payment.derivedStudentId;
         const oldResolved = payment.resolvedStudentName;
         const oldGroup = payment.derivedStudentGroup;
-        const oldStudentName = payment.studentName;
         
         payment.derivedStudentId = resolution.studentId;
         payment.resolvedStudentName = resolution.studentName;
         payment.derivedStudentGroup = resolution.studentGroup;
         payment.resolutionSource = resolution.source;
-        
-        // Set studentName for calendar lookup (use resolved name)
-        if (resolution.studentName) {
-          payment.studentName = resolution.studentName;
-        }
         
         if (resolution.source === 'conflict') {
           payment.conflictCandidates = resolution.conflicts.map(s => s.id);
@@ -3504,7 +3518,7 @@
           delete payment.conflictCandidates;
         }
         
-        if (oldDerivedId !== payment.derivedStudentId || oldResolved !== payment.resolvedStudentName || oldGroup !== payment.derivedStudentGroup || oldStudentName !== payment.studentName) {
+        if (oldDerivedId !== payment.derivedStudentId || oldResolved !== payment.resolvedStudentName || oldGroup !== payment.derivedStudentGroup) {
           updated = true;
         }
       });
@@ -4039,7 +4053,7 @@
       // Check 1: Gmail ID already exists
       const gmailIdExists = existingPayments.some(p => p.gmailId === gmailId || p.emailId === gmailId);
       if (gmailIdExists) {
-        // Removed verbose log - only log summary at end of fetch
+        console.log(`⚠️ Skipped duplicate email payment (Gmail ID exists): ${gmailId}`);
         return true;
       }
       
@@ -4053,7 +4067,7 @@
       });
       
       if (compositeExists) {
-        // Removed verbose log - only log summary at end of fetch
+        console.log(`⚠️ Skipped duplicate email payment from ${payment.payerName} ($${payment.amount})`);
         return true;
       }
       
@@ -4517,6 +4531,7 @@
             row.style.boxShadow = 'none';
           });
           
+          console.log('✅ Marked', newPaymentRows.length, 'payment(s) as viewed');
           
           // Remove this listener after first acknowledgment
           if (container) {
@@ -4564,7 +4579,7 @@
     // ============================================================================
     
     const GMAIL_CLIENT_ID = '67231383915-4kpdv0k6u517admvhl7jlejku7qtbsjj.apps.googleusercontent.com';
-    const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/gmail.send';
+    const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
     const GMAIL_CONNECTION_KEY = 'gmail-connection'; // Per developer command spec
     
     // Enhanced Gmail connection with persistent token management
@@ -4602,6 +4617,7 @@
       gmailAccessToken = token;
       gmailTokenExpiry = connection.expiry_date.toString();
       
+      console.log('✅ Gmail connection saved, expires:', new Date(connection.expiry_date).toLocaleString());
     }
     
     function clearGmailConnection() {
@@ -4678,6 +4694,8 @@
       // Use the exact current origin to match what's in Google Cloud Console
       const redirectUri = window.location.origin;
       
+      console.log('🔐 Current page URL:', window.location.href);
+      console.log('🔐 Using redirect URI:', redirectUri);
       
       // Implicit OAuth flow for browser-based apps
       const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
@@ -4687,7 +4705,9 @@
         `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
         `prompt=select_account`;           // Allow account selection
       
+      console.log('📋 Full auth URL:', authUrl);
       console.log('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
+      console.log('   https://console.cloud.google.com/apis/credentials');
       window.location.href = authUrl;
     }
     
@@ -4700,6 +4720,7 @@
         const token = params.get('access_token');
         const expiresIn = parseInt(params.get('expires_in') || '3600');
         
+        console.log('✅ OAuth token found, expires in:', expiresIn, 'seconds');
         
         if (token) {
           // Save using enhanced connection storage
@@ -4796,6 +4817,7 @@
           return;
         }
         
+        console.log(`✅ Found ${searchData.messages.length} payment emails`);
         
         const existingPayments = PaymentStore.getAll();
         const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
@@ -4841,6 +4863,7 @@
           await recomputePaymentResolutions();
           
           // Log success per developer command
+          console.log(`📥 Loaded ${payments.length} new payment${payments.length > 1 ? 's' : ''} from Gmail.`);
           
           // Dispatch update event per developer command
           window.dispatchEvent(new CustomEvent('payments:updated', {
@@ -4924,6 +4947,7 @@
           return;
         }
         
+        console.log(`✅ Found ${searchData.messages.length} payment emails`);
         
         const existingPayments = PaymentStore.getAll();
         const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
@@ -5003,6 +5027,7 @@
         // Fallback to snippet if body is empty (per developer command)
         if (!bodyText && messageData.snippet) {
           bodyText = messageData.snippet;
+          console.log('📧 Using email snippet as fallback');
         }
         
         if (!bodyText) {
@@ -5022,9 +5047,11 @@
         const isGenericTransaction = bodyTextLower.includes('your transaction of');
         
         if (!isCreditedTo7073 || isSentFrom7073 || isGenericDeposit || isGenericTransaction) {
+          console.log(`⚠️ Skipped non-Zelle or outgoing payment email (not credited to 7073): ${messageData.id}`);
           return null;
         }
         
+        console.log('✅ Valid Zelle deposit credited to account 7073');
         
         // Parse amount - universal pattern
         const amountMatch = bodyText.match(/\$[\d,]+\.\d{2}/);
@@ -5063,7 +5090,8 @@
             .trim();
           
           memo = studentNameFromMessage; // Use as memo too
-          // Removed verbose log - footer extraction is normal operation
+          console.log('📩 Extracted student name from message:', studentNameFromMessage);
+          console.log('🧩 Stopped before footer text (clean extraction)');
         } else {
           // Pattern 2: "Memo:" or "Message:" or "Note:" (text/plain format)
           let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
@@ -5074,6 +5102,7 @@
           }
         }
         
+        console.log('📧 Parsed email:', { amount, senderName, memo, studentNameFromMessage, bodyPreview: bodyText.substring(0, 200) });
         
         if (!amount || !senderName) return null;
         
@@ -5107,6 +5136,7 @@
           }
           
           if (matchedStudent) {
+            console.log(`✅ Matched student from message: ${matchedStudent.name}`);
           }
         }
         
@@ -5134,6 +5164,7 @@
           }
           
           if (matchedStudent) {
+            console.log(`✅ Matched student from memo: ${matchedStudent.name}`);
           }
         }
         
@@ -5161,6 +5192,7 @@
           }
           
           if (matchedStudent) {
+            console.log(`✅ Matched student from sender: ${matchedStudent.name}`);
           }
         }
         
@@ -5169,12 +5201,14 @@
           studentEmail = matchedStudent.email || '';
           groupId = matchedStudent.groupId || '';
         } else {
+          console.log(`⚠️ No student match found for: ${studentNameFromMessage || memo || senderName}`);
         }
         
         // Determine final display names
         const finalStudentName = matchedStudent ? matchedStudent.name : 'Unmatched';
         const finalPayerName = senderName;
         
+        console.log(`📩 Parsed Zelle payment: ${finalPayerName} → ${finalStudentName} ($${amount})`);
 
         // Final cleanup: If memo contains ONLY footer/generic text, set it to empty string
         let cleanMemo = memo || '';
@@ -5265,6 +5299,7 @@
     async function loadFromCloud() {
       try {
   const payments = await PaymentStore.fetchAll();
+        console.log(`📥 Loaded ${payments.length} payments from Supabase`);
         renderPaymentEmailsView();
       } catch (error) {
         console.error('Error loading from cloud:', error);
@@ -5419,6 +5454,7 @@
         await PaymentStore.save(payments);
         
         // Auto-synced to Supabase cloud
+        console.log('✅ Payment ignored and synced to Supabase');
         
         showNotification('🚫 Payment ignored', 'success');
         closePaymentActionsPopup();
@@ -5462,6 +5498,7 @@
         await PaymentStore.save(payments);
         
         // Auto-synced to Supabase cloud
+        console.log('✅ Payment deleted and synced to Supabase');
         
         showNotification('🗑️ Payment deleted', 'success');
         closePaymentActionsPopup();
@@ -5710,6 +5747,11 @@
     
     // BEGIN POPUP BACK & EXIT FIX
     async function linkPaymentToStudent() {
+      console.log('🔗 linkPaymentToStudent() called');
+      console.log('🔍 Current payment data:', currentPaymentPopupData);
+      console.log('🔍 typeof currentPaymentPopupData:', typeof currentPaymentPopupData);
+      console.log('🔍 currentPaymentPopupData is null?', currentPaymentPopupData === null);
+      console.log('🔍 currentPaymentPopupData is undefined?', currentPaymentPopupData === undefined);
       
       if (!currentPaymentPopupData) {
         console.error('❌ No payment selected in currentPaymentPopupData');
@@ -5720,10 +5762,19 @@
       
       // CRITICAL: Save to persistent storage IMMEDIATELY before opening any modals
       savedPaymentDataForLinking = { ...currentPaymentPopupData };
+      console.log('💾 SAVED payment data to persistent storage:', savedPaymentDataForLinking);
+      
+      console.log('✅ Payment selected, payment ID:', currentPaymentPopupData.paymentId);
+      console.log('✅ Payment details:', {
+        id: currentPaymentPopupData.paymentId,
+        payer: currentPaymentPopupData.payerName,
+        amount: currentPaymentPopupData.amount
+      });
       
       // Get list of students
-      const students = getCachedStudents();
+  const students = getCachedStudents();
       
+      console.log('📋 Students loaded:', students.length);
       
       if (!students || students.length === 0) {
         showNotification('⚠️ No students found. Create students first.', 'warning');
@@ -5849,6 +5900,7 @@
     // END SEARCH FIX
     
     function selectStudentFromSearch(studentId) {
+      console.log('👆 Student clicked, ID:', studentId);
       confirmLinkStudent(studentId);
     }
     
@@ -5897,12 +5949,17 @@
         return;
       }
       
+      console.log('💾 Payment data snapshot confirmed:', paymentDataSnapshot);
       
       try {
   const students = getCachedStudents();
+        console.log('🔍 Looking for student ID:', studentId, '(type:', typeof studentId, ')');
+        console.log('📋 Available students:', students.length);
+        console.log('📋 Available student IDs:', students.map(s => s.id));
         
         // Convert studentId to number for comparison (it comes from HTML as string)
         const studentIdNum = parseInt(studentId, 10);
+        console.log('🔍 Converted student ID to number:', studentIdNum);
         
         const student = students.find(s => s.id === studentIdNum);
         
@@ -5912,6 +5969,7 @@
           return;
         }
         
+        console.log('✅ Found student:', student.name);
         
         // BEGIN CRITICAL BUG FIX - Payment ↔ Student Linking Logic
         // Update payment with student link using correct field names:
@@ -5933,6 +5991,8 @@
         
         // Add payer name to student's alias if not already there
         const payerName = payment.payerName || payment.fromName || '';
+        console.log('🔍 Payer name to add as alias:', payerName);
+        console.log('🔍 Student current aliases:', student.aliases);
         
         if (payerName && payerName.trim()) {
           const currentAliases = student.aliases || [];
@@ -5940,17 +6000,20 @@
           const normalizedStudentName = student.name.toLowerCase();
           
           console.log('🔍 Normalized payer:', normalizedPayerName);
+          console.log('🔍 Normalized student:', normalizedStudentName);
           
           // Only add if payer name is different from student name and not already in aliases
           const aliasExists = currentAliases.some(alias => 
             alias.toLowerCase() === normalizedPayerName
           );
           
+          console.log('🔍 Alias already exists?', aliasExists);
           
           if (normalizedPayerName !== normalizedStudentName && !aliasExists) {
             const originalAliases = Array.isArray(currentAliases) ? [...currentAliases] : [];
             student.aliases = [...originalAliases, payerName.trim()];
             
+            console.log('💾 Saving new aliases:', student.aliases);
             
             const savedAliasUpdate = await saveStudent(student);
             if (!savedAliasUpdate) {
@@ -5959,11 +6022,13 @@
             } else {
               Object.assign(student, savedAliasUpdate);
               window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
+              console.log(`✅ Added "${payerName}" to ${student.name}'s aliases`);
             }
           } else {
             console.log('⏭️ Skipped adding alias (already exists or same as student name)');
           }
         } else {
+          console.log('⚠️ No payer name to add as alias');
         }
         
         // Compute derived fields immediately (before saving)
@@ -5971,18 +6036,12 @@
         payment.derivedStudentId = resolution.studentId;
         payment.resolvedStudentName = resolution.studentName;
         payment.derivedStudentGroup = resolution.studentGroup;
-        payment.studentName = student.name; // Set studentName for calendar lookup
         
         PaymentStore.save(payments);
         // END CRITICAL BUG FIX
         
         // Recompute payment resolutions
         recomputePaymentResolutions();
-        
-        // Fire payments:updated event so calendar refreshes
-        window.dispatchEvent(new CustomEvent('payments:updated', { 
-          detail: payments 
-        }));
         
         showNotification(`✅ Payment linked to ${student.name}`, 'success');
         
@@ -6214,11 +6273,15 @@
         const beforeDateStr = formatGmailDate(beforeDate);
         
         console.log('� FULL SYNC - Date Range:');
+        console.log(`   User selected: ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}`);
+        console.log(`   Gmail query: after:${afterDate} before:${beforeDateStr}`);
+        console.log(`   This will fetch emails from ${afterDate} through ${toDate.toLocaleDateString()} (inclusive)`);
         
         showNotification(`🔍 Syncing ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`, 'info');
         
         // Build Gmail search query
         const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
+        console.log('   Query string:', query);
         
         // Fetch all messages with pagination
         let allMessages = [];
@@ -6243,6 +6306,7 @@
           }
           
           const searchData = await searchResponse.json();
+          console.log(`📬 Page ${allMessages.length === 0 ? 1 : Math.ceil(allMessages.length / 500) + 1}: ${searchData.messages?.length || 0} messages`);
           
           if (searchData.messages) {
             allMessages = allMessages.concat(searchData.messages);
@@ -6253,6 +6317,7 @@
           
         } while (pageToken);
         
+        console.log(`✅ Total emails found: ${allMessages.length}`);
         
         if (allMessages.length === 0) {
           showNotification('📭 No Zelle emails found in this date range', 'info');
@@ -6267,6 +6332,8 @@
         const existingPayments = PaymentStore.getAll();
         const existingGmailIds = new Set(existingPayments.map(p => p.gmailId).filter(Boolean));
         
+        console.log(`📊 Existing payments in database: ${existingPayments.length}`);
+        console.log(`📊 Existing Gmail IDs: ${existingGmailIds.size}`);
         
         const newPayments = [];
         const skippedDuplicates = [];
@@ -6330,10 +6397,17 @@
         }
         
         // Summary
+        console.log('📊 FULL SYNC COMPLETE:');
+        console.log(`   Total emails found: ${allMessages.length}`);
+        console.log(`   New payments: ${newPayments.length}`);
+        console.log(`   Duplicates skipped: ${skippedDuplicates.length}`);
+        console.log(`   Invalid/filtered: ${invalidEmails}`);
         
         if (newPayments.length > 0) {
           // Debug: Log all new payment Gmail IDs before saving
+          console.log('🔍 NEW PAYMENTS TO BE SAVED:');
           newPayments.forEach((p, idx) => {
+            console.log(`  ${idx + 1}. ${p.payerName} ($${p.amount}) - Gmail ID: ${p.gmailId}`);
           });
           
           // Save new payments
@@ -6413,11 +6487,6 @@
     function startAutoRefresh() {
       stopAutoRefresh();
       autoRefreshInterval = setInterval(() => {
-        // Don't auto-refresh if Gmail is not connected
-        if (!getGmailConnection()) {
-          console.log('⏸️ Skipping auto-refresh - Gmail not connected');
-          return;
-        }
         console.log('🔄 Auto-refreshing payments...');
         refreshPayments();
       }, TIMING.AUTO_REFRESH_INTERVAL);
@@ -6437,6 +6506,7 @@
     // Notification stub (removed notification center)
     function showNotification(message, type = 'info') {
       const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
+      console.log(`${icon} ${message}`);
     }
     
     // ============================================================================
@@ -6459,74 +6529,11 @@
       }
     });
     
-    // Open Email System in modal
-    function openEmailSystem() {
-      // Close settings menu
-      const menu = document.getElementById('settingsMenu');
-      if (menu) menu.style.display = 'none';
-      
-      // Create modal backdrop
-      const backdrop = document.createElement('div');
-      backdrop.id = 'emailSystemBackdrop';
-      backdrop.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 10000; backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px;';
-      
-      // Create modal container
-      const modal = document.createElement('div');
-      modal.id = 'emailSystemModal';
-      modal.style.cssText = 'background: white; border-radius: 16px; width: 100%; max-width: 1400px; height: 90vh; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.5); position: relative;';
-      
-      // Create close button
-      const closeBtn = document.createElement('button');
-      closeBtn.innerHTML = '✕';
-      closeBtn.style.cssText = 'position: absolute; top: 16px; right: 16px; z-index: 10001; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;';
-      closeBtn.onmouseover = () => closeBtn.style.background = 'rgba(0,0,0,0.7)';
-      closeBtn.onmouseout = () => closeBtn.style.background = 'rgba(0,0,0,0.5)';
-      closeBtn.onclick = closeEmailSystem;
-      
-      // Create iframe to load email system
-      const iframe = document.createElement('iframe');
-      iframe.src = 'email-system-complete.html';
-      iframe.style.cssText = 'width: 100%; height: 100%; border: none; border-radius: 16px;';
-      
-      // Assemble modal
-      modal.appendChild(closeBtn);
-      modal.appendChild(iframe);
-      backdrop.appendChild(modal);
-      document.body.appendChild(backdrop);
-      
-      // Close on backdrop click
-      backdrop.addEventListener('click', function(e) {
-        if (e.target === backdrop) {
-          closeEmailSystem();
-        }
-      });
-      
-      // Close on ESC key
-      document.addEventListener('keydown', handleEmailSystemEscape);
-    }
-    
-    function closeEmailSystem() {
-      const backdrop = document.getElementById('emailSystemBackdrop');
-      if (backdrop) {
-        backdrop.style.opacity = '0';
-        setTimeout(() => backdrop.remove(), 200);
-      }
-      document.removeEventListener('keydown', handleEmailSystemEscape);
-    }
-    
-    function handleEmailSystemEscape(e) {
-      if (e.key === 'Escape') {
-        closeEmailSystem();
-      }
-    }
-    
     // ============================================================================
     // LA TIMEZONE OFFSET CORRECTION
     // ============================================================================
     
-  let isUpdatingLAOffset = false;
-    
-  // Load saved offset settings
+    // Load saved offset settings
     function getLAOffsetSettings() {
       const offset12 = localStorage.getItem('la-offset-12') === 'true';
       const offset11 = localStorage.getItem('la-offset-11') === 'true';
@@ -6534,38 +6541,42 @@
     }
     
     // Toggle LA offset (only one can be active)
-    function setLAOffset(hours, isEnabled, { silent = false } = {}) {
+    function toggleLAOffset(hours) {
       const toggle12 = document.getElementById('laOffset12Toggle');
       const toggle11 = document.getElementById('laOffset11Toggle');
       
-      if (hours === 12 && toggle12) {
-        toggle12.checked = isEnabled;
-        localStorage.setItem('la-offset-12', isEnabled.toString());
-        updateToggleStyle(toggle12, isEnabled);
+      if (hours === 12) {
+        const newState = !toggle12.checked;
+        toggle12.checked = newState;
+        localStorage.setItem('la-offset-12', newState.toString());
         
-        if (isEnabled && toggle11) {
+        // Turn off the other toggle
+        if (newState) {
           toggle11.checked = false;
           localStorage.setItem('la-offset-11', 'false');
-          updateToggleStyle(toggle11, false);
         }
         
-        if (!silent) {
-          showNotification(isEnabled ? '❄️ Winter offset enabled: –12 hours' : '✅ Winter offset disabled', 'success');
-        }
-      } else if (hours === 11 && toggle11) {
-        toggle11.checked = isEnabled;
-        localStorage.setItem('la-offset-11', isEnabled.toString());
-        updateToggleStyle(toggle11, isEnabled);
+        // Update toggle styling
+        updateToggleStyle(toggle12, newState);
+        updateToggleStyle(toggle11, false);
         
-        if (isEnabled && toggle12) {
+        showNotification(newState ? '❄️ Winter offset enabled: –12 hours' : '✅ Winter offset disabled', 'success');
+      } else if (hours === 11) {
+        const newState = !toggle11.checked;
+        toggle11.checked = newState;
+        localStorage.setItem('la-offset-11', newState.toString());
+        
+        // Turn off the other toggle
+        if (newState) {
           toggle12.checked = false;
           localStorage.setItem('la-offset-12', 'false');
-          updateToggleStyle(toggle12, false);
         }
         
-        if (!silent) {
-          showNotification(isEnabled ? '☀️ Summer offset enabled: –11 hours (DST)' : '✅ Summer offset disabled', 'success');
-        }
+        // Update toggle styling
+        updateToggleStyle(toggle11, newState);
+        updateToggleStyle(toggle12, false);
+        
+        showNotification(newState ? '☀️ Summer offset enabled: –11 hours (DST)' : '✅ Summer offset disabled', 'success');
       }
     }
     
@@ -6602,33 +6613,14 @@
       const settings = getLAOffsetSettings();
       const toggle12 = document.getElementById('laOffset12Toggle');
       const toggle11 = document.getElementById('laOffset11Toggle');
-
-      const enable12 = Boolean(settings.offset12);
-      const enable11 = !enable12 && Boolean(settings.offset11);
-
-      isUpdatingLAOffset = true;
-      setLAOffset(12, enable12, { silent: true });
-      setLAOffset(11, enable11, { silent: true });
-      if (toggle12) toggle12.checked = enable12;
-      if (toggle11) toggle11.checked = enable11;
-      isUpdatingLAOffset = false;
-
+      
       if (toggle12) {
-        toggle12.addEventListener('change', (event) => {
-          if (isUpdatingLAOffset) return;
-          isUpdatingLAOffset = true;
-          setLAOffset(12, event.target.checked);
-          isUpdatingLAOffset = false;
-        });
+        toggle12.checked = settings.offset12;
+        updateToggleStyle(toggle12, settings.offset12);
       }
-
       if (toggle11) {
-        toggle11.addEventListener('change', (event) => {
-          if (isUpdatingLAOffset) return;
-          isUpdatingLAOffset = true;
-          setLAOffset(11, event.target.checked);
-          isUpdatingLAOffset = false;
-        });
+        toggle11.checked = settings.offset11;
+        updateToggleStyle(toggle11, settings.offset11);
       }
     }
     
@@ -7060,6 +7052,7 @@
         const today = getTodayLA();
         localStorage.setItem('lastAutoBackupDate', today);
         
+        console.log('Daily auto backup completed:', today);
         
       } catch (error) {
         console.error('Error performing daily auto backup:', error);
@@ -7257,6 +7250,7 @@
     (async function initializeStudents() {
       try {
         students = await loadStudents();
+        console.log(`✅ Loaded ${students.length} students from Supabase`);
         // Render if student manager is open
         const studentManager = document.getElementById('studentManagerModal');
         if (studentManager && studentManager.style.display !== 'none') {
@@ -7276,6 +7270,7 @@
     function showNotificationSimple(message, type = 'info') {
       // Notification toast removed - only log to console
       const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
+      console.log(`${icon} ${message}`);
     }
 
     function normalizeStatus(status) {
@@ -7332,6 +7327,7 @@
           console.error('Auto-backup from student save failed:', error);
         }
         
+        console.log('Saved', students.length, 'students to Supabase');
       } catch (e) {
         console.error('Error saving students:', e);
       }
@@ -7340,6 +7336,7 @@
     function saveWaitingList() {
       try {
         localStorage.setItem(WAITING_LIST_KEY, JSON.stringify(waitingList));
+        console.log('Saved', waitingList.length, 'waiting list students');
       } catch (e) {
         console.error('Error saving waiting list:', e);
       }
@@ -7946,6 +7943,7 @@
     }
 
     async function saveInlineEdit(studentId) {
+      console.log('💾 saveInlineEdit called for:', studentId);
       
       // Convert to number for comparison (passed as string from onclick)
       const numericId = parseInt(studentId);
@@ -8005,10 +8003,12 @@
       renderStudents();
       showNotificationSimple('Student updated', 'success');
       
+      console.log('✅ Student saved successfully');
     }
 
     // ===== STATUS MANAGEMENT =====
     async function cycleStatus(studentId) {
+      console.log('🔄 cycleStatus called with ID:', studentId, 'type:', typeof studentId);
       
       // Handle both string and numeric IDs from Supabase
       const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
@@ -8017,6 +8017,7 @@
         return;
       }
       
+      console.log('👤 Current student:', student.name, 'Status:', student.status);
 
       // Define status cycle: Active → Paused → Graduated → Active
       const statusCycle = {
@@ -8028,6 +8029,7 @@
       const oldStatus = normalizeStatus(student.status);
       const newStatus = statusCycle[oldStatus] || STUDENT_STATUSES.ACTIVE;
       
+      console.log('🔄 Cycling from', oldStatus, 'to', newStatus);
       
       student.status = newStatus;
 
@@ -8272,6 +8274,7 @@
         return;
       }
 
+      console.log('✅ Student saved to Supabase:', savedRecord);
       
       // No longer need to save balance to localStorage - it's in Supabase now
       // Remove localStorage balance management code
@@ -9114,6 +9117,7 @@
     (async function initializeGroups() {
       try {
         groups = await loadGroupsFromSupabase();
+        console.log(`✅ Loaded ${groups.length} groups from Supabase`);
       } catch (error) {
         console.error('Error loading groups on init:', error);
         groups = [];
@@ -9492,6 +9496,7 @@
         window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
         window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
         
+        console.log(`✅ Saved ${groups.length} groups to Supabase`);
       } catch (error) {
         console.error('Error saving groups:', error);
       }
@@ -9670,6 +9675,7 @@
         window.globalData.students = students;
         window.globalData.payments = payments;
         
+        console.log(`✅ Loaded: ${students.length} students, ${groups.length} groups, ${payments.length} payments`);
       } catch (error) {
         console.error('❌ Error loading data from Supabase:', error);
       }
@@ -9683,6 +9689,9 @@
         gmailAccessToken = connection.access_token;
         gmailTokenExpiry = connection.expiry_date.toString();
         updateGmailButtonState(true);
+        console.log('✅ Gmail connection restored from storage');
+        console.log('   Connected at:', connection.connected_at);
+        console.log('   Expires:', new Date(connection.expiry_date).toLocaleString());
         
         // Add Gmail status indicator (🟢 connected)
         showNotification('🟢 Gmail connected', 'success');
@@ -9696,6 +9705,7 @@
             clearGmailConnection();
             gmailAccessToken = null;
             updateGmailButtonState(false);
+            console.log('🔴 Gmail disconnected (token expired)');
           }
         }
       }
@@ -10177,6 +10187,7 @@
       bindNavBtn('navTimerBtn', toggleClassCountdown);
       bindNavBtn('navQuickViewBtn', openQuickView);
 
+      console.log('✅ Floating Nav initialized');
     }
 
     /**
@@ -10709,6 +10720,7 @@
           const currentDayIndex = now.getDay();
           const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
 
+          console.log('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US'), 'Day:', dayNames[currentDayIndex], '(UTC offset:', laOffset, 'hours)');
 
           let nextClass = null;
           let minDiffInSeconds = Infinity;
@@ -10903,9 +10915,11 @@
           const groups = window.groupsCache || window.globalData?.groups || [];
           
           if (!groups || groups.length === 0) {
+            console.log('[ClassCountdownTimer] No groups found in cache');
             return [];
           }
 
+          console.log('[ClassCountdownTimer] Found', groups.length, 'groups');
 
           // Get current LA time using UTC-based calculation
           // CRITICAL: All time calculations use UTC internally for accuracy
@@ -10914,9 +10928,12 @@
           const nowLA = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
           const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
           
+          console.log('[ClassCountdownTimer] Current LA time:', nowLA.toLocaleString(), '(UTC offset:', laOffset, 'hours)');
+          console.log('[ClassCountdownTimer] LA time breakdown - hours:', nowLA.hours, 'minutes:', nowLA.minutes, 'day:', nowLA.dayOfWeek);
           
           // Get current time in seconds since midnight LA time
           const currentTimeInSeconds = nowLA.hours * 3600 + nowLA.minutes * 60 + nowLA.seconds;
+          console.log('[ClassCountdownTimer] Current time in seconds since midnight:', currentTimeInSeconds, `(${(currentTimeInSeconds/3600).toFixed(2)} hours)`);
           
           // Check each day for the next 7 days
           for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
@@ -11045,6 +11062,7 @@
             }
           });
 
+          console.log('[ClassCountdownTimer] Found', uniqueClasses.length, 'unique upcoming classes (removed', allClasses.length - uniqueClasses.length, 'duplicates)');
           return uniqueClasses;
         } catch (error) {
           console.error('[ClassCountdownTimer] Error getting all classes:', error);
@@ -11184,6 +11202,7 @@
           updateDisplay();
         }, 60000);
 
+        console.log('[ClassCountdownTimer] Initialized once — Active (1 interval)');
       }
 
       // Destroy timer
@@ -11192,6 +11211,7 @@
         if (updateInterval) {
           clearInterval(updateInterval);
           updateInterval = null;
+          console.log('[ClassCountdownTimer] Interval cleared');
         }
 
         // Remove click-outside listener
@@ -11207,6 +11227,7 @@
         }
 
         currentClassData = null;
+        console.log('[ClassCountdownTimer] Destroyed');
       }
 
       // Toggle pin mode (above modals)
@@ -11283,6 +11304,7 @@
       function saveSkippedClasses() {
         try {
           localStorage.setItem('skipped-classes:v1', JSON.stringify(skippedClasses));
+          console.log('[SkipClassManager] Saved skipped classes:', skippedClasses);
         } catch (error) {
           console.error('[SkipClassManager] Error saving skipped classes:', error);
         }
@@ -11330,6 +11352,7 @@
         skippedClasses[groupName][dateStr] = true;
         saveSkippedClasses();
         
+        console.log('[SkipClassManager] Skipped class:', groupName, dateStr);
         
         // Dispatch event for calendar refresh
         window.dispatchEvent(new CustomEvent('classSkipped', { 
@@ -11364,6 +11387,7 @@
           saveSkippedClasses();
         }
         
+        console.log('[SkipClassManager] Unskipped class:', groupName, dateStr);
         
         // Dispatch event for calendar refresh
         window.dispatchEvent(new CustomEvent('classUnskipped', { 
@@ -11390,6 +11414,7 @@
 
       // Show skip confirmation dialog
       function showSkipDialog(classData) {
+        console.log('[SkipClassManager] showSkipDialog called with:', classData);
         pendingSkip = classData;
         
         const dialog = document.getElementById('skipClassDialog');
@@ -11402,16 +11427,19 @@
           return;
         }
         
+        console.log('[SkipClassManager] Dialog elements found, populating...');
         
         // Populate dialog
         classNameEl.textContent = classData.groupName;
         classTimeEl.textContent = `${classData.dayName} at ${classData.laTime}`;
         
+        console.log('[SkipClassManager] Showing dialog...');
         
         // Show dialog
         overlay.classList.add('show');
         dialog.classList.add('show');
         
+        console.log('[SkipClassManager] Dialog shown');
       }
 
       // Hide skip dialog
@@ -11476,6 +11504,7 @@
 
       // Initialize - attach double-click handlers to timer items
       function init() {
+        console.log('[SkipClassManager] Initializing...');
         
         // Attach button event listeners
         const cancelBtn = document.getElementById('skipDialogCancelBtn');
@@ -11484,35 +11513,43 @@
         
         if (cancelBtn) {
           cancelBtn.addEventListener('click', cancelSkip);
+          console.log('[SkipClassManager] Cancel button listener attached');
         }
         
         if (confirmBtn) {
           confirmBtn.addEventListener('click', confirmSkip);
+          console.log('[SkipClassManager] Confirm button listener attached');
         }
         
         if (overlay) {
           overlay.addEventListener('click', cancelSkip);
+          console.log('[SkipClassManager] Overlay click listener attached');
         }
         
         // Wait for timer to be rendered, then attach handlers
         const attachHandlers = () => {
           const timerElement = document.getElementById('enhancedCountdownTimer');
           if (!timerElement) {
+            console.log('[SkipClassManager] Timer element not found, will retry...');
             return;
           }
           
           // Remove existing listener if any
           if (timerElement._skipHandlerAttached) {
+            console.log('[SkipClassManager] Handler already attached');
             return;
           }
           
           // Use event delegation for dynamic timer items
           timerElement.addEventListener('dblclick', (e) => {
+            console.log('[SkipClassManager] Double-click detected', e.target);
             const classItem = e.target.closest('.timer-class-item');
             if (!classItem) {
+              console.log('[SkipClassManager] Not a class item');
               return;
             }
             if (classItem.classList.contains('skipped')) {
+              console.log('[SkipClassManager] Already skipped');
               return;
             }
             
@@ -11521,6 +11558,7 @@
             const dayName = classItem.getAttribute('data-day');
             const laTime = classItem.getAttribute('data-time');
             
+            console.log('[SkipClassManager] Class data:', { groupName, dayName, laTime });
             
             if (!groupName || !dayName || !laTime) {
               console.error('[SkipClassManager] Missing class data attributes');
@@ -11533,10 +11571,12 @@
               laTime
             };
             
+            console.log('[SkipClassManager] Showing skip dialog for:', classData);
             showSkipDialog(classData);
           });
           
           timerElement._skipHandlerAttached = true;
+          console.log('[SkipClassManager] Double-click handler attached successfully');
         };
         
         // Try attaching handlers after a short delay
@@ -11546,17 +11586,21 @@
         
         // Listen for timer being opened
         window.addEventListener('timerOpened', () => {
+          console.log('[SkipClassManager] Timer opened event received');
           setTimeout(attachHandlers, 200);
         });
         
         // Also attach when timer is reinitialized
         window.addEventListener('groups:updated', () => {
+          console.log('[SkipClassManager] Groups updated, reattaching handlers');
           setTimeout(attachHandlers, 600);
         });
         window.addEventListener('schedules:updated', () => {
+          console.log('[SkipClassManager] Schedules updated, reattaching handlers');
           setTimeout(attachHandlers, 600);
         });
         
+        console.log('[SkipClassManager] Initialized');
       }
 
       // Public API
@@ -11582,9 +11626,11 @@
 
     // Listen for skip events to update calendar
     window.addEventListener('classSkipped', (event) => {
+      console.log('[SkipClassManager] Class skipped event:', event.detail);
     });
 
     window.addEventListener('classUnskipped', (event) => {
+      console.log('[SkipClassManager] Class unskipped event:', event.detail);
     });
     
     // ============================================================================
@@ -12002,33 +12048,6 @@
       renderCalendar();
     }
     
-    /**
-     * Syncs student balance changes to Supabase after calendar calculations.
-     * Checks which students had balance changes and updates them in database.
-     */
-    async function syncStudentBalancesToSupabase() {
-      const students = getCachedStudents();
-      const changedStudents = students.filter(s => s.balanceChanged);
-      
-      if (changedStudents.length === 0) return;
-      
-      console.log(`Syncing ${changedStudents.length} student balance(s) to Supabase...`);
-      
-      for (const student of changedStudents) {
-        try {
-          // Use existing saveStudent function which includes balance in payload
-          await saveStudent(student);
-          
-          // Clear the change flag
-          delete student.balanceChanged;
-          
-          console.log(`✓ Synced balance for ${student.name}: $${student.balance}`);
-        } catch (error) {
-          console.error(`Failed to sync balance for ${student.name}:`, error);
-        }
-      }
-    }
-    
     function renderCalendar() {
       const year = currentCalendarDate.getFullYear();
       const month = currentCalendarDate.getMonth();
@@ -12049,9 +12068,6 @@
       
       // Render grid
       renderCalendarGrid(calendarData);
-      
-      // Sync student balances to Supabase after calendar calculations
-      syncStudentBalancesToSupabase();
     }
     
     function generateCalendarData(year, month) {
@@ -12183,22 +12199,7 @@
       const laToday = getLADate();
       const todayStr = formatDateYYYYMMDD(laToday);
       
-      // CHECK 1: Is this student marked absent?
-      const absentKey = `absent:${studentId}:${dateStr}`;
-      const isAbsent = localStorage.getItem(absentKey) === 'true';
-      
-      if (isAbsent) {
-        console.log('⚪ Absent check - Student is marked absent:', { studentId, dateStr });
-        return {
-          status: 'absent',
-          paid: false,
-          amount: 0,
-          balance: student.balance || 0,
-          message: 'Marked Absent'
-        };
-      }
-      
-      // CHECK 2: Is this class skipped?
+      // CHECK: Is this class skipped?
       const groupName = student.group;
       if (groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr)) {
         return {
@@ -12222,20 +12223,18 @@
         };
       }
       
-      // RULE 2: Historical Freeze - Use snapshot for dates older than 2 weeks
-      const twoWeeksAgo = new Date(laToday);
-      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-      
-      if (classDate < twoWeeksAgo) {
+      // RULE 2: Historical Freeze - Use snapshot for past dates
+      if (classDate < laToday) {
         const snapshot = getCalendarSnapshot(dateStr);
         if (snapshot && snapshot.students && snapshot.students[studentId]) {
-          // Return frozen data - immune to student/payment/group changes
+          // Return frozen data
           return snapshot.students[studentId];
         }
-        // If no snapshot exists for this old date, recalculate once and freeze it
+        // If no snapshot exists for this past date, it means no class was scheduled
+        // Return as if no class (will not render)
       }
       
-      // RULE 3: Dynamic calculation for TODAY, recent past (< 2 weeks), and FUTURE dates
+      // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
       const balance = student.balance || 0;
       
       // Find all payments for this student (by name or alias match)
@@ -12246,16 +12245,6 @@
         const paymentStudentName = (p.studentName || '').toLowerCase().trim();
         const paymentPayerName = (p.payerName || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
-        
-        // DEBUG: Log first match attempt for Nov 12, 2025
-        if (dateStr === '2025-11-12' && studentNameLower === 'stella ghazaryan') {
-          console.log('🔍 DEBUG Nov 12 - Stella:', {
-            paymentStudentName,
-            paymentPayerName,
-            studentNameLower,
-            matches: paymentStudentName === studentNameLower
-          });
-        }
         
         // Check if studentName matches
         if (paymentStudentName === studentNameLower) return true;
@@ -12273,11 +12262,6 @@
         
         return false;
       });
-      
-      // DEBUG: Log filtered payments
-      if (dateStr === '2025-11-12' && student.name === 'Stella Ghazaryan') {
-        console.log('🔍 Found payments for Stella on Nov 12:', studentPayments.length);
-      }
       
       // Check for payment on this date OR any recent payment that can cover this class
       // If checking a past date, allow payments from up to 7 days after the class
@@ -12311,9 +12295,8 @@
           const remainder = paymentAmount - pricePerClass;
           const newBalance = balance + remainder;
           
-          // Update student balance in memory and mark for Supabase sync
+          // Update student balance in memory only (no auto-save during calendar render)
           student.balance = newBalance;
-          student.balanceChanged = true;
           
           const result = {
             status: 'paid',
@@ -12323,11 +12306,8 @@
             message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
           };
           
-          // Freeze data for dates older than 2 weeks
-          const twoWeeksAgo = new Date(laToday);
-          twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
-          
-          if (classDate < twoWeeksAgo) {
+          // Freeze today's data at end of day
+          if (dateStr === todayStr) {
             saveCalendarSnapshot(dateStr, {
               [studentId]: result
             });
@@ -12343,7 +12323,7 @@
             message: `Paid ${formatCurrency(paymentAmount, '$')}`
           };
           
-          if (classDate < twoWeeksAgo) {
+          if (dateStr === todayStr) {
             saveCalendarSnapshot(dateStr, {
               [studentId]: result
             });
@@ -12353,14 +12333,13 @@
         }
       }
       
-      // Check if can deduct from balance (for ANY unpaid class - past, today, or future)
-      // Balance automatically pays oldest unpaid classes first
-      if (balance >= pricePerClass) {
+      // Check if can deduct from balance (for TODAY and future dates only)
+      // Do NOT deduct for past dates - those should use snapshots or payment records
+      if (balance >= pricePerClass && dateStr >= todayStr) {
         const newBalance = balance - pricePerClass;
         
-        // Update student balance in memory and mark for Supabase sync
+        // Update student balance in memory only (no auto-save during calendar render)
         student.balance = newBalance;
-        student.balanceChanged = true;
         
         const lowBalance = newBalance > 0 && newBalance < pricePerClass;
         
@@ -12373,8 +12352,8 @@
           alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
         };
         
-        // Save snapshot for dates older than 2 weeks
-        if (classDate < twoWeeksAgo) {
+        // Save snapshot only for today
+        if (dateStr === todayStr) {
           saveCalendarSnapshot(dateStr, {
             [studentId]: result
           });
@@ -12383,7 +12362,27 @@
         return result;
       }
       
-      // Absent check moved to top of function - this duplicate removed
+      // Check if marked absent
+      const absentKey = `absent:${studentId}:${dateStr}`;
+      const isAbsent = localStorage.getItem(absentKey) === 'true';
+      
+      if (isAbsent) {
+        const result = {
+          status: 'absent',
+          paid: false,
+          amount: 0,
+          balance: balance,
+          message: 'Marked Absent'
+        };
+        
+        if (dateStr === todayStr) {
+          saveCalendarSnapshot(dateStr, {
+            [studentId]: result
+          });
+        }
+        
+        return result;
+      }
       
       // Future class - show as pending if has balance
       if (classDate > laToday && balance >= pricePerClass) {
@@ -12396,9 +12395,9 @@
         };
       }
       
-      // CRITICAL: Red dots for TODAY and PAST unpaid classes (not future)
-      if (dateStr <= todayStr) {
-        // Current or past unpaid - show red dot
+      // CRITICAL: Red dots ONLY for CURRENT DAY (not past, not future)
+      if (dateStr === todayStr) {
+        // Current day unpaid - show red dot
         const result = {
           status: 'unpaid',
           paid: false,
@@ -12408,12 +12407,10 @@
           showActions: true
         };
         
-        // Save snapshot for dates older than 2 weeks
-        if (classDate < twoWeeksAgo) {
-          saveCalendarSnapshot(dateStr, {
-            [studentId]: result
-          });
-        }
+        // Save snapshot for today's unpaid classes
+        saveCalendarSnapshot(dateStr, {
+          [studentId]: result
+        });
         
         return result;
       }
@@ -12806,8 +12803,6 @@
       
       const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.setItem(absentKey, 'true');
-      
-      console.log('✅ Marked absent:', { studentId: numericId, dateStr, key: absentKey });
       
       showToast('⚪ Marked as absent');
       
