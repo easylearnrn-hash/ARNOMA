@@ -10380,7 +10380,8 @@
         // Use WorldTimeAPI - reliable and free
         try {
           const response = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`, {
-            cache: 'no-store'
+            cache: 'no-store',
+            signal: AbortSignal.timeout(5000) // 5 second timeout
           });
           
           if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -10406,8 +10407,98 @@
           return result;
           
         } catch (error) {
-          console.error(`[TimeAPI] Failed to fetch ${timezone}:`, error);
-          return null;
+          console.warn(`[TimeAPI] WorldTimeAPI failed for ${timezone}, trying fallback:`, error);
+          
+          // Fallback: Use browser time with proper timezone conversion
+          try {
+            const now = new Date();
+            
+            // For Yerevan, use UTC+4 calculation (no DST)
+            if (timezone === 'Asia/Yerevan') {
+              const utcHours = now.getUTCHours();
+              const utcMinutes = now.getUTCMinutes();
+              const utcSeconds = now.getUTCSeconds();
+              
+              let hours = utcHours + 4;
+              let minutes = utcMinutes;
+              let seconds = utcSeconds;
+              
+              let dayOffset = 0;
+              if (hours >= 24) {
+                hours -= 24;
+                dayOffset = 1;
+              }
+              
+              const yerevanDate = new Date(now);
+              yerevanDate.setUTCDate(yerevanDate.getUTCDate() + dayOffset);
+              
+              const result = {
+                hours,
+                minutes,
+                seconds,
+                day: yerevanDate.getUTCDate(),
+                month: yerevanDate.getUTCMonth() + 1,
+                year: yerevanDate.getUTCFullYear(),
+                dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][yerevanDate.getUTCDay()],
+                timestamp: now.getTime(),
+                timezone: timezone
+              };
+              
+              console.log(`[TimeAPI] Using UTC+4 fallback for Yerevan:`, result);
+              return result;
+            }
+            
+            // For LA, use toLocaleString
+            if (timezone === 'America/Los_Angeles') {
+              const timeString = now.toLocaleString("en-US", { 
+                timeZone: timezone,
+                hour12: true,
+                hour: 'numeric',
+                minute: '2-digit',
+                second: '2-digit',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit'
+              });
+              
+              const match = timeString.match(/(\d+)\/(\d+)\/(\d+),\s+(\d+):(\d+):(\d+)\s+(AM|PM)/i);
+              if (!match) throw new Error('Parse failed');
+              
+              const [_, month, day, year, hourStr, minuteStr, secondStr, period] = match;
+              let hours = parseInt(hourStr);
+              const minutes = parseInt(minuteStr);
+              const seconds = parseInt(secondStr);
+              
+              if (period.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+              if (period.toUpperCase() === 'AM' && hours === 12) hours = 0;
+              
+              const dayOfWeek = now.toLocaleString('en-US', {
+                timeZone: timezone,
+                weekday: 'long'
+              });
+              
+              const result = {
+                hours,
+                minutes,
+                seconds,
+                day: parseInt(day),
+                month: parseInt(month),
+                year: parseInt(year),
+                dayOfWeek,
+                timestamp: now.getTime(),
+                timezone: timezone
+              };
+              
+              console.log(`[TimeAPI] Using toLocaleString fallback for LA:`, result);
+              return result;
+            }
+            
+            throw new Error('Unsupported timezone');
+            
+          } catch (fallbackError) {
+            console.error(`[TimeAPI] All methods failed for ${timezone}:`, fallbackError);
+            return null;
+          }
         }
       },
       
