@@ -10671,7 +10671,13 @@
               <span class="timer-icon">🕒</span>
               <span class="timer-title">Upcoming Classes</span>
             </div>
-            <button class="timer-close" title="Close timer">×</button>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <div id="timezoneToggle" style="display: flex; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 2px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);">
+                <button id="tzAM" class="tz-btn active" style="padding: 4px 10px; border: none; background: rgba(59,130,246,0.4); color: white; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;">AM</button>
+                <button id="tzUS" class="tz-btn" style="padding: 4px 10px; border: none; background: transparent; color: rgba(255,255,255,0.6); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;">US</button>
+              </div>
+              <button class="timer-close" title="Close timer">×</button>
+            </div>
           </div>
           <div class="timer-classes-list"></div>
         `;
@@ -10680,6 +10686,45 @@
         closeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           destroy();
+        });
+
+        // Add timezone toggle functionality
+        const tzAM = timer.querySelector('#tzAM');
+        const tzUS = timer.querySelector('#tzUS');
+        
+        // Load saved timezone preference (default to AM/Yerevan)
+        const savedTz = localStorage.getItem('timerTimezone') || 'AM';
+        if (savedTz === 'US') {
+          tzAM.classList.remove('active');
+          tzAM.style.background = 'transparent';
+          tzAM.style.color = 'rgba(255,255,255,0.6)';
+          tzUS.classList.add('active');
+          tzUS.style.background = 'rgba(59,130,246,0.4)';
+          tzUS.style.color = 'white';
+        }
+        
+        tzAM.addEventListener('click', (e) => {
+          e.stopPropagation();
+          localStorage.setItem('timerTimezone', 'AM');
+          tzAM.classList.add('active');
+          tzAM.style.background = 'rgba(59,130,246,0.4)';
+          tzAM.style.color = 'white';
+          tzUS.classList.remove('active');
+          tzUS.style.background = 'transparent';
+          tzUS.style.color = 'rgba(255,255,255,0.6)';
+          updateDisplay(); // Refresh display with new timezone
+        });
+        
+        tzUS.addEventListener('click', (e) => {
+          e.stopPropagation();
+          localStorage.setItem('timerTimezone', 'US');
+          tzUS.classList.add('active');
+          tzUS.style.background = 'rgba(59,130,246,0.4)';
+          tzUS.style.color = 'white';
+          tzAM.classList.remove('active');
+          tzAM.style.background = 'transparent';
+          tzAM.style.color = 'rgba(255,255,255,0.6)';
+          updateDisplay(); // Refresh display with new timezone
         });
 
         // Add click-outside-to-close functionality
@@ -10921,6 +10966,9 @@
           const yerevanData = convertLAToYerevanTime(classData.laTime);
           const countdown = formatCountdown(classData.secondsRemaining);
           
+          // Get selected timezone preference
+          const selectedTz = localStorage.getItem('timerTimezone') || 'AM';
+          
           // Check if this class is skipped
           const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
           const isSkipped = window.SkipClassManager && window.SkipClassManager.isClassSkipped(classData.groupName, dateStr);
@@ -10958,6 +11006,11 @@
 
           const isNext = index === 0;
           const skippedClass = isSkipped ? 'skipped' : '';
+          
+          // Display time based on selected timezone
+          const displayTime = selectedTz === 'AM' 
+            ? `${yerevanData.time} Yerevan (${classData.laTime} LA)`
+            : `${classData.laTime} LA (${yerevanData.time} Yerevan)`;
 
           html += `
             <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''} ${skippedClass}" data-group="${classData.groupName}" data-day="${classData.dayName}" data-time="${classData.laTime}">
@@ -10969,9 +11022,7 @@
               <div class="timer-class-details">
                 <span class="timer-class-day">${classData.dayName}</span>
                 <span class="timer-class-separator">•</span>
-                <span class="timer-class-time">${classData.laTime} LA</span>
-                <span class="timer-class-separator">•</span>
-                <span class="timer-class-time">${yerevanData.time} Yerevan</span>
+                <span class="timer-class-time">${displayTime}</span>
               </div>
             </div>
           `;
