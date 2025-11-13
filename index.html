@@ -13225,6 +13225,38 @@
         `;
       });
       
+      // Check if panel already exists
+      const existingPanel = document.getElementById('dayDetailsPanel');
+      
+      if (existingPanel) {
+        // Panel exists - just update the content without closing
+        const headerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <h3 style="margin: 0; font-size: 20px; font-weight: 900; color: white;">${dateDisplay}</h3>
+              <p style="margin: 4px 0 0 0; font-size: 12px; color: #94a3b8;">${dayData.studentsWithClass.length} scheduled class${dayData.studentsWithClass.length !== 1 ? 'es' : ''}</p>
+            </div>
+            <button onclick="closeDayDetails()" style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 20px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">×</button>
+          </div>
+        `;
+        
+        // Update header
+        const headerDiv = existingPanel.querySelector('div[style*="position: sticky"]');
+        if (headerDiv) {
+          headerDiv.innerHTML = `<div style="padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); z-index: 1;">${headerHTML}</div>`.replace(/<div[^>]*>|<\/div>$/g, '');
+          headerDiv.innerHTML = headerHTML;
+        }
+        
+        // Update student list
+        const contentDiv = existingPanel.querySelectorAll('div[style*="padding: 24px"]')[1];
+        if (contentDiv) {
+          contentDiv.innerHTML = studentsHTML;
+        }
+        
+        return; // Don't create a new panel
+      }
+      
+      // Panel doesn't exist - create it
       const panelHTML = `
         <div id="dayDetailsOverlay" onclick="closeDayDetails()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 28000; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;"></div>
         <div id="dayDetailsPanel" onclick="event.stopPropagation()" style="position: fixed; right: -500px; top: 0; bottom: 0; width: 450px; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border-left: 2px solid rgba(138,180,255,0.3); z-index: 28001; backdrop-filter: blur(20px); box-shadow: -10px 0 40px rgba(0,0,0,0.5); transition: right 0.3s ease; overflow-y: auto;">
@@ -13470,7 +13502,7 @@
           debugLog('Marked absent (Supabase):', { studentId: numericId, dateStr });
           showToast('⚪ Marked as absent');
           
-          // Close the detail modal only
+          // Close the detail modal only (not the sidebar)
           const modal = document.getElementById('classDetailModal');
           if (modal) modal.remove();
           const overlay = document.getElementById('calendarDetailOverlay');
@@ -13479,18 +13511,13 @@
           // Refresh calendar to update dot colors
           renderCalendar();
           
-          // Update the day details sidebar if it's open
+          // Update the day details sidebar immediately if it's open
           const dayPanel = document.getElementById('dayDetailsPanel');
           if (dayPanel) {
-            // Re-fetch the day data with updated status
-            const dateObj = new Date(dateStr);
+            // Re-fetch the day data with updated status and update content
             const dayData = getDayData(dateStr);
             if (dayData) {
-              // Close and reopen the day panel with updated data
-              closeDayDetails();
-              setTimeout(() => {
-                openDayDetails(dateStr, dayData);
-              }, 100);
+              openDayDetails(dateStr, dayData);
             }
           }
         }).catch(err => {
@@ -13504,6 +13531,15 @@
         debugLog('Marked absent (localStorage fallback):', { studentId: numericId, dateStr, key: absentKey });
         showToast('⚪ Marked as absent');
         renderCalendar();
+        
+        // Update sidebar if open
+        const dayPanel = document.getElementById('dayDetailsPanel');
+        if (dayPanel) {
+          const dayData = getDayData(dateStr);
+          if (dayData) {
+            openDayDetails(dateStr, dayData);
+          }
+        }
       }
     }
     
