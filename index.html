@@ -12141,6 +12141,11 @@
      * Returns a map of { dateStr: { studentId: paymentInfo } }
      */
     function autoApplyPaymentsToCalendar(students, payments, startDate, endDate) {
+      console.log('🔧 AUTO-APPLY STARTING...');
+      console.log(`📅 Date range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
+      console.log(`👥 Students: ${students.length}`);
+      console.log(`💰 Total payments: ${payments.length}`);
+      
       const appliedPayments = {}; // dateStr -> studentId -> paymentInfo
       const unmatchedPayments = []; // Payments that need user assignment
       
@@ -12150,6 +12155,7 @@
       
       // Get all class dates for each student from Nov 1 onwards
       const studentClassDates = buildStudentClassSchedule(students, nov1_2025, endDate);
+      console.log(`📚 Built class schedules for ${Object.keys(studentClassDates).length} students`);
       
       // Track which payments have been applied
       const appliedPaymentIds = new Set();
@@ -12164,13 +12170,15 @@
         })
         .sort((a, b) => a.laDate - b.laDate);
       
+      console.log(`💳 Processing ${sortedPayments.length} non-ignored payments`);
+      
       // Process each payment
       sortedPayments.forEach(payment => {
         // Find student by name matching
         const student = findStudentByPayment(payment, students);
         
         if (!student) {
-          debug(`⚠️ Cannot match payment to student: ${payment.payerName || payment.studentName}`);
+          console.log(`⚠️ Cannot match payment to student: ${payment.payerName || payment.studentName}`);
           unmatchedPayments.push(payment);
           return;
         }
@@ -12181,6 +12189,7 @@
         
         // Get student's class dates
         const classDates = studentClassDates[studentId] || [];
+        console.log(`📝 ${student.name}: ${classDates.length} class dates, payment on ${payment.laDateStr}`);
         
         // Strategy 1: Try exact date match first
         const exactMatch = classDates.find(dateStr => {
@@ -12190,7 +12199,7 @@
         if (exactMatch) {
           applyPaymentToDate(exactMatch, studentId, payment, paymentAmount, pricePerClass, appliedPayments);
           appliedPaymentIds.add(payment.id);
-          debug(`✅ Exact match: ${student.name} payment on ${exactMatch}`);
+          console.log(`✅ EXACT MATCH: ${student.name} payment on ${exactMatch}`);
           return;
         }
         
@@ -12208,12 +12217,12 @@
         if (pastClass) {
           applyPaymentToDate(pastClass, studentId, payment, paymentAmount, pricePerClass, appliedPayments);
           appliedPaymentIds.add(payment.id);
-          debug(`✅ Past class match: ${student.name} payment on ${payment.laDateStr} applied to ${pastClass}`);
+          console.log(`✅ PAST CLASS: ${student.name} payment on ${payment.laDateStr} applied to ${pastClass}`);
           return;
         }
         
         // Strategy 3: Payment doesn't match any class - needs user assignment
-        debug(`⚠️ Extra payment for ${student.name}: $${paymentAmount} on ${payment.laDateStr} - no past class within 7 days`);
+        console.log(`⚠️ UNMATCHED: ${student.name}: $${paymentAmount} on ${payment.laDateStr} - no past class within 7 days`);
         unmatchedPayments.push({
           ...payment,
           student,
@@ -12221,6 +12230,11 @@
           reason: 'no_matching_class'
         });
       });
+      
+      console.log(`✅ AUTO-APPLY COMPLETE:`);
+      console.log(`   Applied: ${Object.keys(appliedPayments).length} dates with payments`);
+      console.log(`   Unmatched: ${unmatchedPayments.length} payments`);
+      console.log(`   Applied payments map:`, appliedPayments);
       
       return {
         appliedPayments,
