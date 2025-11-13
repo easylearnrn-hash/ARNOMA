@@ -3739,16 +3739,6 @@
     }
     
     // BEGIN LINKING & SEARCH FIX
-    function closeLinkStudentModal() {
-      const modal = document.getElementById('linkStudentModal');
-      if (modal) {
-        modal.style.opacity = '0';
-        setTimeout(() => {
-          modal.remove();
-        }, 200);
-      }
-    }
-    
     function filterStudentList() {
       const searchInput = document.getElementById('studentSearchInput');
       if (!searchInput) return;
