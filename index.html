@@ -12394,8 +12394,12 @@
         return;
       }
       
-      // Show ALL students (active, paused, graduated) but only count active in totals
-      const eligibleStudents = students.filter(s => s.isActive !== false);
+      // Show ACTIVE and PAUSED students only — exclude GRADUATED entirely
+      const eligibleStudents = students.filter(s => {
+        if (s.isActive === false) return false;
+        const status = normalizeStatus(s.status);
+        return status === 'active' || status === 'paused';
+      });
       
       let totalWeekly = 0;
       let html = '';
@@ -12434,20 +12438,26 @@
         });
       });
       
-      // Sort by name
-      studentData.sort((a, b) => a.name.localeCompare(b.name));
+      // Sort by status first (active before paused), then by name within each status
+      studentData.sort((a, b) => {
+        // Active students come before paused students
+        if (a.status === 'active' && b.status !== 'active') return -1;
+        if (a.status !== 'active' && b.status === 'active') return 1;
+        // Within same status, sort alphabetically by name
+        return a.name.localeCompare(b.name);
+      });
       
       // Generate HTML
       studentData.forEach(data => {
-        // Determine if student is paused or graduated
-        const isPausedOrGraduated = data.status === 'paused' || data.status === 'graduated';
+        // Determine if student is paused (graduated students don't appear in this modal)
+        const isPaused = data.status === 'paused';
         const statusDetails = getStatusDetails(data.status);
         
-        // Apply grayed-out styling for paused/graduated students
-        const cardOpacity = isPausedOrGraduated ? '0.4' : '1';
-        const cardFilter = isPausedOrGraduated ? 'grayscale(0.6)' : 'none';
-        const cardBg = isPausedOrGraduated ? 'rgba(255,255,255,0.015)' : 'rgba(255,255,255,0.03)';
-        const cardBgHover = isPausedOrGraduated ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.06)';
+        // Apply grayed-out styling for paused students
+        const cardOpacity = isPaused ? '0.4' : '1';
+        const cardFilter = isPaused ? 'grayscale(0.6)' : 'none';
+        const cardBg = isPaused ? 'rgba(255,255,255,0.015)' : 'rgba(255,255,255,0.03)';
+        const cardBgHover = isPaused ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.06)';
         
         html += `
           <div style="padding: 16px; background: ${cardBg}; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; transition: all 0.2s; opacity: ${cardOpacity}; filter: ${cardFilter};" onmouseover="this.style.background='${cardBgHover}'" onmouseout="this.style.background='${cardBg}'">
@@ -12462,7 +12472,7 @@
                     ${statusDetails.label}
                   </span>
                 </div>
-                <div style="font-size: 12px; color: #94a3b8;">${isPausedOrGraduated ? '⏸' : ''} Group ${escapeHtml(data.group)} • ${data.weeklyClasses} classes/week • ${formatCurrency(data.pricePerClass, '$')}/class</div>
+                <div style="font-size: 12px; color: #94a3b8;">${isPaused ? '⏸ ' : ''}Group ${escapeHtml(data.group)} • ${data.weeklyClasses} classes/week • ${formatCurrency(data.pricePerClass, '$')}/class</div>
               </div>
             </div>
             <div style="display: flex; gap: 16px; margin-top: 12px;">
@@ -12481,7 +12491,7 @@
       
       // Show message if no students
       if (studentData.length === 0) {
-        html = '<div style="padding: 40px; text-align: center; color: #94a3b8; font-style: italic;">No active students with pricing and schedules</div>';
+        html = '<div style="padding: 40px; text-align: center; color: #94a3b8; font-style: italic;">No active or paused students with pricing and schedules</div>';
       }
       
       container.innerHTML = html;
