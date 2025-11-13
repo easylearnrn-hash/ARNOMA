@@ -10387,17 +10387,23 @@
         getCurrentTimeInZone(timezone) {
           const now = new Date();
           
-          // Get ISO string in the target timezone
-          const isoString = now.toLocaleString('en-CA', {
+          // Get time with AM/PM to ensure correct hour parsing
+          const formatter = new Intl.DateTimeFormat('en-US', {
             timeZone: timezone,
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
-            hour: '2-digit',
+            hour: 'numeric',
             minute: '2-digit',
             second: '2-digit',
-            hour12: false
+            hour12: true
           });
+          
+          const parts = formatter.formatToParts(now);
+          const getValue = (type) => {
+            const part = parts.find(p => p.type === type);
+            return part ? part.value : null;
+          };
           
           // Get day of week separately
           const dayOfWeek = now.toLocaleString('en-US', {
@@ -10405,10 +10411,22 @@
             weekday: 'long'
           });
           
-          // Parse: "YYYY-MM-DD, HH:mm:ss"
-          const [datePart, timePart] = isoString.split(', ');
-          const [year, month, day] = datePart.split('-').map(n => parseInt(n));
-          const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+          let hours = parseInt(getValue('hour'));
+          const minutes = parseInt(getValue('minute'));
+          const seconds = parseInt(getValue('second'));
+          const day = parseInt(getValue('day'));
+          const month = parseInt(getValue('month'));
+          const year = parseInt(getValue('year'));
+          const dayPeriod = getValue('dayPeriod'); // 'AM' or 'PM'
+          
+          // Convert to 24-hour format
+          if (dayPeriod === 'PM' && hours !== 12) {
+            hours += 12;
+          } else if (dayPeriod === 'AM' && hours === 12) {
+            hours = 0;
+          }
+          
+          console.log('[TimezoneUtils] getCurrentTimeInZone:', timezone, '→', year, month, day, hours, minutes, seconds, dayPeriod, dayOfWeek);
           
           return {
             hours,
@@ -10953,6 +10971,7 @@
                       const dayIndex = dayNames.indexOf(s.day);
                       const newDayIndex = (dayIndex + converted.dayShift + 7) % 7;
                       adjustedDay = dayNames[newDayIndex];
+                      console.log(`[Timer] ${group.name}: ${s.day} ${s.time} LA → ${adjustedDay} ${converted.time} Yerevan (shift: ${converted.dayShift})`);
                       debug(`[Timer getAllClasses] Day shift: ${s.day} ${s.time} LA → ${adjustedDay} ${converted.time} Yerevan (shift: ${converted.dayShift})`);
                     }
                     return { day: adjustedDay, time: converted.time };
