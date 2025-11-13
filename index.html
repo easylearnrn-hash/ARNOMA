@@ -12012,10 +12012,11 @@
     
     // Helper function to get current date in LA timezone
     function getLADate() {
+      // Get current UTC time
       const now = new Date();
       
-      // Get LA time components using Intl.DateTimeFormat for accuracy
-      const formatter = new Intl.DateTimeFormat('en-US', {
+      // Get the time string in LA timezone
+      const laString = now.toLocaleString('en-US', {
         timeZone: 'America/Los_Angeles',
         year: 'numeric',
         month: '2-digit',
@@ -12026,30 +12027,22 @@
         hour12: false
       });
       
-      const parts = formatter.formatToParts(now);
-      const partsObj = {};
-      parts.forEach(part => {
-        if (part.type !== 'literal') {
-          partsObj[part.type] = part.value;
-        }
-      });
+      // Parse it back but force interpretation as UTC to preserve the values
+      // Format is: "MM/DD/YYYY, HH:mm:ss"
+      const [datePart, timePart] = laString.split(', ');
+      const [month, day, year] = datePart.split('/');
+      const [hour, minute, second] = timePart.split(':');
       
-      // Create date with UTC constructor to avoid local timezone interpretation
-      const laDate = new Date(Date.UTC(
-        parseInt(partsObj.year),
-        parseInt(partsObj.month) - 1,
-        parseInt(partsObj.day),
-        parseInt(partsObj.hour),
-        parseInt(partsObj.minute),
-        parseInt(partsObj.second)
-      ));
+      // Create a date string in ISO format and append 'Z' to force UTC interpretation
+      const isoString = `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
       
-      return laDate;
+      return new Date(isoString);
     }
     
     // Helper function to convert any date to LA timezone
     function toLADate(date) {
-      const formatter = new Intl.DateTimeFormat('en-US', {
+      // Get the time string in LA timezone
+      const laString = date.toLocaleString('en-US', {
         timeZone: 'America/Los_Angeles',
         year: 'numeric',
         month: '2-digit',
@@ -12060,25 +12053,16 @@
         hour12: false
       });
       
-      const parts = formatter.formatToParts(date);
-      const partsObj = {};
-      parts.forEach(part => {
-        if (part.type !== 'literal') {
-          partsObj[part.type] = part.value;
-        }
-      });
+      // Parse it back but force interpretation as UTC to preserve the values
+      // Format is: "MM/DD/YYYY, HH:mm:ss"
+      const [datePart, timePart] = laString.split(', ');
+      const [month, day, year] = datePart.split('/');
+      const [hour, minute, second] = timePart.split(':');
       
-      // Create date with UTC constructor to avoid local timezone interpretation
-      const laDate = new Date(Date.UTC(
-        parseInt(partsObj.year),
-        parseInt(partsObj.month) - 1,
-        parseInt(partsObj.day),
-        parseInt(partsObj.hour),
-        parseInt(partsObj.minute),
-        parseInt(partsObj.second)
-      ));
+      // Create a date string in ISO format and append 'Z' to force UTC interpretation
+      const isoString = `${year}-${month}-${day}T${hour}:${minute}:${second}Z`;
       
-      return laDate;
+      return new Date(isoString);
     }
     
     function openSmartCalendar() {
