@@ -10365,6 +10365,102 @@
      * - All calculations are done in UTC internally, then converted to local time for display.
      * - NEVER hard-code timezone offsets - always retrieve them dynamically.
      */
+    
+    // ============================================
+    // TIME API - NEVER TRUST DEVICE CLOCK
+    // ============================================
+    window.TimeAPI = {
+      cache: {
+        yerevan: null,
+        la: null,
+        lastFetch: 0
+      },
+      
+      async fetchRealTime(timezone) {
+        // Use WorldTimeAPI - reliable and free
+        try {
+          const response = await fetch(`https://worldtimeapi.org/api/timezone/${timezone}`, {
+            cache: 'no-store'
+          });
+          
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+          
+          const data = await response.json();
+          
+          // Parse the datetime string properly
+          const dt = new Date(data.datetime);
+          
+          const result = {
+            hours: dt.getHours(),
+            minutes: dt.getMinutes(),
+            seconds: dt.getSeconds(),
+            day: dt.getDate(),
+            month: dt.getMonth() + 1,
+            year: dt.getFullYear(),
+            dayOfWeek: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dt.getDay()],
+            timestamp: data.unixtime * 1000,
+            timezone: timezone
+          };
+          
+          console.log(`[TimeAPI] Fetched ${timezone}:`, result);
+          return result;
+          
+        } catch (error) {
+          console.error(`[TimeAPI] Failed to fetch ${timezone}:`, error);
+          return null;
+        }
+      },
+      
+      async getCurrentTime(timezone) {
+        const now = performance.now();
+        const cacheKey = timezone === 'Asia/Yerevan' ? 'yerevan' : 'la';
+        
+        // Cache for 3 seconds to avoid excessive API calls during rapid updates
+        if (this.cache[cacheKey] && (now - this.cache.lastFetch < 3000)) {
+          const cached = this.cache[cacheKey];
+          const elapsedMs = now - this.cache.lastFetch;
+          const elapsedSeconds = Math.floor(elapsedMs / 1000);
+          
+          // Calculate current time from cached time + elapsed seconds
+          let seconds = cached.seconds + elapsedSeconds;
+          let minutes = cached.minutes;
+          let hours = cached.hours;
+          let day = cached.day;
+          
+          while (seconds >= 60) {
+            minutes++;
+            seconds -= 60;
+          }
+          while (minutes >= 60) {
+            hours++;
+            minutes -= 60;
+          }
+          while (hours >= 24) {
+            day++;
+            hours -= 24;
+            // Note: not handling month/year rollover in cache, just refetch
+          }
+          
+          return {
+            ...cached,
+            hours,
+            minutes,
+            seconds,
+            day
+          };
+        }
+        
+        // Fetch fresh time from API
+        const freshTime = await this.fetchRealTime(timezone);
+        if (freshTime) {
+          this.cache[cacheKey] = freshTime;
+          this.cache.lastFetch = now;
+        }
+        
+        return freshTime;
+      }
+    };
+    
     window.ClassCountdownTimer = (function() {
       // Private state
       let timerElement = null;
@@ -10384,74 +10480,10 @@
          * @param {string} timezone - IANA timezone string (e.g., 'America/Los_Angeles')
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
-        getCurrentTimeInZone(timezone) {
-          // CRITICAL WORKAROUND: Safari/WebKit has bugs with Asia/Yerevan timezone
-          // Solution: Use UTC offset calculation instead of relying on toLocaleString
-          
-          const now = new Date();
-          
-          if (timezone === 'Asia/Yerevan') {
-            // Yerevan is UTC+4 (no DST)
-            const utcTime = now.getTime();
-            const yerevanTime = new Date(utcTime + (4 * 60 * 60 * 1000)); // Add 4 hours to UTC
-            
-            const hours = yerevanTime.getUTCHours();
-            const minutes = yerevanTime.getUTCMinutes();
-            const seconds = yerevanTime.getUTCSeconds();
-            const day = yerevanTime.getUTCDate();
-            const month = yerevanTime.getUTCMonth() + 1;
-            const year = yerevanTime.getUTCFullYear();
-            const dayOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][yerevanTime.getUTCDay()];
-            
-            console.log('[TimezoneUtils] Yerevan time via UTC+4:', { hours, minutes, seconds, dayOfWeek, day, month, year });
-            
-            return { hours, minutes, seconds, day, month, year, dayOfWeek };
-          }
-          
-          // For other timezones (like LA), use toLocaleString
-          const timeString = now.toLocaleString("en-US", { 
-            timeZone: timezone,
-            hour12: true,
-            hour: 'numeric',
-            minute: '2-digit',
-            second: '2-digit',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit'
-          });
-          
-          console.log('[TimezoneUtils] Raw toLocaleString output for', timezone, ':', timeString);
-          
-          // Parse: "11/13/2025, 4:20:35 AM"
-          const match = timeString.match(/(\d+)\/(\d+)\/(\d+),\s+(\d+):(\d+):(\d+)\s+(AM|PM)/i);
-          if (!match) {
-            console.error('[TimezoneUtils] Parse failed:', timeString);
-            return null;
-          }
-          
-          const [_, month, day, year, hourStr, minuteStr, secondStr, period] = match;
-          let hours = parseInt(hourStr);
-          const minutes = parseInt(minuteStr);
-          const seconds = parseInt(secondStr);
-          
-          console.log('[TimezoneUtils] Parsed:', { hourStr, minuteStr, secondStr, period, hours, minutes, seconds });
-          
-          // Convert to 24-hour format
-          if (period.toUpperCase() === 'PM' && hours !== 12) {
-            hours += 12;
-          } else if (period.toUpperCase() === 'AM' && hours === 12) {
-            hours = 0;
-          }
-          
-          console.log('[TimezoneUtils] After 24h conversion:', { hours, minutes, seconds });
-          
-          // Get day of week
-          const dayOfWeek = now.toLocaleString('en-US', {
-            timeZone: timezone,
-            weekday: 'long'
-          });
-          
-          return {
+        async getCurrentTimeInZone(timezone) {
+          // NEVER TRUST DEVICE CLOCK - Always fetch from online API
+          return await window.TimeAPI.getCurrentTime(timezone);
+        },
             hours,
             minutes,
             seconds,
@@ -10985,13 +11017,13 @@
       }
 
       // Get all classes for the next 7 days
-      function getAllUpcomingClasses() {
+      async function getAllUpcomingClasses() {
         try {
           // CRITICAL FORK: Different data sources based on timezone mode
           if (timerTimeZone === 'EVN') {
-            return getAllUpcomingClassesYerevan();
+            return await getAllUpcomingClassesYerevan();
           } else {
-            return getAllUpcomingClassesLA();
+            return await getAllUpcomingClassesLA();
           }
         } catch (error) {
           console.error('[ClassCountdownTimer] Error getting all classes:', error);
@@ -11000,12 +11032,15 @@
       }
 
       // Get classes using Yerevan timezone (reads from Quick View Yerevan data)
-      function getAllUpcomingClassesYerevan() {
+      async function getAllUpcomingClassesYerevan() {
         const allClasses = [];
 
         const timezone = 'Asia/Yerevan';
-        const now = TimezoneUtils.getCurrentTimeInZone(timezone);
-        if (!now) return [];
+        const now = await TimezoneUtils.getCurrentTimeInZone(timezone);
+        if (!now) {
+          console.error('[Timer EVN] Failed to get current time');
+          return [];
+        }
 
         const yerevanClasses = getClassesFromQuickViewYerevan();
         console.log('[Timer EVN] Found classes from Quick View:', yerevanClasses);
@@ -11083,7 +11118,7 @@
       }
 
       // Get classes using LA timezone (original calendar data)
-      function getAllUpcomingClassesLA() {
+      async function getAllUpcomingClassesLA() {
         try {
           const allClasses = [];
           
@@ -11100,7 +11135,7 @@
           // CRITICAL: Calendar times are ALWAYS stored in LA timezone
           // So we MUST calculate using LA time, regardless of display preference
           const timezone = 'America/Los_Angeles';
-          const nowTime = TimezoneUtils.getCurrentTimeInZone(timezone);
+          const nowTime = await TimezoneUtils.getCurrentTimeInZone(timezone);
           const timezoneOffset = TimezoneUtils.getTimezoneOffset(timezone);
           
           debug('[ClassCountdownTimer] Current time (' + timezone + '):', nowTime.toLocaleString(), '(UTC offset:', timezoneOffset, 'hours)');
@@ -11257,10 +11292,10 @@
       }
 
       // Update timer display with all classes
-      function updateDisplay() {
+      async function updateDisplay() {
         if (!timerElement) return;
 
-        const allClasses = getAllUpcomingClasses();
+        const allClasses = await getAllUpcomingClasses();
         const listContainer = timerElement.querySelector('.timer-classes-list');
         const titleEl = timerElement.querySelector('.timer-title');
         
