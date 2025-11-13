@@ -6406,6 +6406,11 @@
     function startAutoRefresh() {
       stopAutoRefresh();
       autoRefreshInterval = setInterval(() => {
+        // Don't auto-refresh if Gmail is not connected
+        if (!getGmailConnection()) {
+          console.log('⏸️ Skipping auto-refresh - Gmail not connected');
+          return;
+        }
         console.log('🔄 Auto-refreshing payments...');
         refreshPayments();
       }, TIMING.AUTO_REFRESH_INTERVAL);
