@@ -10667,9 +10667,12 @@
         timer.id = 'enhancedCountdownTimer';
         timer.innerHTML = `
           <div class="timer-header">
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <span class="timer-icon">🕒</span>
-              <span class="timer-title">Upcoming Classes</span>
+            <div style="display: flex; flex-direction: column; gap: 2px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="timer-icon">🕒</span>
+                <span class="timer-title">Upcoming Classes</span>
+              </div>
+              <div id="currentTimeDisplay" style="font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 500; padding-left: 24px;"></div>
             </div>
             <div style="display: flex; align-items: center; gap: 8px;">
               <div id="timezoneToggle" style="display: flex; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 2px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);">
@@ -10938,9 +10941,41 @@
         }
       }
 
+      // Update current time display based on timezone preference
+      function updateCurrentTimeDisplay() {
+        const currentTimeEl = timerElement?.querySelector('#currentTimeDisplay');
+        if (!currentTimeEl) return;
+        
+        const selectedTz = localStorage.getItem('timerTimezone') || 'AM';
+        
+        // Always get LA time from UTC (not local computer time)
+        const laTime = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+        
+        if (selectedTz === 'AM') {
+          // Convert LA time to Yerevan time
+          const yerevanTime = convertLAToYerevanTime(
+            laTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+          );
+          const laTimeStr = laTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+          const dateStr = laTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          currentTimeEl.textContent = `${yerevanTime.time} Yerevan • ${laTimeStr} LA • ${dateStr}`;
+        } else {
+          // Show LA time first
+          const yerevanTime = convertLAToYerevanTime(
+            laTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
+          );
+          const laTimeStr = laTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+          const dateStr = laTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          currentTimeEl.textContent = `${laTimeStr} LA • ${yerevanTime.time} Yerevan • ${dateStr}`;
+        }
+      }
+
       // Update timer display with all classes
       function updateDisplay() {
         if (!timerElement) return;
+
+        // Update current time display based on timezone preference
+        updateCurrentTimeDisplay();
 
         const allClasses = getAllUpcomingClasses();
         const listContainer = timerElement.querySelector('.timer-classes-list');
