@@ -9,7 +9,7 @@
   <meta http-equiv="Expires" content="-1">
   
   <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.1.0-20251112-0240">
+  <meta name="version" content="2.3.0-20251112-0500">
   
   <!-- Supabase Configuration -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
@@ -70,6 +70,63 @@
         timeZone: LA_TIMEZONE,
         ...options 
       });
+    }
+
+    // ==========================================================================
+    // PERFORMANCE HELPERS - Shared collection utilities
+    // ==========================================================================
+    function coerceStudentId(rawId) {
+      if (rawId === null || rawId === undefined) return null;
+      if (typeof rawId === 'number' && Number.isFinite(rawId)) return rawId;
+      const parsed = Number(String(rawId).trim());
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+
+    function getStudentsCollection(preferredCollection) {
+      if (Array.isArray(preferredCollection)) return preferredCollection;
+      if (Array.isArray(window.studentsCache)) return window.studentsCache;
+      if (Array.isArray(window.globalData?.students)) return window.globalData.students;
+      return [];
+    }
+
+    function getGroupsCollection(preferredCollection) {
+      if (Array.isArray(preferredCollection)) return preferredCollection;
+      if (Array.isArray(window.groupsCache)) return window.groupsCache;
+      if (Array.isArray(window.globalData?.groups)) return window.globalData.groups;
+      return [];
+    }
+
+    function getStudentById(studentId, preferredCollection) {
+      const numericId = coerceStudentId(studentId);
+      if (numericId === null) return null;
+
+      if (window.studentsMap instanceof Map && window.studentsMap.size) {
+        const mapHit = window.studentsMap.get(numericId) || window.studentsMap.get(String(numericId));
+        if (mapHit) return mapHit;
+      }
+
+      const stringId = String(studentId);
+      const collection = getStudentsCollection(preferredCollection);
+      return collection.find(student => {
+        if (!student) return false;
+        if (student.id === numericId) return true;
+        return String(student.id) === stringId;
+      }) || null;
+    }
+
+    function getGroupByName(groupName, preferredCollection) {
+      if (!groupName) return null;
+      const normalized = String(groupName).trim();
+      if (!normalized) return null;
+
+      if (window.groupsMap instanceof Map && window.groupsMap.size) {
+        const direct = window.groupsMap.get(normalized) || window.groupsMap.get(normalized.toLowerCase());
+        if (direct) return direct;
+      }
+
+      const lower = normalized.toLowerCase();
+      const collection = getGroupsCollection(preferredCollection);
+      return collection.find(group => group && typeof group.name === 'string' && group.name.toLowerCase() === lower) || null;
     }
   </script>
 
@@ -3140,7 +3197,10 @@
       window.studentsCache = mappedData;
       window.studentsMap.clear();
       mappedData.forEach(student => {
-        window.studentsMap.set(student.id, student);
+        if (student && student.id !== undefined && student.id !== null) {
+          window.studentsMap.set(student.id, student);
+          window.studentsMap.set(String(student.id), student);
+        }
       });
       return mappedData;
     }
@@ -3282,7 +3342,11 @@
       window.groupsCache = deduped;
       window.groupsMap.clear();
       deduped.forEach(group => {
-        window.groupsMap.set(group.name, group);
+        if (!group || !group.name) return;
+        const normalizedName = String(group.name).trim();
+        if (!normalizedName) return;
+        window.groupsMap.set(normalizedName, group);
+        window.groupsMap.set(normalizedName.toLowerCase(), group);
       });
       
       return window.groupsCache;
@@ -3386,12 +3450,12 @@
     
     // Resolve payment to student using alias system
     function resolvePaymentToStudent(payment, studentCache) {
-  const students = Array.isArray(studentCache) ? studentCache : getCachedStudents();
+      const students = Array.isArray(studentCache) ? studentCache : getCachedStudents();
       
       // Priority 1: Manual link (check both linkedStudentId and studentId)
       const manualStudentId = payment.linkedStudentId || payment.studentId;
       if (manualStudentId && payment.manuallyLinked) {
-        const student = students.find(s => s.id === manualStudentId);
+        const student = getStudentById(manualStudentId, students);
         if (student) {
           return {
             studentId: student.id,
@@ -3661,7 +3725,7 @@
         animation: fadeIn 0.2s ease;
       `;
       
-  const students = getCachedStudents();
+    const students = getCachedStudents();
       
       const modalContent = document.createElement('div');
       modalContent.style.cssText = `
@@ -3795,8 +3859,8 @@
           return;
         }
         
-    const students = getCachedStudents();
-    const student = students.find(s => s.id === studentId);
+        const students = getCachedStudents();
+        const student = getStudentById(studentId, students);
         
         if (!student) {
           showNotification('❌ Student not found', 'error');
@@ -3852,8 +3916,8 @@
     async function showAddAliasModal(paymentId, studentId) {
       const payments = PaymentStore.getAll();
       const payment = payments.find(p => p.id === paymentId);
-  const students = getCachedStudents();
-      const student = students.find(s => s.id === studentId);
+      const students = getCachedStudents();
+      const student = getStudentById(studentId, students);
       
       if (!payment || !student) return;
       
@@ -5903,18 +5967,18 @@
       debug('💾 Payment data snapshot confirmed:', paymentDataSnapshot);
       
       try {
-  const students = getCachedStudents();
+        const students = getCachedStudents();
         debug('🔍 Looking for student ID:', studentId, '(type:', typeof studentId, ')');
-        debug('📋 Available students:', students.length);
-        debug('📋 Available student IDs:', students.map(s => s.id));
+    debug('📋 Available students:', students.length);
+    debug('📋 Available student IDs:', students.map(s => s.id));
         
-        // Convert studentId to number for comparison (it comes from HTML as string)
-        const studentIdNum = parseInt(studentId, 10);
-        debug('🔍 Converted student ID to number:', studentIdNum);
+    // Convert studentId to number for comparison (it comes from HTML as string)
+    const studentIdNum = parseInt(studentId, 10);
+    debug('🔍 Converted student ID to number:', studentIdNum);
         
-        const student = students.find(s => s.id === studentIdNum);
+    const student = getStudentById(studentIdNum, students);
         
-        if (!student) {
+    if (!student) {
           console.error('❌ Student not found. ID:', studentIdNum, 'Available:', students.map(s => ({ id: s.id, name: s.name })));
           showNotification('❌ Student not found', 'error');
           return;
@@ -7671,7 +7735,7 @@
       event.stopPropagation();
       
       // Find student in both local array and cache
-      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+      const student = getStudentById(studentId, students);
       if (!student) {
         console.error('Student not found:', studentId);
         return;
@@ -7703,7 +7767,7 @@
       event.stopPropagation();
       
       // Find student in local array
-      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+      const student = getStudentById(studentId, students);
       if (!student) {
         console.error('Student not found:', studentId);
         return;
@@ -7773,7 +7837,7 @@
       
       // Convert to number for comparison (passed as string from onclick)
       const numericId = parseInt(studentId);
-      const student = students.find(s => s.id === numericId);
+      const student = getStudentById(numericId, students);
       if (!student) {
         console.error('❌ Student not found:', studentId);
         return;
@@ -7837,7 +7901,7 @@
       debug('🔄 cycleStatus called with ID:', studentId, 'type:', typeof studentId);
       
       // Handle both string and numeric IDs from Supabase
-      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+      const student = getStudentById(studentId, students);
       if (!student) {
         console.error('❌ Student not found:', studentId, 'Available IDs:', students.map(s => s.id));
         return;
@@ -7917,7 +7981,7 @@
 
     async function toggleVisibility(studentId, visible) {
       // Handle both string and numeric IDs from Supabase
-      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+      const student = getStudentById(studentId, students);
       if (!student) return;
 
       student.showInGrid = visible;
@@ -8062,7 +8126,7 @@
       let savedStudent;
       
       if (editingStudentId) {
-        const student = students.find(s => s.id === editingStudentId);
+  const student = getStudentById(editingStudentId, students);
         if (student) {
           student.name = name;
           student.group = group;
@@ -8123,7 +8187,7 @@
     }
 
     async function deleteStudent(studentId) {
-      const student = students.find(s => s.id === studentId);
+  const student = getStudentById(studentId, students);
       if (!student) return;
 
       const confirmed = await customConfirm(
@@ -8669,7 +8733,7 @@
     }
 
     async function moveToWaitingList(studentId) {
-      const student = students.find(s => s.id === studentId);
+  const student = getStudentById(studentId, students);
       if (!student) return;
 
       const confirmed = await customConfirm(
@@ -8827,8 +8891,8 @@
     }
 
     async function mergeDuplicates(primaryId, duplicateId) {
-      const primary = students.find(s => s.id === primaryId);
-      const duplicate = students.find(s => s.id === duplicateId);
+  const primary = getStudentById(primaryId, students);
+  const duplicate = getStudentById(duplicateId, students);
 
       if (!primary || !duplicate) {
         showNotificationSimple('Student not found', 'error');
@@ -9122,7 +9186,7 @@
     function editGroupSchedule(groupName) {
       const grid = document.getElementById('groupGrid');
       grid.querySelectorAll('.schedule-editor').forEach(el => el.remove());
-      const group = groups.find(g => g.name === groupName);
+      const group = getGroupByName(groupName, groups);
       if (!group) return;
       
       const card = [...grid.children].find(c => {
@@ -9229,7 +9293,7 @@
         }
       });
       
-      const group = groups.find(g => g.name === groupName);
+      const group = getGroupByName(groupName, groups);
       if (!group) return;
       
       // CRITICAL FIX: Replace old schedule entirely (no appending)
@@ -11575,7 +11639,7 @@
       const groups = window.groupsCache || window.globalData?.groups || [];
       
       // Find the group by name
-      const group = groups.find(g => g.name === groupName);
+      const group = getGroupByName(groupName, groups);
       
       // Return 0 if group not found or no schedule
       if (!group || !group.schedule) return 0;
@@ -11897,46 +11961,6 @@
       document.getElementById('calendarSubtitle').textContent = 
         `${activeStudentCount} active student${activeStudentCount !== 1 ? 's' : ''} • ${totalClasses} scheduled class${totalClasses !== 1 ? 'es' : ''}`;
       
-      // Show notification if there are unmatched payments
-      const unmatchedCount = window.unmatchedPayments?.length || 0;
-      let unmatchedNotification = document.getElementById('unmatchedPaymentsNotification');
-      
-      if (unmatchedCount > 0) {
-        if (!unmatchedNotification) {
-          unmatchedNotification = document.createElement('div');
-          unmatchedNotification.id = 'unmatchedPaymentsNotification';
-          unmatchedNotification.style.cssText = `
-            margin: 15px 0;
-            padding: 12px 16px;
-            background: rgba(251, 191, 36, 0.1);
-            border: 1px solid rgba(251, 191, 36, 0.3);
-            border-radius: 8px;
-            color: #fbbf24;
-            font-size: 13px;
-            cursor: pointer;
-            transition: all 0.2s;
-          `;
-          unmatchedNotification.onmouseover = () => {
-            unmatchedNotification.style.background = 'rgba(251, 191, 36, 0.15)';
-          };
-          unmatchedNotification.onmouseout = () => {
-            unmatchedNotification.style.background = 'rgba(251, 191, 36, 0.1)';
-          };
-          
-          const subtitleEl = document.getElementById('calendarSubtitle');
-          subtitleEl.parentNode.insertBefore(unmatchedNotification, subtitleEl.nextSibling);
-        }
-        
-        unmatchedNotification.innerHTML = `
-          ⚠️ ${unmatchedCount} payment${unmatchedCount !== 1 ? 's' : ''} need${unmatchedCount === 1 ? 's' : ''} to be assigned to class dates
-          <span style="float: right; opacity: 0.7;">Click to review →</span>
-        `;
-        unmatchedNotification.onclick = showUnmatchedPaymentsModal;
-        unmatchedNotification.style.display = 'block';
-      } else if (unmatchedNotification) {
-        unmatchedNotification.style.display = 'none';
-      }
-      
       // Render grid
       renderCalendarGrid(calendarData);
       
@@ -11969,7 +11993,7 @@
         
         // Save each balance update
         for (const [studentId, newBalance] of balanceUpdateQueue.entries()) {
-          const student = students.find(s => s.id === studentId);
+          const student = getStudentById(studentId, students);
           if (student && student.balance !== newBalance) {
             student.balance = newBalance;
             
@@ -12004,24 +12028,6 @@
         return status === 'active' && s.isActive !== false;
       });
       
-      // AUTO-APPLY PAYMENTS (November 1, 2025+)
-      // CRITICAL: Always process from Nov 1, 2025 onwards, not just the current month
-      const nov1_2025 = new Date('2025-11-01T00:00:00');
-      const laToday = getLADate();
-      const futureDate = new Date(laToday);
-      futureDate.setMonth(futureDate.getMonth() + 6); // Process 6 months into future
-      
-      const autoAppliedData = autoApplyPaymentsToCalendar(activeStudents, payments, nov1_2025, futureDate);
-      
-      // Store unmatched payments for user assignment
-      if (autoAppliedData.unmatchedPayments.length > 0) {
-        window.unmatchedPayments = autoAppliedData.unmatchedPayments;
-        debug(`⚠️ ${autoAppliedData.unmatchedPayments.length} unmatched payments need assignment`);
-      }
-      
-      // Store applied payments globally for checkPaymentStatus to use
-      window.autoAppliedPayments = autoAppliedData.appliedPayments;
-      
       // Map students to their schedules
       const scheduleMap = {};
       let totalScheduledClasses = 0;
@@ -12030,7 +12036,7 @@
         const groupName = student.group || '';
         if (!groupName.trim()) return;
         
-        const group = groups.find(g => g.name === groupName);
+        const group = getGroupByName(groupName, groups);
         if (!group || !group.schedule) return;
         
         // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
@@ -12129,249 +12135,6 @@
       return days;
     }
     
-    // ============================================================================
-    // PAYMENT AUTO-APPLICATION SYSTEM (November 1, 2025+)
-    // ============================================================================
-    // This system automatically matches Gmail payments to calendar dates
-    // All operations use LA timezone (America/Los_Angeles)
-    // ============================================================================
-    
-    /**
-     * Auto-apply payments to calendar starting November 1, 2025
-     * Returns a map of { dateStr: { studentId: paymentInfo } }
-     */
-    function autoApplyPaymentsToCalendar(students, payments, startDate, endDate) {
-      console.log('🔧 AUTO-APPLY STARTING...');
-      console.log(`📅 Date range: ${startDate.toLocaleDateString()} to ${endDate.toLocaleDateString()}`);
-      console.log(`👥 Students: ${students.length}`);
-      console.log(`💰 Total payments: ${payments.length}`);
-      
-      const appliedPayments = {}; // dateStr -> studentId -> paymentInfo
-      const unmatchedPayments = []; // Payments that need user assignment
-      
-      // Only process payments from November 1, 2025 onwards
-      const nov1_2025 = new Date('2025-11-01T00:00:00');
-      const laToday = getLADate();
-      
-      // Get all class dates for each student from Nov 1 onwards
-      const studentClassDates = buildStudentClassSchedule(students, nov1_2025, endDate);
-      console.log(`📚 Built class schedules for ${Object.keys(studentClassDates).length} students`);
-      
-      // Track which payments have been applied
-      const appliedPaymentIds = new Set();
-      
-      // Sort payments by date (LA timezone)
-      const sortedPayments = payments
-        .filter(p => !p.ignored)
-        .map(p => {
-          const timestamp = p.emailDate || p.date || p.timestamp;
-          const laDate = toLADate(new Date(timestamp));
-          return { ...p, laDate, laDateStr: formatDateYYYYMMDD(laDate) };
-        })
-        .sort((a, b) => a.laDate - b.laDate);
-      
-      console.log(`💳 Processing ${sortedPayments.length} non-ignored payments`);
-      
-      // Process each payment
-      sortedPayments.forEach(payment => {
-        // Find student by name matching
-        const student = findStudentByPayment(payment, students);
-        
-        if (!student) {
-          console.log(`⚠️ Cannot match payment to student: ${payment.payerName || payment.studentName}`);
-          unmatchedPayments.push(payment);
-          return;
-        }
-        
-        const studentId = student.id;
-        const pricePerClass = parseFloat(student.payPerClass) || 0;
-        const paymentAmount = parseFloat(payment.amount) || 0;
-        
-        // Get student's class dates
-        const classDates = studentClassDates[studentId] || [];
-        console.log(`📝 ${student.name}: ${classDates.length} class dates, payment on ${payment.laDateStr}`);
-        
-        // Strategy 1: Try exact date match first
-        const exactMatch = classDates.find(dateStr => {
-          return dateStr === payment.laDateStr && !appliedPayments[dateStr]?.[studentId];
-        });
-        
-        if (exactMatch) {
-          applyPaymentToDate(exactMatch, studentId, payment, paymentAmount, pricePerClass, appliedPayments);
-          appliedPaymentIds.add(payment.id);
-          console.log(`✅ EXACT MATCH: ${student.name} payment on ${exactMatch}`);
-          return;
-        }
-        
-        // Strategy 2: ONLY look for PAST classes BEFORE the payment (unlimited lookback)
-        // This prevents applying Nov 10 payment to Nov 13 class
-        // Payment can cover ANY past unpaid class from Nov 1 onwards, but NOT future classes
-        const pastClass = findPastUnpaidClass(
-          payment.laDateStr,
-          classDates,
-          appliedPayments,
-          studentId,
-          365 // unlimited lookback - match to any past class in the last year
-        );
-        
-        if (pastClass) {
-          applyPaymentToDate(pastClass, studentId, payment, paymentAmount, pricePerClass, appliedPayments);
-          appliedPaymentIds.add(payment.id);
-          console.log(`✅ PAST CLASS: ${student.name} payment on ${payment.laDateStr} applied to ${pastClass}`);
-          return;
-        }
-        
-        // Strategy 3: Payment doesn't match any class - needs user assignment
-        console.log(`⚠️ UNMATCHED: ${student.name}: $${paymentAmount} on ${payment.laDateStr} - no unpaid past classes found`);
-        unmatchedPayments.push({
-          ...payment,
-          student,
-          studentId,
-          reason: 'no_matching_class'
-        });
-      });
-      
-      console.log(`✅ AUTO-APPLY COMPLETE:`);
-      console.log(`   Applied: ${Object.keys(appliedPayments).length} dates with payments`);
-      console.log(`   Unmatched: ${unmatchedPayments.length} payments`);
-      console.log(`   Applied payments map:`, appliedPayments);
-      
-      return {
-        appliedPayments,
-        unmatchedPayments
-      };
-    }
-    
-    /**
-     * Build a schedule map of all class dates for each student
-     */
-    function buildStudentClassSchedule(students, startDate, endDate) {
-      const schedule = {}; // studentId -> [dateStr, dateStr, ...]
-      const groups = window.groupsCache || [];
-      
-      students.forEach(student => {
-        const groupName = student.group;
-        if (!groupName) return;
-        
-        const group = groups.find(g => g.name === groupName);
-        if (!group || !group.schedule) return;
-        
-        const scheduleDays = parseScheduleDays(group.schedule);
-        const classDates = [];
-        
-        // Generate all class dates from start to end
-        const current = new Date(startDate);
-        while (current <= endDate) {
-          const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][current.getDay()];
-          
-          if (scheduleDays.includes(dayName)) {
-            const dateStr = formatDateYYYYMMDD(current);
-            
-            // Check if class was skipped
-            const isSkipped = window.SkipClassManager?.isClassSkipped(groupName, dateStr);
-            if (!isSkipped) {
-              classDates.push(dateStr);
-            }
-          }
-          
-          current.setDate(current.getDate() + 1);
-        }
-        
-        schedule[student.id] = classDates;
-      });
-      
-      return schedule;
-    }
-    
-    /**
-     * Find student by payment payer/student name
-     */
-    function findStudentByPayment(payment, students) {
-      const paymentStudentName = (payment.studentName || '').toLowerCase().trim();
-      const paymentPayerName = (payment.payerName || '').toLowerCase().trim();
-      
-      return students.find(student => {
-        const studentNameLower = (student.name || '').toLowerCase().trim();
-        
-        // Direct match
-        if (paymentStudentName === studentNameLower || paymentPayerName === studentNameLower) {
-          return true;
-        }
-        
-        // Last name match (for "Husikyan Consulting" → "Sona Husikyan")
-        const studentLastName = studentNameLower.split(' ').pop();
-        if (studentLastName && studentLastName.length > 3) {
-          if (paymentPayerName.includes(studentLastName) || paymentStudentName.includes(studentLastName)) {
-            return true;
-          }
-        }
-        
-        // Alias match
-        if (student.aliases && Array.isArray(student.aliases)) {
-          return student.aliases.some(alias => {
-            const aliasLower = alias.toLowerCase().trim();
-            return aliasLower === paymentStudentName || aliasLower === paymentPayerName;
-          });
-        }
-        
-        return false;
-      });
-    }
-    
-    /**
-     * Find most recent unpaid class BEFORE the payment date (lookback only)
-     * This prevents applying payments to future classes
-     */
-    function findPastUnpaidClass(paymentDateStr, classDates, appliedPayments, studentId, daysLookback) {
-      const paymentDate = new Date(paymentDateStr);
-      
-      let nearest = null;
-      let minDiff = Infinity;
-      
-      classDates.forEach(dateStr => {
-        // Skip if already paid
-        if (appliedPayments[dateStr]?.[studentId]) return;
-        
-        const classDate = new Date(dateStr);
-        const daysDiff = (paymentDate - classDate) / (1000 * 60 * 60 * 24);
-        
-        // ONLY consider classes BEFORE or ON the payment date
-        // daysDiff > 0 means class was in the past
-        // daysDiff = 0 means same day
-        if (daysDiff >= 0 && daysDiff <= daysLookback && daysDiff < minDiff) {
-          minDiff = daysDiff;
-          nearest = dateStr;
-        }
-      });
-      
-      return nearest;
-    }
-    
-    /**
-     * Apply a payment to a specific class date
-     */
-    function applyPaymentToDate(dateStr, studentId, payment, paymentAmount, pricePerClass, appliedPayments) {
-      if (!appliedPayments[dateStr]) {
-        appliedPayments[dateStr] = {};
-      }
-      
-      appliedPayments[dateStr][studentId] = {
-        paymentId: payment.id,
-        amount: paymentAmount,
-        pricePerClass: pricePerClass,
-        remainder: Math.max(0, paymentAmount - pricePerClass),
-        paid: true,
-        status: 'paid',
-        message: paymentAmount > pricePerClass 
-          ? `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(paymentAmount - pricePerClass, '$')} to balance)`
-          : `Paid ${formatCurrency(paymentAmount, '$')}`
-      };
-    }
-    
-    // ============================================================================
-    // END PAYMENT AUTO-APPLICATION SYSTEM
-    // ============================================================================
-    
     function checkPaymentStatus(student, classDate, pricePerClass, payments) {
       const dateStr = formatDateYYYYMMDD(classDate);
       const studentId = student.id;
@@ -12420,39 +12183,122 @@
         };
       }
       
-      // RULE 3: Check auto-applied payments first (for November 1, 2025+)
-      if (window.autoAppliedPayments && window.autoAppliedPayments[dateStr]?.[studentId]) {
-        const appliedPayment = window.autoAppliedPayments[dateStr][studentId];
-        const balance = student.balance || 0;
+      // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
+      const balance = student.balance || 0;
+      
+      // Find all payments for this student (by name or alias match)
+      // Check BOTH studentName AND payerName fields
+      const studentPayments = payments.filter(p => {
+        if (p.ignored) return false;
         
-        // Handle remainder and update balance
-        if (appliedPayment.remainder > 0) {
-          const newBalance = balance + appliedPayment.remainder;
+        const paymentStudentName = (p.studentName || '').toLowerCase().trim();
+        const paymentPayerName = (p.payerName || '').toLowerCase().trim();
+        const studentNameLower = (student.name || '').toLowerCase().trim();
+        
+        // Check if studentName matches
+        if (paymentStudentName === studentNameLower) return true;
+        
+        // Check if payerName matches (for cases where parent pays)
+        if (paymentPayerName === studentNameLower) return true;
+        
+        // SMART MATCHING: Check if payer name contains student's last name
+        // This handles cases like "Husikyan Consulting" → "Sona Husikyan"
+        const studentLastName = studentNameLower.split(' ').pop(); // Get last word as last name
+        if (studentLastName && studentLastName.length > 3) { // Only match if last name is significant
+          if (paymentPayerName.includes(studentLastName)) {
+            debug(`💡 Smart match: "${paymentPayerName}" contains "${studentLastName}" (${student.name})`);
+            return true;
+          }
+          if (paymentStudentName.includes(studentLastName)) {
+            debug(`💡 Smart match: "${paymentStudentName}" contains "${studentLastName}" (${student.name})`);
+            return true;
+          }
+        }
+        
+        // Check if payment matches any student alias
+        if (student.aliases && Array.isArray(student.aliases)) {
+          return student.aliases.some(alias => {
+            const aliasLower = alias.toLowerCase().trim();
+            return aliasLower === paymentStudentName || aliasLower === paymentPayerName;
+          });
+        }
+        
+        return false;
+      });
+      
+      // Check for payment on this date OR any recent payment that can cover this class
+      // If checking a past date, allow payments from up to 7 days after the class
+      const paymentOnDate = studentPayments.find(p => {
+        const paymentTimestamp = p.emailDate || p.date || p.timestamp;
+        if (!paymentTimestamp) return false;
+        
+        const paymentDate = toLADate(new Date(paymentTimestamp));
+        const paymentDateStr = formatDateYYYYMMDD(paymentDate);
+        
+        // Exact date match
+        if (paymentDateStr === dateStr) return true;
+        
+        // For past classes: allow payment from up to 7 days after the class
+        if (dateStr < todayStr) {
+          const classDate = new Date(dateStr);
+          const payDate = new Date(paymentDateStr);
+          const daysDiff = Math.floor((payDate - classDate) / (1000 * 60 * 60 * 24));
+          
+          // Payment can be up to 7 days after the class date
+          if (daysDiff > 0 && daysDiff <= 7) return true;
+        }
+        
+        return false;
+      });
+      
+      if (paymentOnDate) {
+        const paymentAmount = parseFloat(paymentOnDate.amount) || 0;
+        
+        if (paymentAmount > pricePerClass) {
+          const remainder = paymentAmount - pricePerClass;
+          const newBalance = balance + remainder;
+          
+          // Update student balance in memory and queue for save
           student.balance = newBalance;
           queueBalanceUpdate(studentId, newBalance);
           
-          return {
+          const result = {
             status: 'paid',
             paid: true,
-            amount: appliedPayment.amount,
+            amount: paymentAmount,
             balance: newBalance,
-            message: appliedPayment.message
+            message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
           };
+          
+          // Freeze today's data at end of day
+          if (dateStr === todayStr) {
+            saveCalendarSnapshot(dateStr, {
+              [studentId]: result
+            });
+          }
+          
+          return result;
+        } else {
+          const result = {
+            status: 'paid',
+            paid: true,
+            amount: paymentAmount,
+            balance: balance,
+            message: `Paid ${formatCurrency(paymentAmount, '$')}`
+          };
+          
+          if (dateStr === todayStr) {
+            saveCalendarSnapshot(dateStr, {
+              [studentId]: result
+            });
+          }
+          
+          return result;
         }
-        
-        return {
-          status: 'paid',
-          paid: true,
-          amount: appliedPayment.amount,
-          balance: balance,
-          message: appliedPayment.message
-        };
       }
       
-      // RULE 4: Check if can deduct from balance (for TODAY and future dates only)
-      // Do NOT deduct for past dates - those should use auto-applied payments or snapshots
-      const balance = student.balance || 0;
-      
+      // Check if can deduct from balance (for TODAY and future dates only)
+      // Do NOT deduct for past dates - those should use snapshots or payment records
       if (balance >= pricePerClass && dateStr >= todayStr) {
         const newBalance = balance - pricePerClass;
         
@@ -12571,7 +12417,8 @@
         
         // Check if any classes are skipped on this day
         const hasSkippedClass = hasClasses && dayData.studentsWithClass.some(classInfo => {
-          const groupName = window.groupsCache?.find(g => g.name === classInfo.student.group)?.name;
+          const group = getGroupByName(classInfo.student.group);
+          const groupName = group?.name;
           return groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
         });
         
@@ -12619,7 +12466,8 @@
         }
         
         // Check if this class is skipped
-        const groupName = window.groupsCache?.find(g => g.name === student.group)?.name;
+        const group = getGroupByName(student.group);
+        const groupName = group?.name;
         const isSkipped = groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
         
         let dotColor;
@@ -12748,30 +12596,6 @@
         `;
       });
       
-      // Check if this is a past date (frozen snapshot)
-      const laToday = getLADate();
-      const isPastDate = dateObj < laToday;
-      const snapshot = isPastDate ? getCalendarSnapshot(dateStr) : null;
-      
-      // Add Force Recalculate button for past dates
-      const forceRecalcButton = isPastDate && snapshot ? `
-        <div style="margin-top: 16px; padding: 12px; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 8px;">
-          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-            <span style="font-size: 16px;">⚠️</span>
-            <span style="font-size: 11px; font-weight: 700; color: #fbbf24;">FROZEN DATA</span>
-          </div>
-          <p style="margin: 0 0 10px 0; font-size: 11px; color: rgba(251,191,36,0.8); line-height: 1.4;">
-            This date is frozen to preserve historical accuracy. Frozen at ${new Date(snapshot.frozenAt).toLocaleString()}.
-          </p>
-          <button onclick="forceRecalculateDay('${dateStr}')" 
-                  style="width: 100%; padding: 8px 12px; background: rgba(251,191,36,0.2); border: 1px solid rgba(251,191,36,0.5); border-radius: 6px; color: #fbbf24; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;"
-                  onmouseover="this.style.background='rgba(251,191,36,0.3)'; this.style.borderColor='#fbbf24';"
-                  onmouseout="this.style.background='rgba(251,191,36,0.2)'; this.style.borderColor='rgba(251,191,36,0.5)';">
-            🔄 Force Recalculate with Current Data
-          </button>
-        </div>
-      ` : '';
-      
       const panelHTML = `
         <div id="dayDetailsOverlay" onclick="closeDayDetails()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 28000; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;"></div>
         <div id="dayDetailsPanel" onclick="event.stopPropagation()" style="position: fixed; right: -500px; top: 0; bottom: 0; width: 450px; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border-left: 2px solid rgba(138,180,255,0.3); z-index: 28001; backdrop-filter: blur(20px); box-shadow: -10px 0 40px rgba(0,0,0,0.5); transition: right 0.3s ease; overflow-y: auto;">
@@ -12783,7 +12607,6 @@
               </div>
               <button onclick="closeDayDetails()" style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 20px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">×</button>
             </div>
-            ${forceRecalcButton}
           </div>
           <div style="padding: 24px;">
             ${studentsHTML}
@@ -12815,193 +12638,6 @@
       }
     }
     
-    // Force recalculate a frozen day with current payment data
-    function forceRecalculateDay(dateStr) {
-      const confirmed = confirm(
-        `⚠️ FORCE RECALCULATE\n\n` +
-        `This will recalculate ${dateStr} using CURRENT payment data and balance information.\n\n` +
-        `The frozen snapshot will be replaced with fresh calculations.\n\n` +
-        `Use this if:\n` +
-        `• You added/modified payments after the date was frozen\n` +
-        `• Student balances have changed\n` +
-        `• You need to correct historical data\n\n` +
-        `Continue?`
-      );
-      
-      if (!confirmed) return;
-      
-      debug(`[ForceRecalc] Recalculating ${dateStr} with current data...`);
-      
-      try {
-        const students = getCachedStudents();
-        const payments = PaymentStore.getAll();
-        const groups = window.groupsCache || [];
-        const [year, month, day] = dateStr.split('-').map(Number);
-        const date = new Date(year, month - 1, day);
-        
-        const newSnapshot = { students: {}, frozenAt: new Date().toISOString() };
-        
-        // Get all students who should have class on this date
-        students.forEach(student => {
-          if (!student.group) return;
-          
-          const group = groups.find(g => g.name === student.group);
-          if (!group || !group.schedule) return;
-          
-          const scheduleDays = parseScheduleDays(group.schedule);
-          const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][date.getDay()];
-          
-          if (scheduleDays.includes(dayName)) {
-            const pricePerClass = parseFloat(student.payPerClass) || 0;
-            
-            // Calculate payment status using current data
-            const studentPayments = payments.filter(p => {
-              if (p.ignored) return false;
-              const paymentStudentName = (p.studentName || '').toLowerCase().trim();
-              const paymentPayerName = (p.payerName || '').toLowerCase().trim();
-              const studentNameLower = student.name.toLowerCase().trim();
-              
-              if (paymentStudentName === studentNameLower || paymentPayerName === studentNameLower) return true;
-              
-              const studentLastName = studentNameLower.split(' ').pop();
-              if (studentLastName && studentLastName.length > 3) {
-                if (paymentPayerName.includes(studentLastName) || paymentStudentName.includes(studentLastName)) return true;
-              }
-              return false;
-            });
-            
-            // Check for payment on this date
-            const paymentOnDate = studentPayments.find(p => {
-              const paymentTimestamp = p.emailDate || p.date || p.timestamp;
-              if (!paymentTimestamp) return false;
-              const paymentDate = toLADate(new Date(paymentTimestamp));
-              const paymentDateStr = formatDateYYYYMMDD(paymentDate);
-              return paymentDateStr === dateStr;
-            });
-            
-            let paymentStatus;
-            if (paymentOnDate) {
-              paymentStatus = {
-                status: 'paid',
-                paid: true,
-                amount: parseFloat(paymentOnDate.amount),
-                balance: student.balance || 0,
-                message: 'Paid'
-              };
-            } else if (student.balance >= pricePerClass) {
-              paymentStatus = {
-                status: 'deducted',
-                paid: true,
-                amount: pricePerClass,
-                balance: (student.balance || 0) - pricePerClass,
-                message: 'Deducted from balance'
-              };
-            } else {
-              paymentStatus = {
-                status: 'unpaid',
-                paid: false,
-                amount: 0,
-                balance: student.balance || 0,
-                message: 'Not Paid'
-              };
-            }
-            
-            newSnapshot.students[student.id] = paymentStatus;
-          }
-        });
-        
-        // Save new snapshot
-        localStorage.setItem(`calendar_snapshot_${dateStr}`, JSON.stringify(newSnapshot));
-        debug(`[ForceRecalc] ✅ Recalculated ${dateStr} - ${Object.keys(newSnapshot.students).length} students`);
-        
-        // Close panel and refresh calendar
-        closeDayDetails();
-        renderCalendar();
-        
-        showToast(`✅ ${dateStr} recalculated with current data`);
-        
-      } catch (error) {
-        console.error('[ForceRecalc] Error:', error);
-        showToast('❌ Failed to recalculate');
-      }
-    }
-    
-    // Show unmatched payments modal for user assignment
-    function showUnmatchedPaymentsModal() {
-      const unmatchedPayments = window.unmatchedPayments || [];
-      
-      if (unmatchedPayments.length === 0) {
-        showToast('✅ All payments are matched!');
-        return;
-      }
-      
-      const modal = createModal({
-        title: `⚠️ Unmatched Payments (${unmatchedPayments.length})`,
-        content: `
-          <div style="color: #94a3b8; margin-bottom: 20px; font-size: 13px;">
-            These payments couldn't be automatically matched to class dates. You can assign them manually.
-          </div>
-          <div style="max-height: 400px; overflow-y: auto;">
-            ${unmatchedPayments.map((payment, index) => {
-              const student = payment.student;
-              const amount = parseFloat(payment.amount) || 0;
-              const date = new Date(payment.laDate).toLocaleDateString('en-US', { 
-                weekday: 'short',
-                month: 'short', 
-                day: 'numeric',
-                timeZone: 'America/Los_Angeles'
-              });
-              
-              return `
-                <div style="
-                  padding: 15px;
-                  background: rgba(255,255,255,0.03);
-                  border-radius: 8px;
-                  margin-bottom: 10px;
-                  border: 1px solid rgba(255,255,255,0.1);
-                ">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <div>
-                      <div style="font-weight: 600; color: white;">${escapeHtml(student?.name || payment.studentName || 'Unknown')}</div>
-                      <div style="font-size: 12px; color: #94a3b8;">${date} • ${formatCurrency(amount, '$')}</div>
-                    </div>
-                    <button 
-                      onclick="assignPaymentToClass('${payment.id}')"
-                      style="
-                        padding: 8px 16px;
-                        background: rgba(59, 130, 246, 0.2);
-                        border: 1px solid rgba(59, 130, 246, 0.4);
-                        border-radius: 6px;
-                        color: #3b82f6;
-                        cursor: pointer;
-                        font-size: 12px;
-                        transition: all 0.2s;
-                      "
-                      onmouseover="this.style.background='rgba(59, 130, 246, 0.3)'"
-                      onmouseout="this.style.background='rgba(59, 130, 246, 0.2)'"
-                    >
-                      Assign to Class
-                    </button>
-                  </div>
-                  <div style="font-size: 11px; color: #64748b;">
-                    Reason: ${payment.reason === 'no_matching_class' ? 'No matching class found within ±7 days' : 'Unknown'}
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        `,
-        buttons: [
-          { text: 'Close', onClick: () => modal.remove() }
-        ]
-      });
-    }
-    
-    // Placeholder for assigning payment to a specific class
-    function assignPaymentToClass(paymentId) {
-      showToast('⚠️ Manual assignment feature coming soon! For now, adjust payment dates in Gmail or student schedules.');
-    }
-    
     // Show individual student class details (when clicking a dot)
     function showStudentClassDetails(studentId, dateStr, classInfo) {
       // Don't close day details - keep it open for marking multiple absences
@@ -13023,14 +12659,12 @@
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; font-weight: 600;">Quick Actions:</div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+              <button onclick="event.stopPropagation(); quickAddPayment('${studentId}', '${dateStr}', ${classInfo.pricePerClass})" style="padding: 8px 14px; background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); border-radius: 8px; color: #22c55e; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,0.3)'" onmouseout="this.style.background='rgba(34,197,94,0.2)'">
+                ➕ Add Payment
+              </button>
               <button onclick="event.stopPropagation(); markAsAbsent('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(100,116,139,0.2); border: 1px solid rgba(100,116,139,0.4); border-radius: 8px; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(100,116,139,0.3)'" onmouseout="this.style.background='rgba(100,116,139,0.2)'">
                 ⚪ Mark Absent
               </button>
-            </div>
-            <div style="margin-top: 8px; padding: 8px; background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); border-radius: 6px;">
-              <div style="font-size: 10px; color: rgba(251,191,36,0.9);">
-                ⚠️ Payments can only be added via Gmail sync. The calendar is read-only.
-              </div>
             </div>
           </div>
         `;
@@ -13098,9 +12732,203 @@
       document.body.appendChild(overlay);
     }
     
-    // REMOVED: Payment creation functions
-    // The calendar is READ-ONLY and can NEVER create payments
-    // Only Gmail-fetched payments are allowed in the system
+    function quickAddPayment(studentId, dateStr, amount) {
+      debug('[QuickAddPayment] Called with:', { studentId, dateStr, amount });
+      
+      // Close detail popup
+      const overlay = document.getElementById('calendarDetailOverlay');
+      if (overlay) overlay.click();
+      
+      // Show unpaid classes selection modal
+      debug('[QuickAddPayment] Opening unpaid classes modal...');
+      showUnpaidClassesModal(studentId, dateStr);
+    }
+    
+    function showUnpaidClassesModal(studentId, initialDateStr) {
+      debug('[UnpaidClassesModal] Opening modal for:', { studentId, initialDateStr });
+      
+      const students = getCachedStudents();
+      debug('[UnpaidClassesModal] Total students in cache:', students.length);
+      debug('[UnpaidClassesModal] Looking for student ID:', studentId, 'Type:', typeof studentId);
+      
+      // Use loose equality to handle string/number mismatch
+  const student = getStudentById(studentId, students);
+      if (!student) {
+        console.error('[UnpaidClassesModal] Student not found:', studentId);
+        debug('[UnpaidClassesModal] Available student IDs:', students.slice(0, 10).map(s => `${s.id} (${typeof s.id})`));
+  debug('[UnpaidClassesModal] Checking with parseInt:', getStudentById(parseInt(studentId), students));
+        return;
+      }
+      
+      debug('[UnpaidClassesModal] Student found:', student.name);
+      
+      // Get calendar data by regenerating it
+      // This uses the SAME logic as the calendar rendering
+      const today = getLADate();
+      const currentYear = today.getFullYear();
+      const currentMonth = today.getMonth();
+      
+      // Find all unpaid classes by scanning rendered calendar data
+      const unpaidClasses = [];
+      
+      // Scan from calendar start date to current month
+      const startDate = new Date(CALENDAR_START_DATE);
+      const startYear = startDate.getFullYear();
+      const startMonth = startDate.getMonth();
+      
+      // Generate calendar data for each month from start to current
+      for (let year = startYear; year <= currentYear; year++) {
+        const monthStart = (year === startYear) ? startMonth : 0;
+        const monthEnd = (year === currentYear) ? currentMonth : 11;
+        
+        for (let month = monthStart; month <= monthEnd; month++) {
+          const calendarData = generateCalendarData(year, month);
+          
+          // Check each day in this month
+          calendarData.days.forEach(dayData => {
+            const dateStr = formatDateYYYYMMDD(dayData.date);
+            
+            // Only include dates up to today
+            if (dayData.date > today) return;
+            
+            // Find this student in the day's data
+            const studentClass = dayData.studentsWithClass.find(sc => sc.student.id == studentId);
+            
+            // Only include if student has class and it's unpaid
+            if (studentClass && studentClass.status === 'unpaid') {
+              const dateDisplay = dayData.date.toLocaleDateString('en-US', { 
+                weekday: 'short', 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric' 
+              });
+              
+              unpaidClasses.push({
+                date: dayData.date,
+                dateStr: dateStr,
+                dayName: dayData.dayName,
+                groupName: student.group,
+                status: 'unpaid',
+                pricePerClass: studentClass.pricePerClass,
+                dateDisplay: dateDisplay
+              });
+            }
+          });
+        }
+      }
+      
+      debug('[UnpaidClassesModal] Found', unpaidClasses.length, 'unpaid classes');
+      
+      if (unpaidClasses.length === 0) {
+        showToast('✅ No unpaid classes found');
+        return;
+      }
+      
+      // Generate HTML for unpaid classes list
+      let classesHTML = '';
+      unpaidClasses.forEach((cls, index) => {
+        const dateDisplay = cls.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+        const isInitial = cls.dateStr === initialDateStr;
+        
+        classesHTML += `
+          <label style="display: flex; align-items: center; padding: 12px; background: ${isInitial ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isInitial ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.1)'; this.style.borderColor='rgba(138,180,255,0.3)';" onmouseout="this.style.background='${isInitial ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)'}'; this.style.borderColor='${isInitial ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}';">
+            <input type="checkbox" class="unpaid-class-checkbox" data-date="${cls.dateStr}" ${isInitial ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; margin-right: 12px; accent-color: #22c55e;">
+            <div style="flex: 1;">
+              <div style="font-size: 14px; font-weight: 700; color: white; margin-bottom: 2px;">${dateDisplay}</div>
+              <div style="font-size: 11px; color: #94a3b8;">Group ${escapeHtml(cls.groupName)} • <span style="color: #ef4444; font-weight: 600;">🔴 Unpaid</span></div>
+            </div>
+            <div style="font-size: 13px; font-weight: 900; color: #22c55e;">${formatCurrency(cls.pricePerClass, '$')}</div>
+          </label>
+        `;
+      });
+      
+      const modalHTML = `
+        <div id="unpaidClassesModal" onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 29000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; min-width: 500px; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
+          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+            <div>
+              <h3 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; color: white;">Select Unpaid Classes</h3>
+              <p style="margin: 0; font-size: 13px; color: #94a3b8;">${escapeHtml(student.name)} • Group ${escapeHtml(student.group || 'N/A')}</p>
+            </div>
+            <button onclick="closeUnpaidClassesModal()" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
+          </div>
+          
+          <div style="margin-bottom: 16px; padding: 12px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px;">
+            <div style="font-size: 12px; color: #22c55e; font-weight: 700;">ℹ️ Select one or more unpaid classes to apply payment</div>
+          </div>
+          
+          <div style="flex: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 8px;">
+            ${classesHTML}
+          </div>
+          
+          <div style="display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <button onclick="closeUnpaidClassesModal()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
+            <button onclick="applyPaymentToSelected('${studentId}')" style="flex: 2; padding: 12px; background: rgba(34,197,94,0.8); border: 1px solid rgba(34,197,94,1); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,1)'" onmouseout="this.style.background='rgba(34,197,94,0.8)'">Apply Payment to Selected</button>
+          </div>
+        </div>
+      `;
+      
+      // Add overlay
+      const modalOverlay = document.createElement('div');
+      modalOverlay.id = 'unpaidClassesOverlay';
+      modalOverlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 28500; backdrop-filter: blur(6px);';
+      modalOverlay.onclick = closeUnpaidClassesModal;
+      
+      document.body.insertAdjacentHTML('beforeend', modalHTML);
+      document.body.appendChild(modalOverlay);
+      
+      debug('[UnpaidClassesModal] ✅ Modal created and displayed');
+    }
+    
+    function closeUnpaidClassesModal() {
+      const modal = document.getElementById('unpaidClassesModal');
+      const overlay = document.getElementById('unpaidClassesOverlay');
+      if (modal) modal.remove();
+      if (overlay) overlay.remove();
+    }
+    
+    function applyPaymentToSelected(studentId) {
+      const checkboxes = document.querySelectorAll('.unpaid-class-checkbox:checked');
+      if (checkboxes.length === 0) {
+        showToast('⚠️ Please select at least one class');
+        return;
+      }
+      
+      const students = getCachedStudents();
+      // Use loose equality to handle string/number mismatch
+  const student = getStudentById(studentId, students);
+      if (!student) return;
+      
+      const selectedDates = Array.from(checkboxes).map(cb => cb.dataset.date);
+      const pricePerClass = parseFloat(student.payPerClass) || 0;
+      const totalAmount = selectedDates.length * pricePerClass;
+      
+      const confirmed = confirm(`Apply payment of ${formatCurrency(totalAmount, '$')} to ${selectedDates.length} class${selectedDates.length !== 1 ? 'es' : ''}?\n\nThis will mark the selected classes as paid.`);
+      if (!confirmed) return;
+      
+      const payments = PaymentStore.getAll();
+      
+      // Create a payment for each selected date
+      selectedDates.forEach(dateStr => {
+        const payment = {
+          id: 'cal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+          payerName: student.name,
+          studentName: student.name,
+          amount: pricePerClass.toString(),
+          emailDate: new Date(dateStr).toISOString(),
+          timestamp: new Date(dateStr).toISOString(),
+          note: 'Added from Calendar - Unpaid Classes Selection',
+          ignored: false,
+          source: 'calendar'
+        };
+        payments.push(payment);
+      });
+      
+      PaymentStore.save(payments);
+      
+      showToast(`✅ Payment applied to ${selectedDates.length} class${selectedDates.length !== 1 ? 'es' : ''}`);
+      closeUnpaidClassesModal();
+      renderCalendar();
+    }
     
     function markAsAbsent(studentId, dateStr) {
       // Convert to number for consistency
@@ -13177,74 +13005,8 @@
     // END EARNING FORECAST SYSTEM
     // ============================================================================
     
-    // ============================================================================
-    // ONE-TIME MIGRATION: Fix Calendar Payment Timezone Issues
-    // ============================================================================
-    async function migrateCalendarPaymentTimezones() {
-      const MIGRATION_KEY = 'migration_calendar_timezone_v1';
-      
-      // Check if migration already ran
-      if (localStorage.getItem(MIGRATION_KEY) === 'completed') {
-        debug('[Migration] Calendar payment timezone fix already completed');
-        return;
-      }
-      
-      debug('[Migration] Starting calendar payment timezone fix...');
-      
-      try {
-        const payments = PaymentStore.getAll();
-        let fixedCount = 0;
-        
-        payments.forEach(payment => {
-          // Only fix calendar payments without a source field (created before the fix)
-          // These have IDs starting with "cal_" and emailDate at midnight UTC
-          if (payment.id && payment.id.startsWith('cal_') && !payment.source && payment.emailDate) {
-            const oldDate = new Date(payment.emailDate);
-            
-            // Check if it's at midnight UTC (the bug signature)
-            if (oldDate.getUTCHours() === 0 && oldDate.getUTCMinutes() === 0) {
-              // Fix: Add 1 day and set to noon local time
-              const fixedDate = new Date(oldDate);
-              fixedDate.setDate(fixedDate.getDate() + 1);
-              fixedDate.setHours(12, 0, 0, 0);
-              
-              payment.emailDate = fixedDate.toISOString();
-              payment.timestamp = fixedDate.toISOString();
-              payment.source = 'calendar-migrated';
-              
-              fixedCount++;
-              debug(`[Migration] Fixed: ${payment.studentName || payment.payerName} - ${payment.emailDate}`);
-            }
-          }
-        });
-        
-        if (fixedCount > 0) {
-          debug(`[Migration] Saving ${fixedCount} fixed payment(s) to Supabase...`);
-          await PaymentStore.save(payments);
-          debug(`[Migration] ✅ Successfully fixed ${fixedCount} calendar payment(s)`);
-        } else {
-          debug('[Migration] No calendar payments needed fixing');
-        }
-        
-        // Mark migration as completed
-        localStorage.setItem(MIGRATION_KEY, 'completed');
-        debug('[Migration] Calendar payment timezone fix completed and marked');
-        
-      } catch (error) {
-        console.error('[Migration] Error fixing calendar payment timezones:', error);
-        // Don't mark as completed so it will retry next time
-      }
-    }
-    // ============================================================================
-    // END ONE-TIME MIGRATION
-    // ============================================================================
-    
     // Initialize on page load
-    document.addEventListener('DOMContentLoaded', async () => {
-      await initialize();
-      // Run migration after initialization (when PaymentStore is ready)
-      await migrateCalendarPaymentTimezones();
-    });
+    document.addEventListener('DOMContentLoaded', initialize);
     
     debug('✅ ARNOMA app loaded - Using Supabase cloud database [v2.3.0 - Performance Optimized ⚡ - Build 20251112-0500]');
     debug('🔧 Optimizations: Debug logs disabled, Map caching enabled, CSS GPU acceleration');
