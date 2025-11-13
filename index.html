@@ -12013,33 +12013,6 @@
       renderCalendar();
     }
     
-    /**
-     * Syncs student balance changes to Supabase after calendar calculations.
-     * Checks which students had balance changes and updates them in database.
-     */
-    async function syncStudentBalancesToSupabase() {
-      const students = getCachedStudents();
-      const changedStudents = students.filter(s => s.balanceChanged);
-      
-      if (changedStudents.length === 0) return;
-      
-      console.log(`Syncing ${changedStudents.length} student balance(s) to Supabase...`);
-      
-      for (const student of changedStudents) {
-        try {
-          // Use existing saveStudent function which includes balance in payload
-          await saveStudent(student);
-          
-          // Clear the change flag
-          delete student.balanceChanged;
-          
-          console.log(`✓ Synced balance for ${student.name}: $${student.balance}`);
-        } catch (error) {
-          console.error(`Failed to sync balance for ${student.name}:`, error);
-        }
-      }
-    }
-    
     function renderCalendar() {
       const year = currentCalendarDate.getFullYear();
       const month = currentCalendarDate.getMonth();
@@ -12060,9 +12033,6 @@
       
       // Render grid
       renderCalendarGrid(calendarData);
-      
-      // Sync student balances to Supabase after calendar calculations
-      syncStudentBalancesToSupabase();
     }
     
     function generateCalendarData(year, month) {
@@ -12335,18 +12305,16 @@
         
         if (paymentAmount > pricePerClass) {
           const remainder = paymentAmount - pricePerClass;
-          const newBalance = balance + remainder;
           
-          // Add overpayment to balance
-          student.balance = newBalance;
-          student.balanceChanged = true;
+          // NOTE: Balance changes must be done manually via "Apply from Credit" or payment processing
+          // DO NOT modify student.balance during calendar render - it causes duplicate additions
           
           const result = {
             status: 'paid',
             paid: true,
             amount: paymentAmount,
-            balance: newBalance,
-            message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
+            balance: balance,
+            message: `Paid ${formatCurrency(paymentAmount, '$')} (${formatCurrency(remainder, '$')} overpaid)`
           };
           
           // Freeze data for dates older than 2 weeks
