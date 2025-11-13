@@ -7379,6 +7379,20 @@
 
         // Save all students to Supabase cloud database
         await saveStudents();
+        
+        // Reload all cloud-synced data
+        if (window.SkipClassManager) {
+          await window.SkipClassManager.reloadFromSupabase();
+        }
+        if (window.AbsentManager) {
+          await window.AbsentManager.reloadFromSupabase();
+        }
+        if (window.CreditPaymentManager) {
+          await window.CreditPaymentManager.reloadFromSupabase();
+        }
+        
+        // Refresh calendar to show updated data
+        renderCalendar();
 
         showNotificationSimple('✅ Synced with Supabase', 'success');
       } catch (error) {
@@ -11730,6 +11744,417 @@
     // END SKIP CLASS MANAGER
     // ============================================================================
 
+    // ============================================================================
+    // ABSENT MANAGER - Cloud Sync for Student Absences ☁️
+    // ============================================================================
+    /**
+     * Absent Manager - Supabase Cloud Sync Version
+     * - Tracks when students are marked absent
+     * - Syncs across all devices via Supabase
+     * - Fallback to localStorage for offline support
+     */
+    window.AbsentManager = (function() {
+      // Absences data structure: { studentId: { 'YYYY-MM-DD': true } }
+      let absences = {};
+      let isInitialized = false;
+
+      // Load absences from Supabase
+      async function loadAbsences() {
+        try {
+          console.log('☁️ Loading absences from Supabase...');
+          const { data, error } = await supabase
+            .from('student_absences')
+            .select('*');
+
+          if (error) {
+            console.error('❌ Error loading absences from Supabase:', error);
+            loadAbsencesFromLocalStorage();
+            return;
+          }
+
+          console.log('✅ Loaded absences from Supabase:', data);
+
+          // Convert array to nested object: { studentId: { 'YYYY-MM-DD': true } }
+          absences = {};
+          (data || []).forEach(record => {
+            const studentId = record.student_id;
+            const dateStr = record.class_date;
+            
+            if (!absences[studentId]) {
+              absences[studentId] = {};
+            }
+            absences[studentId][dateStr] = true;
+          });
+
+          console.log('📊 Absences loaded:', absences);
+        } catch (err) {
+          console.error('❌ Exception loading absences:', err);
+          loadAbsencesFromLocalStorage();
+        }
+      }
+
+      // Save absences to Supabase
+      async function saveAbsences() {
+        try {
+          console.log('☁️ Saving absences to Supabase...');
+
+          // Convert nested object to array of records
+          const records = [];
+          for (const studentId in absences) {
+            for (const dateStr in absences[studentId]) {
+              if (absences[studentId][dateStr]) {
+                records.push({
+                  student_id: parseInt(studentId),
+                  class_date: dateStr
+                });
+              }
+            }
+          }
+
+          // Delete all existing records
+          const { error: deleteError } = await supabase
+            .from('student_absences')
+            .delete()
+            .neq('id', 0);
+
+          if (deleteError) {
+            console.error('❌ Error deleting absences:', deleteError);
+            saveAbsencesToLocalStorage();
+            return;
+          }
+
+          // Insert new records
+          if (records.length > 0) {
+            const { error: insertError } = await supabase
+              .from('student_absences')
+              .insert(records);
+
+            if (insertError) {
+              console.error('❌ Error inserting absences:', insertError);
+              saveAbsencesToLocalStorage();
+              return;
+            }
+          }
+
+          console.log('✅ Saved absences to Supabase:', records.length, 'records');
+          saveAbsencesToLocalStorage(); // Keep localStorage as backup
+        } catch (err) {
+          console.error('❌ Exception saving absences:', err);
+          saveAbsencesToLocalStorage();
+        }
+      }
+
+      // Fallback: Load from localStorage
+      function loadAbsencesFromLocalStorage() {
+        console.log('📦 Loading absences from localStorage (fallback)...');
+        // Migrate from old format: absent:studentId:dateStr
+        absences = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('absent:')) {
+            const [, studentId, dateStr] = key.split(':');
+            if (localStorage.getItem(key) === 'true') {
+              if (!absences[studentId]) {
+                absences[studentId] = {};
+              }
+              absences[studentId][dateStr] = true;
+            }
+          }
+        }
+        console.log('📦 Loaded absences from localStorage:', absences);
+      }
+
+      // Fallback: Save to localStorage
+      function saveAbsencesToLocalStorage() {
+        console.log('📦 Saving absences to localStorage (fallback)...');
+        // Clear old absence keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('absent:')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
+        // Save new absences
+        for (const studentId in absences) {
+          for (const dateStr in absences[studentId]) {
+            if (absences[studentId][dateStr]) {
+              const key = `absent:${studentId}:${dateStr}`;
+              localStorage.setItem(key, 'true');
+            }
+          }
+        }
+      }
+
+      // Initialize: Load from Supabase
+      async function init() {
+        if (isInitialized) return;
+        console.log('🚀 Initializing AbsentManager...');
+        await loadAbsences();
+        isInitialized = true;
+      }
+
+      // Public API
+      return {
+        init,
+        
+        // Check if student is absent on a date
+        isAbsent(studentId, dateStr) {
+          return !!(absences[studentId] && absences[studentId][dateStr]);
+        },
+        
+        // Mark student as absent
+        async markAbsent(studentId, dateStr) {
+          if (!absences[studentId]) {
+            absences[studentId] = {};
+          }
+          absences[studentId][dateStr] = true;
+          await saveAbsences();
+        },
+        
+        // Remove absent mark
+        async removeAbsent(studentId, dateStr) {
+          if (absences[studentId]) {
+            delete absences[studentId][dateStr];
+            if (Object.keys(absences[studentId]).length === 0) {
+              delete absences[studentId];
+            }
+          }
+          await saveAbsences();
+        },
+        
+        // Reload from Supabase (for manual sync)
+        async reloadFromSupabase() {
+          console.log('🔄 Reloading absences from Supabase...');
+          await loadAbsences();
+        }
+      };
+    })();
+
+    // Initialize AbsentManager
+    if (window.supabase) {
+      window.AbsentManager.init().catch(err => {
+        console.error('Failed to initialize AbsentManager:', err);
+      });
+    }
+
+    // ============================================================================
+    // END ABSENT MANAGER
+    // ============================================================================
+
+    // ============================================================================
+    // CREDIT PAYMENT MANAGER - Cloud Sync for Credit Payments ☁️
+    // ============================================================================
+    /**
+     * Credit Payment Manager - Supabase Cloud Sync Version
+     * - Tracks when student credit/balance is applied to pay for a class
+     * - Syncs across all devices via Supabase
+     * - Fallback to localStorage for offline support
+     */
+    window.CreditPaymentManager = (function() {
+      // Credit payments data structure: { studentId: { 'YYYY-MM-DD': {amount, balance} } }
+      let creditPayments = {};
+      let isInitialized = false;
+
+      // Load credit payments from Supabase
+      async function loadCreditPayments() {
+        try {
+          console.log('☁️ Loading credit payments from Supabase...');
+          const { data, error } = await supabase
+            .from('credit_payments')
+            .select('*');
+
+          if (error) {
+            console.error('❌ Error loading credit payments from Supabase:', error);
+            loadCreditPaymentsFromLocalStorage();
+            return;
+          }
+
+          console.log('✅ Loaded credit payments from Supabase:', data);
+
+          // Convert array to nested object
+          creditPayments = {};
+          (data || []).forEach(record => {
+            const studentId = record.student_id;
+            const dateStr = record.class_date;
+            
+            if (!creditPayments[studentId]) {
+              creditPayments[studentId] = {};
+            }
+            creditPayments[studentId][dateStr] = {
+              amount: parseFloat(record.amount),
+              balance: record.balance_after ? parseFloat(record.balance_after) : null
+            };
+          });
+
+          console.log('📊 Credit payments loaded:', creditPayments);
+        } catch (err) {
+          console.error('❌ Exception loading credit payments:', err);
+          loadCreditPaymentsFromLocalStorage();
+        }
+      }
+
+      // Save credit payments to Supabase
+      async function saveCreditPayments() {
+        try {
+          console.log('☁️ Saving credit payments to Supabase...');
+
+          // Convert nested object to array of records
+          const records = [];
+          for (const studentId in creditPayments) {
+            for (const dateStr in creditPayments[studentId]) {
+              const payment = creditPayments[studentId][dateStr];
+              records.push({
+                student_id: parseInt(studentId),
+                class_date: dateStr,
+                amount: payment.amount,
+                balance_after: payment.balance
+              });
+            }
+          }
+
+          // Delete all existing records
+          const { error: deleteError } = await supabase
+            .from('credit_payments')
+            .delete()
+            .neq('id', 0);
+
+          if (deleteError) {
+            console.error('❌ Error deleting credit payments:', deleteError);
+            saveCreditPaymentsToLocalStorage();
+            return;
+          }
+
+          // Insert new records
+          if (records.length > 0) {
+            const { error: insertError } = await supabase
+              .from('credit_payments')
+              .insert(records);
+
+            if (insertError) {
+              console.error('❌ Error inserting credit payments:', insertError);
+              saveCreditPaymentsToLocalStorage();
+              return;
+            }
+          }
+
+          console.log('✅ Saved credit payments to Supabase:', records.length, 'records');
+          saveCreditPaymentsToLocalStorage(); // Keep localStorage as backup
+        } catch (err) {
+          console.error('❌ Exception saving credit payments:', err);
+          saveCreditPaymentsToLocalStorage();
+        }
+      }
+
+      // Fallback: Load from localStorage
+      function loadCreditPaymentsFromLocalStorage() {
+        console.log('📦 Loading credit payments from localStorage (fallback)...');
+        creditPayments = {};
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('credit-payment:')) {
+            const [, , studentId, dateStr] = key.split(':');
+            const value = localStorage.getItem(key);
+            if (value) {
+              try {
+                const data = JSON.parse(value);
+                if (!creditPayments[studentId]) {
+                  creditPayments[studentId] = {};
+                }
+                creditPayments[studentId][dateStr] = {
+                  amount: data.amount,
+                  balance: data.balance
+                };
+              } catch (e) {
+                console.error('Error parsing credit payment:', e);
+              }
+            }
+          }
+        }
+        console.log('📦 Loaded credit payments from localStorage:', creditPayments);
+      }
+
+      // Fallback: Save to localStorage
+      function saveCreditPaymentsToLocalStorage() {
+        console.log('📦 Saving credit payments to localStorage (fallback)...');
+        // Clear old credit payment keys
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key.startsWith('credit-payment:')) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+
+        // Save new credit payments
+        for (const studentId in creditPayments) {
+          for (const dateStr in creditPayments[studentId]) {
+            const payment = creditPayments[studentId][dateStr];
+            const key = `credit-payment:${studentId}:${dateStr}`;
+            localStorage.setItem(key, JSON.stringify(payment));
+          }
+        }
+      }
+
+      // Initialize: Load from Supabase
+      async function init() {
+        if (isInitialized) return;
+        console.log('🚀 Initializing CreditPaymentManager...');
+        await loadCreditPayments();
+        isInitialized = true;
+      }
+
+      // Public API
+      return {
+        init,
+        
+        // Check if credit was applied for a student on a date
+        getCreditPayment(studentId, dateStr) {
+          return creditPayments[studentId] && creditPayments[studentId][dateStr];
+        },
+        
+        // Apply credit payment
+        async applyCreditPayment(studentId, dateStr, amount, balance) {
+          if (!creditPayments[studentId]) {
+            creditPayments[studentId] = {};
+          }
+          creditPayments[studentId][dateStr] = { amount, balance };
+          await saveCreditPayments();
+        },
+        
+        // Remove credit payment
+        async removeCreditPayment(studentId, dateStr) {
+          if (creditPayments[studentId]) {
+            delete creditPayments[studentId][dateStr];
+            if (Object.keys(creditPayments[studentId]).length === 0) {
+              delete creditPayments[studentId];
+            }
+          }
+          await saveCreditPayments();
+        },
+        
+        // Reload from Supabase (for manual sync)
+        async reloadFromSupabase() {
+          console.log('🔄 Reloading credit payments from Supabase...');
+          await loadCreditPayments();
+        }
+      };
+    })();
+
+    // Initialize CreditPaymentManager
+    if (window.supabase) {
+      window.CreditPaymentManager.init().catch(err => {
+        console.error('Failed to initialize CreditPaymentManager:', err);
+      });
+    }
+
+    // ============================================================================
+    // END CREDIT PAYMENT MANAGER
+    // ============================================================================
+
     // Initialize Floating Nav on DOM ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', initFloatingNav);
@@ -12355,10 +12780,7 @@
       const todayStr = formatDateYYYYMMDD(laToday);
       
       // CHECK 1: Is this student marked absent?
-      const absentKey = `absent:${studentId}:${dateStr}`;
-      const isAbsent = localStorage.getItem(absentKey) === 'true';
-      
-      if (isAbsent) {
+      if (window.AbsentManager && window.AbsentManager.isAbsent(studentId, dateStr)) {
         debugLog('Absent check - Student is marked absent:', { studentId, dateStr });
         return {
           status: 'absent',
@@ -12370,15 +12792,13 @@
       }
       
       // CHECK 1b: Was credit applied to this class?
-      const creditPaymentKey = `credit-payment:${studentId}:${dateStr}`;
-      const creditPayment = localStorage.getItem(creditPaymentKey);
+      const creditPayment = window.CreditPaymentManager && window.CreditPaymentManager.getCreditPayment(studentId, dateStr);
       
       if (creditPayment) {
-        const creditData = JSON.parse(creditPayment);
         return {
           status: 'deducted',
           paid: true,
-          amount: creditData.amount,
+          amount: creditPayment.amount,
           balance: student.balance || 0,
           message: `Paid from Credit (${formatCurrency(student.balance || 0, '$')} remaining)`
         };
@@ -12432,16 +12852,6 @@
         const paymentStudentName = (p.studentName || '').toLowerCase().trim();
         const paymentPayerName = (p.payerName || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
-        
-        // DEBUG: Log first match attempt for Nov 12, 2025
-        if (dateStr === '2025-11-12' && studentNameLower === 'stella ghazaryan') {
-          console.log('🔍 DEBUG Nov 12 - Stella:', {
-            paymentStudentName,
-            paymentPayerName,
-            studentNameLower,
-            matches: paymentStudentName === studentNameLower
-          });
-        }
         
         // Check if studentName matches
         if (paymentStudentName === studentNameLower) return true;
@@ -13020,14 +13430,19 @@
       try {
         await saveStudent(student);
         
-        // Store a marker that this class was paid from credit (like a payment)
-        const creditPaymentKey = `credit-payment:${numericId}:${dateStr}`;
-        localStorage.setItem(creditPaymentKey, JSON.stringify({
-          studentId: numericId,
-          date: dateStr,
-          amount: pricePerClass,
-          appliedAt: new Date().toISOString()
-        }));
+        // Store credit payment using CreditPaymentManager for cloud sync
+        if (window.CreditPaymentManager) {
+          await window.CreditPaymentManager.applyCreditPayment(numericId, dateStr, pricePerClass, newBalance);
+          debugLog('Applied credit payment (Supabase):', { studentId: numericId, dateStr, amount: pricePerClass });
+        } else {
+          // Fallback to localStorage
+          const creditPaymentKey = `credit-payment:${numericId}:${dateStr}`;
+          localStorage.setItem(creditPaymentKey, JSON.stringify({
+            amount: pricePerClass,
+            balance: newBalance
+          }));
+          debugLog('Applied credit payment (localStorage fallback):', { studentId: numericId, dateStr, amount: pricePerClass });
+        }
         
         showToast(`✅ Applied ${formatCurrency(pricePerClass, '$')} from credit\nNew Balance: ${formatCurrency(newBalance, '$')}`, 'success');
         
@@ -13049,35 +13464,46 @@
       // Convert to number for consistency
       const numericId = parseInt(studentId);
       
-      const absentKey = `absent:${numericId}:${dateStr}`;
-      localStorage.setItem(absentKey, 'true');
-      
-      debugLog('Marked absent:', { studentId: numericId, dateStr, key: absentKey });
-      
-      showToast('⚪ Marked as absent');
-      
-      // Close the detail modal only
-      const modal = document.getElementById('classDetailModal');
-      if (modal) modal.remove();
-      const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.remove();
-      
-      // Refresh calendar to update dot colors
-      renderCalendar();
-      
-      // Update the day details sidebar if it's open
-      const dayPanel = document.getElementById('dayDetailsPanel');
-      if (dayPanel) {
-        // Re-fetch the day data with updated status
-        const dateObj = new Date(dateStr);
-        const dayData = getDayData(dateStr);
-        if (dayData) {
-          // Close and reopen the day panel with updated data
-          closeDayDetails();
-          setTimeout(() => {
-            openDayDetails(dateStr, dayData);
-          }, 100);
-        }
+      // Use AbsentManager for cloud sync
+      if (window.AbsentManager) {
+        window.AbsentManager.markAbsent(numericId, dateStr).then(() => {
+          debugLog('Marked absent (Supabase):', { studentId: numericId, dateStr });
+          showToast('⚪ Marked as absent');
+          
+          // Close the detail modal only
+          const modal = document.getElementById('classDetailModal');
+          if (modal) modal.remove();
+          const overlay = document.getElementById('calendarDetailOverlay');
+          if (overlay) overlay.remove();
+          
+          // Refresh calendar to update dot colors
+          renderCalendar();
+          
+          // Update the day details sidebar if it's open
+          const dayPanel = document.getElementById('dayDetailsPanel');
+          if (dayPanel) {
+            // Re-fetch the day data with updated status
+            const dateObj = new Date(dateStr);
+            const dayData = getDayData(dateStr);
+            if (dayData) {
+              // Close and reopen the day panel with updated data
+              closeDayDetails();
+              setTimeout(() => {
+                openDayDetails(dateStr, dayData);
+              }, 100);
+            }
+          }
+        }).catch(err => {
+          console.error('Error marking absent:', err);
+          showToast('❌ Error marking absent');
+        });
+      } else {
+        // Fallback to localStorage
+        const absentKey = `absent:${numericId}:${dateStr}`;
+        localStorage.setItem(absentKey, 'true');
+        debugLog('Marked absent (localStorage fallback):', { studentId: numericId, dateStr, key: absentKey });
+        showToast('⚪ Marked as absent');
+        renderCalendar();
       }
     }
     
