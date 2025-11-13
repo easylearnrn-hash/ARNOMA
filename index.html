@@ -5972,6 +5972,11 @@
         // Recompute payment resolutions
         recomputePaymentResolutions();
         
+        // Fire payments:updated event so calendar refreshes
+        window.dispatchEvent(new CustomEvent('payments:updated', { 
+          detail: payments 
+        }));
+        
         showNotification(`✅ Payment linked to ${student.name}`, 'success');
         
         // Clear persistent storage after successful link
