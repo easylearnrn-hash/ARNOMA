@@ -12436,11 +12436,24 @@
       
       // Generate HTML
       studentData.forEach(data => {
+        // Get student object to access status
+        const student = activeStudents.find(s => s.name === data.name);
+        const studentStatus = normalizeStatus(student?.status);
+        const statusDetails = getStatusDetails(studentStatus);
+        
         html += `
           <div style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
-              <div>
-                <div style="font-size: 16px; font-weight: 700; color: white; margin-bottom: 4px;">${escapeHtml(data.name)}</div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                  <div style="font-size: 16px; font-weight: 700; color: white;">${escapeHtml(data.name)}</div>
+                  <span class="status-pill-single status-${studentStatus}" 
+                        onclick="cycleStatusInBreakdown(${student.id})"
+                        title="Click to cycle: Active → Paused → Graduated"
+                        style="cursor: pointer; user-select: none; transition: all 0.2s;">
+                    ${statusDetails.label}
+                  </span>
+                </div>
                 <div style="font-size: 12px; color: #94a3b8;">Group ${escapeHtml(data.group)} • ${data.weeklyClasses} classes/week • ${formatCurrency(data.pricePerClass, '$')}/class</div>
               </div>
             </div>
@@ -12469,6 +12482,59 @@
       const totalMonthly = totalWeekly * 4;
       document.getElementById('breakdownTotalWeekly').textContent = formatCurrency(totalWeekly, '$');
       document.getElementById('breakdownTotalMonthly').textContent = formatCurrency(totalMonthly, '$');
+    }
+    
+    // Cycle student status from within the breakdown modal
+    async function cycleStatusInBreakdown(studentId) {
+      // Get students from cache
+      const students = window.studentsCache || window.globalData?.students || [];
+      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+      
+      if (!student) {
+        console.error('❌ Student not found:', studentId);
+        showNotificationSimple('❌ Student not found', 'error');
+        return;
+      }
+      
+      // Define status cycle: Active → Paused → Graduated → Active
+      const statusCycle = {
+        [STUDENT_STATUSES.ACTIVE]: STUDENT_STATUSES.PAUSED,
+        [STUDENT_STATUSES.PAUSED]: STUDENT_STATUSES.GRADUATED,
+        [STUDENT_STATUSES.GRADUATED]: STUDENT_STATUSES.ACTIVE
+      };
+      
+      const oldStatus = normalizeStatus(student.status);
+      const newStatus = statusCycle[oldStatus] || STUDENT_STATUSES.ACTIVE;
+      
+      student.status = newStatus;
+      
+      // Record timestamp when status changes to paused or graduated
+      if (newStatus === STUDENT_STATUSES.PAUSED || newStatus === STUDENT_STATUSES.GRADUATED) {
+        student.statusChangedDate = new Date().toISOString();
+      } else {
+        student.statusChangedDate = null;
+      }
+      
+      // Save to Supabase
+      const saved = await saveStudent(student);
+      
+      if (!saved) {
+        showNotificationSimple('❌ Failed to update status', 'error');
+        return;
+      }
+      
+      // Update cache
+      Object.assign(student, saved);
+      window.studentsCache = students;
+      
+      // Refresh the breakdown modal WITHOUT reordering
+      // This will update the UI while maintaining current order
+      updateStudentBreakdown();
+      
+      // Also fire event so other modules can update if needed
+      window.dispatchEvent(new CustomEvent('students:updated'));
+      
+      showNotificationSimple(`✅ ${student.name} status updated to ${newStatus}`, 'success');
     }
     
     // ============================================================================
