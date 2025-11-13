@@ -12394,11 +12394,8 @@
         return;
       }
       
-      // Filter active students
-      const activeStudents = students.filter(s => {
-        const status = (s.status || 'active').toLowerCase();
-        return status === 'active' && s.isActive !== false;
-      });
+      // Show ALL students (active, paused, graduated) but only count active in totals
+      const eligibleStudents = students.filter(s => s.isActive !== false);
       
       let totalWeekly = 0;
       let html = '';
@@ -12406,7 +12403,7 @@
       // Build list of students with their earnings
       const studentData = [];
       
-      activeStudents.forEach(student => {
+      eligibleStudents.forEach(student => {
         const pricePerClass = parseFloat(student.payPerClass) || 0;
         if (pricePerClass <= 0) return;
         
@@ -12419,15 +12416,21 @@
         const studentWeekly = pricePerClass * weeklyClasses;
         const studentMonthly = studentWeekly * 4;
         
-        totalWeekly += studentWeekly;
+        // Only count active students in totals
+        const studentStatus = normalizeStatus(student.status);
+        if (studentStatus === 'active') {
+          totalWeekly += studentWeekly;
+        }
         
         studentData.push({
+          id: student.id,
           name: student.name,
           group: groupName,
           pricePerClass,
           weeklyClasses,
           studentWeekly,
-          studentMonthly
+          studentMonthly,
+          status: studentStatus
         });
       });
       
@@ -12436,25 +12439,30 @@
       
       // Generate HTML
       studentData.forEach(data => {
-        // Get student object to access status
-        const student = activeStudents.find(s => s.name === data.name);
-        const studentStatus = normalizeStatus(student?.status);
-        const statusDetails = getStatusDetails(studentStatus);
+        // Determine if student is paused or graduated
+        const isPausedOrGraduated = data.status === 'paused' || data.status === 'graduated';
+        const statusDetails = getStatusDetails(data.status);
+        
+        // Apply grayed-out styling for paused/graduated students
+        const cardOpacity = isPausedOrGraduated ? '0.4' : '1';
+        const cardFilter = isPausedOrGraduated ? 'grayscale(0.6)' : 'none';
+        const cardBg = isPausedOrGraduated ? 'rgba(255,255,255,0.015)' : 'rgba(255,255,255,0.03)';
+        const cardBgHover = isPausedOrGraduated ? 'rgba(255,255,255,0.025)' : 'rgba(255,255,255,0.06)';
         
         html += `
-          <div style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
+          <div style="padding: 16px; background: ${cardBg}; border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; transition: all 0.2s; opacity: ${cardOpacity}; filter: ${cardFilter};" onmouseover="this.style.background='${cardBgHover}'" onmouseout="this.style.background='${cardBg}'">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
               <div style="flex: 1;">
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
                   <div style="font-size: 16px; font-weight: 700; color: white;">${escapeHtml(data.name)}</div>
-                  <span class="status-pill-single status-${studentStatus}" 
-                        onclick="cycleStatusInBreakdown(${student.id})"
+                  <span class="status-pill-single status-${data.status}" 
+                        onclick="cycleStatusInBreakdown(${data.id})"
                         title="Click to cycle: Active → Paused → Graduated"
                         style="cursor: pointer; user-select: none; transition: all 0.2s;">
                     ${statusDetails.label}
                   </span>
                 </div>
-                <div style="font-size: 12px; color: #94a3b8;">Group ${escapeHtml(data.group)} • ${data.weeklyClasses} classes/week • ${formatCurrency(data.pricePerClass, '$')}/class</div>
+                <div style="font-size: 12px; color: #94a3b8;">${isPausedOrGraduated ? '⏸' : ''} Group ${escapeHtml(data.group)} • ${data.weeklyClasses} classes/week • ${formatCurrency(data.pricePerClass, '$')}/class</div>
               </div>
             </div>
             <div style="display: flex; gap: 16px; margin-top: 12px;">
