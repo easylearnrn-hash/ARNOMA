@@ -12322,9 +12322,9 @@
         }
       }
       
-      // Check if can deduct from balance (for TODAY and future dates only)
-      // Do NOT deduct for past dates - those should use snapshots or payment records
-      if (balance >= pricePerClass && dateStr >= todayStr) {
+      // Check if can deduct from balance (for ANY unpaid class - past, today, or future)
+      // Balance automatically pays oldest unpaid classes first
+      if (balance >= pricePerClass) {
         const newBalance = balance - pricePerClass;
         
         // Update student balance in memory only (no auto-save during calendar render)
