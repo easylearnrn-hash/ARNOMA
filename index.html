@@ -10964,23 +10964,23 @@
         const selectedTz = localStorage.getItem('timerTimezone') || 'AM';
         
         // Always get LA time from UTC (not local computer time)
-        const laTime = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+        const laTimeObj = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+        if (!laTimeObj || !(laTimeObj instanceof Date)) {
+          console.error('[ClassCountdownTimer] Failed to get LA time');
+          return;
+        }
         
         if (selectedTz === 'AM') {
           // Convert LA time to Yerevan time
-          const yerevanTime = convertLAToYerevanTime(
-            laTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-          );
-          const laTimeStr = laTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-          const dateStr = laTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          const laTimeStr = laTimeObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+          const yerevanTime = convertLAToYerevanTime(laTimeStr);
+          const dateStr = laTimeObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
           currentTimeEl.textContent = `${yerevanTime.time} Yerevan • ${laTimeStr} LA • ${dateStr}`;
         } else {
           // Show LA time first
-          const yerevanTime = convertLAToYerevanTime(
-            laTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true })
-          );
-          const laTimeStr = laTime.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-          const dateStr = laTime.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+          const laTimeStr = laTimeObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+          const yerevanTime = convertLAToYerevanTime(laTimeStr);
+          const dateStr = laTimeObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
           currentTimeEl.textContent = `${laTimeStr} LA • ${yerevanTime.time} Yerevan • ${dateStr}`;
         }
       }
