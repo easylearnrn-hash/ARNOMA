@@ -2211,6 +2211,7 @@
           <select id="filterPayment" onchange="filterStudents()" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; min-width: 150px;">
             <option value="">All Payment Status</option>
             <option value="unpaid">Unpaid Classes</option>
+            <option value="credit">Has Credit Balance</option>
           </select>
           
           <select id="sortPrice" onchange="filterStudents()" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; min-width: 150px;">
@@ -7527,6 +7528,7 @@
       card.setAttribute('data-notes', (student.notes || '').toLowerCase());
       card.setAttribute('data-status', normalizeStatus(student.status));
       card.setAttribute('data-pay', student.payPerClass || 0);
+      card.setAttribute('data-balance', student.balance || 0);
       
       const statusDetails = getStatusDetails(student.status);
       const showInGrid = student.showInGrid !== false;
@@ -7734,8 +7736,17 @@
         // Status filter
         const statusMatch = !statusFilter || status === statusFilter;
 
-        // Payment filter (placeholder - requires payment data integration)
-        const paymentMatch = !paymentFilter;
+        // Payment filter - check for credit balance
+        let paymentMatch = !paymentFilter;
+        if (paymentFilter === 'credit') {
+          const balance = parseFloat(card.getAttribute('data-balance') || '0');
+          paymentMatch = balance > 0;
+        } else if (paymentFilter === 'unpaid') {
+          // Unpaid logic would require calendar data integration
+          paymentMatch = true;
+        } else {
+          paymentMatch = true;
+        }
 
         if (searchMatch && groupMatch && statusMatch && paymentMatch) {
           card.style.display = 'flex';
