@@ -5965,6 +5965,7 @@
         payment.derivedStudentId = resolution.studentId;
         payment.resolvedStudentName = resolution.studentName;
         payment.derivedStudentGroup = resolution.studentGroup;
+        payment.studentName = student.name; // Set studentName for calendar lookup
         
         PaymentStore.save(payments);
         // END CRITICAL BUG FIX
