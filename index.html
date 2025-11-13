@@ -12309,11 +12309,24 @@
         
         if (paymentAmount > pricePerClass) {
           const remainder = paymentAmount - pricePerClass;
-          const newBalance = balance + remainder;
           
-          // Update student balance in memory and mark for Supabase sync
-          student.balance = newBalance;
-          student.balanceChanged = true;
+          // CRITICAL: Check if this payment has already been applied to balance
+          // Track using payment ID + date to prevent duplicate balance additions
+          const balanceTrackingKey = `balance-applied:${paymentOnDate.id}:${dateStr}`;
+          const alreadyApplied = localStorage.getItem(balanceTrackingKey) === 'true';
+          
+          let newBalance = balance;
+          
+          // Only add to balance if not already applied
+          if (!alreadyApplied) {
+            newBalance = balance + remainder;
+            student.balance = newBalance;
+            student.balanceChanged = true;
+            
+            // Mark this payment as applied to prevent future duplicate additions
+            localStorage.setItem(balanceTrackingKey, 'true');
+            console.log(`💰 Added $${remainder} to ${student.name}'s balance from payment ${paymentOnDate.id}`);
+          }
           
           const result = {
             status: 'paid',
@@ -12356,31 +12369,43 @@
       // Check if can deduct from balance (for ANY unpaid class - past, today, or future)
       // Balance automatically pays oldest unpaid classes first
       if (balance >= pricePerClass) {
-        const newBalance = balance - pricePerClass;
+        // CRITICAL: Check if this class has already been paid from balance
+        // Track using student ID + date to prevent duplicate deductions
+        const deductionTrackingKey = `balance-deducted:${studentId}:${dateStr}`;
+        const alreadyDeducted = localStorage.getItem(deductionTrackingKey) === 'true';
         
-        // Update student balance in memory and mark for Supabase sync
-        student.balance = newBalance;
-        student.balanceChanged = true;
-        
-        const lowBalance = newBalance > 0 && newBalance < pricePerClass;
-        
-        const result = {
-          status: lowBalance ? 'low-balance' : 'deducted',
-          paid: true,
-          amount: pricePerClass,
-          balance: newBalance,
-          message: `From Balance (${formatCurrency(newBalance, '$')} remaining)`,
-          alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
-        };
-        
-        // Save snapshot for dates older than 2 weeks
-        if (classDate < twoWeeksAgo) {
-          saveCalendarSnapshot(dateStr, {
-            [studentId]: result
-          });
+        // Only deduct if not already deducted
+        if (!alreadyDeducted) {
+          const newBalance = balance - pricePerClass;
+          
+          // Update student balance in memory and mark for Supabase sync
+          student.balance = newBalance;
+          student.balanceChanged = true;
+          
+          // Mark this class as paid from balance to prevent future duplicate deductions
+          localStorage.setItem(deductionTrackingKey, 'true');
+          console.log(`💳 Deducted $${pricePerClass} from ${student.name}'s balance for ${dateStr}`);
+          
+          const lowBalance = newBalance > 0 && newBalance < pricePerClass;
+          
+          const result = {
+            status: lowBalance ? 'low-balance' : 'deducted',
+            paid: true,
+            amount: pricePerClass,
+            balance: newBalance,
+            message: `From Balance (${formatCurrency(newBalance, '$')} remaining)`,
+            alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
+          };
+          
+          // Save snapshot for dates older than 2 weeks
+          if (classDate < twoWeeksAgo) {
+            saveCalendarSnapshot(dateStr, {
+              [studentId]: result
+            });
+          }
+          
+          return result;
         }
-        
-        return result;
       }
       
       // Absent check moved to top of function - this duplicate removed
