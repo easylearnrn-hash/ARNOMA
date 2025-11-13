@@ -10227,89 +10227,175 @@
      */
     function getNextClassTime() {
       try {
-        const groups = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
-        const now = new Date();
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const currentDayIndex = now.getDay();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
+        const groupsSource = window.groupsCache || window.globalData?.groups || JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
+        const groups = Array.isArray(groupsSource) ? groupsSource : [];
+        if (groups.length === 0) {
+          return null;
+        }
+
+        const laNow = getLADate();
+        const currentMinutes = laNow.getHours() * 60 + laNow.getMinutes();
+
+        const normalizeDay = (day) => {
+          if (!day) return '';
+          const map = {
+            'sun': 'Sunday', 'sunday': 'Sunday',
+            'mon': 'Monday', 'monday': 'Monday',
+            'tue': 'Tuesday', 'tues': 'Tuesday', 'tuesday': 'Tuesday',
+            'wed': 'Wednesday', 'weds': 'Wednesday', 'wednesday': 'Wednesday',
+            'thu': 'Thursday', 'thur': 'Thursday', 'thurs': 'Thursday', 'thursday': 'Thursday',
+            'fri': 'Friday', 'friday': 'Friday',
+            'sat': 'Saturday', 'saturday': 'Saturday'
+          };
+          const normalized = map[String(day).trim().toLowerCase()];
+          return normalized || String(day).trim();
+        };
+
+        const extractSessions = (group) => {
+          const sessions = [];
+
+          const collectFromSlot = (slot) => {
+            if (!slot) return;
+
+            const rawTime = slot.time || slot.startTime || slot.laTime;
+            if (!rawTime) return;
+
+            const timeString = String(rawTime).trim();
+            if (!timeString) return;
+
+            let dayCandidates = [];
+
+            if (Array.isArray(slot.days)) {
+              dayCandidates = slot.days;
+            } else if (typeof slot.days === 'string') {
+              dayCandidates = slot.days.split(/[\/,&]/).map(token => token.trim()).filter(Boolean);
+            }
+
+            if (typeof slot.day === 'string' && slot.day.trim()) {
+              dayCandidates.push(slot.day);
+            }
+
+            // Some legacy records store weekday under slot.weekday or slot.weekDay
+              if (typeof slot.weekday === 'string' && slot.weekday.trim()) {
+                dayCandidates.push(slot.weekday);
+              }
+              if (typeof slot.weekDay === 'string' && slot.weekDay.trim()) {
+                dayCandidates.push(slot.weekDay);
+              }
+
+            // If no explicit days captured, fall back to combined field like "Mon/Wed"
+            if (!dayCandidates.length && typeof slot.dayString === 'string') {
+              dayCandidates = slot.dayString.split(/[\/,&]/).map(token => token.trim()).filter(Boolean);
+            }
+
+            const uniqueDays = Array.from(new Set(dayCandidates));
+
+            uniqueDays.forEach(day => {
+              const normalizedDay = normalizeDay(day);
+              if (!normalizedDay) return;
+              sessions.push({ day: normalizedDay, time: timeString });
+            });
+          };
+
+          if (Array.isArray(group.schedule)) {
+            group.schedule.forEach(collectFromSlot);
+          }
+
+          if (Array.isArray(group.sessions)) {
+            group.sessions.forEach(collectFromSlot);
+          }
+
+          if (typeof group.schedule === 'string') {
+            const cleaned = group.schedule.replace(/\*\*/g, '').replace(/\*/g, '');
+            cleaned.split(',').map(part => part.trim()).filter(Boolean).forEach(entry => {
+              const match = entry.match(/^([\w/\-&\s]+?)\s+(.+)$/);
+              if (!match) return;
+              const dayTokens = match[1].split(/[\/,&]/);
+              const timePart = match[2].trim();
+              dayTokens.map(token => token.trim()).filter(Boolean).forEach(token => {
+                const normalizedDay = normalizeDay(token);
+                if (!normalizedDay) return;
+                sessions.push({ day: normalizedDay, time: timePart });
+              });
+            });
+          }
+
+          return sessions;
+        };
 
         let nextClass = null;
         let minDiffInMinutes = Infinity;
 
-        // Check up to 7 days ahead
         for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
-          const checkDayIndex = (currentDayIndex + daysAhead) % 7;
-          const checkDayName = dayNames[checkDayIndex];
+          const checkDate = new Date(laNow);
+          checkDate.setDate(laNow.getDate() + daysAhead);
+          const checkDayName = checkDate.toLocaleString('en-US', {
+            timeZone: 'America/Los_Angeles',
+            weekday: 'long'
+          });
 
           groups.forEach(group => {
-            if (!group.schedule || !Array.isArray(group.schedule)) return;
+            const sessions = extractSessions(group);
+            if (!sessions.length) return;
 
-            group.schedule.forEach(slot => {
-              if (!slot.days || !slot.time) return;
+            sessions.forEach(session => {
+              if (session.day !== checkDayName) return;
 
-              slot.days.forEach(day => {
-                if (day !== checkDayName) return;
+              const timeMatch = String(session.time).trim().match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+              if (!timeMatch) return;
 
-                // Parse time (e.g., "2:00 PM" or "14:00")
-                const timeMatch = slot.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
-                if (!timeMatch) return;
+              let hours = parseInt(timeMatch[1], 10);
+              const minutes = parseInt(timeMatch[2], 10);
+              const ampm = timeMatch[3] ? timeMatch[3].toUpperCase() : null;
 
-                let hours = parseInt(timeMatch[1]);
-                const minutes = parseInt(timeMatch[2]);
-                const ampm = timeMatch[3];
+              if (ampm) {
+                if (ampm === 'PM' && hours !== 12) hours += 12;
+                if (ampm === 'AM' && hours === 12) hours = 0;
+              } else {
+                hours = hours % 24;
+              }
 
-                if (ampm) {
-                  if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
-                  if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
-                }
+              const classMinutes = hours * 60 + minutes;
 
-                const classMinutes = hours * 60 + minutes;
-                
-                // Calculate total difference in minutes from now
-                let totalDiff;
-                if (daysAhead === 0) {
-                  totalDiff = classMinutes - currentMinutes;
-                  // Skip if class already passed today
-                  if (totalDiff <= 0) return;
+              let totalDiff;
+              if (daysAhead === 0) {
+                totalDiff = classMinutes - currentMinutes;
+                if (totalDiff <= 0) return;
+              } else {
+                totalDiff = (daysAhead * 24 * 60) - currentMinutes + classMinutes;
+              }
+
+              if (totalDiff > 0 && totalDiff < minDiffInMinutes) {
+                minDiffInMinutes = totalDiff;
+
+                const daysLeft = Math.floor(totalDiff / (24 * 60));
+                const hoursLeft = Math.floor((totalDiff % (24 * 60)) / 60);
+                const minsLeft = totalDiff % 60;
+
+                let timeStr = '';
+                if (daysLeft > 0) {
+                  timeStr = `${daysLeft}d ${hoursLeft}h`;
+                } else if (hoursLeft > 0) {
+                  timeStr = `${hoursLeft}h ${minsLeft}m`;
                 } else {
-                  // For future days, add full days in minutes
-                  totalDiff = (daysAhead * 24 * 60) - currentMinutes + classMinutes;
+                  timeStr = `${minsLeft}m`;
                 }
 
-                if (totalDiff > 0 && totalDiff < minDiffInMinutes) {
-                  minDiffInMinutes = totalDiff;
-                  
-                  // Format time remaining
-                  const daysLeft = Math.floor(totalDiff / (24 * 60));
-                  const hoursLeft = Math.floor((totalDiff % (24 * 60)) / 60);
-                  const minsLeft = totalDiff % 60;
-                  
-                  let timeStr = '';
-                  if (daysLeft > 0) {
-                    timeStr = `${daysLeft}d ${hoursLeft}h`;
-                  } else if (hoursLeft > 0) {
-                    timeStr = `${hoursLeft}h ${minsLeft}m`;
-                  } else {
-                    timeStr = `${minsLeft}m`;
-                  }
-
-                  // Determine day label
-                  let dayLabel = '';
-                  if (daysAhead === 0) {
-                    dayLabel = 'Today';
-                  } else if (daysAhead === 1) {
-                    dayLabel = 'Tomorrow';
-                  } else {
-                    dayLabel = checkDayName;
-                  }
-
-                  nextClass = {
-                    groupName: group.name.length === 1 ? `Group ${group.name}` : group.name,
-                    timeRemaining: timeStr,
-                    dayName: dayLabel
-                  };
+                let dayLabel = '';
+                if (daysAhead === 0) {
+                  dayLabel = 'Today';
+                } else if (daysAhead === 1) {
+                  dayLabel = 'Tomorrow';
+                } else {
+                  dayLabel = checkDayName;
                 }
-              });
+
+                nextClass = {
+                  groupName: group.name && group.name.length === 1 ? `Group ${group.name}` : (group.name || 'Unknown Group'),
+                  timeRemaining: timeStr,
+                  dayName: dayLabel
+                };
+              }
             });
           });
         }
@@ -10846,31 +10932,57 @@
                 return map[day.toLowerCase()] || day;
               };
 
-              if (Array.isArray(group.schedule)) {
-                // Legacy array format with { days: [], time: '' }
-                group.schedule.forEach(slot => {
-                  if (!slot || !slot.days || !slot.time) return;
-                  const timeFormatted = ensureAMPMFormatLocal(slot.time);
-                  slot.days.forEach(day => {
-                    if (day) {
-                      sessions.push({
-                        day: normalizeDay(day),
-                        time: timeFormatted
-                      });
-                    }
-                  });
+              const collectFromSlot = (slot) => {
+                if (!slot) return;
+
+                const rawTime = slot.time || slot.startTime || slot.laTime;
+                if (!rawTime) return;
+
+                const timeFormatted = ensureAMPMFormatLocal(String(rawTime).trim());
+                if (!timeFormatted) return;
+
+                let dayCandidates = [];
+
+                if (Array.isArray(slot.days)) {
+                  dayCandidates = slot.days;
+                } else if (typeof slot.days === 'string') {
+                  dayCandidates = slot.days.split(/[\/,&]/).map(token => token.trim()).filter(Boolean);
+                }
+
+                if (typeof slot.day === 'string' && slot.day.trim()) {
+                  dayCandidates.push(slot.day);
+                }
+
+                if (typeof slot.weekday === 'string' && slot.weekday.trim()) {
+                  dayCandidates.push(slot.weekday);
+                }
+                if (typeof slot.weekDay === 'string' && slot.weekDay.trim()) {
+                  dayCandidates.push(slot.weekDay);
+                }
+
+                if (!dayCandidates.length && typeof slot.dayString === 'string') {
+                  dayCandidates = slot.dayString.split(/[\/,&]/).map(token => token.trim()).filter(Boolean);
+                }
+
+                const uniqueDays = Array.from(new Set(dayCandidates));
+
+                uniqueDays.forEach(day => {
+                  const normalized = normalizeDay(day);
+                  if (!normalized) return;
+                  sessions.push({ day: normalized, time: timeFormatted });
                 });
-              } else if (Array.isArray(group.sessions)) {
-                // Some imports might store sessions separately
-                sessions = group.sessions
-                  .filter(s => s && s.day && s.time)
-                  .map(s => ({
-                    day: normalizeDay(s.day),
-                    time: ensureAMPMFormatLocal(s.time)
-                  }));
-              } else if (typeof group.schedule === 'string') {
-                // Primary format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
-                sessions = parseScheduleString(group.schedule);
+              };
+
+              if (Array.isArray(group.schedule)) {
+                group.schedule.forEach(collectFromSlot);
+              }
+
+              if (Array.isArray(group.sessions)) {
+                group.sessions.forEach(collectFromSlot);
+              }
+
+              if (typeof group.schedule === 'string') {
+                sessions = sessions.concat(parseScheduleString(group.schedule));
               }
 
               if (!sessions.length) return;
@@ -11046,31 +11158,29 @@
 
       // Helper function to calculate class date
       function calculateClassDateForTimer(dayName, laTime) {
-        const now = new Date();
+        const laNow = getLADate();
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        let targetDate;
-        if (dayName === 'Today') {
-          targetDate = new Date(now);
-        } else if (dayName === 'Tomorrow') {
-          targetDate = new Date(now);
+
+        const targetDate = new Date(laNow);
+
+        if (dayName === 'Tomorrow') {
           targetDate.setDate(targetDate.getDate() + 1);
-        } else {
-          // Find next occurrence of this day
-          const currentDay = now.getDay();
+        } else if (dayName !== 'Today') {
+          const currentDay = laNow.getDay();
           const targetDay = dayNames.indexOf(dayName);
-          let daysAhead = targetDay - currentDay;
-          if (daysAhead <= 0) daysAhead += 7;
-          
-          targetDate = new Date(now);
-          targetDate.setDate(targetDate.getDate() + daysAhead);
+          if (targetDay !== -1) {
+            let daysAhead = targetDay - currentDay;
+            if (daysAhead <= 0) daysAhead += 7;
+            targetDate.setDate(targetDate.getDate() + daysAhead);
+          }
         }
-        
-        // Format as YYYY-MM-DD
-        const year = targetDate.getFullYear();
-        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-        const day = String(targetDate.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+
+        return targetDate.toLocaleString('en-CA', {
+          timeZone: 'America/Los_Angeles',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
       }
 
       // Initialize timer
@@ -11199,31 +11309,29 @@
 
       // Calculate the date for a class (Today, Tomorrow, or specific day)
       function calculateClassDate(dayName, laTime) {
-        const now = new Date();
+        const laNow = getLADate();
         const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        let targetDate;
-        if (dayName === 'Today') {
-          targetDate = new Date(now);
-        } else if (dayName === 'Tomorrow') {
-          targetDate = new Date(now);
+
+        const targetDate = new Date(laNow);
+
+        if (dayName === 'Tomorrow') {
           targetDate.setDate(targetDate.getDate() + 1);
-        } else {
-          // Find next occurrence of this day
-          const currentDay = now.getDay();
+        } else if (dayName !== 'Today') {
+          const currentDay = laNow.getDay();
           const targetDay = dayNames.indexOf(dayName);
-          let daysAhead = targetDay - currentDay;
-          if (daysAhead <= 0) daysAhead += 7;
-          
-          targetDate = new Date(now);
-          targetDate.setDate(targetDate.getDate() + daysAhead);
+          if (targetDay !== -1) {
+            let daysAhead = targetDay - currentDay;
+            if (daysAhead <= 0) daysAhead += 7;
+            targetDate.setDate(targetDate.getDate() + daysAhead);
+          }
         }
-        
-        // Format as YYYY-MM-DD
-        const year = targetDate.getFullYear();
-        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-        const day = String(targetDate.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+
+        return targetDate.toLocaleString('en-CA', {
+          timeZone: 'America/Los_Angeles',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        });
       }
 
       // Check if a class is skipped
@@ -12659,8 +12767,8 @@
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; font-weight: 600;">Quick Actions:</div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-              <button onclick="event.stopPropagation(); quickAddPayment('${studentId}', '${dateStr}', ${classInfo.pricePerClass})" style="padding: 8px 14px; background: rgba(34,197,94,0.2); border: 1px solid rgba(34,197,94,0.4); border-radius: 8px; color: #22c55e; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,0.3)'" onmouseout="this.style.background='rgba(34,197,94,0.2)'">
-                ➕ Add Payment
+              <button onclick="event.stopPropagation(); reviewUnpaidClasses('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(59,130,246,0.2); border: 1px solid rgba(59,130,246,0.4); border-radius: 8px; color: #3b82f6; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(59,130,246,0.3)'" onmouseout="this.style.background='rgba(59,130,246,0.2)'">
+                📬 Review Payment Records
               </button>
               <button onclick="event.stopPropagation(); markAsAbsent('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(100,116,139,0.2); border: 1px solid rgba(100,116,139,0.4); border-radius: 8px; color: #94a3b8; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(100,116,139,0.3)'" onmouseout="this.style.background='rgba(100,116,139,0.2)'">
                 ⚪ Mark Absent
@@ -12732,15 +12840,14 @@
       document.body.appendChild(overlay);
     }
     
-    function quickAddPayment(studentId, dateStr, amount) {
-      debug('[QuickAddPayment] Called with:', { studentId, dateStr, amount });
+    function reviewUnpaidClasses(studentId, dateStr) {
+      debug('[CalendarPayments] Reviewing unpaid classes for:', { studentId, dateStr });
       
-      // Close detail popup
+      // Close detail popup to prevent stacked modals
       const overlay = document.getElementById('calendarDetailOverlay');
       if (overlay) overlay.click();
       
-      // Show unpaid classes selection modal
-      debug('[QuickAddPayment] Opening unpaid classes modal...');
+      // Open unpaid classes viewer (read-only)
       showUnpaidClassesModal(studentId, dateStr);
     }
     
@@ -12826,19 +12933,18 @@
       
       // Generate HTML for unpaid classes list
       let classesHTML = '';
-      unpaidClasses.forEach((cls, index) => {
+      unpaidClasses.forEach(cls => {
         const dateDisplay = cls.date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
         const isInitial = cls.dateStr === initialDateStr;
         
         classesHTML += `
-          <label style="display: flex; align-items: center; padding: 12px; background: ${isInitial ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isInitial ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.1)'; this.style.borderColor='rgba(138,180,255,0.3)';" onmouseout="this.style.background='${isInitial ? 'rgba(34,197,94,0.1)' : 'rgba(255,255,255,0.03)'}'; this.style.borderColor='${isInitial ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.1)'}';">
-            <input type="checkbox" class="unpaid-class-checkbox" data-date="${cls.dateStr}" ${isInitial ? 'checked' : ''} style="width: 18px; height: 18px; cursor: pointer; margin-right: 12px; accent-color: #22c55e;">
+          <div style="display: flex; align-items: center; padding: 12px; background: ${isInitial ? 'rgba(59,130,246,0.16)' : 'rgba(255,255,255,0.03)'}; border: 1px solid ${isInitial ? 'rgba(59,130,246,0.4)' : 'rgba(255,255,255,0.1)'}; border-radius: 8px; margin-bottom: 8px; transition: all 0.2s;">
             <div style="flex: 1;">
               <div style="font-size: 14px; font-weight: 700; color: white; margin-bottom: 2px;">${dateDisplay}</div>
               <div style="font-size: 11px; color: #94a3b8;">Group ${escapeHtml(cls.groupName)} • <span style="color: #ef4444; font-weight: 600;">🔴 Unpaid</span></div>
             </div>
-            <div style="font-size: 13px; font-weight: 900; color: #22c55e;">${formatCurrency(cls.pricePerClass, '$')}</div>
-          </label>
+            <div style="font-size: 13px; font-weight: 900; color: #f97316;">${formatCurrency(cls.pricePerClass, '$')}</div>
+          </div>
         `;
       });
       
@@ -12846,23 +12952,23 @@
         <div id="unpaidClassesModal" onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 29000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; min-width: 500px; max-width: 600px; max-height: 80vh; display: flex; flex-direction: column; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
             <div>
-              <h3 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; color: white;">Select Unpaid Classes</h3>
+              <h3 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; color: white;">Review Unpaid Classes</h3>
               <p style="margin: 0; font-size: 13px; color: #94a3b8;">${escapeHtml(student.name)} • Group ${escapeHtml(student.group || 'N/A')}</p>
             </div>
             <button onclick="closeUnpaidClassesModal()" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
           </div>
           
-          <div style="margin-bottom: 16px; padding: 12px; background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px;">
-            <div style="font-size: 12px; color: #22c55e; font-weight: 700;">ℹ️ Select one or more unpaid classes to apply payment</div>
+          <div style="margin-bottom: 16px; padding: 12px; background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px;">
+            <div style="font-size: 12px; color: #3b82f6; font-weight: 700;">ℹ️ Payments sync automatically from Gmail. Review the unpaid classes below — no manual entries are needed.</div>
           </div>
           
           <div style="flex: 1; overflow-y: auto; margin-bottom: 16px; padding-right: 8px;">
             ${classesHTML}
           </div>
           
-          <div style="display: flex; gap: 10px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-            <button onclick="closeUnpaidClassesModal()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
-            <button onclick="applyPaymentToSelected('${studentId}')" style="flex: 2; padding: 12px; background: rgba(34,197,94,0.8); border: 1px solid rgba(34,197,94,1); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34,197,94,1)'" onmouseout="this.style.background='rgba(34,197,94,0.8)'">Apply Payment to Selected</button>
+          <div style="padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column; gap: 12px;">
+            <div style="font-size: 11px; color: rgba(255,255,255,0.6);">🟢 When matching Payment Records arrive from Gmail, the calendar updates automatically. If no payment exists yet, the class remains 🔴.</div>
+            <button onclick="closeUnpaidClassesModal()" style="align-self: flex-end; padding: 12px 24px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; color: white; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.18)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">Close</button>
           </div>
         </div>
       `;
@@ -12884,50 +12990,6 @@
       const overlay = document.getElementById('unpaidClassesOverlay');
       if (modal) modal.remove();
       if (overlay) overlay.remove();
-    }
-    
-    function applyPaymentToSelected(studentId) {
-      const checkboxes = document.querySelectorAll('.unpaid-class-checkbox:checked');
-      if (checkboxes.length === 0) {
-        showToast('⚠️ Please select at least one class');
-        return;
-      }
-      
-      const students = getCachedStudents();
-      // Use loose equality to handle string/number mismatch
-  const student = getStudentById(studentId, students);
-      if (!student) return;
-      
-      const selectedDates = Array.from(checkboxes).map(cb => cb.dataset.date);
-      const pricePerClass = parseFloat(student.payPerClass) || 0;
-      const totalAmount = selectedDates.length * pricePerClass;
-      
-      const confirmed = confirm(`Apply payment of ${formatCurrency(totalAmount, '$')} to ${selectedDates.length} class${selectedDates.length !== 1 ? 'es' : ''}?\n\nThis will mark the selected classes as paid.`);
-      if (!confirmed) return;
-      
-      const payments = PaymentStore.getAll();
-      
-      // Create a payment for each selected date
-      selectedDates.forEach(dateStr => {
-        const payment = {
-          id: 'cal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-          payerName: student.name,
-          studentName: student.name,
-          amount: pricePerClass.toString(),
-          emailDate: new Date(dateStr).toISOString(),
-          timestamp: new Date(dateStr).toISOString(),
-          note: 'Added from Calendar - Unpaid Classes Selection',
-          ignored: false,
-          source: 'calendar'
-        };
-        payments.push(payment);
-      });
-      
-      PaymentStore.save(payments);
-      
-      showToast(`✅ Payment applied to ${selectedDates.length} class${selectedDates.length !== 1 ? 'es' : ''}`);
-      closeUnpaidClassesModal();
-      renderCalendar();
     }
     
     function markAsAbsent(studentId, dateStr) {
