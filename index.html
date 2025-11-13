@@ -10385,37 +10385,39 @@
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
         getCurrentTimeInZone(timezone) {
-          // CRITICAL FIX: toLocaleString is fundamentally broken for Asia/Yerevan
-          // Use manual UTC calculation instead
+          // CRITICAL: We need the ACTUAL current time in the target timezone
+          // Not the browser's local time formatted as that timezone
+          
           const now = new Date();
           
-          // Create formatter to get timezone offset
-          const formatter = new Intl.DateTimeFormat('en-US', {
+          // Get the time string in target timezone with 12-hour format
+          const timeString = now.toLocaleString("en-US", { 
             timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
+            hour12: true,
+            hour: 'numeric',
             minute: '2-digit',
             second: '2-digit',
-            hour12: true // Use 12-hour to avoid the bug
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
           });
           
-          const parts = formatter.formatToParts(now);
-          const getValue = (type) => parts.find(p => p.type === type)?.value;
+          // Parse: "11/13/2025, 4:20:35 AM"
+          const match = timeString.match(/(\d+)\/(\d+)\/(\d+),\s+(\d+):(\d+):(\d+)\s+(AM|PM)/i);
+          if (!match) {
+            console.error('[TimezoneUtils] Parse failed:', timeString);
+            return null;
+          }
           
-          let hours = parseInt(getValue('hour'));
-          const minutes = parseInt(getValue('minute'));
-          const seconds = parseInt(getValue('second'));
-          const dayPeriod = getValue('dayPeriod');
-          const day = parseInt(getValue('day'));
-          const month = parseInt(getValue('month'));
-          const year = parseInt(getValue('year'));
+          const [_, month, day, year, hourStr, minuteStr, secondStr, period] = match;
+          let hours = parseInt(hourStr);
+          const minutes = parseInt(minuteStr);
+          const seconds = parseInt(secondStr);
           
-          // Convert to 24-hour format MANUALLY
-          if (dayPeriod === 'PM' && hours !== 12) {
+          // Convert to 24-hour format
+          if (period.toUpperCase() === 'PM' && hours !== 12) {
             hours += 12;
-          } else if (dayPeriod === 'AM' && hours === 12) {
+          } else if (period.toUpperCase() === 'AM' && hours === 12) {
             hours = 0;
           }
           
@@ -10425,15 +10427,15 @@
             weekday: 'long'
           });
           
-          console.log('[TimezoneUtils] FIXED timezone conversion:', timezone, '→', hours + ':' + minutes + ':' + seconds, dayPeriod, '(24h format:', hours + ')');
+          console.log('[TimezoneUtils] Timezone conversion:', timezone, '→ Raw:', timeString, '→ Parsed:', hours + ':' + minutes + ':' + seconds, '(', period, ')');
           
           return {
             hours,
             minutes,
             seconds,
-            day,
-            month,
-            year,
+            day: parseInt(day),
+            month: parseInt(month),
+            year: parseInt(year),
             dayOfWeek,
             // For backwards compatibility, provide Date-like methods
             getDay() {
