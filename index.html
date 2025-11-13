@@ -7459,6 +7459,10 @@
               <span class="info-label">PAY/CLASS</span>
               <span class="info-value">${formatCurrency(student.payPerClass || 0, '$')}</span>
             </div>
+            <div class="info-row">
+              <span class="info-label">CREDIT</span>
+              <span class="info-value" style="color: ${(student.balance || 0) >= 0 ? '#22c55e' : '#ef4444'};">${formatCurrency(student.balance || 0, '$')}</span>
+            </div>
             <div class="info-column">
               <span class="info-label">PHONE</span>
               <span class="info-text">${escapeHtml(student.phone || 'N/A')}</span>
