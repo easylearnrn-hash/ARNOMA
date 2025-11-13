@@ -3486,11 +3486,17 @@
         const oldDerivedId = payment.derivedStudentId;
         const oldResolved = payment.resolvedStudentName;
         const oldGroup = payment.derivedStudentGroup;
+        const oldStudentName = payment.studentName;
         
         payment.derivedStudentId = resolution.studentId;
         payment.resolvedStudentName = resolution.studentName;
         payment.derivedStudentGroup = resolution.studentGroup;
         payment.resolutionSource = resolution.source;
+        
+        // Set studentName for calendar lookup (use resolved name)
+        if (resolution.studentName) {
+          payment.studentName = resolution.studentName;
+        }
         
         if (resolution.source === 'conflict') {
           payment.conflictCandidates = resolution.conflicts.map(s => s.id);
@@ -3498,7 +3504,7 @@
           delete payment.conflictCandidates;
         }
         
-        if (oldDerivedId !== payment.derivedStudentId || oldResolved !== payment.resolvedStudentName || oldGroup !== payment.derivedStudentGroup) {
+        if (oldDerivedId !== payment.derivedStudentId || oldResolved !== payment.resolvedStudentName || oldGroup !== payment.derivedStudentGroup || oldStudentName !== payment.studentName) {
           updated = true;
         }
       });
