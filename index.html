@@ -14,10 +14,35 @@
   <!-- Supabase Configuration -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
   <script>
-    // VERSION CHECK - This should appear FIRST in console
-    console.log('🔥 CACHE BUSTER: Version 2.1.0 - Build 20251112-0240');
-    
-    // Supabase Client Initialization
+        // PERFORMANCE CONFIG - Set to false to disable verbose logging
+        const DEBUG_MODE = false;
+        const debugLog = (...args) => { if (DEBUG_MODE) console.log(...args); };
+
+        // DEBOUNCE HELPER - Prevents excessive function calls during rapid events
+        const debounce = (func, wait) => {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        };
+
+        // Create debounced wrapper for inline oninput handlers
+        const debouncedFilterStudentSearch = debounce(() => {
+            const searchTerm = document.getElementById('linkStudentSearchInput').value.toLowerCase();
+            const studentItems = document.querySelectorAll('.link-student-item');
+            studentItems.forEach(item => {
+                const studentName = item.textContent.toLowerCase();
+                item.style.display = studentName.includes(searchTerm) ? 'block' : 'none';
+            });
+        }, 300);
+
+        // VERSION CHECK - This should appear FIRST in console
+        console.log('🔥 ARNOMA v2.1.0 Ready');    // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -3703,7 +3728,7 @@
       // Add event listeners
       const searchInput = document.getElementById('studentSearchInput');
       if (searchInput) {
-        searchInput.addEventListener('input', filterStudentList);
+        searchInput.addEventListener('input', debounce(filterStudentList, 300));
       }
       
       const studentItems = document.querySelectorAll('.student-select-item');
@@ -4567,7 +4592,7 @@
         const connection = JSON.parse(stored);
         // Check if token is expired
         if (connection.expiry_date && Date.now() >= connection.expiry_date) {
-          console.log('Gmail token expired');
+          debugLog('Gmail token expired');
           localStorage.removeItem(GMAIL_CONNECTION_KEY);
           return null;
         }
@@ -4614,7 +4639,7 @@
       const fiveMinutes = 5 * 60 * 1000;
       
       if (expiry && (expiry - now) < fiveMinutes) {
-        console.log('Gmail token expiring soon, attempting silent refresh...');
+        debugLog('Gmail token expiring soon, attempting silent refresh...');
         
         // Token expired or expiring - need to re-authenticate
         // Note: Google OAuth2 implicit flow doesn't support refresh tokens
@@ -4678,13 +4703,13 @@
         `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
         `prompt=select_account`;           // Allow account selection
       
-      console.log('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
+      debugLog('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
       window.location.href = authUrl;
     }
     
     function handleOAuthCallback() {
       const hash = window.location.hash;
-      console.log('🔍 Checking for OAuth callback - hash:', hash ? 'Found' : 'None');
+      debugLog('🔍 Checking for OAuth callback - hash:', hash ? 'Found' : 'None');
       
       if (hash && hash.includes('access_token')) {
         const params = new URLSearchParams(hash.substring(1));
@@ -4703,7 +4728,7 @@
           window.history.replaceState(null, '', window.location.pathname);
           
           // Auto-fetch payments after connection
-          console.log('📥 Auto-fetching payments after connection...');
+          debugLog('📥 Auto-fetching payments after connection...');
           setTimeout(() => refreshPayments(), 1000);
         }
       } else if (hash && hash.includes('error')) {
@@ -5745,7 +5770,7 @@
           </div>
           <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 14px;">Search and select a student to link this payment to:</p>
           
-          <input type="text" id="linkStudentSearchInput" placeholder="Search students by name..." style="width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 14px; margin-bottom: 16px; outline: none; pointer-events: auto;" oninput="filterStudentSearch()" onkeydown="if(event.key==='Escape'){closeLinkStudentModal();}" autofocus>
+          <input type="text" id="linkStudentSearchInput" placeholder="Search students by name..." style="width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 14px; margin-bottom: 16px; outline: none; pointer-events: auto;" oninput="debouncedFilterStudentSearch()" onkeydown="if(event.key==='Escape'){closeLinkStudentModal();}" autofocus>
           
           <div id="studentSearchResults" style="max-height: 320px; overflow-y: auto; margin-bottom: 16px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             ${studentListHTML}
@@ -5875,7 +5900,7 @@
       let paymentDataSnapshot = currentPaymentPopupData ? { ...currentPaymentPopupData } : null;
       
       if (!paymentDataSnapshot && savedPaymentDataForLinking) {
-        console.log('⚠️ currentPaymentPopupData was null, using savedPaymentDataForLinking');
+        debugLog('⚠️ currentPaymentPopupData was null, using savedPaymentDataForLinking');
         paymentDataSnapshot = { ...savedPaymentDataForLinking };
       }
       
@@ -5930,7 +5955,7 @@
           const normalizedPayerName = payerName.trim().toLowerCase();
           const normalizedStudentName = student.name.toLowerCase();
           
-          console.log('🔍 Normalized payer:', normalizedPayerName);
+          debugLog('🔍 Normalized payer:', normalizedPayerName);
           
           // Only add if payer name is different from student name and not already in aliases
           const aliasExists = currentAliases.some(alias => 
@@ -5952,7 +5977,7 @@
               window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
             }
           } else {
-            console.log('⏭️ Skipped adding alias (already exists or same as student name)');
+            debugLog('⏭️ Skipped adding alias (already exists or same as student name)');
           }
         } else {
         }
@@ -5979,7 +6004,7 @@
         
         // Clear persistent storage after successful link
         savedPaymentDataForLinking = null;
-        console.log('🧹 Cleared savedPaymentDataForLinking after successful link');
+        debugLog('🧹 Cleared savedPaymentDataForLinking after successful link');
         
         closeLinkStudentModal();
         closePaymentActionsPopup();
@@ -6146,7 +6171,7 @@
           fromDateStr = defaultFrom.toISOString().split('T')[0];
           fromDateInput.value = fromDateStr;
         }
-        console.log('📅 Applied default dates - From:', fromDateStr, 'To:', toDateStr);
+        debugLog('📅 Applied default dates - From:', fromDateStr, 'To:', toDateStr);
       }
       
       if (!fromDateStr || !toDateStr) {
@@ -6406,10 +6431,10 @@
       autoRefreshInterval = setInterval(() => {
         // Don't auto-refresh if Gmail is not connected
         if (!getGmailConnection()) {
-          console.log('⏸️ Skipping auto-refresh - Gmail not connected');
+          debugLog('⏸️ Skipping auto-refresh - Gmail not connected');
           return;
         }
-        console.log('🔄 Auto-refreshing payments...');
+        debugLog('🔄 Auto-refreshing payments...');
         refreshPayments();
       }, TIMING.AUTO_REFRESH_INTERVAL);
     }
@@ -6902,7 +6927,7 @@
         // Store backup metadata in localStorage for quick access
         localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
         
-        console.log('✅ Auto-backup completed (data already in Supabase)');
+        debugLog('✅ Auto-backup completed');
       } catch (error) {
         console.error('Error creating auto-backup metadata:', error);
       }
@@ -9648,7 +9673,7 @@
     // ============================================================================
     
     async function initialize() {
-      console.log('🚀 Initializing ARNOMA app with Supabase...');
+      debugLog('🚀 Initializing ARNOMA app with Supabase...');
       
       // Initialize global data
       if (!window.globalData) {
@@ -10757,7 +10782,7 @@
                 let totalDiffSeconds;
                 if (daysAhead === 0) {
                   totalDiffSeconds = classTimeInSeconds - currentTime;
-                  console.log(`[ClassCountdownTimer] Checking ${group.name} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
+                  debugLog(`[ClassCountdownTimer] Checking ${group.name} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
                   // Skip if more than 2 hours (7200 seconds) past - class is over
                   if (totalDiffSeconds < -7200) return;
                 } else {
@@ -10767,7 +10792,7 @@
                 // Skip classes currently in progress (started but not yet 2 hours past)
                 // Only count future classes (totalDiffSeconds > 0)
                 if (totalDiffSeconds > 0 && totalDiffSeconds < minDiffInSeconds) {
-                  console.log(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
+                  debugLog(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
                   minDiffInSeconds = totalDiffSeconds;
                   
                   // Determine day label
@@ -10999,11 +11024,11 @@
                   totalDiffSeconds = (daysAhead * 86400) - currentTimeInSeconds + classTimeInSeconds;
                 }
                 
-                console.log(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time} (day +${daysAhead}): classTime=${classTimeInSeconds}s, currentTime=${currentTimeInSeconds}s, diff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
+                debugLog(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time} (day +${daysAhead}): classTime=${classTimeInSeconds}s, currentTime=${currentTimeInSeconds}s, diff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
                 
                 // Skip if more than 2 hours (7200 seconds) past - class is over
                 if (totalDiffSeconds < -7200) {
-                  console.log(`[ClassCountdownTimer] ❌ Skipping ${group.name} - more than 2h past`);
+                  debugLog(`[ClassCountdownTimer] ❌ Skipping ${group.name} - more than 2h past`);
                   return;
                 }
 
@@ -12221,7 +12246,7 @@
       const isAbsent = localStorage.getItem(absentKey) === 'true';
       
       if (isAbsent) {
-        console.log('⚪ Absent check - Student is marked absent:', { studentId, dateStr });
+        debugLog('Absent check - Student is marked absent:', { studentId, dateStr });
         return {
           status: 'absent',
           paid: false,
@@ -12914,7 +12939,7 @@
       const absentKey = `absent:${numericId}:${dateStr}`;
       localStorage.setItem(absentKey, 'true');
       
-      console.log('✅ Marked absent:', { studentId: numericId, dateStr, key: absentKey });
+      debugLog('Marked absent:', { studentId: numericId, dateStr, key: absentKey });
       
       showToast('⚪ Marked as absent');
       
@@ -13013,9 +13038,7 @@
     // Initialize on page load
     document.addEventListener('DOMContentLoaded', initialize);
     
-    console.log('✅ ARNOMA app loaded - Using Supabase cloud database [v2.1.0 - Full Sync Redesigned - Build 20251112-0230]');
-    console.log('🔧 CACHE CHECK: If you see this message, JavaScript is loading correctly.');
-    console.log('🔧 Full Sync has been redesigned with proper date range handling.');
+    debugLog('ARNOMA app loaded - Using Supabase cloud database');
   </script>
 </body>
 </html>
