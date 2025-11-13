@@ -10138,12 +10138,32 @@
           });
           // END DAY SHIFT FIX
           
+          // Helper function to convert time string to 24-hour numeric value for sorting
+          function timeToNumeric(timeStr) {
+            // Parse "8:00 AM" or "5:30 PM" format
+            const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+            if (!match) return 0;
+            
+            let hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const period = match[3].toUpperCase();
+            
+            // Convert to 24-hour format
+            if (period === 'PM' && hours !== 12) {
+              hours += 12;
+            } else if (period === 'AM' && hours === 12) {
+              hours = 0;
+            }
+            
+            // Return as decimal: 8:30 AM = 8.5, 5:45 PM = 17.75
+            return hours + (minutes / 60);
+          }
+          
           // Sort sessions by time within each day (chronological order)
           Object.keys(daySchedule).forEach(day => {
             daySchedule[day].sort((a, b) => {
-              // Clean time strings are already without markers
-              const timeA = new Date('1970-01-01 ' + a.yerevanTime);
-              const timeB = new Date('1970-01-01 ' + b.yerevanTime);
+              const timeA = timeToNumeric(a.yerevanTime);
+              const timeB = timeToNumeric(b.yerevanTime);
               return timeA - timeB;
             });
           });
