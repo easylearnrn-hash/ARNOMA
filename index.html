@@ -11907,9 +11907,8 @@
     const BALANCE_STORAGE_KEY = 'firestone:student-balances:v1';
     const CALENDAR_SNAPSHOT_KEY = 'firestone:calendar-snapshots:v1';
     
-    // Calendar start date - 2 weeks from today (November 27, 2025)
-    // Classes before this date will not be shown
-    const CALENDAR_START_DATE = new Date('2025-11-27T00:00:00');
+    // Calendar start date - November 1, 2025
+    const CALENDAR_START_DATE = new Date('2025-11-01T00:00:00');
     
     // Load balances from localStorage
     function loadStudentBalances() {
@@ -12193,18 +12192,20 @@
         };
       }
       
-      // RULE 2: Historical Freeze - Use snapshot for past dates
-      if (classDate < laToday) {
+      // RULE 2: Historical Freeze - Use snapshot for dates older than 2 weeks
+      const twoWeeksAgo = new Date(laToday);
+      twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+      
+      if (classDate < twoWeeksAgo) {
         const snapshot = getCalendarSnapshot(dateStr);
         if (snapshot && snapshot.students && snapshot.students[studentId]) {
-          // Return frozen data
+          // Return frozen data - immune to student/payment/group changes
           return snapshot.students[studentId];
         }
-        // If no snapshot exists for this past date, it means no class was scheduled
-        // Return as if no class (will not render)
+        // If no snapshot exists for this old date, recalculate once and freeze it
       }
       
-      // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
+      // RULE 3: Dynamic calculation for TODAY, recent past (< 2 weeks), and FUTURE dates
       const balance = student.balance || 0;
       
       // Find all payments for this student (by name or alias match)
@@ -12291,8 +12292,11 @@
             message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
           };
           
-          // Freeze today's data at end of day
-          if (dateStr === todayStr) {
+          // Freeze data for dates older than 2 weeks
+          const twoWeeksAgo = new Date(laToday);
+          twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+          
+          if (classDate < twoWeeksAgo) {
             saveCalendarSnapshot(dateStr, {
               [studentId]: result
             });
@@ -12308,7 +12312,7 @@
             message: `Paid ${formatCurrency(paymentAmount, '$')}`
           };
           
-          if (dateStr === todayStr) {
+          if (classDate < twoWeeksAgo) {
             saveCalendarSnapshot(dateStr, {
               [studentId]: result
             });
@@ -12337,8 +12341,8 @@
           alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
         };
         
-        // Save snapshot only for today
-        if (dateStr === todayStr) {
+        // Save snapshot for dates older than 2 weeks
+        if (classDate < twoWeeksAgo) {
           saveCalendarSnapshot(dateStr, {
             [studentId]: result
           });
