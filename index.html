@@ -2082,7 +2082,7 @@
   <div id="floatingNav" class="floating-nav" style="display:none;">
     <button id="navTopBtn" class="nav-btn" title="Scroll to Top">↑</button>
     <button id="navUndoBtn" class="nav-btn" title="Undo">←</button>
-    <button id="navRedoBtn" class="nav-btn" title="Redo">→</button>
+    <button id="navEarningForecastBtn" class="nav-btn" title="💰 Earning Forecast Overview">💰</button>
     <button id="navCalendarBtn" class="nav-btn" title="Smart Payment Calendar" onclick="openSmartCalendar()">☰</button>
     <button id="navTimerBtn" class="nav-btn" title="Class Countdown Timer">◷</button>
     <button id="navQuickViewBtn" class="nav-btn" title="Quick View – Group Schedules">◈</button>
@@ -10223,7 +10223,7 @@
       // Bind all button handlers with guards
       bindNavBtn('navTopBtn', scrollToTop);
       bindNavBtn('navUndoBtn', undoAction);
-      bindNavBtn('navRedoBtn', redoAction);
+      bindNavBtn('navEarningForecastBtn', openEarningsForecast);
       bindNavBtn('navTimerBtn', toggleClassCountdown);
       bindNavBtn('navQuickViewBtn', openQuickView);
       // navCalendarBtn has onclick in HTML
