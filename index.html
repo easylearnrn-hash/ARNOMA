@@ -10530,7 +10530,7 @@
       // Helper function to get classes from Quick View Yerevan tab data
       function getClassesFromQuickViewYerevan() {
         const classes = [];
-        const groups = getAllGroups();
+        const groups = window.groupsCache || window.globalData?.groups || [];
         if (!groups || groups.length === 0) return classes;
         
         const dayMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
