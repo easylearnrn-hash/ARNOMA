@@ -10275,7 +10275,6 @@
      *   but 12 hours during U.S. Standard Time (November → March).
      * - All calculations are done in UTC internally, then converted to local time for display.
      * - NEVER hard-code timezone offsets - always retrieve them dynamically.
-     * Version: 2025-11-13-02 (Fixed toLocaleTimeString error)
      */
     window.ClassCountdownTimer = (function() {
       // Private state
@@ -10295,32 +10294,55 @@
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
         getCurrentTimeInZone(timezone) {
-          try {
-            const now = new Date();
-            
-            // Get individual components in the target timezone
-            const year = parseInt(now.toLocaleString('en-US', { timeZone: timezone, year: 'numeric' }));
-            const month = parseInt(now.toLocaleString('en-US', { timeZone: timezone, month: 'numeric' }));
-            const day = parseInt(now.toLocaleString('en-US', { timeZone: timezone, day: 'numeric' }));
-            const hour = parseInt(now.toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false }));
-            const minute = parseInt(now.toLocaleString('en-US', { timeZone: timezone, minute: 'numeric' }));
-            const second = parseInt(now.toLocaleString('en-US', { timeZone: timezone, second: 'numeric' }));
-            
-            // Create a new Date object (in local timezone but with LA time values)
-            // This is a "fake" Date object that displays LA time
-            const laDate = new Date(year, month - 1, day, hour, minute, second);
-            
-            // Verify we got a valid date
-            if (isNaN(laDate.getTime())) {
-              console.error('[TimezoneUtils] Invalid date created:', { year, month, day, hour, minute, second });
-              return null;
+          const now = new Date();
+          
+          // Get ISO string in the target timezone
+          const isoString = now.toLocaleString('en-CA', {
+            timeZone: timezone,
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: false
+          });
+          
+          // Get day of week separately
+          const dayOfWeek = now.toLocaleString('en-US', {
+            timeZone: timezone,
+            weekday: 'long'
+          });
+          
+          // Parse: "YYYY-MM-DD, HH:mm:ss"
+          const [datePart, timePart] = isoString.split(', ');
+          const [year, month, day] = datePart.split('-').map(n => parseInt(n));
+          const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+          
+          return {
+            hours,
+            minutes,
+            seconds,
+            day,
+            month,
+            year,
+            dayOfWeek,
+            // For backwards compatibility, provide Date-like methods
+            getDay() {
+              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+              return dayNames.indexOf(this.dayOfWeek);
+            },
+            getHours() { return this.hours; },
+            getMinutes() { return this.minutes; },
+            getSeconds() { return this.seconds; },
+            getTime() {
+              // Return milliseconds since epoch for this time
+              return new Date(this.year, this.month - 1, this.day, this.hours, this.minutes, this.seconds).getTime();
+            },
+            toLocaleString() {
+              return `${this.month}/${this.day}/${this.year}, ${String(this.hours).padStart(2, '0')}:${String(this.minutes).padStart(2, '0')}:${String(this.seconds).padStart(2, '0')}`;
             }
-            
-            return laDate;
-          } catch (error) {
-            console.error('[TimezoneUtils] Error getting time in zone:', error);
-            return null;
-          }
+          };
         },
 
         /**
@@ -10520,11 +10542,8 @@
           const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
           const currentDayIndex = now.getDay();
           const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-          
-          // Store the current LA date for comparison (YYYY-MM-DD format)
-          const currentLADate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-          debug('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US'), 'Day:', dayNames[currentDayIndex], 'Date:', currentLADate, '(UTC offset:', laOffset, 'hours)');
+          debug('[ClassCountdownTimer] Current LA time:', now.toLocaleString('en-US'), 'Day:', dayNames[currentDayIndex], '(UTC offset:', laOffset, 'hours)');
 
           let nextClass = null;
           let minDiffInSeconds = Infinity;
@@ -10533,11 +10552,6 @@
           for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
             const checkDayIndex = (currentDayIndex + daysAhead) % 7;
             const checkDayName = dayNames[checkDayIndex];
-            
-            // Calculate the actual date being checked (in LA timezone)
-            const checkDate = new Date(now);
-            checkDate.setDate(checkDate.getDate() + daysAhead);
-            const checkDateStr = `${checkDate.getFullYear()}-${String(checkDate.getMonth() + 1).padStart(2, '0')}-${String(checkDate.getDate()).padStart(2, '0')}`;
 
             groups.forEach(group => {
               let sessions = [];
@@ -10587,24 +10601,17 @@
                 // Skip classes currently in progress (started but not yet 2 hours past)
                 // Only count future classes (totalDiffSeconds > 0)
                 if (totalDiffSeconds > 0 && totalDiffSeconds < minDiffInSeconds) {
-                  debug(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} (${checkDateStr}) at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
+                  debug(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
                   minDiffInSeconds = totalDiffSeconds;
                   
-                  // Determine day label based on LA date comparison
+                  // Determine day label
                   let dayLabel = '';
-                  if (checkDateStr === currentLADate) {
+                  if (daysAhead === 0) {
                     dayLabel = 'Today';
+                  } else if (daysAhead === 1) {
+                    dayLabel = 'Tomorrow';
                   } else {
-                    // Calculate tomorrow's LA date
-                    const tomorrow = new Date(now);
-                    tomorrow.setDate(tomorrow.getDate() + 1);
-                    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
-                    
-                    if (checkDateStr === tomorrowStr) {
-                      dayLabel = 'Tomorrow';
-                    } else {
-                      dayLabel = checkDayName;
-                    }
+                    dayLabel = checkDayName;
                   }
 
                   nextClass = {
@@ -10660,20 +10667,11 @@
         timer.id = 'enhancedCountdownTimer';
         timer.innerHTML = `
           <div class="timer-header">
-            <div style="display: flex; flex-direction: column; gap: 2px;">
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span class="timer-icon">🕒</span>
-                <span class="timer-title">Upcoming Classes</span>
-              </div>
-              <div id="currentTimeDisplay" style="font-size: 10px; color: rgba(255,255,255,0.5); font-weight: 500; padding-left: 24px;"></div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span class="timer-icon">🕒</span>
+              <span class="timer-title">Upcoming Classes</span>
             </div>
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <div id="timezoneToggle" style="display: flex; background: rgba(255,255,255,0.1); border-radius: 8px; padding: 2px; cursor: pointer; border: 1px solid rgba(255,255,255,0.2);">
-                <button id="tzAM" class="tz-btn active" style="padding: 4px 10px; border: none; background: rgba(59,130,246,0.4); color: white; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;">AM</button>
-                <button id="tzUS" class="tz-btn" style="padding: 4px 10px; border: none; background: transparent; color: rgba(255,255,255,0.6); border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; transition: all 0.2s;">US</button>
-              </div>
-              <button class="timer-close" title="Close timer">×</button>
-            </div>
+            <button class="timer-close" title="Close timer">×</button>
           </div>
           <div class="timer-classes-list"></div>
         `;
@@ -10682,45 +10680,6 @@
         closeBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           destroy();
-        });
-
-        // Add timezone toggle functionality
-        const tzAM = timer.querySelector('#tzAM');
-        const tzUS = timer.querySelector('#tzUS');
-        
-        // Load saved timezone preference (default to AM/Yerevan)
-        const savedTz = localStorage.getItem('timerTimezone') || 'AM';
-        if (savedTz === 'US') {
-          tzAM.classList.remove('active');
-          tzAM.style.background = 'transparent';
-          tzAM.style.color = 'rgba(255,255,255,0.6)';
-          tzUS.classList.add('active');
-          tzUS.style.background = 'rgba(59,130,246,0.4)';
-          tzUS.style.color = 'white';
-        }
-        
-        tzAM.addEventListener('click', (e) => {
-          e.stopPropagation();
-          localStorage.setItem('timerTimezone', 'AM');
-          tzAM.classList.add('active');
-          tzAM.style.background = 'rgba(59,130,246,0.4)';
-          tzAM.style.color = 'white';
-          tzUS.classList.remove('active');
-          tzUS.style.background = 'transparent';
-          tzUS.style.color = 'rgba(255,255,255,0.6)';
-          updateDisplay(); // Refresh display with new timezone
-        });
-        
-        tzUS.addEventListener('click', (e) => {
-          e.stopPropagation();
-          localStorage.setItem('timerTimezone', 'US');
-          tzUS.classList.add('active');
-          tzUS.style.background = 'rgba(59,130,246,0.4)';
-          tzUS.style.color = 'white';
-          tzAM.classList.remove('active');
-          tzAM.style.background = 'transparent';
-          tzAM.style.color = 'rgba(255,255,255,0.6)';
-          updateDisplay(); // Refresh display with new timezone
         });
 
         // Add click-outside-to-close functionality
@@ -10934,41 +10893,9 @@
         }
       }
 
-      // Update current time display based on timezone preference
-      function updateCurrentTimeDisplay() {
-        const currentTimeEl = timerElement?.querySelector('#currentTimeDisplay');
-        if (!currentTimeEl) return;
-        
-        const selectedTz = localStorage.getItem('timerTimezone') || 'AM';
-        
-        // Always get LA time from UTC (not local computer time)
-        const laTimeObj = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
-        if (!laTimeObj || !(laTimeObj instanceof Date)) {
-          console.error('[ClassCountdownTimer] Failed to get LA time');
-          return;
-        }
-        
-        if (selectedTz === 'AM') {
-          // Convert LA time to Yerevan time
-          const laTimeStr = laTimeObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-          const yerevanTime = convertLAToYerevanTime(laTimeStr);
-          const dateStr = laTimeObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-          currentTimeEl.textContent = `${yerevanTime.time} Yerevan • ${laTimeStr} LA • ${dateStr}`;
-        } else {
-          // Show LA time first
-          const laTimeStr = laTimeObj.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-          const yerevanTime = convertLAToYerevanTime(laTimeStr);
-          const dateStr = laTimeObj.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-          currentTimeEl.textContent = `${laTimeStr} LA • ${yerevanTime.time} Yerevan • ${dateStr}`;
-        }
-      }
-
       // Update timer display with all classes
       function updateDisplay() {
         if (!timerElement) return;
-
-        // Update current time display based on timezone preference
-        updateCurrentTimeDisplay();
 
         const allClasses = getAllUpcomingClasses();
         const listContainer = timerElement.querySelector('.timer-classes-list');
@@ -10993,9 +10920,6 @@
         allClasses.forEach((classData, index) => {
           const yerevanData = convertLAToYerevanTime(classData.laTime);
           const countdown = formatCountdown(classData.secondsRemaining);
-          
-          // Get selected timezone preference
-          const selectedTz = localStorage.getItem('timerTimezone') || 'AM';
           
           // Check if this class is skipped
           const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
@@ -11034,11 +10958,6 @@
 
           const isNext = index === 0;
           const skippedClass = isSkipped ? 'skipped' : '';
-          
-          // Display time based on selected timezone
-          const displayTime = selectedTz === 'AM' 
-            ? `${yerevanData.time} Yerevan (${classData.laTime} LA)`
-            : `${classData.laTime} LA (${yerevanData.time} Yerevan)`;
 
           html += `
             <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''} ${skippedClass}" data-group="${classData.groupName}" data-day="${classData.dayName}" data-time="${classData.laTime}">
@@ -11050,7 +10969,9 @@
               <div class="timer-class-details">
                 <span class="timer-class-day">${classData.dayName}</span>
                 <span class="timer-class-separator">•</span>
-                <span class="timer-class-time">${displayTime}</span>
+                <span class="timer-class-time">${classData.laTime} LA</span>
+                <span class="timer-class-separator">•</span>
+                <span class="timer-class-time">${yerevanData.time} Yerevan</span>
               </div>
             </div>
           `;
@@ -12282,15 +12203,15 @@
           return;
         }
         
-        // Strategy 2: ONLY look for PAST classes within 7 days BEFORE the payment
+        // Strategy 2: ONLY look for PAST classes BEFORE the payment (unlimited lookback)
         // This prevents applying Nov 10 payment to Nov 13 class
-        // Payment can cover a class from up to 7 days ago, but NOT future classes
+        // Payment can cover ANY past unpaid class from Nov 1 onwards, but NOT future classes
         const pastClass = findPastUnpaidClass(
           payment.laDateStr,
           classDates,
           appliedPayments,
           studentId,
-          7 // days lookback window
+          365 // unlimited lookback - match to any past class in the last year
         );
         
         if (pastClass) {
@@ -12301,7 +12222,7 @@
         }
         
         // Strategy 3: Payment doesn't match any class - needs user assignment
-        console.log(`⚠️ UNMATCHED: ${student.name}: $${paymentAmount} on ${payment.laDateStr} - no past class within 7 days`);
+        console.log(`⚠️ UNMATCHED: ${student.name}: $${paymentAmount} on ${payment.laDateStr} - no unpaid past classes found`);
         unmatchedPayments.push({
           ...payment,
           student,
