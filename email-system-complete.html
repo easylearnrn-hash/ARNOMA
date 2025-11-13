@@ -1,0 +1,1690 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARNOMA Email System - Complete</title>
+  
+  <style>
+    :root {
+      --primary: #a5b4fc;
+      --primary-bright: #c7d2fe;
+      --secondary: #94a3b8;
+      --ink: #f8fafc;
+      --ink-dim: #cbd5e1;
+      --bg-dark: #1e293b;
+      --bg-darker: #0f172a;
+      --text: #f8fafc;
+      --stroke: rgba(255,255,255,.2);
+      --success: #4ade80;
+      --warning: #fbbf24;
+      --error: #f87171;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: var(--ink);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 24px 32px;
+      border-radius: 16px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 400px;
+      height: 400px;
+      background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
+      border-radius: 50%;
+    }
+
+    .header-icon {
+      background: rgba(255,255,255,.2);
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      backdrop-filter: blur(10px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .header h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: white;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header p {
+      font-size: 14px;
+      color: rgba(255,255,255,.85);
+      margin-top: 4px;
+    }
+
+    .btn {
+      padding: 14px 28px;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      box-shadow: 0 6px 20px rgba(102,126,234,.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(102,126,234,.5);
+    }
+
+    .btn-secondary {
+      background: linear-gradient(135deg, rgba(165,180,252,.2), rgba(165,180,252,.3));
+      border: 2px solid rgba(165,180,252,.5);
+      color: var(--primary-bright);
+    }
+
+    .btn-secondary:hover {
+      background: linear-gradient(135deg, rgba(165,180,252,.3), rgba(165,180,252,.4));
+      border-color: var(--primary-bright);
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+
+    @media (max-width: 900px) {
+      .template-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .template-card {
+      background: linear-gradient(135deg, rgba(30,41,59,0.6), rgba(30,41,59,0.8));
+      backdrop-filter: blur(20px);
+      border: 2px solid rgba(165,180,252,.25);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s;
+      cursor: pointer;
+      min-width: 0;
+      width: 100%;
+    }
+
+    .template-card:hover {
+      border-color: var(--primary-bright);
+      background: linear-gradient(135deg, rgba(30,41,59,0.7), rgba(30,41,59,0.9));
+      box-shadow: 0 12px 32px rgba(165,180,252,.3);
+      transform: translateY(-3px);
+    }
+
+    .notification {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      padding: 16px 24px;
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border: 2px solid var(--primary-bright);
+      border-radius: 14px;
+      color: var(--ink);
+      font-weight: 600;
+      z-index: 10000;
+      animation: slideIn 0.3s ease-out;
+      box-shadow: 0 10px 30px rgba(0,0,0,.6), 0 0 0 1px rgba(165,180,252,.2);
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(248,250,252,.08);
+      border: 2px solid rgba(165,180,252,.3);
+      border-radius: 12px;
+      color: var(--ink);
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--primary-bright);
+      background: rgba(248,250,252,.12);
+      box-shadow: 0 0 0 3px rgba(165,180,252,.15);
+    }
+
+    .form-group textarea {
+      min-height: 200px;
+      resize: vertical;
+      line-height: 1.6;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,.75);
+      backdrop-filter: blur(8px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+      border: 2px solid rgba(165,180,252,.4);
+      border-radius: 20px;
+      max-width: 800px;
+      width: 100%;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px rgba(0,0,0,.5);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px 24px;
+      position: relative;
+      border-bottom: 2px solid rgba(255,255,255,.1);
+    }
+
+    .modal-header h2 {
+      font-size: 24px;
+      color: white;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 0;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: 12px;
+      right: 16px;
+      background: rgba(255,255,255,.2);
+      border: none;
+      color: white;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+
+    .modal-close:hover {
+      background: rgba(255,255,255,.3);
+      transform: rotate(90deg);
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .info-banner {
+      background: linear-gradient(135deg, rgba(102,126,234,.15), rgba(118,75,162,.15));
+      padding: 16px 20px;
+      border-radius: 12px;
+      border: 2px solid rgba(138,180,255,.3);
+      margin-bottom: 24px;
+      display: flex;
+      gap: 12px;
+    }
+
+    .info-icon {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .btn-icon {
+      background: rgba(165,180,252,.2);
+      border: 2px solid rgba(165,180,252,.35);
+      color: var(--ink);
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(165,180,252,.3);
+      border-color: var(--primary-bright);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(165,180,252,.25);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-icon">📧</div>
+      <div>
+        <h1>ARNOMA Email System</h1>
+        <p>Professional automated email templates with HTML formatting</p>
+      </div>
+      <button class="btn btn-secondary" onclick="openAutomations()" style="margin-left: auto; margin-right: 12px;">
+        ⚙️ Automations
+      </button>
+      <button class="btn btn-primary" onclick="openEditor()">
+        ✨ Create Template
+      </button>
+    </div>
+
+    <div class="info-banner">
+      <div class="info-icon">ℹ️</div>
+      <div>
+        <div style="font-weight: 700; color: var(--primary); font-size: 14px; margin-bottom: 4px;">
+          Professional HTML Email Templates
+        </div>
+        <div style="font-size: 13px; color: rgba(255,255,255,.85); line-height: 1.6;">
+          All templates use the ARNOMA branded HTML layout with gradient header, professional styling, and Zelle payment frame.
+        </div>
+      </div>
+    </div>
+
+    <div class="template-grid" id="templatesGrid">
+      <div style="text-align: center; padding: 80px 20px; color: var(--secondary);">
+        <div style="font-size: 72px; opacity: 0.3; margin-bottom: 20px;">📧</div>
+        <p style="font-size: 18px;">Loading templates...</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Automations Manager Modal -->
+  <div id="automationsModal" class="modal">
+    <div class="modal-content" style="max-width: 1000px;">
+      <div class="modal-header">
+        <h2>
+          <span>⚙️</span>
+          <span>Email Automations</span>
+        </h2>
+        <span class="modal-close" onclick="closeAutomations()">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <div class="info-banner" style="margin-bottom: 24px;">
+          <div class="info-icon">⚡</div>
+          <div>
+            <div style="font-weight: 700; color: var(--primary); font-size: 14px; margin-bottom: 4px;">
+              Flexible Automation System
+            </div>
+            <div style="font-size: 13px; color: rgba(255,255,255,.85); line-height: 1.6;">
+              Set up automated emails to be sent to individual students or entire groups based on schedules or triggers.
+            </div>
+          </div>
+        </div>
+
+        <div id="automationsList">
+          <div style="text-align: center; padding: 60px 20px; color: var(--secondary);">
+            <div style="font-size: 64px; opacity: 0.3; margin-bottom: 16px;">⚙️</div>
+            <p style="font-size: 16px;">No automations configured yet</p>
+            <button class="btn btn-primary" onclick="openAutomationEditor()" style="margin-top: 16px;">
+              Create First Automation
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Automation Editor Modal -->
+  <div id="automationEditorModal" class="modal">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="modal-header">
+        <h2>
+          <span>⚡</span>
+          <span id="automationModalTitle">Create Automation</span>
+        </h2>
+        <span class="modal-close" onclick="closeAutomationEditor()">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <form id="automationForm" onsubmit="saveAutomation(event)">
+          <input type="hidden" id="automationId">
+
+          <div class="form-group">
+            <label>Automation Name *</label>
+            <input type="text" id="automationName" required placeholder="e.g., Weekly Class Reminder">
+          </div>
+
+          <div class="form-group">
+            <label>Select Email Template *</label>
+            <select id="automationTemplate" required>
+              <option value="">-- Choose Template --</option>
+            </select>
+          </div>
+
+          <div style="background: rgba(165,180,252,.12); padding: 20px; border-radius: 14px; border: 2px solid rgba(165,180,252,.35); margin-bottom: 20px;">
+            <h3 style="margin: 0 0 16px 0; color: var(--primary-bright); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">👥</span>
+              Recipients
+            </h3>
+            
+            <div style="display: flex; gap: 12px; margin-bottom: 14px;">
+              <label style="flex: 1; background: rgba(255,255,255,.05); padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; transition: all 0.2s;">
+                <input type="radio" name="recipientType" value="individual" checked onchange="toggleRecipientType()" style="margin-right: 8px;">
+                <span style="font-weight: 600; color: white;">📧 Individual Students</span>
+              </label>
+              <label style="flex: 1; background: rgba(255,255,255,.05); padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; transition: all 0.2s;">
+                <input type="radio" name="recipientType" value="group" onchange="toggleRecipientType()" style="margin-right: 8px;">
+                <span style="font-weight: 600; color: white;">👥 Entire Groups</span>
+              </label>
+              <label style="flex: 1; background: rgba(255,255,255,.05); padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; transition: all 0.2s;">
+                <input type="radio" name="recipientType" value="all" onchange="toggleRecipientType()" style="margin-right: 8px;">
+                <span style="font-weight: 600; color: white;">🌐 All Students</span>
+              </label>
+            </div>
+
+            <div id="individualSelection" style="display: block;">
+              <div style="margin-bottom: 12px;">
+                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--ink); font-size: 13px;">Add Email Address</label>
+                <div style="display: flex; gap: 8px;">
+                  <input type="email" id="emailInput" placeholder="student@example.com" style="flex: 1; padding: 12px; background: rgba(248,250,252,.08); border: 2px solid rgba(165,180,252,.3); border-radius: 10px; color: white; font-size: 14px;">
+                  <button type="button" onclick="addEmailToList()" class="btn btn-primary" style="padding: 12px 20px; white-space: nowrap;">
+                    ➕ Add
+                  </button>
+                </div>
+              </div>
+              <div id="emailList" style="max-height: 200px; overflow-y: auto; background: rgba(15,23,42,.4); border-radius: 10px; padding: 12px; border: 1px solid rgba(165,180,252,.2);">
+                <div id="emailListContent" style="display: flex; flex-direction: column; gap: 8px;">
+                  <div style="color: var(--secondary); font-size: 13px; text-align: center; padding: 20px;">
+                    No email addresses added yet
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="groupSelection" style="display: none;">
+              <div id="groupList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
+                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
+                  <input type="checkbox" name="groups" value="A" style="margin-right: 6px;">
+                  <span style="font-weight: 600; color: white;">Group A</span>
+                </label>
+                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
+                  <input type="checkbox" name="groups" value="B" style="margin-right: 6px;">
+                  <span style="font-weight: 600; color: white;">Group B</span>
+                </label>
+                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
+                  <input type="checkbox" name="groups" value="C" style="margin-right: 6px;">
+                  <span style="font-weight: 600; color: white;">Group C</span>
+                </label>
+              </div>
+            </div>
+
+            <div id="allSelection" style="display: none;">
+              <div style="background: rgba(34,197,94,.1); padding: 12px; border-radius: 8px; border: 2px solid rgba(34,197,94,.3); text-align: center;">
+                <div style="font-size: 18px; margin-bottom: 6px;">🌐</div>
+                <div style="font-weight: 600; color: #22c55e; margin-bottom: 4px;">All Active Students</div>
+                <div style="font-size: 12px; color: rgba(255,255,255,.7);">Email will be sent to all active students in your database</div>
+              </div>
+            </div>
+          </div>
+
+          <div style="background: rgba(59,130,246,.08); padding: 18px; border-radius: 12px; border: 2px solid rgba(59,130,246,.3); margin-bottom: 20px;">
+            <h3 style="margin: 0 0 14px 0; color: #3b82f6; font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 20px;">⏰</span>
+              Schedule
+            </h3>
+
+            <div class="form-group" style="margin-bottom: 14px;">
+              <label>Frequency</label>
+              <select id="automationFrequency" onchange="toggleFrequencyOptions()">
+                <option value="once">One Time</option>
+                <option value="daily">Daily</option>
+                <option value="weekly">Weekly</option>
+                <option value="monthly">Monthly</option>
+                <option value="before_class">Before Class</option>
+              </select>
+            </div>
+
+            <div id="onceOptions" style="display: block;">
+              <div class="form-group">
+                <label>Date & Time</label>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                  <input type="date" id="onceDate">
+                  <input type="time" id="onceTime" value="09:00">
+                </div>
+              </div>
+            </div>
+
+            <div id="dailyOptions" style="display: none;">
+              <div class="form-group">
+                <label>Send at</label>
+                <input type="time" id="dailyTime" value="09:00">
+              </div>
+            </div>
+
+            <div id="weeklyOptions" style="display: none;">
+              <div class="form-group">
+                <label>Days of Week</label>
+                <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px;">
+                  <label style="background: rgba(255,255,255,.05); padding: 8px 4px; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer;">
+                    <input type="checkbox" name="weekdays" value="0" style="display: block; margin: 0 auto 4px;">
+                    Sun
+                  </label>
+                  <label style="background: rgba(255,255,255,.05); padding: 8px 4px; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer;">
+                    <input type="checkbox" name="weekdays" value="1" style="display: block; margin: 0 auto 4px;">
+                    Mon
+                  </label>
+                  <label style="background: rgba(255,255,255,.05); padding: 8px 4px; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer;">
+                    <input type="checkbox" name="weekdays" value="2" style="display: block; margin: 0 auto 4px;">
+                    Tue
+                  </label>
+                  <label style="background: rgba(255,255,255,.05); padding: 8px 4px; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer;">
+                    <input type="checkbox" name="weekdays" value="3" style="display: block; margin: 0 auto 4px;">
+                    Wed
+                  </label>
+                  <label style="background: rgba(255,255,255,.05); padding: 8px 4px; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer;">
+                    <input type="checkbox" name="weekdays" value="4" style="display: block; margin: 0 auto 4px;">
+                    Thu
+                  </label>
+                  <label style="background: rgba(255,255,255,.05); padding: 8px 4px; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer;">
+                    <input type="checkbox" name="weekdays" value="5" style="display: block; margin: 0 auto 4px;">
+                    Fri
+                  </label>
+                  <label style="background: rgba(255,255,255,.05); padding: 8px 4px; border-radius: 6px; text-align: center; font-size: 12px; cursor: pointer;">
+                    <input type="checkbox" name="weekdays" value="6" style="display: block; margin: 0 auto 4px;">
+                    Sat
+                  </label>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>Send at</label>
+                <input type="time" id="weeklyTime" value="09:00">
+              </div>
+            </div>
+
+            <div id="monthlyOptions" style="display: none;">
+              <div class="form-group">
+                <label>Day of Month</label>
+                <select id="monthlyDay">
+                  <option value="1">1st</option>
+                  <option value="5">5th</option>
+                  <option value="10">10th</option>
+                  <option value="15">15th</option>
+                  <option value="20">20th</option>
+                  <option value="25">25th</option>
+                  <option value="last">Last day</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Send at</label>
+                <input type="time" id="monthlyTime" value="09:00">
+              </div>
+            </div>
+
+            <div id="beforeClassOptions" style="display: none;">
+              <div class="form-group">
+                <label>Send before class</label>
+                <select id="beforeClassTime">
+                  <option value="15">15 minutes</option>
+                  <option value="30">30 minutes</option>
+                  <option value="60">1 hour</option>
+                  <option value="120">2 hours</option>
+                  <option value="180">3 hours</option>
+                  <option value="360">6 hours</option>
+                  <option value="720">12 hours</option>
+                  <option value="1440">1 day</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 10px;">
+              <input type="checkbox" id="automationActive" checked style="width: 18px; height: 18px;">
+              <span>Active (automation will run automatically)</span>
+            </label>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+              💾 Save Automation
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="closeAutomationEditor()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div id="previewModal" class="modal">
+    <div class="modal-content" style="max-width: 700px;">
+      <div class="modal-header">
+        <h2>
+          <span>👁️</span>
+          <span>Email Preview</span>
+        </h2>
+        <span class="modal-close" onclick="closePreviewModal()">&times;</span>
+      </div>
+      <div class="modal-body" style="padding: 0;">
+        <iframe id="previewFrame" style="width: 100%; height: 70vh; border: none; border-radius: 0 0 16px 16px;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <!-- Editor Modal -->
+  <div id="editorModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>
+          <span>✉️</span>
+          <span id="modalTitle">Create Email Template</span>
+        </h2>
+        <span class="modal-close" onclick="closeEditor()">&times;</span>
+      </div>
+
+      <div class="modal-body">
+        <form id="templateForm" onsubmit="saveTemplate(event)">
+          <input type="hidden" id="templateId">
+
+          <div class="form-group">
+            <label>Template Name *</label>
+            <input type="text" id="templateName" required placeholder="e.g., Welcome Email, Payment Reminder">
+          </div>
+
+          <div class="form-group">
+            <label>Subject Line *</label>
+            <input type="text" id="templateSubject" required placeholder="e.g., Welcome to {{Group}}!">
+          </div>
+
+          <div class="form-group">
+            <label>Email Content *</label>
+            <p style="font-size: 12px; color: var(--secondary); margin-bottom: 8px;">
+              Write your email content here. It will automatically be wrapped in the professional ARNOMA template with header, footer, and styling.
+            </p>
+            <textarea id="templateBody" required placeholder="Dear <strong>{{StudentName}}</strong>,
+
+Welcome to ARNOMA NCLEX-RN! We're excited to have you join our program.
+
+Your next class is on {{NextClass}} at {{ClassTime}}.
+
+Best regards,
+ARNOMA Team"></textarea>
+            
+            <div style="margin-top: 12px; padding: 12px; background: rgba(102,126,234,.08); border-radius: 8px; border-left: 4px solid #667eea;">
+              <div style="font-size: 11px; font-weight: 600; color: #a5b4fc; margin-bottom: 6px;">✨ Variables & Formatting:</div>
+              <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; font-size: 11px; color: #94a3b8;">
+                <div>{{StudentName}} - Student's name</div>
+                <div>{{Group}} - Student's group</div>
+                <div>{{NextClass}} - Next class date</div>
+                <div>{{ClassTime}} - Class time</div>
+                <div>{{PaymentAmount}} - Payment amount</div>
+                <div>{{UnpaidClasses}} - Unpaid classes list</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Trigger Type</label>
+            <select id="templateTrigger">
+              <option value="manual">Manual Send Only</option>
+              <option value="new_student">When New Student Added</option>
+              <option value="before_class">Before Class</option>
+              <option value="after_class">After Class</option>
+              <option value="payment_due">Payment Due</option>
+              <option value="countdown">Countdown Timer</option>
+            </select>
+          </div>
+
+          <div style="display: flex; gap: 12px; margin-top: 24px;">
+            <button type="submit" class="btn btn-primary" style="flex: 1;">
+              💾 Save Template
+            </button>
+            <button type="button" class="btn btn-secondary" onclick="closeEditor()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Email template generator function (from your index.html design)
+    function generateEmailHTML(title, bodyContent) {
+      return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARNOMA NCLEX-RN Email</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+    }
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    .email-container {
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .email-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 45px 35px 35px;
+      text-align: center;
+    }
+    .email-header img {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 15px;
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.7))
+              drop-shadow(0 0 12px rgba(255,255,255,0.4))
+              drop-shadow(0 0 3px rgba(255,255,255,0.8));
+      animation: fadeIn 1.5s ease-in-out;
+    }
+    .email-header h1 {
+      color: #fff;
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.5px;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    .email-body {
+      padding: 35px;
+      color: #333;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+    .email-body p {
+      margin: 0 0 16px 0;
+    }
+    .email-body img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 20px auto;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+    .payment-frame {
+      background-color: #f8f9fc;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 30px;
+      margin: 24px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .payment-frame img {
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: none;
+    }
+    .info-box {
+      background-color: #f6f8fe;
+      border-left: 3px solid #3b82f6;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #1e293b;
+      margin: 20px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .info-box p {
+      margin: 6px 0;
+      text-align: left;
+    }
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0.3) 80%, transparent);
+      margin: 24px 0;
+      border: none;
+    }
+    .email-footer {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      text-align: center;
+      padding: 30px 20px;
+    }
+    .email-footer img {
+      width: 100px;
+      height: 100px;
+      margin: 10px 0;
+      filter: drop-shadow(0 0 5px rgba(255,255,255,0.6))
+              drop-shadow(0 0 10px rgba(255,255,255,0.3))
+              drop-shadow(0 0 2px rgba(255,255,255,0.8));
+    }
+    .email-footer p {
+      margin: 6px 0;
+      font-size: 13px;
+    }
+    @media (max-width: 600px) {
+      body { padding: 20px 10px; }
+      .email-body { padding: 25px 20px; font-size: 15px; }
+      .email-header img { width: 110px; height: 110px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <div class="email-header">
+        <img src="https://richyfesta.com/richyfesta-logo.png" alt="ARNOMA Logo">
+        <h1>${title}</h1>
+      </div>
+
+      <div class="email-body">
+        ${bodyContent}
+      </div>
+
+      <div class="email-footer">
+        <img src="https://richyfesta.com/richyfesta-logo.png" alt="ARNOMA Logo">
+        <p><strong style="font-size: 18px;">ARNOMA – NCLEX RN</strong></p>
+        <p style="font-size: 14px;">Professional NCLEX Preparation & Medical Education</p>
+        <p style="font-size: 13px;">
+          nclex.rn@arnoma.us<br>
+          richy@arnoma.us<br>
+          909-808-1818
+        </p>
+        <p style="font-size: 12px; color: #95a5a6;">
+          © 2025 ARNOMA. All rights reserved.
+        </p>
+        <p style="font-size: 12px; color: #7f8c8d;">
+          This is an automated notification from your ARNOMA NCLEX prep program.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+    }
+
+    // EmailSystem object (matches index.html exactly)
+    const emailSystem = {
+      _templates: [],
+      _storageKey: 'arnoma-email-templates-v2',
+      
+      init() {
+        this.loadTemplates();
+        this.renderTemplates();
+      },
+      
+      loadTemplates() {
+        try {
+          const stored = localStorage.getItem(this._storageKey);
+          if (stored) {
+            this._templates = JSON.parse(stored);
+          } else {
+            this._templates = this.getDefaultTemplates();
+            this.saveTemplates();
+          }
+        } catch (e) {
+          console.error('Error loading templates:', e);
+          this._templates = this.getDefaultTemplates();
+        }
+      },
+      
+      saveTemplates() {
+        try {
+          localStorage.setItem(this._storageKey, JSON.stringify(this._templates));
+          return true;
+        } catch (e) {
+          console.error('Error saving templates:', e);
+          showNotification('Failed to save template', 'error');
+          return false;
+        }
+      },
+      
+      getDefaultTemplates() {
+        const timestamp = Date.now();
+        return [
+          {
+            id: `${timestamp}_welcome`,
+            name: 'Welcome Email',
+            subject: 'Welcome to ARNOMA NCLEX-RN - {{Group}}',
+            body: generateEmailHTML(
+              'Welcome to ARNOMA NCLEX-RN',
+              `<p>Dear <strong>{{StudentName}}</strong>,</p>
+              <p>Welcome to <strong>Group {{Group}}</strong>! We're excited to have you join our NCLEX preparation program.</p>
+              <div class="info-box">
+                <p><strong>📅 Your Next Class:</strong></p>
+                <p>{{NextClass}} at {{ClassTime}}</p>
+              </div>
+              <p>Your notes and materials will be posted on <em>Google Classroom</em> within 30 minutes after each session.</p>
+              <p>Best regards,<br><strong>ARNOMA NCLEX-RN Team</strong></p>
+              <div class="divider"></div>
+              <p style="color: #7f8c8d; font-size: 14px; text-align: center;">
+                <em>Need help? Simply reply to this email and we'll assist you promptly.</em>
+              </p>`
+            ),
+            trigger: 'new_student',
+            active: true
+          },
+          {
+            id: `${timestamp}_payment`,
+            name: 'Payment Reminder',
+            subject: 'Payment Reminder - ARNOMA NCLEX-RN',
+            body: generateEmailHTML(
+              'Payment Reminder',
+              `<p>Dear <strong>{{StudentName}}</strong>,</p>
+              <p>This is a friendly reminder about pending payment for your recent classes.</p>
+              <div class="info-box">
+                <p><strong>📋 Unpaid Classes:</strong></p>
+                <p>{{UnpaidClasses}}</p>
+                <p><strong>💰 Amount Due:</strong> {{PaymentAmount}}</p>
+              </div>
+              <p><strong>If you have already paid</strong>, please reply with your payment confirmation.</p>
+              <div class="payment-frame">
+                <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;">
+                  <strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong>
+                </p>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #6b7280;">
+                  Scan in your banking app to pay.
+                </p>
+                <div style="margin: 16px 0;">
+                  <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 600; color: #1f2937;">Arnoma</p>
+                  <p style="margin: 0 0 16px 0; font-size: 16px; color: #4b5563;">909-300-5155</p>
+                </div>
+                <img src="https://drive.google.com/uc?export=view&id=14LMuyziZ4igOY-Ek8I1kTWM3jJm1b4K-" alt="Zelle QR Code" style="max-width:240px;height:auto;border:0;display:block;margin:0 auto" />
+                <p style="margin: 16px 0 0 0; font-size: 18px; color: #9ca3af;">
+                  <strong style="color: #764ba2;">Zelle</strong>
+                </p>
+              </div>
+              <p>Thank you for your prompt attention!</p>
+              <p>Best regards,<br><strong>ARNOMA NCLEX-RN Team</strong></p>
+              <div class="divider"></div>
+              <p style="color: #7f8c8d; font-size: 14px; text-align: center;">
+                <em>Need help? Simply reply to this email and we'll assist you promptly.</em>
+              </p>`
+            ),
+            trigger: 'manual',
+            active: true
+          }
+        ];
+      },
+      
+      renderTemplates() {
+        const grid = document.getElementById('templatesGrid');
+        
+        if (this._templates.length === 0) {
+          grid.innerHTML = `
+            <div style="text-align: center; padding: 80px 20px; color: var(--secondary);">
+              <div style="font-size: 72px; opacity: 0.3; margin-bottom: 20px;">📧</div>
+              <p style="font-size: 18px;">No templates yet. Create your first one!</p>
+            </div>
+          `;
+          return;
+        }
+        
+        grid.innerHTML = this._templates.map(template => {
+          const isHTML = template.body.includes('<!DOCTYPE html>');
+          const bodyPreview = isHTML ? 'Full HTML Email Template' : template.body.substring(0, 200);
+          
+          return `
+            <div class="template-card">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
+                <div style="flex: 1;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 20px; color: var(--primary);">${template.name}</h3>
+                  <div style="font-size: 12px; color: var(--secondary); text-transform: uppercase; font-weight: 600;">
+                    ${this.getTriggerLabel(template.trigger)}
+                  </div>
+                </div>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" ${template.active ? 'checked' : ''} onchange="emailSystem.toggleActive('${template.id}')" style="width: 18px; height: 18px;">
+                  <span style="font-size: 12px; color: var(--secondary);">Active</span>
+                </label>
+              </div>
+              
+              <div style="background: rgba(0,0,0,.2); padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 3px solid var(--primary);">
+                <div style="font-weight: 600; color: white; font-size: 13px; margin-bottom: 6px;">Subject:</div>
+                <div style="color: var(--ink-dim); font-size: 13px;">${template.subject}</div>
+              </div>
+              
+              <div style="background: rgba(0,0,0,.2); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                <div style="font-weight: 600; color: white; font-size: 13px; margin-bottom: 6px;">Content:</div>
+                <div style="color: var(--ink-dim); font-size: 12px; line-height: 1.5; max-height: 100px; overflow-y: auto;">
+                  ${isHTML ? '📄 Professional HTML Email Template' : bodyPreview}...
+                </div>
+              </div>
+              
+              <div style="display: flex; gap: 10px;">
+                ${isHTML ? `
+                  <button onclick="emailSystem.previewTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(74,222,128,.2); color: var(--success); border: 2px solid rgba(74,222,128,.4); padding: 10px;">
+                    👁️ Preview
+                  </button>
+                ` : ''}
+                <button onclick="emailSystem.editTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(165,180,252,.2); color: var(--primary-bright); border: 2px solid rgba(165,180,252,.4); padding: 10px;">
+                  ✏️ Edit
+                  </button>
+                <button onclick="emailSystem.deleteTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(248,113,113,.2); color: var(--error); border: 2px solid rgba(248,113,113,.4); padding: 10px;">
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          `;
+        }).join('');
+      },
+      
+      getTriggerLabel(trigger) {
+        const labels = {
+          manual: 'Manual Send',
+          new_student: 'New Student',
+          before_class: 'Before Class',
+          after_class: 'After Class',
+          payment_due: 'Payment Due',
+          countdown: 'Countdown'
+        };
+        return labels[trigger] || trigger;
+      },
+      
+      toggleActive(id) {
+        const template = this._templates.find(t => t.id === id);
+        if (template) {
+          template.active = !template.active;
+          this.saveTemplates();
+          this.renderTemplates();
+          showNotification(template.active ? 'Template activated' : 'Template deactivated', 'success');
+        }
+      },
+      
+      editTemplate(id) {
+        const template = this._templates.find(t => t.id === id);
+        if (!template) return;
+        
+        editingId = id;
+        document.getElementById('modalTitle').textContent = 'Edit Email Template';
+        document.getElementById('templateId').value = id;
+        document.getElementById('templateName').value = template.name;
+        document.getElementById('templateSubject').value = template.subject;
+        
+        // Extract body content from HTML if it's a full template
+        if (template.body.includes('<!DOCTYPE html>')) {
+          const bodyMatch = template.body.match(/<div class="email-body">([\s\S]*?)<\/div>\s*<div class="email-footer">/);
+          if (bodyMatch) {
+            document.getElementById('templateBody').value = bodyMatch[1].trim();
+          } else {
+            document.getElementById('templateBody').value = template.body;
+          }
+        } else {
+          document.getElementById('templateBody').value = template.body;
+        }
+        
+        document.getElementById('templateTrigger').value = template.trigger;
+        openEditor();
+      },
+      
+      deleteTemplate(id) {
+        if (!confirm('Delete this template? This cannot be undone.')) return;
+        
+        this._templates = this._templates.filter(t => t.id !== id);
+        this.saveTemplates();
+        this.renderTemplates();
+        showNotification('Template deleted', 'success');
+      },
+      
+      previewTemplate(id) {
+        const template = this._templates.find(t => t.id === id);
+        if (!template) return;
+        
+        // Replace variables with sample data
+        let previewHTML = template.body
+          .replace(/\{\{StudentName\}\}/g, 'John Doe')
+          .replace(/\{\{Group\}\}/g, 'Group A - Monday 6PM')
+          .replace(/\{\{NextClass\}\}/g, 'Monday, November 11, 2025')
+          .replace(/\{\{ClassTime\}\}/g, '6:00 PM PST')
+          .replace(/\{\{PaymentAmount\}\}/g, '$120.00')
+          .replace(/\{\{UnpaidClasses\}\}/g, 'Nov 4, Nov 6, Nov 8 (3 classes)');
+        
+        openPreviewModal(previewHTML);
+      }
+    };
+
+    let editingId = null;
+    let currentEmails = [];
+
+    function addEmailToList() {
+      const emailInput = document.getElementById('emailInput');
+      const email = emailInput.value.trim();
+      
+      if (!email) {
+        showNotification('Please enter an email address', 'error');
+        return;
+      }
+      
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        showNotification('Please enter a valid email address', 'error');
+        return;
+      }
+      
+      if (currentEmails.includes(email)) {
+        showNotification('Email already added', 'error');
+        return;
+      }
+      
+      currentEmails.push(email);
+      emailInput.value = '';
+      renderEmailList();
+      showNotification('Email added', 'success');
+    }
+
+    function removeEmailFromList(email) {
+      currentEmails = currentEmails.filter(e => e !== email);
+      renderEmailList();
+      showNotification('Email removed', 'success');
+    }
+
+    function renderEmailList() {
+      const container = document.getElementById('emailListContent');
+      
+      if (currentEmails.length === 0) {
+        container.innerHTML = `
+          <div style="color: var(--secondary); font-size: 13px; text-align: center; padding: 20px;">
+            No email addresses added yet
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = currentEmails.map(email => `
+        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(165,180,252,.15); padding: 10px 14px; border-radius: 8px; border: 1px solid rgba(165,180,252,.3);">
+          <span style="color: var(--ink); font-size: 13px; font-weight: 500;">${email}</span>
+          <button onclick="removeEmailFromList('${email}')" style="background: rgba(248,113,113,.2); border: 1px solid rgba(248,113,113,.4); color: var(--error); padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600;">
+            Remove
+          </button>
+        </div>
+      `).join('');
+    }
+
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = 'notification';
+      notification.style.borderColor = type === 'error' ? 'var(--error)' : 
+                                        type === 'success' ? 'var(--success)' : 
+                                        'var(--primary-bright)';
+      notification.textContent = message;
+      document.body.appendChild(notification);
+      setTimeout(() => notification.remove(), 3500);
+    }
+
+    function openPreviewModal(htmlContent) {
+      const modal = document.getElementById('previewModal');
+      const iframe = document.getElementById('previewFrame');
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(htmlContent);
+      iframeDoc.close();
+      modal.classList.add('active');
+    }
+
+    function closePreviewModal() {
+      document.getElementById('previewModal').classList.remove('active');
+    }
+
+    function openEditor() {
+      document.getElementById('editorModal').classList.add('active');
+    }
+
+    function closeEditor() {
+      document.getElementById('editorModal').classList.remove('active');
+      document.getElementById('templateForm').reset();
+      document.getElementById('templateId').value = '';
+      editingId = null;
+    }
+
+    function saveTemplate(e) {
+      e.preventDefault();
+
+      const isEditing = Boolean(editingId);
+      const existingIndex = isEditing ? emailSystem._templates.findIndex(t => t.id === editingId) : -1;
+      const existingTemplate = existingIndex >= 0 ? emailSystem._templates[existingIndex] : null;
+
+      const id = existingTemplate ? existingTemplate.id : `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const name = document.getElementById('templateName').value.trim();
+      const subject = document.getElementById('templateSubject').value.trim();
+      const bodyContent = document.getElementById('templateBody').value;
+      const trigger = document.getElementById('templateTrigger').value;
+
+      const emailTitle = name || 'ARNOMA NCLEX-RN';
+      const fullHTML = generateEmailHTML(emailTitle, bodyContent);
+
+      const template = {
+        ...(existingTemplate || {}),
+        id,
+        name,
+        subject,
+        body: fullHTML,
+        trigger,
+        active: existingTemplate ? existingTemplate.active : true,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!template.createdAt) {
+        template.createdAt = new Date().toISOString();
+      }
+
+      if (existingTemplate) {
+        emailSystem._templates[existingIndex] = template;
+      } else {
+        emailSystem._templates.push(template);
+      }
+
+      emailSystem.saveTemplates();
+      emailSystem.renderTemplates();
+
+      const notificationMessage = existingTemplate ? 'Template updated' : 'Template created';
+      closeEditor();
+      showNotification(notificationMessage, 'success');
+    }
+
+    // Click outside to close - handles all modals
+    document.addEventListener('click', function(event) {
+      if (event.target.classList.contains('modal') && event.target.classList.contains('active')) {
+        event.target.classList.remove('active');
+        
+        // Clean up based on which modal was closed
+        if (event.target.id === 'editorModal') {
+          document.getElementById('templateForm').reset();
+          document.getElementById('templateId').value = '';
+          editingId = null;
+        } else if (event.target.id === 'automationEditorModal') {
+          document.getElementById('automationForm').reset();
+          document.getElementById('automationId').value = '';
+        }
+        // automationsModal doesn't need cleanup
+      }
+    });
+
+    // ===== AUTOMATION SYSTEM =====
+    const automationSystem = {
+      _automations: [],
+
+      loadAutomations() {
+        try {
+          const stored = localStorage.getItem('arnoma-automations-v2');
+          if (stored) {
+            this._automations = JSON.parse(stored);
+          }
+        } catch (e) {
+          console.error('Error loading automations:', e);
+        }
+        this.renderAutomations();
+      },
+
+      saveAutomations() {
+        try {
+          localStorage.setItem('arnoma-automations-v2', JSON.stringify(this._automations));
+        } catch (e) {
+          console.error('Failed to save automations:', e);
+          showNotification('Failed to save automations.', 'error');
+        }
+      },
+
+      renderAutomations() {
+        const container = document.getElementById('automationsList');
+        
+        if (this._automations.length === 0) {
+          container.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px; color: var(--secondary);">
+              <div style="font-size: 64px; opacity: 0.3; margin-bottom: 16px;">⚙️</div>
+              <p style="font-size: 16px;">No automations configured yet</p>
+              <button class="btn btn-primary" onclick="openAutomationEditor()" style="margin-top: 16px;">
+                Create First Automation
+              </button>
+            </div>
+          `;
+          return;
+        }
+
+        const html = `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h3 style="margin: 0;">Active Automations (${this._automations.filter(a => a.active).length})</h3>
+            <button class="btn btn-primary" onclick="openAutomationEditor()">
+              ➕ New Automation
+            </button>
+          </div>
+          <div style="display: grid; gap: 16px;">
+            ${this._automations.map(automation => `
+              <div class="template-card" style="border-left: 4px solid ${automation.active ? '#22c55e' : '#64748b'};">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                  <div style="flex: 1;">
+                    <h3 style="margin: 0 0 8px 0; color: white; font-size: 16px; font-weight: 700;">
+                      ${automation.active ? '✅' : '⏸️'} ${automation.name}
+                    </h3>
+                    <div style="font-size: 13px; color: var(--secondary); margin-bottom: 6px;">
+                      📧 Template: <strong>${automation.templateName}</strong>
+                    </div>
+                    <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                      <span style="font-size: 12px; background: rgba(165,180,252,.25); padding: 4px 10px; border-radius: 6px; color: var(--primary-bright);">
+                        👥 ${this.getRecipientLabel(automation)}
+                      </span>
+                      <span style="font-size: 12px; background: rgba(59,130,246,.2); padding: 4px 10px; border-radius: 6px; color: #bfdbfe;">
+                        ⏰ ${this.getScheduleLabel(automation)}
+                      </span>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="btn-icon" onclick="toggleAutomation('${automation.id}')" title="${automation.active ? 'Pause' : 'Activate'}">
+                      ${automation.active ? '⏸️' : '▶️'}
+                    </button>
+                    <button class="btn-icon" onclick="editAutomation('${automation.id}')" title="Edit">
+                      ✏️
+                    </button>
+                    <button class="btn-icon" onclick="deleteAutomation('${automation.id}')" title="Delete">
+                      🗑️
+                    </button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        `;
+        
+        container.innerHTML = html;
+      },
+
+      getRecipientLabel(automation) {
+        if (automation.recipientType === 'all') return 'All Students';
+        if (automation.recipientType === 'group') {
+          return `Groups: ${automation.groups.join(', ')}`;
+        }
+        if (automation.recipientType === 'individual' && automation.emails) {
+          return `${automation.emails.length} Email${automation.emails.length !== 1 ? 's' : ''}`;
+        }
+        return `${automation.students ? automation.students.length : 0} Individual Students`;
+      },
+
+      getScheduleLabel(automation) {
+        const freq = automation.frequency;
+        if (freq === 'once') return `Once on ${automation.onceDate} at ${automation.onceTime}`;
+        if (freq === 'daily') return `Daily at ${automation.dailyTime}`;
+        if (freq === 'weekly') {
+          const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          const selectedDays = automation.weekdays.map(d => days[d]).join(', ');
+          return `Weekly on ${selectedDays} at ${automation.weeklyTime}`;
+        }
+        if (freq === 'monthly') return `Monthly on ${automation.monthlyDay} at ${automation.monthlyTime}`;
+        if (freq === 'before_class') return `${automation.beforeClassTime} min before class`;
+        return freq;
+      }
+    };
+
+    // Automation Modal Functions
+    function openAutomations() {
+      automationSystem.loadAutomations();
+      document.getElementById('automationsModal').classList.add('active');
+    }
+
+    function closeAutomations() {
+      document.getElementById('automationsModal').classList.remove('active');
+    }
+
+    function openAutomationEditor(automationId = null) {
+      const modal = document.getElementById('automationEditorModal');
+      const form = document.getElementById('automationForm');
+      const title = document.getElementById('automationModalTitle');
+      
+      form.reset();
+      document.getElementById('automationId').value = '';
+      document.getElementById('automationActive').checked = true;
+      currentEmails = [];
+
+      // Populate template dropdown
+      const templateSelect = document.getElementById('automationTemplate');
+      templateSelect.innerHTML = '<option value="">-- Choose Template --</option>' +
+        emailSystem._templates.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+      
+      // Reset selection states
+      const groupCheckboxes = document.querySelectorAll('input[name="groups"]');
+      groupCheckboxes.forEach(cb => { cb.checked = false; });
+      const weekdayCheckboxes = document.querySelectorAll('input[name="weekdays"]');
+      weekdayCheckboxes.forEach(cb => { cb.checked = false; });
+
+      document.getElementById('automationFrequency').value = 'once';
+      toggleFrequencyOptions();
+      document.querySelector('input[name="recipientType"][value="individual"]').checked = true;
+      toggleRecipientType();
+
+      renderEmailList();
+      
+      if (automationId) {
+        const automation = automationSystem._automations.find(a => a.id === automationId);
+        if (automation) {
+          title.textContent = 'Edit Automation';
+          document.getElementById('automationId').value = automation.id;
+          document.getElementById('automationName').value = automation.name;
+          document.getElementById('automationTemplate').value = automation.templateId;
+          document.querySelector(`input[name="recipientType"][value="${automation.recipientType}"]`).checked = true;
+          toggleRecipientType();
+          
+          if (automation.recipientType === 'group') {
+            automation.groups.forEach(group => {
+              const checkbox = document.querySelector(`input[name="groups"][value="${group}"]`);
+              if (checkbox) checkbox.checked = true;
+            });
+          }
+          
+          if (automation.recipientType === 'individual' && automation.emails && automation.emails.length) {
+            currentEmails = [...automation.emails];
+            renderEmailList();
+          }
+          
+          document.getElementById('automationFrequency').value = automation.frequency;
+          toggleFrequencyOptions();
+          
+          if (automation.frequency === 'once') {
+            document.getElementById('onceDate').value = automation.onceDate;
+            document.getElementById('onceTime').value = automation.onceTime;
+          } else if (automation.frequency === 'daily') {
+            document.getElementById('dailyTime').value = automation.dailyTime;
+          } else if (automation.frequency === 'weekly') {
+            (automation.weekdays || []).forEach(day => {
+              const checkbox = document.querySelector(`input[name="weekdays"][value="${day}"]`);
+              if (checkbox) checkbox.checked = true;
+            });
+            document.getElementById('weeklyTime').value = automation.weeklyTime;
+          } else if (automation.frequency === 'monthly') {
+            document.getElementById('monthlyDay').value = automation.monthlyDay;
+            document.getElementById('monthlyTime').value = automation.monthlyTime;
+          } else if (automation.frequency === 'before_class') {
+            document.getElementById('beforeClassTime').value = automation.beforeClassTime;
+          }
+          
+          document.getElementById('automationActive').checked = automation.active;
+        }
+      } else {
+        title.textContent = 'Create Automation';
+      }
+      
+      modal.classList.add('active');
+    }
+
+    function closeAutomationEditor() {
+      document.getElementById('automationEditorModal').classList.remove('active');
+    }
+
+    function toggleRecipientType() {
+      const type = document.querySelector('input[name="recipientType"]:checked').value;
+      document.getElementById('individualSelection').style.display = type === 'individual' ? 'block' : 'none';
+      document.getElementById('groupSelection').style.display = type === 'group' ? 'block' : 'none';
+      document.getElementById('allSelection').style.display = type === 'all' ? 'block' : 'none';
+    }
+
+    function toggleFrequencyOptions() {
+      const freq = document.getElementById('automationFrequency').value;
+      document.getElementById('onceOptions').style.display = freq === 'once' ? 'block' : 'none';
+      document.getElementById('dailyOptions').style.display = freq === 'daily' ? 'block' : 'none';
+      document.getElementById('weeklyOptions').style.display = freq === 'weekly' ? 'block' : 'none';
+      document.getElementById('monthlyOptions').style.display = freq === 'monthly' ? 'block' : 'none';
+      document.getElementById('beforeClassOptions').style.display = freq === 'before_class' ? 'block' : 'none';
+    }
+
+    function saveAutomation(event) {
+      event.preventDefault();
+      
+      const automationIdField = document.getElementById('automationId');
+      const isEditing = Boolean(automationIdField.value);
+      const existingIndex = isEditing ? automationSystem._automations.findIndex(a => a.id === automationIdField.value) : -1;
+      const existingAutomation = existingIndex >= 0 ? automationSystem._automations[existingIndex] : null;
+
+      const id = existingAutomation ? existingAutomation.id : Date.now().toString();
+      const name = document.getElementById('automationName').value.trim();
+      if (!name) {
+        showNotification('⚠️ Automation name is required.', 'error');
+        return;
+      }
+      const templateId = document.getElementById('automationTemplate').value;
+      const template = emailSystem._templates.find(t => t.id === templateId);
+
+      if (!template) {
+        showNotification('⚠️ Please select a valid email template.', 'error');
+        return;
+      }
+
+      const recipientType = document.querySelector('input[name="recipientType"]:checked').value;
+      const frequency = document.getElementById('automationFrequency').value;
+      const active = document.getElementById('automationActive').checked;
+
+      const automation = {
+        ...(existingAutomation || {}),
+        id,
+        name,
+        templateId,
+        templateName: template.name,
+        recipientType,
+        frequency,
+        active,
+        updatedAt: new Date().toISOString()
+      };
+
+      if (!automation.createdAt) {
+        automation.createdAt = new Date().toISOString();
+      }
+
+      // Normalize recipient collections
+      delete automation.groups;
+      delete automation.students;
+      delete automation.emails;
+
+      if (recipientType === 'group') {
+        const groups = Array.from(document.querySelectorAll('input[name="groups"]:checked')).map(cb => cb.value);
+        if (!groups.length) {
+          showNotification('⚠️ Please select at least one group.', 'error');
+          return;
+        }
+        automation.groups = groups;
+      } else if (recipientType === 'individual') {
+        if (currentEmails.length === 0) {
+          showNotification('⚠️ Please add at least one email address.', 'error');
+          return;
+        }
+        automation.emails = [...currentEmails];
+      }
+
+      // Clear previous schedule state
+      delete automation.onceDate;
+      delete automation.onceTime;
+      delete automation.dailyTime;
+      delete automation.weekdays;
+      delete automation.weeklyTime;
+      delete automation.monthlyDay;
+      delete automation.monthlyTime;
+      delete automation.beforeClassTime;
+
+      if (frequency === 'once') {
+        const onceDate = document.getElementById('onceDate').value;
+        const onceTime = document.getElementById('onceTime').value;
+        if (!onceDate || !onceTime) {
+          showNotification('⚠️ Please set date and time for one-time automation.', 'error');
+          return;
+        }
+        automation.onceDate = onceDate;
+        automation.onceTime = onceTime;
+      } else if (frequency === 'daily') {
+        const dailyTime = document.getElementById('dailyTime').value;
+        if (!dailyTime) {
+          showNotification('⚠️ Please set time for daily automation.', 'error');
+          return;
+        }
+        automation.dailyTime = dailyTime;
+      } else if (frequency === 'weekly') {
+        const weekdays = Array.from(document.querySelectorAll('input[name="weekdays"]:checked')).map(cb => parseInt(cb.value, 10));
+        const weeklyTime = document.getElementById('weeklyTime').value;
+        if (!weekdays.length) {
+          showNotification('⚠️ Please select at least one day of the week.', 'error');
+          return;
+        }
+        if (!weeklyTime) {
+          showNotification('⚠️ Please set time for weekly automation.', 'error');
+          return;
+        }
+        automation.weekdays = weekdays;
+        automation.weeklyTime = weeklyTime;
+      } else if (frequency === 'monthly') {
+        const monthlyDay = document.getElementById('monthlyDay').value;
+        const monthlyTime = document.getElementById('monthlyTime').value;
+        if (!monthlyDay || !monthlyTime) {
+          showNotification('⚠️ Please set day and time for monthly automation.', 'error');
+          return;
+        }
+        automation.monthlyDay = monthlyDay;
+        automation.monthlyTime = monthlyTime;
+      } else if (frequency === 'before_class') {
+        const beforeClassTime = document.getElementById('beforeClassTime').value;
+        if (!beforeClassTime) {
+          showNotification('⚠️ Please set time before class.', 'error');
+          return;
+        }
+        automation.beforeClassTime = beforeClassTime;
+      }
+
+      if (existingAutomation) {
+        automationSystem._automations[existingIndex] = automation;
+      } else {
+        automationSystem._automations.push(automation);
+      }
+
+      automationSystem.saveAutomations();
+      automationSystem.renderAutomations();
+      closeAutomationEditor();
+
+      showNotification(`Automation "${name}" saved successfully!`, 'success');
+    }
+
+    function editAutomation(id) {
+      openAutomationEditor(id);
+    }
+
+    function toggleAutomation(id) {
+      const automation = automationSystem._automations.find(a => a.id === id);
+      if (automation) {
+        automation.active = !automation.active;
+        automationSystem.saveAutomations();
+        automationSystem.renderAutomations();
+      }
+    }
+
+    function deleteAutomation(id) {
+      const automation = automationSystem._automations.find(a => a.id === id);
+      if (automation && confirm(`Delete automation "${automation.name}"?`)) {
+        automationSystem._automations = automationSystem._automations.filter(a => a.id !== id);
+        automationSystem.saveAutomations();
+        automationSystem.renderAutomations();
+        showNotification('Automation deleted', 'success');
+      }
+    }
+
+    function toggleTemplate(id) {
+      const template = emailSystem._templates.find(t => t.id === id);
+      if (template) {
+        template.active = !template.active;
+        emailSystem.saveTemplates();
+        emailSystem.renderTemplates();
+      }
+    }
+
+    // Initialize
+    emailSystem.init();
+  </script>
+</body>
+</html>
