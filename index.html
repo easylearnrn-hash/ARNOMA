@@ -10385,25 +10385,29 @@
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
         getCurrentTimeInZone(timezone) {
+          // Create a date string in the target timezone and parse it back
           const now = new Date();
           
-          // Get time with AM/PM to ensure correct hour parsing
-          const formatter = new Intl.DateTimeFormat('en-US', {
+          // Get ISO-like string in target timezone
+          const dateStr = now.toLocaleString('en-US', {
             timeZone: timezone,
             year: 'numeric',
             month: '2-digit',
             day: '2-digit',
-            hour: 'numeric',
+            hour: '2-digit',
             minute: '2-digit',
             second: '2-digit',
-            hour12: true
+            hour12: false
           });
           
-          const parts = formatter.formatToParts(now);
-          const getValue = (type) => {
-            const part = parts.find(p => p.type === type);
-            return part ? part.value : null;
-          };
+          // Parse the string: "MM/DD/YYYY, HH:mm:ss"
+          const match = dateStr.match(/(\d+)\/(\d+)\/(\d+),\s+(\d+):(\d+):(\d+)/);
+          if (!match) {
+            console.error('[TimezoneUtils] Failed to parse date:', dateStr);
+            return null;
+          }
+          
+          const [_, month, day, year, hours, minutes, seconds] = match.map(n => parseInt(n));
           
           // Get day of week separately
           const dayOfWeek = now.toLocaleString('en-US', {
@@ -10411,22 +10415,7 @@
             weekday: 'long'
           });
           
-          let hours = parseInt(getValue('hour'));
-          const minutes = parseInt(getValue('minute'));
-          const seconds = parseInt(getValue('second'));
-          const day = parseInt(getValue('day'));
-          const month = parseInt(getValue('month'));
-          const year = parseInt(getValue('year'));
-          const dayPeriod = getValue('dayPeriod'); // 'AM' or 'PM'
-          
-          // Convert to 24-hour format
-          if (dayPeriod === 'PM' && hours !== 12) {
-            hours += 12;
-          } else if (dayPeriod === 'AM' && hours === 12) {
-            hours = 0;
-          }
-          
-          console.log('[TimezoneUtils] getCurrentTimeInZone:', timezone, '→', year, month, day, hours, minutes, seconds, dayPeriod, dayOfWeek);
+          console.log('[TimezoneUtils] getCurrentTimeInZone:', timezone, '→', dateStr, '| Parsed:', year, month, day, hours, minutes, seconds, dayOfWeek);
           
           return {
             hours,
