@@ -10402,6 +10402,8 @@
             day: '2-digit'
           });
           
+          console.log('[TimezoneUtils] Raw toLocaleString output for', timezone, ':', timeString);
+          
           // Parse: "11/13/2025, 4:20:35 AM"
           const match = timeString.match(/(\d+)\/(\d+)\/(\d+),\s+(\d+):(\d+):(\d+)\s+(AM|PM)/i);
           if (!match) {
@@ -10414,12 +10416,16 @@
           const minutes = parseInt(minuteStr);
           const seconds = parseInt(secondStr);
           
+          console.log('[TimezoneUtils] Parsed:', { hourStr, minuteStr, secondStr, period, hours, minutes, seconds });
+          
           // Convert to 24-hour format
           if (period.toUpperCase() === 'PM' && hours !== 12) {
             hours += 12;
           } else if (period.toUpperCase() === 'AM' && hours === 12) {
             hours = 0;
           }
+          
+          console.log('[TimezoneUtils] After 24h conversion:', { hours, minutes, seconds });
           
           // Get day of week
           const dayOfWeek = now.toLocaleString('en-US', {
