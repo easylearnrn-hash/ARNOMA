@@ -2754,9 +2754,14 @@
         <button onclick="changeCalendarMonth(-1)" style="padding: 10px 18px; background: rgba(138,180,255,0.1); border: 1px solid rgba(138,180,255,0.3); border-radius: 10px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.2)'" onmouseout="this.style.background='rgba(138,180,255,0.1)'">
           ← Previous
         </button>
-        <div style="text-align: center;">
-          <div id="calendarMonthYear" style="font-size: 20px; font-weight: 900; color: white; letter-spacing: -0.5px;">December 2024</div>
-          <div id="calendarSubtitle" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Loading schedule...</div>
+        <div style="text-align: center; display: flex; flex-direction: column; align-items: center; gap: 8px;">
+          <div>
+            <div id="calendarMonthYear" style="font-size: 20px; font-weight: 900; color: white; letter-spacing: -0.5px;">December 2024</div>
+            <div id="calendarSubtitle" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Loading schedule...</div>
+          </div>
+          <button onclick="recalculateAllBalances()" style="padding: 6px 14px; background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: 8px; color: #eab308; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(234,179,8,0.2)'" onmouseout="this.style.background='rgba(234,179,8,0.1)'">
+            🔄 Apply Balance to Unpaid
+          </button>
         </div>
         <button onclick="changeCalendarMonth(1)" style="padding: 10px 18px; background: rgba(138,180,255,0.1); border: 1px solid rgba(138,180,255,0.3); border-radius: 10px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138,180,255,0.2)'" onmouseout="this.style.background='rgba(138,180,255,0.1)'">
           Next →
@@ -12038,6 +12043,35 @@
           console.error(`Failed to sync balance for ${student.name}:`, error);
         }
       }
+    }
+    
+    /**
+     * Recalculates all student balances by clearing tracking keys.
+     * This allows balance to auto-apply to unpaid classes.
+     */
+    function recalculateAllBalances() {
+      const confirmMsg = "This will clear balance tracking and re-apply student credit to unpaid classes. Continue?";
+      if (!confirm(confirmMsg)) return;
+      
+      console.log('🔄 Clearing all balance tracking keys...');
+      
+      // Clear all balance-related tracking keys from localStorage
+      const keysToRemove = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith('balance-applied:') || key.startsWith('balance-deducted:'))) {
+          keysToRemove.push(key);
+        }
+      }
+      
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+      console.log(`✓ Removed ${keysToRemove.length} tracking keys`);
+      
+      // Force re-render calendar
+      console.log('🔄 Recalculating calendar...');
+      renderCalendar();
+      
+      alert(`Balance recalculation complete! Cleared ${keysToRemove.length} tracking entries.`);
     }
     
     function renderCalendar() {
