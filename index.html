@@ -11907,8 +11907,9 @@
     const BALANCE_STORAGE_KEY = 'firestone:student-balances:v1';
     const CALENDAR_SNAPSHOT_KEY = 'firestone:calendar-snapshots:v1';
     
-    // Calendar start date - November 1, 2025
-    const CALENDAR_START_DATE = new Date('2025-11-01T00:00:00');
+    // Calendar start date - 2 weeks from today (November 27, 2025)
+    // Classes before this date will not be shown
+    const CALENDAR_START_DATE = new Date('2025-11-27T00:00:00');
     
     // Load balances from localStorage
     function loadStudentBalances() {
