@@ -10298,29 +10298,25 @@
           try {
             const now = new Date();
             
-            // Get the time string in target timezone
-            const timeStr = now.toLocaleString('en-US', {
-              timeZone: timezone,
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-              hour: '2-digit',
-              minute: '2-digit',
-              second: '2-digit',
-              hour12: false
-            });
+            // Get individual components in the target timezone
+            const year = parseInt(now.toLocaleString('en-US', { timeZone: timezone, year: 'numeric' }));
+            const month = parseInt(now.toLocaleString('en-US', { timeZone: timezone, month: 'numeric' }));
+            const day = parseInt(now.toLocaleString('en-US', { timeZone: timezone, day: 'numeric' }));
+            const hour = parseInt(now.toLocaleString('en-US', { timeZone: timezone, hour: 'numeric', hour12: false }));
+            const minute = parseInt(now.toLocaleString('en-US', { timeZone: timezone, minute: 'numeric' }));
+            const second = parseInt(now.toLocaleString('en-US', { timeZone: timezone, second: 'numeric' }));
             
-            // Parse the string to create a Date object
-            // Format: "MM/DD/YYYY, HH:mm:ss"
-            const date = new Date(timeStr);
+            // Create a new Date object (in local timezone but with LA time values)
+            // This is a "fake" Date object that displays LA time
+            const laDate = new Date(year, month - 1, day, hour, minute, second);
             
             // Verify we got a valid date
-            if (isNaN(date.getTime())) {
-              console.error('[TimezoneUtils] Invalid date created from:', timeStr);
+            if (isNaN(laDate.getTime())) {
+              console.error('[TimezoneUtils] Invalid date created:', { year, month, day, hour, minute, second });
               return null;
             }
             
-            return date;
+            return laDate;
           } catch (error) {
             console.error('[TimezoneUtils] Error getting time in zone:', error);
             return null;
