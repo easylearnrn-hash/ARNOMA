@@ -10295,55 +10295,36 @@
          * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
          */
         getCurrentTimeInZone(timezone) {
-          const now = new Date();
-          
-          // Get ISO string in the target timezone
-          const isoString = now.toLocaleString('en-CA', {
-            timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-          });
-          
-          // Get day of week separately
-          const dayOfWeek = now.toLocaleString('en-US', {
-            timeZone: timezone,
-            weekday: 'long'
-          });
-          
-          // Parse: "YYYY-MM-DD, HH:mm:ss"
-          const [datePart, timePart] = isoString.split(', ');
-          const [year, month, day] = datePart.split('-').map(n => parseInt(n));
-          const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
-          
-          return {
-            hours,
-            minutes,
-            seconds,
-            day,
-            month,
-            year,
-            dayOfWeek,
-            // For backwards compatibility, provide Date-like methods
-            getDay() {
-              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-              return dayNames.indexOf(this.dayOfWeek);
-            },
-            getHours() { return this.hours; },
-            getMinutes() { return this.minutes; },
-            getSeconds() { return this.seconds; },
-            getTime() {
-              // Return milliseconds since epoch for this time
-              return new Date(this.year, this.month - 1, this.day, this.hours, this.minutes, this.seconds).getTime();
-            },
-            toLocaleString() {
-              return `${this.month}/${this.day}/${this.year}, ${String(this.hours).padStart(2, '0')}:${String(this.minutes).padStart(2, '0')}:${String(this.seconds).padStart(2, '0')}`;
+          try {
+            const now = new Date();
+            
+            // Get the time string in target timezone
+            const timeStr = now.toLocaleString('en-US', {
+              timeZone: timezone,
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false
+            });
+            
+            // Parse the string to create a Date object
+            // Format: "MM/DD/YYYY, HH:mm:ss"
+            const date = new Date(timeStr);
+            
+            // Verify we got a valid date
+            if (isNaN(date.getTime())) {
+              console.error('[TimezoneUtils] Invalid date created from:', timeStr);
+              return null;
             }
-          };
+            
+            return date;
+          } catch (error) {
+            console.error('[TimezoneUtils] Error getting time in zone:', error);
+            return null;
+          }
         },
 
         /**
