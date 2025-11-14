@@ -13327,9 +13327,22 @@
                  onclick="showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
                  onmouseover="this.closest('div[style*=padding]').style.background='rgba(255,255,255,0.06)'; this.closest('div[style*=padding]').style.borderColor='rgba(138,180,255,0.3)';"
                  onmouseout="this.closest('div[style*=padding]').style.background='rgba(255,255,255,0.03)'; this.closest('div[style*=padding]').style.borderColor='rgba(255,255,255,0.08)';">
-              <div>
-                <div style="font-size: 15px; font-weight: 700; color: white; margin-bottom: 4px;">${escapeHtml(student.name)}</div>
-                <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Group ${student.group || 'N/A'} • ${formatCurrency(pricePerClass, '$')}/class</div>
+              <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="font-size: 15px; font-weight: 700; color: white;">${escapeHtml(student.name)}</div>
+                  <button onclick="event.stopPropagation(); toggleAutoReminder('${student.id}', this);" 
+                          id="reminderBtn_${student.id}"
+                          title="${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? 'Auto-reminders paused - Click to resume' : 'Auto-reminders active - Click to pause'}"
+                          style="width: 24px; height: 24px; padding: 0; background: ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? 'rgba(239,68,68,0.2)' : 'rgba(251,146,60,0.2)'}; 
+                                 border: 1px solid ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? 'rgba(239,68,68,0.4)' : 'rgba(251,146,60,0.4)'}; 
+                                 border-radius: 6px; color: ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? '#ef4444' : '#fb923c'}; 
+                                 font-size: 12px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
+                          onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 2px 8px rgba(251,146,60,0.4)';"
+                          onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                    ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? '▶' : '⏸'}
+                  </button>
+                </div>
+                <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px;">Group ${student.group || 'N/A'} • ${formatCurrency(pricePerClass, '$')}/class</div>
               </div>
               <div style="display: flex; align-items: center; gap: 6px;">
                 <span style="font-size: 18px;">${statusIcon}</span>
@@ -13337,17 +13350,6 @@
               </div>
             </div>
             ${balance > 0 ? `<div style="margin-top: 8px; font-size: 10px; color: #eab308;">💰 Balance: ${formatCurrency(balance, '$')}</div>` : ''}
-            <div style="margin-top: 10px; display: flex; gap: 8px;">
-              <button onclick="event.stopPropagation(); toggleAutoReminder('${student.id}', this);" 
-                      id="reminderBtn_${student.id}"
-                      style="flex: 1; padding: 6px 10px; background: ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'}; 
-                             border: 2px solid ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? 'rgba(34,197,94,0.4)' : 'rgba(234,179,8,0.4)'}; 
-                             border-radius: 8px; color: white; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                      onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)';"
-                      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? '▶️ Resume Auto-Reminders' : '⏸️ Pause Auto-Reminders'}
-              </button>
-            </div>
           </div>
         `;
       });
@@ -13445,11 +13447,13 @@
       const success = await window.PaymentReminderManager.togglePause(studentId);
       
       if (success) {
-        // Update button appearance
+        // Update button appearance (small orange/red icon)
         const isPaused = window.PaymentReminderManager.isPaused(studentId);
-        buttonElement.style.background = isPaused ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)';
-        buttonElement.style.borderColor = isPaused ? 'rgba(34,197,94,0.4)' : 'rgba(234,179,8,0.4)';
-        buttonElement.textContent = isPaused ? '▶️ Resume Auto-Reminders' : '⏸️ Pause Auto-Reminders';
+        buttonElement.style.background = isPaused ? 'rgba(239,68,68,0.2)' : 'rgba(251,146,60,0.2)';
+        buttonElement.style.borderColor = isPaused ? 'rgba(239,68,68,0.4)' : 'rgba(251,146,60,0.4)';
+        buttonElement.style.color = isPaused ? '#ef4444' : '#fb923c';
+        buttonElement.textContent = isPaused ? '▶' : '⏸';
+        buttonElement.title = isPaused ? 'Auto-reminders paused - Click to resume' : 'Auto-reminders active - Click to pause';
       }
     }
       showClassDetails(studentId, dateStr, classInfo);
