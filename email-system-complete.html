@@ -1210,7 +1210,7 @@ ARNOMA Team"></textarea>
     // EmailSystem object (matches index.html exactly)
     const emailSystem = {
       _templates: [],
-      _storageKey: 'arnoma-email-templates-v6',
+      _storageKey: 'arnoma-email-templates-v7',
       
       init() {
         this.loadTemplates();
@@ -1332,11 +1332,11 @@ ARNOMA Team"></textarea>
           {
             id: `${timestamp}_welcome`,
             name: 'Welcome Email',
-            subject: 'Welcome to ARNOMA NCLEX-RN! 🎓',
+            subject: 'Welcome to ARNOMA NCLEX-RN',
             body: generateEmailHTML(
-              'Welcome to Your Nursing Classroom! 🎓',
+              'Welcome to Your Nursing Classroom',
               `<p>Dear <strong>{{StudentName}}</strong>,</p>
-              <p>Welcome to your all-in-one nursing classroom! You are enrolled in <strong>Group {{GroupName}}</strong>, and your group schedule is <strong>{{GroupSchedule}}</strong>.</p>
+              <p>Welcome to your all-in-one nursing classroom! You are enrolled in <strong>{{Group}}</strong>, and your group schedule is <strong>{{GroupSchedule}}</strong>.</p>
               <p>Please make sure to complete your payment before class so that all your notes and materials will be accessible once the class ends.</p>
               <div class="payment-frame">
                 <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;">
