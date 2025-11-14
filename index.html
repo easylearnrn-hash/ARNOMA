@@ -2050,86 +2050,9 @@
       50% { opacity: 0.95; }
     }
     /* ========== END FLOATING NAV STYLES ========== */
-
-    /* ========== LOGIN FORM STYLES ========== */
-    #loginEmail:focus,
-    #loginPassword:focus {
-      outline: none;
-      border-color: #667eea;
-      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-    }
-
-    #loginBtn:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5);
-    }
-
-    #loginBtn:active:not(:disabled) {
-      transform: translateY(0);
-    }
-
-    #loginBtn:disabled {
-      opacity: 0.7;
-      cursor: not-allowed;
-    }
-    /* ========== END LOGIN FORM STYLES ========== */
   </style>
 </head>
 <body>
-  <!-- ========== AUTHENTICATION SCREEN ========== -->
-  <div id="authScreen" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); z-index: 99999; display: flex; align-items: center; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-    <div style="background: rgba(255,255,255,0.95); border-radius: 24px; padding: 48px 40px; max-width: 420px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;">
-      <!-- Logo -->
-      <div style="margin-bottom: 32px;">
-        <img src="richyfesta-logo.png" alt="ARNOMA Logo" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="width: 120px; height: 120px; border-radius: 50%; box-shadow: 0 8px 24px rgba(0,0,0,0.15); object-fit: cover;">
-        <div style="display: none; width: 120px; height: 120px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4); font-size: 48px; font-weight: 800; color: white;">
-          🔐
-        </div>
-      </div>
-      
-      <!-- Title -->
-      <h1 style="margin: 0 0 8px 0; font-size: 28px; font-weight: 800; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-        ARNOMA NCLEX-RN
-      </h1>
-      <p style="margin: 0 0 32px 0; color: #64748b; font-size: 15px;">
-        Student Management System
-      </p>
-      
-      <!-- Login Form -->
-      <form id="loginForm" style="text-align: left;">
-        <div style="margin-bottom: 20px;">
-          <label style="display: block; margin-bottom: 8px; color: #334155; font-weight: 600; font-size: 14px;">Email</label>
-          <input type="email" id="loginEmail" required placeholder="your@email.com" style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; transition: all 0.2s; box-sizing: border-box;">
-        </div>
-        
-        <div style="margin-bottom: 24px;">
-          <label style="display: block; margin-bottom: 8px; color: #334155; font-weight: 600; font-size: 14px;">Password</label>
-          <input type="password" id="loginPassword" required placeholder="Enter your password" style="width: 100%; padding: 14px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 15px; transition: all 0.2s; box-sizing: border-box;">
-        </div>
-        
-        <div style="margin-bottom: 24px; display: flex; align-items: center; gap: 8px;">
-          <input type="checkbox" id="rememberMe" style="width: 18px; height: 18px; cursor: pointer;">
-          <label for="rememberMe" style="color: #64748b; font-size: 14px; cursor: pointer;">Remember me</label>
-        </div>
-        
-        <button type="submit" id="loginBtn" style="width: 100%; padding: 16px; background: linear-gradient(135deg, #667eea, #764ba2); border: none; border-radius: 12px; color: white; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 14px rgba(102, 126, 234, 0.4);">
-          Sign In
-        </button>
-        
-        <div id="authError" style="display: none; margin-top: 16px; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; color: #dc2626; font-size: 14px; text-align: center;"></div>
-      </form>
-      
-      <!-- Footer -->
-      <p style="margin: 24px 0 0 0; color: #94a3b8; font-size: 13px;">
-        Secure access for authorized users only
-      </p>
-    </div>
-  </div>
-  <!-- ========== END AUTHENTICATION SCREEN ========== -->
-
-  <!-- Main App Container (hidden until authenticated) -->
-  <div id="mainApp" style="display: none;">
-  
   <!-- ========== SKIP CLASS DIALOG ========== -->
   <div id="skipClassOverlay"></div>
   <div id="skipClassDialog">
@@ -8466,13 +8389,11 @@
     }
 
     async function deleteStudent(studentId) {
-      console.log('🗑️ deleteStudent called with ID:', studentId, typeof studentId);
+      console.log('🗑️ deleteStudent called with ID:', studentId);
       
-      // Handle both string and number IDs
-      const student = students.find(s => s.id == studentId || String(s.id) === String(studentId));
+      const student = students.find(s => s.id === studentId);
       if (!student) {
         console.error('❌ Student not found:', studentId);
-        console.log('Available students:', students.map(s => ({ id: s.id, name: s.name })));
         return;
       }
 
@@ -14335,148 +14256,5 @@
     
     debugLog('ARNOMA app loaded - Using Supabase cloud database');
   </script>
-
-  <!-- ========== AUTHENTICATION SYSTEM ========== -->
-  <script>
-    // Authentication State Management
-    let currentUser = null;
-
-    // Check authentication on page load
-    async function checkAuth() {
-      try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        
-        if (error) throw error;
-        
-        if (session) {
-          currentUser = session.user;
-          console.log('✅ User authenticated:', currentUser.email);
-          showMainApp();
-        } else {
-          console.log('🔒 No active session - showing login');
-          showAuthScreen();
-        }
-      } catch (error) {
-        console.error('❌ Auth check error:', error);
-        showAuthScreen();
-      }
-    }
-
-    // Show main app
-    function showMainApp() {
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('mainApp').style.display = 'block';
-    }
-
-    // Show auth screen
-    function showAuthScreen() {
-      document.getElementById('authScreen').style.display = 'flex';
-      document.getElementById('mainApp').style.display = 'none';
-    }
-
-    // Handle login form submission
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const email = document.getElementById('loginEmail').value.trim();
-      const password = document.getElementById('loginPassword').value;
-      const rememberMe = document.getElementById('rememberMe').checked;
-      const loginBtn = document.getElementById('loginBtn');
-      const errorDiv = document.getElementById('authError');
-      
-      // Disable button and show loading
-      loginBtn.disabled = true;
-      loginBtn.textContent = 'Signing in...';
-      errorDiv.style.display = 'none';
-      
-      try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: email,
-          password: password
-        });
-        
-        if (error) throw error;
-        
-        currentUser = data.user;
-        console.log('✅ Login successful:', currentUser.email);
-        
-        // Store session preference
-        if (rememberMe) {
-          localStorage.setItem('arnoma-remember', 'true');
-        }
-        
-        showMainApp();
-        
-      } catch (error) {
-        console.error('❌ Login error:', error);
-        
-        let errorMessage = 'Login failed. Please check your credentials.';
-        if (error.message.includes('Invalid login')) {
-          errorMessage = 'Invalid email or password.';
-        } else if (error.message.includes('Email not confirmed')) {
-          errorMessage = 'Please confirm your email address.';
-        }
-        
-        errorDiv.textContent = errorMessage;
-        errorDiv.style.display = 'block';
-        
-        loginBtn.disabled = false;
-        loginBtn.textContent = 'Sign In';
-      }
-    });
-
-    // Add logout functionality
-    async function logout() {
-      try {
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        
-        currentUser = null;
-        localStorage.removeItem('arnoma-remember');
-        console.log('✅ Logged out successfully');
-        showAuthScreen();
-        
-        // Clear form
-        document.getElementById('loginEmail').value = '';
-        document.getElementById('loginPassword').value = '';
-        document.getElementById('rememberMe').checked = false;
-        
-      } catch (error) {
-        console.error('❌ Logout error:', error);
-      }
-    }
-
-    // Add logout button to nav (will be added after DOM loads)
-    window.addEventListener('load', () => {
-      // Find a good place to add logout button - you can customize this
-      const floatingNav = document.getElementById('floatingNav');
-      if (floatingNav) {
-        const logoutBtn = document.createElement('button');
-        logoutBtn.className = 'nav-btn';
-        logoutBtn.title = 'Logout';
-        logoutBtn.textContent = '🚪';
-        logoutBtn.onclick = logout;
-        floatingNav.appendChild(logoutBtn);
-      }
-    });
-
-    // Listen for auth state changes
-    supabase.auth.onAuthStateChange((event, session) => {
-      console.log('🔐 Auth state changed:', event);
-      
-      if (event === 'SIGNED_IN') {
-        currentUser = session.user;
-        showMainApp();
-      } else if (event === 'SIGNED_OUT') {
-        currentUser = null;
-        showAuthScreen();
-      }
-    });
-
-    // Check authentication immediately
-    checkAuth();
-  </script>
-
-  </div> <!-- End mainApp -->
 </body>
 </html>
