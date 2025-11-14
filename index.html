@@ -13133,7 +13133,9 @@
         const paymentTimestamp = p.emailDate || p.date || p.timestamp;
         if (!paymentTimestamp) return false;
         
-        const paymentDate = toLADate(new Date(paymentTimestamp));
+        // Payment dates are already stored in LA timezone (via applyLAOffset during email processing)
+        // So we just need to format them, NOT convert timezone again
+        const paymentDate = new Date(paymentTimestamp);
         const paymentDateStr = formatDateYYYYMMDD(paymentDate);
         
         // DEBUG: Log date comparison for today
