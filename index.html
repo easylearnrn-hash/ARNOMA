@@ -8393,6 +8393,7 @@
     async function deleteStudent(studentId) {
       console.log('🗑️ deleteStudent called with ID:', studentId);
       
+      const students = getCachedStudents();
       const student = students.find(s => s.id === studentId);
       if (!student) {
         console.error('❌ Student not found:', studentId);
@@ -8421,17 +8422,17 @@
         return;
       }
 
-      students = students.filter(s => s.id !== studentId);
-      window.studentsCache = students;
-      window.dispatchEvent(new CustomEvent('students:updated', { detail: students }));
+      const updatedStudents = students.filter(s => s.id !== studentId);
+      window.studentsCache = updatedStudents;
+      window.dispatchEvent(new CustomEvent('students:updated', { detail: updatedStudents }));
 
       try {
         const payments = await PaymentStore.fetchAll();
         const backupData = {
           timestamp: new Date().toISOString(),
-          students,
+          students: updatedStudents,
           payments,
-          student_count: students.length,
+          student_count: updatedStudents.length,
           payment_count: payments.length,
           source: 'student-delete'
         };
