@@ -8314,6 +8314,15 @@
         return;
       }
 
+      // Check if we should send welcome email
+      const isNewStudent = !editingStudentId;
+      const hadNoEmail = editingStudentId && (!students.find(s => s.id === editingStudentId)?.email);
+      const nowHasEmail = savedRecord.email && savedRecord.email.trim() !== '';
+      
+      // Send welcome email if: new student with email OR existing student just got email added
+      if (nowHasEmail && (isNewStudent || hadNoEmail)) {
+        sendWelcomeEmail(savedRecord);
+      }
       
       // No longer need to save balance to localStorage - it's in Supabase now
       // Remove localStorage balance management code
@@ -8333,6 +8342,50 @@
       renderStudents();
       closeStudentModal();
       showNotificationSimple(editingStudentId ? 'Student updated' : 'Student added', 'success');
+    }
+    
+    // Send welcome email to new students
+    async function sendWelcomeEmail(student) {
+      if (!student.email) {
+        console.log('⚠️ Cannot send welcome email - student has no email address');
+        return;
+      }
+      
+      try {
+        const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+        if (!emailFrame) {
+          console.error('❌ Email system iframe not found');
+          return;
+        }
+        
+        // Get group schedule from groups array
+        const groupNames = student.group ? student.group.split(',').map(g => g.trim()) : [];
+        let groupSchedule = 'Not assigned';
+        
+        if (groupNames.length > 0 && window.groupsCache) {
+          const groupSchedules = groupNames.map(groupName => {
+            const group = window.groupsCache.find(g => g.name === groupName);
+            return group?.schedule || groupName;
+          });
+          groupSchedule = groupSchedules.join(', ');
+        }
+        
+        // Send message to email system iframe
+        emailFrame.contentWindow.postMessage({
+          action: 'sendWelcomeEmail',
+          student: {
+            name: student.name,
+            email: student.email,
+            group: student.group || 'Not assigned',
+            groupSchedule: groupSchedule
+          }
+        }, '*');
+        
+        console.log('📧 Welcome email sent to:', student.name, student.email);
+        showNotificationSimple('📧 Welcome email sent to ' + student.name, 'success');
+      } catch (error) {
+        console.error('❌ Error sending welcome email:', error);
+      }
     }
 
     async function deleteStudent(studentId) {

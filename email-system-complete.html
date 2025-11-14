@@ -1350,6 +1350,45 @@ ARNOMA Team"></textarea>
             ),
             trigger: 'manual',
             active: true
+          },
+          {
+            id: `${timestamp}_welcome`,
+            name: 'Welcome Email',
+            subject: 'Welcome to ARNOMA NCLEX-RN! 🎓',
+            body: generateEmailHTML(
+              'Welcome to Your Nursing Classroom! 🎓',
+              `<p>Dear <strong>{{StudentName}}</strong>,</p>
+              <p>Welcome to your all-in-one nursing classroom! You are enrolled in <strong>Group {{GroupName}}</strong>, and your group schedule is <strong>{{GroupSchedule}}</strong>.</p>
+              <p>Please make sure to complete your payment before class so that all your notes and materials will be accessible once the class ends.</p>
+              <div class="payment-frame">
+                <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;">
+                  <strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong>
+                </p>
+                <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">
+                  Scan in your banking app to pay.
+                </p>
+                <div style="margin: 12px 0;">
+                  <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #1f2937;">Arnoma</p>
+                  <p style="margin: 0 0 12px 0; font-size: 14px; color: #4b5563;">909-300-5155</p>
+                </div>
+                <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/Arnoma%20Zelle.JPG" alt="Zelle QR Code" style="max-width:180px;height:auto;border:0;display:block;margin:0 auto" />
+                <p style="margin: 12px 0 0 0; font-size: 16px; color: #9ca3af;">
+                  <strong style="color: #764ba2;">Zelle</strong>
+                </p>
+              </div>
+              <p>Here, you'll find everything you need for NCLEX-RN success — including structured notes, detailed study guides, recorded lectures, and practice questions covering all major topics, from Fundamentals to Pharmacology and every body system.</p>
+              <div class="info-box">
+                <p style="margin-bottom: 8px;"><strong>You'll be able to:</strong></p>
+                <p style="margin: 4px 0;">• Stay organized</p>
+                <p style="margin: 4px 0;">• Track your learning progress</p>
+                <p style="margin: 4px 0;">• Access class materials anytime</p>
+                <p style="margin: 4px 0;">• Prepare for the NCLEX with clarity and confidence</p>
+              </div>
+              <p style="font-size: 17px; font-weight: 600; color: #764ba2; text-align: center; margin: 24px 0;">Let's study smart, support one another, and achieve success together! 🚀</p>
+              <p>Best regards,<br><strong>ARNOMA NCLEX-RN Team</strong></p>`
+            ),
+            trigger: 'student_created',
+            active: true
           }
         ];
       },
@@ -2332,6 +2371,65 @@ ARNOMA Team"></textarea>
           
         } catch (error) {
           console.error('❌ Error sending auto-reminder:', error);
+        }
+      }
+      
+      // Handle welcome email requests
+      if (action === 'sendWelcomeEmail') {
+        console.log('📧 Received welcome email request:', student.name);
+        
+        try {
+          // Find Welcome Email template
+          const templates = emailSystem._templates || [];
+          const welcomeTemplate = templates.find(t => 
+            t.name.toLowerCase().includes('welcome') && 
+            t.active
+          );
+          
+          if (!welcomeTemplate) {
+            console.error('❌ No active Welcome Email template found');
+            return;
+          }
+          
+          if (!student.email) {
+            console.error('❌ Student has no email address:', student.name);
+            return;
+          }
+          
+          // Replace variables in template
+          let subject = welcomeTemplate.subject
+            .replace(/\{\{StudentName\}\}/g, student.name);
+          
+          let body = welcomeTemplate.body
+            .replace(/\{\{StudentName\}\}/g, student.name)
+            .replace(/\{\{GroupName\}\}/g, student.group || 'Not assigned')
+            .replace(/\{\{GroupSchedule\}\}/g, student.groupSchedule || 'To be determined');
+          
+          // Send email via Supabase Edge Function
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+              to: student.email,
+              subject: subject,
+              html: body
+            })
+          });
+          
+          if (!response.ok) {
+            throw new Error(`Failed to send email: ${response.statusText}`);
+          }
+          
+          // Track sent email
+          await trackSentEmail(student.email, subject, 'Welcome Email');
+          
+          console.log('✅ Welcome email sent successfully to:', student.name);
+          
+        } catch (error) {
+          console.error('❌ Error sending welcome email:', error);
         }
       }
     });
