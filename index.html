@@ -12744,8 +12744,29 @@
     
     // Helper function to convert any date to LA timezone
     function toLADate(date) {
-      const laTime = new Date(date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-      return laTime;
+      // Convert UTC date to LA timezone properly
+      // Don't use toLocaleString + new Date as it corrupts the time!
+      const utcDate = new Date(date);
+      
+      // Get the LA timezone offset for this specific date (handles DST)
+      const laDateStr = utcDate.toLocaleString('en-US', { 
+        timeZone: 'America/Los_Angeles',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      });
+      
+      // Parse "MM/DD/YYYY, HH:mm:ss" format
+      const [datePart, timePart] = laDateStr.split(', ');
+      const [month, day, year] = datePart.split('/');
+      const [hour, minute, second] = timePart.split(':');
+      
+      // Create date object with LA time components
+      return new Date(year, month - 1, day, hour, minute, second);
     }
     
     function openSmartCalendar() {
