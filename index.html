@@ -12691,6 +12691,9 @@
       // Get calendar data
       const calendarData = generateCalendarData(year, month);
       
+      // Store in global scope for PaymentReminderManager
+      window.currentCalendarData = calendarData;
+      
       // Update subtitle
       const totalClasses = calendarData.totalScheduledClasses;
       const activeStudentCount = calendarData.activeStudents.length;
@@ -14028,12 +14031,20 @@
           
           console.log('🔍 [PaymentReminderManager] Starting daily reminder check for:', todayStr);
           
-          // Get current calendar data
-          const calendarData = window.currentCalendarData || await generateCalendarData();
-          if (!calendarData || !calendarData.students) {
-            console.warn('[PaymentReminderManager] No calendar data available');
+          // IMPORTANT: Wait for calendar data to be available
+          // Don't run checks until after calendar is initialized
+          if (!window.currentCalendarData) {
+            console.log('[PaymentReminderManager] ⏳ Calendar not initialized yet, will check again on next interval');
             return;
           }
+          
+          const calendarData = window.currentCalendarData;
+          if (!calendarData || !calendarData.students) {
+            console.warn('[PaymentReminderManager] ❌ No calendar data available');
+            return;
+          }
+          
+          console.log('[PaymentReminderManager] 📊 Checking', calendarData.students.length, 'students for unpaid classes');
           
           let remindersSent = 0;
           
@@ -14113,10 +14124,15 @@
         await loadPausedFromSupabase();
         loadSentReminders();
         
-        // Check immediately on load
-        checkAndSendReminders();
+        // DON'T check immediately on load - calendar isn't ready yet
+        // Instead, check after a short delay to let calendar initialize
+        console.log('[PaymentReminderManager] ⏳ Scheduling first reminder check in 10 seconds...');
+        setTimeout(() => {
+          console.log('[PaymentReminderManager] 🔄 Running first reminder check...');
+          checkAndSendReminders();
+        }, 10000); // Wait 10 seconds for calendar to initialize
         
-        // Check every hour
+        // Check every hour after that
         setInterval(checkAndSendReminders, 60 * 60 * 1000);
       }
       
