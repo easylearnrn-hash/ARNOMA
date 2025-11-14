@@ -12815,8 +12815,18 @@
       // Update subtitle
       const totalClasses = calendarData.totalScheduledClasses;
       const activeStudentCount = calendarData.activeStudents.length;
-      document.getElementById('calendarSubtitle').textContent = 
-        `${activeStudentCount} active student${activeStudentCount !== 1 ? 's' : ''} • ${totalClasses} scheduled class${totalClasses !== 1 ? 'es' : ''}`;
+      const monthPaid = calendarData.monthTotalPaid || 0;
+      const monthUnpaid = calendarData.monthTotalUnpaid || 0;
+      
+      document.getElementById('calendarSubtitle').innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
+          <span>${activeStudentCount} active student${activeStudentCount !== 1 ? 's' : ''} • ${totalClasses} scheduled class${totalClasses !== 1 ? 'es' : ''}</span>
+          <span style="color: rgba(255,255,255,0.3);">|</span>
+          <span style="color: #22c55e; font-weight: 600;">💰 ${formatCurrency(monthPaid, '$')} paid</span>
+          <span style="color: rgba(255,255,255,0.3);">|</span>
+          <span style="color: #ef4444; font-weight: 600;">⚠️ ${formatCurrency(monthUnpaid, '$')} pending</span>
+        </div>
+      `;
       
       // Render grid
       renderCalendarGrid(calendarData);
@@ -12863,6 +12873,9 @@
       
       // Build day data
       const days = [];
+      let monthTotalPaid = 0;
+      let monthTotalUnpaid = 0;
+      
       for (let day = 1; day <= daysInMonth; day++) {
         const date = new Date(year, month, day);
         const dayOfWeek = date.getDay();
@@ -12880,6 +12893,15 @@
               ...paymentStatus
             });
             totalScheduledClasses++;
+            
+            // Add to month totals
+            const status = paymentStatus.status;
+            const price = parseFloat(pricePerClass) || 0;
+            if (status === 'paid' || status === 'deducted' || status === 'low-balance') {
+              monthTotalPaid += price;
+            } else if (status === 'unpaid') {
+              monthTotalUnpaid += price;
+            }
           }
         });
         
@@ -12896,7 +12918,9 @@
         daysInMonth,
         days,
         activeStudents,
-        totalScheduledClasses
+        totalScheduledClasses,
+        monthTotalPaid,
+        monthTotalUnpaid
       };
     }
     
