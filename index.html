@@ -13271,6 +13271,26 @@
              date.getFullYear() === today.getFullYear();
     }
     
+    // Toggle auto-reminder pause/resume for a student
+    async function toggleAutoReminder(studentId, buttonElement) {
+      if (!window.PaymentReminderManager) {
+        showNotification('❌ Payment Reminder Manager not available', 'error');
+        return;
+      }
+      
+      const success = await window.PaymentReminderManager.togglePause(studentId);
+      
+      if (success) {
+        // Update button appearance (small orange/red icon)
+        const isPaused = window.PaymentReminderManager.isPaused(studentId);
+        buttonElement.style.background = isPaused ? 'rgba(239,68,68,0.2)' : 'rgba(251,146,60,0.2)';
+        buttonElement.style.borderColor = isPaused ? 'rgba(239,68,68,0.4)' : 'rgba(251,146,60,0.4)';
+        buttonElement.style.color = isPaused ? '#ef4444' : '#fb923c';
+        buttonElement.textContent = isPaused ? '▶' : '⏸';
+        buttonElement.title = isPaused ? 'Auto-reminders paused - Click to resume' : 'Auto-reminders active - Click to pause';
+      }
+    }
+    
     // Open day details panel showing all students scheduled that day
     function openDayDetails(dateStr, dayData) {
       const dateObj = new Date(dateStr);
@@ -13436,26 +13456,6 @@
       // closeDayDetails();
       
       // Show class details modal
-    
-    // Toggle auto-reminder pause/resume for a student
-    async function toggleAutoReminder(studentId, buttonElement) {
-      if (!window.PaymentReminderManager) {
-        showNotification('❌ Payment Reminder Manager not available', 'error');
-        return;
-      }
-      
-      const success = await window.PaymentReminderManager.togglePause(studentId);
-      
-      if (success) {
-        // Update button appearance (small orange/red icon)
-        const isPaused = window.PaymentReminderManager.isPaused(studentId);
-        buttonElement.style.background = isPaused ? 'rgba(239,68,68,0.2)' : 'rgba(251,146,60,0.2)';
-        buttonElement.style.borderColor = isPaused ? 'rgba(239,68,68,0.4)' : 'rgba(251,146,60,0.4)';
-        buttonElement.style.color = isPaused ? '#ef4444' : '#fb923c';
-        buttonElement.textContent = isPaused ? '▶' : '⏸';
-        buttonElement.title = isPaused ? 'Auto-reminders paused - Click to resume' : 'Auto-reminders active - Click to pause';
-      }
-    }
       showClassDetails(studentId, dateStr, classInfo);
     }
     
