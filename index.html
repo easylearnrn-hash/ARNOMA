@@ -11471,7 +11471,7 @@
             skipped[record.group_name][record.class_date] = true;
           });
           
-          console.log('✅ [SkipClassManager] Loaded', Object.keys(skipped).length, 'groups from Supabase');
+          // console.log('✅ [SkipClassManager] Loaded', Object.keys(skipped).length, 'groups from Supabase');
           return skipped;
         } catch (error) {
           console.error('[SkipClassManager] ❌ Exception loading skipped classes:', error);
@@ -11732,13 +11732,13 @@
           return;
         }
         
-        console.log('🚀 [SkipClassManager] Initializing with Supabase cloud sync...');
+        // console.log('🚀 [SkipClassManager] Initializing with Supabase cloud sync...');
         
         // Load skipped classes from Supabase
         skippedClasses = await loadSkippedClasses();
         isInitialized = true;
         
-        console.log('✅ [SkipClassManager] Initialized with', Object.keys(skippedClasses).length, 'groups');
+        // console.log('✅ [SkipClassManager] Initialized with', Object.keys(skippedClasses).length, 'groups');
         
         // Attach button event listeners
         const cancelBtn = document.getElementById('skipDialogCancelBtn');
@@ -11893,7 +11893,7 @@
             return;
           }
 
-          console.log('✅ Loaded absences from Supabase:', data);
+          // console.log('✅ Loaded absences from Supabase:', data);
 
           // Convert array to nested object: { studentId: { 'YYYY-MM-DD': true } }
           absences = {};
@@ -11907,7 +11907,7 @@
             absences[studentId][dateStr] = true;
           });
 
-          console.log('📊 Absences loaded:', absences);
+          // console.log('📊 Absences loaded:', absences);
         } catch (err) {
           console.error('❌ Exception loading absences:', err);
           loadAbsencesFromLocalStorage();
@@ -12012,7 +12012,7 @@
       // Initialize: Load from Supabase
       async function init() {
         if (isInitialized) return;
-        console.log('🚀 Initializing AbsentManager...');
+        // console.log('🚀 Initializing AbsentManager...');
         await loadAbsences();
         isInitialized = true;
       }
@@ -12093,7 +12093,7 @@
             return;
           }
 
-          console.log('✅ Loaded credit payments from Supabase:', data);
+          // console.log('✅ Loaded credit payments from Supabase:', data);
 
           // Convert array to nested object
           creditPayments = {};
@@ -12110,7 +12110,7 @@
             };
           });
 
-          console.log('📊 Credit payments loaded:', creditPayments);
+          // console.log('📊 Credit payments loaded:', creditPayments);
         } catch (err) {
           console.error('❌ Exception loading credit payments:', err);
           loadCreditPaymentsFromLocalStorage();
@@ -12223,7 +12223,7 @@
       // Initialize: Load from Supabase
       async function init() {
         if (isInitialized) return;
-        console.log('🚀 Initializing CreditPaymentManager...');
+        // console.log('🚀 Initializing CreditPaymentManager...');
         await loadCreditPayments();
         isInitialized = true;
       }
@@ -14069,7 +14069,7 @@
             });
           }
           
-          console.log('✅ [PaymentReminderManager] Loaded', Object.keys(pausedStudents).length, 'paused states from Supabase');
+          // console.log('✅ [PaymentReminderManager] Loaded', Object.keys(pausedStudents).length, 'paused states from Supabase');
         } catch (error) {
           console.error('[PaymentReminderManager] ❌ Exception loading paused students:', error);
         }
