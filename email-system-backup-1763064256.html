@@ -346,9 +346,6 @@
       box-shadow: 0 4px 12px rgba(165,180,252,.25);
     }
   </style>
-  
-  <!-- Supabase JS Client -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <div class="container">
@@ -360,9 +357,6 @@
       </div>
       <button id="gmailConnectBtn" class="btn btn-secondary" onclick="connectGmail()" style="margin-left: auto; margin-right: 12px;">
         📧 Connect Gmail
-      </button>
-      <button class="btn btn-secondary" onclick="openSentEmails()" style="margin-right: 12px;">
-        📨 Sent Emails
       </button>
       <button class="btn btn-secondary" onclick="openAutomations()" style="margin-right: 12px;">
         ⚙️ Automations
@@ -486,10 +480,18 @@
 
             <div id="groupSelection" style="display: none;">
               <div id="groupList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
-                <!-- Groups will be loaded dynamically from Supabase -->
-                <div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--secondary);">
-                  Loading groups...
-                </div>
+                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
+                  <input type="checkbox" name="groups" value="A" style="margin-right: 6px;">
+                  <span style="font-weight: 600; color: white;">Group A</span>
+                </label>
+                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
+                  <input type="checkbox" name="groups" value="B" style="margin-right: 6px;">
+                  <span style="font-weight: 600; color: white;">Group B</span>
+                </label>
+                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
+                  <input type="checkbox" name="groups" value="C" style="margin-right: 6px;">
+                  <span style="font-weight: 600; color: white;">Group C</span>
+                </label>
               </div>
             </div>
 
@@ -648,39 +650,6 @@
     </div>
   </div>
 
-  <!-- Sent Emails Modal -->
-  <div id="sentEmailsModal" class="modal">
-    <div class="modal-content" style="max-width: 1000px;">
-      <div class="modal-header">
-        <h2>
-          <span>📨</span>
-          <span>Sent Emails History</span>
-        </h2>
-        <span class="modal-close" onclick="closeSentEmails()">&times;</span>
-      </div>
-      <div class="modal-body">
-        <div class="info-banner" style="margin-bottom: 24px;">
-          <div class="info-icon">📊</div>
-          <div>
-            <div style="font-weight: 700; color: var(--primary); font-size: 14px; margin-bottom: 4px;">
-              Email History
-            </div>
-            <div style="font-size: 13px; color: rgba(255,255,255,.85); line-height: 1.6;">
-              View all emails sent through the ARNOMA email system
-            </div>
-          </div>
-        </div>
-        
-        <div id="sentEmailsList" style="display: flex; flex-direction: column; gap: 12px;">
-          <div style="text-align: center; padding: 60px 20px; color: var(--secondary);">
-            <div style="font-size: 64px; opacity: 0.3; margin-bottom: 16px;">📧</div>
-            <p style="font-size: 16px;">Loading sent emails...</p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Editor Modal -->
   <div id="editorModal" class="modal">
     <div class="modal-content">
@@ -766,12 +735,8 @@ ARNOMA Team"></textarea>
     
     // Supabase + Resend Configuration (Production Email System)
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA4Njc2MjgsImV4cCI6MjA0NjQ0MzYyOH0.5eHRjEEyJjdkEY-ACaVA7X_BNQfvF-u8jBPj76QN_2w';
     const EMAIL_FROM = 'ARNOMA <info@mail.arnoma.us>';
-    
-    // Initialize Supabase client
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    console.log('✅ Supabase client initialized');
     
     // Email sending method preference
     let useSupabaseEmail = true; // Set to false to use Gmail instead
@@ -1011,7 +976,7 @@ ARNOMA Team"></textarea>
       }
     }
     // Send email to multiple recipients
-    async function sendBulkEmails(recipients, subject, htmlBody, templateName = 'Unknown') {
+    async function sendBulkEmails(recipients, subject, htmlBody) {
       if (!useSupabaseEmail && !isGmailConnected()) {
         showNotification('❌ Please connect Gmail first', 'error');
         return;
@@ -1024,8 +989,6 @@ ARNOMA Team"></textarea>
         const success = await sendEmail(email, subject, htmlBody);
         if (success) {
           successCount++;
-          // Track sent email in Supabase
-          await trackSentEmail(email, subject, templateName);
         } else {
           failCount++;
         }
@@ -1210,7 +1173,7 @@ ARNOMA Team"></textarea>
     // EmailSystem object (matches index.html exactly)
     const emailSystem = {
       _templates: [],
-      _storageKey: 'arnoma-email-templates-v4',
+      _storageKey: 'arnoma-email-templates-v2',
       
       init() {
         this.loadTemplates();
@@ -1274,14 +1237,14 @@ ARNOMA Team"></textarea>
             subject: 'Payment Reminder - ARNOMA NCLEX-RN',
             body: generateEmailHTML(
               'Payment Reminder',
-              `<p>Hello <strong>{{StudentName}}</strong>,</p>
-              <p>This is a quick, automated check regarding your recent classes:</p>
+              `<p>Dear <strong>{{StudentName}}</strong>,</p>
+              <p>This is a friendly reminder about pending payment for your recent classes.</p>
               <div class="info-box">
-                <p><strong>{{UnpaidClasses}}</strong></p>
+                <p><strong>📋 Unpaid Classes:</strong></p>
+                <p>{{UnpaidClasses}}</p>
+                <p><strong>💰 Amount Due:</strong> {{PaymentAmount}}</p>
               </div>
-              <p>Our records show that your payment hasn't been posted yet.</p>
-              <p><strong>If you have already paid:</strong> Great! Please simply reply with the screenshot of your transfer. That's all we need to update our log and ensure you don't receive any more reminders.</p>
-              <p><strong>If you still plan to pay:</strong> Please submit the payment at your earliest convenience. The system can only process and send your notes once payment is confirmed.</p>
+              <p><strong>If you have already paid</strong>, please reply with your payment confirmation.</p>
               <div class="payment-frame">
                 <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;">
                   <strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong>
@@ -1298,55 +1261,12 @@ ARNOMA Team"></textarea>
                   <strong style="color: #764ba2;">Zelle</strong>
                 </p>
               </div>
-              <p>Thank you for your prompt attention to this!</p>
-              <p>Best regards,<br><strong>ARNOMA Team</strong></p>`
-            ),
-            trigger: 'manual',
-            active: true
-          },
-          {
-            id: `${timestamp}_receipt`,
-            name: 'Payment Receipt',
-            subject: 'Payment Received - ARNOMA NCLEX-RN',
-            body: generateEmailHTML(
-              'Payment Receipt',
-              `<p>Dear <strong>{{StudentName}}</strong>,</p>
-              <p>Thank you for your payment of <strong>{{PaymentAmount}}</strong>. Your payment has been successfully registered.</p>
-              <p>You can expect your notes to be posted on <em>Google Classroom</em> within 30 minutes of your payment receipt.</p>
-              <p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>`
-            ),
-            trigger: 'manual',
-            active: true
-          },
-          {
-            id: `${timestamp}_classreminder`,
-            name: 'Class Reminder',
-            subject: 'Class Starting Soon - ARNOMA NCLEX-RN',
-            body: generateEmailHTML(
-              'Class Reminder',
-              `<p>Dear <strong>{{StudentName}}</strong>,</p>
-              <p>This is a friendly reminder for your <strong>Group {{GroupName}}</strong> class:</p>
-              <div class="info-box">
-                <p><strong>{{ClassTime}}</strong></p>
-              </div>
-              <p>The link to the class will be emailed to you in about <strong>30 minutes</strong>. Please be ready.</p>
-              <div class="payment-frame">
-                <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;">
-                  <strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong>
-                </p>
-                <p style="margin: 0 0 16px 0; font-size: 14px; color: #6b7280;">
-                  Scan in your banking app to pay.
-                </p>
-                <div style="margin: 16px 0;">
-                  <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 600; color: #1f2937;">Arnoma</p>
-                  <p style="margin: 0 0 16px 0; font-size: 16px; color: #4b5563;">909-300-5155</p>
-                </div>
-                <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/Arnoma%20Zelle.JPG" alt="Zelle QR Code" style="max-width:240px;height:auto;border:0;display:block;margin:0 auto" />
-                <p style="margin: 16px 0 0 0; font-size: 18px; color: #9ca3af;">
-                  <strong style="color: #764ba2;">Zelle</strong>
-                </p>
-              </div>
-              <p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>`
+              <p>Thank you for your prompt attention!</p>
+              <p>Best regards,<br><strong>ARNOMA NCLEX-RN Team</strong></p>
+              <div class="divider"></div>
+              <p style="color: #7f8c8d; font-size: 14px; text-align: center;">
+                <em>Need help? Simply reply to this email and we'll assist you promptly.</em>
+              </p>`
             ),
             trigger: 'manual',
             active: true
@@ -1357,70 +1277,63 @@ ARNOMA Team"></textarea>
       renderTemplates() {
         const grid = document.getElementById('templatesGrid');
         
-        // Always show "Create Template" card first
-        let html = `
-          <div class="template-card" onclick="openEditor()" style="cursor: pointer; border: 2px dashed rgba(165,180,252,.4); background: linear-gradient(135deg, rgba(102,126,234,.1), rgba(118,75,162,.1)); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 180px; padding: 16px;">
-            <div style="font-size: 48px; opacity: 0.6; margin-bottom: 10px;">✨</div>
-            <h3 style="margin: 0 0 4px 0; font-size: 16px; color: var(--primary-bright);">Create New Template</h3>
-            <p style="font-size: 12px; color: var(--secondary); margin: 0;">Click to add a new email template</p>
-          </div>
-        `;
-        
         if (this._templates.length === 0) {
-          grid.innerHTML = html;
+          grid.innerHTML = `
+            <div style="text-align: center; padding: 80px 20px; color: var(--secondary);">
+              <div style="font-size: 72px; opacity: 0.3; margin-bottom: 20px;">📧</div>
+              <p style="font-size: 18px;">No templates yet. Create your first one!</p>
+            </div>
+          `;
           return;
         }
         
-        // Add existing templates
-        html += this._templates.map(template => {
+        grid.innerHTML = this._templates.map(template => {
           const isHTML = template.body.includes('<!DOCTYPE html>');
-          const bodyPreview = isHTML ? 'Full HTML Email Template' : template.body.substring(0, 150);
+          const bodyPreview = isHTML ? 'Full HTML Email Template' : template.body.substring(0, 200);
           
           return `
-            <div class="template-card" style="padding: 16px;">
-              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+            <div class="template-card">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
                 <div style="flex: 1;">
-                  <h3 style="margin: 0 0 4px 0; font-size: 16px; color: var(--primary);">${template.name}</h3>
-                  <div style="font-size: 10px; color: var(--secondary); text-transform: uppercase; font-weight: 600;">
+                  <h3 style="margin: 0 0 8px 0; font-size: 20px; color: var(--primary);">${template.name}</h3>
+                  <div style="font-size: 12px; color: var(--secondary); text-transform: uppercase; font-weight: 600;">
                     ${this.getTriggerLabel(template.trigger)}
                   </div>
                 </div>
-                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
-                  <input type="checkbox" ${template.active ? 'checked' : ''} onchange="emailSystem.toggleActive('${template.id}')" style="width: 16px; height: 16px;">
-                  <span style="font-size: 11px; color: var(--secondary);">Active</span>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                  <input type="checkbox" ${template.active ? 'checked' : ''} onchange="emailSystem.toggleActive('${template.id}')" style="width: 18px; height: 18px;">
+                  <span style="font-size: 12px; color: var(--secondary);">Active</span>
                 </label>
               </div>
               
-              <div style="background: rgba(0,0,0,.2); padding: 10px; border-radius: 6px; margin-bottom: 10px; border-left: 3px solid var(--primary);">
-                <div style="font-weight: 600; color: white; font-size: 11px; margin-bottom: 4px;">Subject:</div>
-                <div style="color: var(--ink-dim); font-size: 12px;">${template.subject}</div>
+              <div style="background: rgba(0,0,0,.2); padding: 12px; border-radius: 8px; margin-bottom: 16px; border-left: 3px solid var(--primary);">
+                <div style="font-weight: 600; color: white; font-size: 13px; margin-bottom: 6px;">Subject:</div>
+                <div style="color: var(--ink-dim); font-size: 13px;">${template.subject}</div>
               </div>
               
-              <div style="background: rgba(0,0,0,.2); padding: 10px; border-radius: 6px; margin-bottom: 10px;">
-                <div style="font-weight: 600; color: white; font-size: 11px; margin-bottom: 4px;">Content:</div>
-                <div style="color: var(--ink-dim); font-size: 11px; line-height: 1.4; max-height: 80px; overflow-y: auto;">
+              <div style="background: rgba(0,0,0,.2); padding: 12px; border-radius: 8px; margin-bottom: 16px;">
+                <div style="font-weight: 600; color: white; font-size: 13px; margin-bottom: 6px;">Content:</div>
+                <div style="color: var(--ink-dim); font-size: 12px; line-height: 1.5; max-height: 100px; overflow-y: auto;">
                   ${isHTML ? '📄 Professional HTML Email Template' : bodyPreview}...
                 </div>
               </div>
               
-              <div style="display: flex; gap: 8px;">
+              <div style="display: flex; gap: 10px;">
                 ${isHTML ? `
-                  <button onclick="emailSystem.previewTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(74,222,128,.2); color: var(--success); border: 2px solid rgba(74,222,128,.4); padding: 8px; font-size: 12px;">
+                  <button onclick="emailSystem.previewTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(74,222,128,.2); color: var(--success); border: 2px solid rgba(74,222,128,.4); padding: 10px;">
                     👁️ Preview
                   </button>
                 ` : ''}
-                <button onclick="emailSystem.editTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(165,180,252,.2); color: var(--primary-bright); border: 2px solid rgba(165,180,252,.4); padding: 8px; font-size: 12px;">
+                <button onclick="emailSystem.editTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(165,180,252,.2); color: var(--primary-bright); border: 2px solid rgba(165,180,252,.4); padding: 10px;">
                   ✏️ Edit
                   </button>
-                <button onclick="emailSystem.deleteTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(248,113,113,.2); color: var(--error); border: 2px solid rgba(248,113,113,.4); padding: 8px; font-size: 12px;">
+                <button onclick="emailSystem.deleteTemplate('${template.id}')" class="btn" style="flex: 1; background: rgba(248,113,113,.2); color: var(--error); border: 2px solid rgba(248,113,113,.4); padding: 10px;">
                   🗑️ Delete
                 </button>
               </div>
             </div>
           `;
         }).join('');
-        
-        grid.innerHTML = html;
       },
       
       getTriggerLabel(trigger) {
@@ -1580,14 +1493,7 @@ ARNOMA Team"></textarea>
     }
 
     function openEditor() {
-      console.log('🔵 Opening editor modal...');
-      const modal = document.getElementById('editorModal');
-      if (!modal) {
-        console.error('❌ Editor modal not found!');
-        return;
-      }
-      console.log('✅ Modal found, adding active class');
-      modal.classList.add('active');
+      document.getElementById('editorModal').classList.add('active');
     }
 
     function closeEditor() {
@@ -1666,7 +1572,7 @@ ARNOMA Team"></textarea>
 
       loadAutomations() {
         try {
-          const stored = localStorage.getItem('arnoma-automations-v3');
+          const stored = localStorage.getItem('arnoma-automations-v2');
           if (stored) {
             this._automations = JSON.parse(stored);
           }
@@ -1678,7 +1584,7 @@ ARNOMA Team"></textarea>
 
       saveAutomations() {
         try {
-          localStorage.setItem('arnoma-automations-v3', JSON.stringify(this._automations));
+          localStorage.setItem('arnoma-automations-v2', JSON.stringify(this._automations));
         } catch (e) {
           console.error('Failed to save automations:', e);
           showNotification('Failed to save automations.', 'error');
@@ -1785,62 +1691,6 @@ ARNOMA Team"></textarea>
 
     function closeAutomations() {
       document.getElementById('automationsModal').classList.remove('active');
-    }
-
-    async function openSentEmails() {
-      document.getElementById('sentEmailsModal').classList.add('active');
-      await renderSentEmails();
-    }
-
-    function closeSentEmails() {
-      document.getElementById('sentEmailsModal').classList.remove('active');
-    }
-
-    async function renderSentEmails() {
-      const container = document.getElementById('sentEmailsList');
-      container.innerHTML = '<div style="text-align: center; padding: 60px 20px; color: var(--secondary);"><div style="font-size: 64px; opacity: 0.3; margin-bottom: 16px;">⏳</div><p style="font-size: 16px;">Loading sent emails...</p></div>';
-      
-      const emails = await loadSentEmails();
-      
-      if (emails.length === 0) {
-        container.innerHTML = `
-          <div style="text-align: center; padding: 60px 20px; color: var(--secondary);">
-            <div style="font-size: 64px; opacity: 0.3; margin-bottom: 16px;">📭</div>
-            <p style="font-size: 16px;">No sent emails yet</p>
-            <p style="font-size: 14px; margin-top: 8px;">Emails sent through this system will appear here</p>
-          </div>
-        `;
-        return;
-      }
-      
-      container.innerHTML = emails.map(email => {
-        const date = new Date(email.sent_at);
-        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-        
-        return `
-          <div style="background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.1); border-radius: 12px; padding: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
-              <div style="flex: 1;">
-                <div style="font-weight: 600; color: var(--ink); font-size: 15px; margin-bottom: 4px;">
-                  ${email.recipient_email}
-                </div>
-                <div style="color: var(--primary); font-size: 13px; font-weight: 600;">
-                  ${email.template_name || 'Email'}
-                </div>
-              </div>
-              <div style="text-align: right;">
-                <div style="font-size: 12px; color: var(--secondary);">${dateStr}</div>
-                <div style="font-size: 12px; color: var(--secondary);">${timeStr}</div>
-              </div>
-            </div>
-            <div style="background: rgba(0,0,0,.2); padding: 10px 12px; border-radius: 8px; border-left: 3px solid var(--primary);">
-              <div style="font-size: 12px; color: var(--secondary); margin-bottom: 4px; font-weight: 600;">Subject:</div>
-              <div style="color: var(--ink-dim); font-size: 13px;">${email.subject}</div>
-            </div>
-          </div>
-        `;
-      }).join('');
     }
 
     function openAutomationEditor(automationId = null) {
@@ -2132,40 +1982,13 @@ ARNOMA Team"></textarea>
       if (automation.recipientType === 'individual') {
         recipients = automation.emails || [];
       } else if (automation.recipientType === 'group') {
-        // Fetch student emails from selected groups
-        const selectedGroups = automation.selectedGroups || [];
-        if (selectedGroups.length === 0) {
-          showNotification('❌ No groups selected', 'error');
-          return;
-        }
-        
-        try {
-          const { data: students, error } = await supabase
-            .from('students')
-            .select('email, group_name')
-            .in('group_name', selectedGroups);
-          
-          if (error) throw error;
-          recipients = students.map(s => s.email).filter(email => email);
-        } catch (error) {
-          console.error('❌ Error fetching students:', error);
-          showNotification('❌ Error fetching students from groups', 'error');
-          return;
-        }
+        // TODO: Fetch student emails from groups via parent window
+        showNotification('⚠️ Group email sending coming soon. Use individual emails for now.', 'warning');
+        return;
       } else if (automation.recipientType === 'all') {
-        // Fetch all active student emails
-        try {
-          const { data: students, error } = await supabase
-            .from('students')
-            .select('email');
-          
-          if (error) throw error;
-          recipients = students.map(s => s.email).filter(email => email);
-        } catch (error) {
-          console.error('❌ Error fetching all students:', error);
-          showNotification('❌ Error fetching all students', 'error');
-          return;
-        }
+        // TODO: Fetch all student emails via parent window
+        showNotification('⚠️ Send to all coming soon. Use individual emails for now.', 'warning');
+        return;
       }
 
       if (recipients.length === 0) {
@@ -2179,87 +2002,11 @@ ARNOMA Team"></textarea>
       }
 
       showNotification(`📧 Sending emails...`, 'info');
-      await sendBulkEmails(recipients, template.subject, template.body, template.name);
-    }
-
-    // Load groups from Supabase and populate group selection
-    async function loadGroupsFromSupabase() {
-      try {
-        const { data: groups, error } = await supabase
-          .from('groups')
-          .select('group_name')
-          .order('group_name');
-        
-        if (error) throw error;
-        
-        const groupList = document.getElementById('groupList');
-        if (!groups || groups.length === 0) {
-          groupList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--secondary);">No groups found. Please add groups in Group Manager.</div>';
-          return;
-        }
-        
-        groupList.innerHTML = groups.map(g => `
-          <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
-            <input type="checkbox" name="groups" value="${g.group_name}" style="margin-right: 6px;">
-            <span style="font-weight: 600; color: white;">${g.group_name}</span>
-          </label>
-        `).join('');
-        
-        console.log('✅ Loaded', groups.length, 'groups from Supabase');
-      } catch (error) {
-        console.error('❌ Error loading groups:', error);
-        const groupList = document.getElementById('groupList');
-        groupList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--error);">Error loading groups</div>';
-      }
-    }
-
-    // Track sent emails in Supabase
-    async function trackSentEmail(recipient, subject, template_name) {
-      try {
-        const { error } = await supabase
-          .from('sent_emails')
-          .insert([{
-            recipient_email: recipient,
-            subject: subject,
-            template_name: template_name,
-            sent_at: new Date().toISOString()
-          }]);
-        
-        if (error) throw error;
-        console.log('✅ Tracked sent email to', recipient);
-      } catch (error) {
-        console.error('❌ Error tracking sent email:', error);
-      }
-    }
-
-    // Load sent emails history
-    async function loadSentEmails() {
-      try {
-        const { data: emails, error } = await supabase
-          .from('sent_emails')
-          .select('*')
-          .order('sent_at', { ascending: false })
-          .limit(100);
-        
-        if (error) throw error;
-        return emails || [];
-      } catch (error) {
-        console.error('❌ Error loading sent emails:', error);
-        return [];
-      }
+      await sendBulkEmails(recipients, template.subject, template.body);
     }
 
     // Initialize
-    // Clear old cache versions
-    ['arnoma-email-templates-v2', 'arnoma-email-templates-v3', 'arnoma-automations-v2'].forEach(key => {
-      if (localStorage.getItem(key)) {
-        localStorage.removeItem(key);
-        console.log('🧹 Cleared old cache:', key);
-      }
-    });
-    
     emailSystem.init();
-    loadGroupsFromSupabase();
     
     // Check Gmail connection on load
     if (!useSupabaseEmail) { handleGmailOAuthCallback(); }
@@ -2267,74 +2014,6 @@ ARNOMA Team"></textarea>
     if (!useSupabaseEmail && isGmailConnected()) {
       updateGmailButtonState(true);
     }
-    
-    // Listen for auto-reminder requests from parent window
-    window.addEventListener('message', async function(event) {
-      // Security check - only accept messages from same origin
-      if (event.origin !== window.location.origin) return;
-      
-      const { action, student, classDate } = event.data;
-      
-      if (action === 'sendAutoReminder') {
-        console.log('📧 Received auto-reminder request:', student.name, classDate);
-        
-        try {
-          // Find Payment Reminder template
-          const templates = emailSystem._templates || [];
-          const reminderTemplate = templates.find(t => 
-            t.name.toLowerCase().includes('payment') && 
-            t.name.toLowerCase().includes('reminder') && 
-            t.active
-          );
-          
-          if (!reminderTemplate) {
-            console.error('❌ No active Payment Reminder template found');
-            return;
-          }
-          
-          if (!student.email) {
-            console.error('❌ Student has no email address:', student.name);
-            return;
-          }
-          
-          // Replace variables in template
-          let subject = reminderTemplate.subject
-            .replace(/\{\{studentName\}\}/g, student.name)
-            .replace(/\{\{balance\}\}/g, `$${student.balance}`);
-          
-          let body = reminderTemplate.body
-            .replace(/\{\{studentName\}\}/g, student.name)
-            .replace(/\{\{balance\}\}/g, `$${student.balance}`)
-            .replace(/\{\{classDate\}\}/g, classDate);
-          
-          // Send email via Supabase Edge Function
-          const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-            },
-            body: JSON.stringify({
-              to: student.email,
-              subject: subject,
-              html: body
-            })
-          });
-          
-          if (!response.ok) {
-            throw new Error(`Failed to send email: ${response.statusText}`);
-          }
-          
-          // Track sent email
-          await trackSentEmail(student.email, subject, 'Auto Payment Reminder');
-          
-          console.log('✅ Auto-reminder sent successfully to:', student.name);
-          
-        } catch (error) {
-          console.error('❌ Error sending auto-reminder:', error);
-        }
-      }
-    });
   </script>
 </body>
 </html>

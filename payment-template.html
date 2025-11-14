@@ -1,0 +1,3427 @@
+/***************************************
+* ZELLE → GOOGLE SHEETS AUTO-UPDATER
+* Minimal + Emails + Admin Test + Groups + Class Reminders (+ inline QR)
+* + NEW: Post-Class Payment Audit (emails students who didn't pay for today's class)
+* - Sends FROM Gmail alias nclex.rn@arnoma.us as "ARNOMA NCLEX-RN"
+* - Columns: Date | Student Name | Student Email | Group | Payer Name | Amount | Message
+* - Newest payments first; de-dup via ProcessedEmails
+* - Emails on NEW payments (Update only): includes amount + group + schedule
+* - NO BCC to admin on student receipts (per request)
+* - "Send Test Email to Admin": sends the exact student email to easylearnrn@gmail.com
+* - Class Reminder Cron (every 5m): emails students ~30 min before their class
+* - Post-Class Audit Cron (every 5m): ~0–30 min after class END, emails students who didn't pay TODAY
+* REQUIREMENTS:
+*   • Apps Script → Services → Add "Gmail API"
+*   • Gmail Settings → Accounts → "Send mail as": add/verify nclex.rn@arnoma.us
+***************************************/
+
+
+const CFG = {
+  tz: 'America/Los_Angeles', // LA local time for class slots
+
+
+  logSheet: 'Zelle Log',
+  processedSheet: 'ProcessedEmails',
+  studentSheet: 'Students',              // NEW: sheet that stores dynamic student entries
+  gmailQuery: 'newer_than:90d from:usbank@notifications.usbank.com subject:Zelle',
+
+
+  columns: ['Date','Student Name','Student Email','Group','Payer Name','Amount','Message'],
+
+
+  dateFormat: 'MMMM dd, yyyy "at" hh:mm AM/PM',
+  currencyFormat: '$#,##0.00',
+  freezeHeader: false,
+
+
+  // Email settings (payment receipts)
+  email: {
+    enabled: true,
+    fromAlias: 'nclex.rn@arnoma.us',      // alias to send from
+    senderName: 'ARNOMA NCLEX-RN',        // display name
+    subject: 'Payment Received - Notes Will Be Posted Soon', // ASCII-only
+    admin: 'hrachfilm@gmail.com',
+    bccAdmin: false, // ← disabled; and code below no longer adds BCC
+    testRecipient: 'easylearnrn@gmail.com'
+  },
+
+
+  // Reminder email settings
+  reminders: {
+    enabled: true,
+    subject: 'Class Reminder - Link arrives in 30 minutes', // ASCII-only
+    times: [720, 30, 0], // Three separate reminder times in minutes before class
+    qrFileId: '1MTXk3cM8dSVI7iABySh_OXVsAdgcilDm', // inline QR image (Drive ID)
+    qrCid: 'zelleQr' // content-id used in HTML <img src="cid:zelleQr">
+  },
+
+
+  // NEW: Post-class audit settings
+  postClassAudit: {
+    enabled: true,
+    defaultDurationMin: 90,        // assumed class duration (minutes)
+    windowAfterEndMin: 0,          // inclusive window after END (minutes)
+    windowAfterEndMax: 30,
+    subject: 'Payment Pending for Today\'s Class',
+    dedupHours: 48
+  },
+
+
+  // Name → Canonical Student Name (alias map)
+  aliasMap: {
+    'Level Up Management': 'Hasmik Antonova',
+    'Level Up Management, Inc.': 'Hasmik Antonova',
+    'Husikyan Consulting': 'Sona Husikyan',
+    'Husikyan Consulting, I.Nc.': 'Sona Husikyan',
+    'Scins Inc': 'Anna Ohanjanyan',
+
+
+    // ✱ UPDATED: normalize to Beatrisa Arushanyan (with “y”)
+    'Oganes Terterian': 'Beatrisa Arushanyan',
+    'Beatrisa Arushanian': 'Beatrisa Arushanyan',
+
+
+    // ✱ NEW: treat these as Mariam Gevorgyan (canonical)
+    'Mari Poghosyan': 'Mariam Gevorgyan',
+    'Abraham Poghosyan': 'Mariam Gevorgyan',
+
+
+    // keep historical alias → new canonical
+    'Mari Gevorgyan': 'Mariam Gevorgyan',
+
+
+    'Stepan Gevorgyan': 'Mariam Gevorgyan',
+    'Narine Avetisyan': 'Nare Avetisyan',
+    'Zhaneta Avetikyan': 'Janna Avetikyan',
+    'Srbui Babayan': 'Srbui Babayan',
+    'Aram Harutyunyan': 'Aram Harutyunyan',
+    'Ana Nshanyan': 'Ana Nshanyan',
+    'Lusine Hakobyan': 'Lusine Hakobyan',
+    'Ani Harutyunyan': 'Ani Harutyunyan',
+
+
+    // keep identity alias with canonical spelling
+    'Beatrisa Arushanyan': 'Beatrisa Arushanyan',
+
+
+    'Sirush Edigarian': 'Sirush Edigarian',
+    'Sirush Edigaryan': 'Sirush Edigarian',
+    'Tereza Abramyan': 'Tereza Abramyan',
+    'Alvard Ghukasyan': 'Alvard Ghukasyan',
+    'Narine Jamalyan': 'Narine Jamalyan',
+    'Vergine Mkrtchyan': 'Vergine Mkrtchyan',
+    'Gayane Zadourian': 'Gayane Zadourian',
+    'Mari Melkonyan': 'Mari Melkonyan',
+    'Jacqueline Kivranyan': 'Jacqueline Kivranyan',
+    'Ani Khurshudyan': 'Ani Khurshudyan',
+    'Stella Ghazaryan': 'Stella Ghazaryan',
+    'Anahit Aslanian': 'Anahit Aslanian',
+    'Anahit Aslanyan': 'Anahit Aslanian',
+    'Milena Bagramyan': 'Milena Bagramyan',
+    'Milen B': 'Milena Bagramyan',
+    'Anna Ohanjanyan': 'Anna Ohanjanyan',
+    'Hasmik Antonova': 'Hasmik Antonova',
+    'Beatrisa Arushanyan ': 'Beatrisa Arushanyan',
+    'Janna Avetikyan': 'Janna Avetikyan',
+    'Araksya Dulbenchyan': 'Araksya Dulbenchyan',
+    'Sona Husikyan': 'Sona Husikyan',
+    'Ani Sahakyan': 'Ani Sahakyan',
+    'Richy Festa (Teacher)': 'Richy Festa (Teacher)',
+    'Richy Festa': 'Richy Festa (Teacher)'
+  },
+
+
+  // Canonical Student Name → Email
+  contacts: {
+    'Tereza Abramyan': 'terabram07@gmail.com',
+    'Nare Avetisyan': 'narineavetisyan7788@gmail.com',
+    'Alvard Ghukasyan': 'alvardghukasyan85@gmail.com',
+    'Narine Jamalyan': 'narinejamalyan83@gmail.com',
+    'Vergine Mkrtchyan': 'vergine.mkrtchyan05@gmail.com',
+    'Gayane Zadourian': 'zadouriangayane@gmail.com',
+    'Richy Festa (Teacher)': 'hrachfilm@gmail.com',
+
+
+    'Stella Ghazaryan': 'stellinybeauty@gmail.com',
+    'Anahit Aslanian': 'anahitaslanian797@gmail.com',
+    'Ani Harutyunyan': 'aniko1245@mail.ru',
+    'Ani Khurshudyan': 'anikhurshudyan@icloud.com',
+    'Mari Melkonyan': 'mmelkonyan20@gmail.com',
+    'Jacqueline Kivranyan': 'jkivranyan45@gmail.com',
+    'Milena Bagramyan': 'milenabagh@icloud.com',
+    'Anna Ohanjanyan': 'pv.annaohanjanyan@gmail.com',
+    'Sirush Edigarian': 'sirush2118@gmail.com',
+    'Hasmik Antonova': 'Hasmik.Antonova@gmail.com',
+
+
+    // ✱ keep single canonical spelling with email
+    'Beatrisa Arushanyan': 'arushanyanbeatrisa@gmail.com',
+
+
+    'Janna Avetikyan': 'jannaavetikyan1979@gmail.com',
+    'Srbui Babayan': 'srbui81@gmail.com',
+
+
+    // Confirmed email stays as provided
+    'Araksya Dulbenchyan': 'Araksya1947@gmail.com',
+
+
+    // ✱ NEW canonical entry for Mariam (reuse previous email)
+    'Mariam Gevorgyan': 'gevvprgyanm@gmail.com',
+
+
+    'Lusine Hakobyan': 'hakobyanl26@gmail.com',
+    'Aram Harutyunyan': 'harutyunyanaram2004@gmail.com',
+    'Sona Husikyan': 'shusikyan@gmail.com',
+    'Ana Nshanyan': 'nshanyanana@gmail.com',
+    'Ani Sahakyan': 'anialex2021@gmail.com'
+  },
+
+
+  // ======= GROUPS (name → group) =======
+  groups: {
+    // ---------- Group A ----------
+    'Sirush Edigarian': 'A',
+    'Hasmik Antonova': 'A',
+    'Beatrisa Arushanyan': 'A',
+    'Janna Avetikyan': 'A',
+    'Srbui Babayan': 'A',
+    'Araksya Dulbenchyan': 'A',
+    // ✱ switched canonical from "Mari Gevorgyan" → "Mariam Gevorgyan"
+    'Mariam Gevorgyan': 'A',
+    'Lusine Hakobyan': 'A',
+    'Ani Harutyunyan': 'A',
+    'Aram Harutyunyan': 'A',
+    'Sona Husikyan': 'A',
+    'Ana Nshanyan': 'A',
+    'Ani Sahakyan': 'A',
+
+
+    // ---------- Group C ----------
+    'Tereza Abramyan': 'C',
+    'Nare Avetisyan': 'C',
+    'Alvard Ghukasyan': 'C',
+    'Narine Jamalyan': 'C',
+    'Vergine Mkrtchyan': 'C',
+    'Gayane Zadourian': 'C',
+    'Richy Festa (Teacher)': 'C',
+
+
+    // ---------- Group D ----------
+    'Stella Ghazaryan': 'D',
+    'Anahit Aslanian': 'D',
+    'Mari Melkonyan': 'D',
+    'Jacqueline Kivranyan': 'D',
+    'Ani Khurshudyan': 'D',
+    'Milena Bagramyan': 'D',
+    'Anna Ohanjanyan': 'D'
+  },
+
+
+  // Schedules for reminders (dow: 0=Sun..6=Sat, America/Los_Angeles)
+  groupScheduleSlots: {
+    'A': [{ dow: [2,4], hour: 20, minute: 0 }],
+    'B': [],
+    'C': [{ dow: [1,3,5], hour: 8,  minute: 0 }],
+    'D': [{ dow: [1,3],   hour: 20, minute: 0 }, { dow: [0], hour: 9, minute: 30 }],
+    'E': [],
+    'F': [],
+    'G': [],
+    'H': [],
+    'I': []
+  },
+
+
+  // Pretty schedule strings (for receipts)
+  groupSchedules: {
+    'A': 'Tuesday & Thursday at 8:00 PM',
+    'B': 'Schedule TBD',
+    'C': 'Monday, Wednesday & Friday at 8:00 AM',
+    'D': 'Monday & Wednesday at 8:00 PM; Sunday at 9:30 AM',
+    'E': 'Schedule TBD',
+    'F': 'Schedule TBD',
+    'G': 'Schedule TBD',
+    'H': 'Schedule TBD',
+    'I': 'Schedule TBD'
+  }
+};
+
+
+const TEMPLATE_SHEET_NAME = 'Email Templates';
+const TEMPLATE_SHEET_COLUMNS = ['Type','Name','Subject','PlainBody','HtmlBody','UpdatedAt'];
+const TEMPLATE_PROP_PREFIX = 'EMAIL_TEMPLATE_ACTIVE_';
+const RAW_HTML_PLACEHOLDERS = new Set(['scheduleLineHtml','qrBlockHtml']);
+const GROUP_SCHEDULE_PROP_KEY = 'GROUP_SCHEDULE_DATA_V1';
+let GROUP_SCHEDULE_CACHE = null;
+const GROUP_SCHEDULE_DOW_META = [
+  { value: 0, short: 'Sun', label: 'Sunday' },
+  { value: 1, short: 'Mon', label: 'Monday' },
+  { value: 2, short: 'Tue', label: 'Tuesday' },
+  { value: 3, short: 'Wed', label: 'Wednesday' },
+  { value: 4, short: 'Thu', label: 'Thursday' },
+  { value: 5, short: 'Fri', label: 'Friday' },
+  { value: 6, short: 'Sat', label: 'Saturday' }
+];
+
+const EMAIL_TEMPLATE_DEFS = {
+ receipt: {
+   label: 'Payment Receipt',
+   defaultName: 'Default',
+   defaultSubject: CFG.email.subject,
+   defaultPlain: `Dear {{studentName}},\n\nThank you for your payment of {{amountStr}}. Your payment has been successfully registered.{{scheduleLinePlain}}\nYou can expect your notes to be posted on Google Classroom within 30 minutes of your payment receipt.\n\nBest regards,\nARNOMA NCLEX-RN`,
+   defaultHtml: `<p>Dear <strong>{{studentName}}</strong>,</p>
+<p>Thank you for your payment of <strong>{{amountStr}}</strong>. Your payment has been successfully registered.</p>
+{{scheduleLineHtml}}
+<p>You can expect your notes to be posted on <em>Google Classroom</em> within 30 minutes of your payment receipt.</p>
+<p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>`,
+   placeholders: [
+     { key: 'studentName', description: 'Student name' },
+     { key: 'amountStr', description: 'Payment amount (e.g. $45.00)' },
+     { key: 'amount', description: 'Payment amount (number)' },
+     { key: 'group', description: 'Group letter (if available)' },
+     { key: 'scheduleLine', description: 'Schedule text for the student\'s group' },
+     { key: 'scheduleLinePlain', description: 'Preformatted schedule line for plain text' },
+     { key: 'scheduleLineHtml', description: 'Preformatted schedule paragraph for HTML' },
+     { key: 'whenStr', description: 'Payment timestamp formatted in LA time' }
+   ]
+ },
+ reminder: {
+   label: 'Class Reminder',
+   defaultName: 'Default',
+   defaultSubject: CFG.reminders.subject,
+   defaultPlain: `Dear {{studentName}},\n\nThis is a friendly reminder that your Group {{group}} class starts at {{classTimeStr}}.\nThe link to the class will be emailed to you in about 30 minutes. Please be ready.\n\nIf you haven’t made your payment yet, please do so by sending a Zelle payment to 909 300 5155. Thank you!\n\nBest regards,\nARNOMA NCLEX-RN`,
+   defaultHtml: `<p>Dear <strong>{{studentName}}</strong>,</p>
+<p>This is a friendly reminder for your <strong>Group {{group}}</strong> class:</p>
+<div class="info-box">
+  <p><strong>{{classTimeStr}}</strong></p>
+</div>
+<p>The link to the class will be emailed to you in about <strong>30 minutes</strong>. Please be ready.</p>
+<p>If you haven't made your payment yet, please send a <strong>Zelle payment to 909&nbsp;300&nbsp;5155</strong>. Thank you!</p>
+{{qrBlockHtml}}
+<p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>`,
+   placeholders: [
+     { key: 'studentName', description: 'Student name' },
+     { key: 'group', description: 'Group letter' },
+     { key: 'classTimeStr', description: 'Class start time formatted in LA time' },
+     { key: 'qrBlockHtml', description: 'HTML snippet containing the inline QR image (if configured)' }
+   ]
+ },
+ pending: {
+   label: 'Payment Audit',
+   defaultName: 'Default',
+   defaultSubject: CFG.postClassAudit.subject,
+   defaultPlain: `Hello {{studentName}},\n\nThis is a quick, automated check regarding your class today at {{whenStr}}.\n\nOur records show that your payment hasn't been posted yet.\n\nIf you have already paid: Great! Please simply reply with the screenshot of your transfer. That's all we need to update our log and ensure you don't receive any more reminders.\n\nIf you still plan to pay: Please submit the payment at your earliest convenience. The system can only process and send your notes once payment is confirmed.\n\nThank you for your prompt attention to this!\n\nBest regards,\nARNOMA Team`,
+   defaultHtml: `<p>Hello <strong>{{studentName}}</strong>,</p>
+<p>This is a quick, automated check regarding your recent classes:</p>
+<div class="info-box">
+  <p><strong>{{whenStr}}</strong></p>
+</div>
+<p>Our records show that your payment hasn't been posted yet.</p>
+<p><strong>If you have already paid:</strong> Great! Please simply reply with the screenshot of your transfer. That's all we need to update our log and ensure you don't receive any more reminders.</p>
+<p><strong>If you still plan to pay:</strong> Please submit the payment at your earliest convenience. The system can only process and send your notes once payment is confirmed.</p>
+<p>Thank you for your prompt attention to this!</p>
+<p>Best regards,<br><strong>ARNOMA Team</strong></p>`,
+   placeholders: [
+     { key: 'studentName', description: 'Student name' },
+     { key: 'group', description: 'Group letter' },
+     { key: 'whenStr', description: 'Class start time formatted in LA time' }
+   ]
+ }
+};
+
+
+/* ========= Index builders & normalization ========= */
+const CORP_TOKENS = new Set(['inc','i','nc','llc','l.l.c','corp','corporation','company','co','ltd','limited','plc','incorporated']);
+function normalizeKey_(s){
+ const base = String(s||'').toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,' ').replace(/\s+/g,' ').trim();
+ return base.split(' ').filter(t=>t&&!CORP_TOKENS.has(t)).join(' ');
+}
+function buildAliasIndex_(){ const idx={}; for (const k in CFG.aliasMap){ if(!Object.prototype.hasOwnProperty.call(CFG.aliasMap,k)) continue; idx[normalizeKey_(k)]=CFG.aliasMap[k]; } return idx; }
+const ALIAS_INDEX = buildAliasIndex_();
+function buildContactsIndex_(){ const idx={}; for (const n in CFG.contacts){ if(!Object.prototype.hasOwnProperty.call(CFG.contacts,n)) continue; idx[normalizeKey_(n)]=CFG.contacts[n]; } return idx; }
+const CONTACTS_INDEX = buildContactsIndex_();
+function buildGroupsIndex_(){ const idx={}; for (const n in CFG.groups){ if(!Object.prototype.hasOwnProperty.call(CFG.groups,n)) continue; idx[normalizeKey_(n)]=CFG.groups[n]; } return idx; }
+const GROUPS_INDEX = buildGroupsIndex_();
+
+
+let TEMPLATE_CACHE = null;
+
+function resetTemplateCache_(){ TEMPLATE_CACHE = null; }
+
+function getTemplateCache_(){
+  if (TEMPLATE_CACHE) return TEMPLATE_CACHE;
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ensureTemplateSheet_(ss);
+  seedDefaultTemplatesIfNeeded_(sheet);
+  const lastRow = sheet.getLastRow();
+  let map = {};
+  if (lastRow > 1){
+    const values = sheet.getRange(2,1,lastRow-1,TEMPLATE_SHEET_COLUMNS.length).getValues();
+    map = values.reduce((acc,row)=>{
+      const type = String(row[0]||'').trim();
+      const name = String(row[1]||'').trim();
+      if (!type || !name) return acc;
+      if (!acc[type]) acc[type] = [];
+      acc[type].push({
+        type,
+        name,
+        subject: row[2] || '',
+        plainBody: row[3] || '',
+        htmlBody: row[4] || '',
+        updatedAt: row[5] instanceof Date ? row[5] : null
+      });
+      return acc;
+    }, {});
+  }
+  TEMPLATE_CACHE = map;
+  return TEMPLATE_CACHE;
+}
+
+function ensureTemplateSheet_(ss){
+  let sheet = ss.getSheetByName(TEMPLATE_SHEET_NAME);
+  if (!sheet){
+    sheet = ss.insertSheet(TEMPLATE_SHEET_NAME);
+    sheet.getRange(1,1,1,TEMPLATE_SHEET_COLUMNS.length).setValues([TEMPLATE_SHEET_COLUMNS]);
+    sheet.setFrozenRows(1);
+  } else {
+    sheet.getRange(1,1,1,TEMPLATE_SHEET_COLUMNS.length).setValues([TEMPLATE_SHEET_COLUMNS]);
+    if (sheet.getFrozenRows() !== 1) sheet.setFrozenRows(1);
+  }
+  return sheet;
+}
+
+function seedDefaultTemplatesIfNeeded_(sheet){
+  const lastRow = sheet.getLastRow();
+  const existing = new Set();
+  if (lastRow > 1){
+    const data = sheet.getRange(2,1,lastRow-1,2).getValues();
+    data.forEach(row=>{
+      const type = String(row[0]||'').trim();
+      if (type) existing.add(type);
+    });
+  }
+  const rowsToAppend = [];
+  Object.keys(EMAIL_TEMPLATE_DEFS).forEach(type=>{
+    if (!existing.has(type)){
+      const def = EMAIL_TEMPLATE_DEFS[type];
+      rowsToAppend.push([
+        type,
+        def.defaultName,
+        def.defaultSubject,
+        def.defaultPlain,
+        def.defaultHtml,
+        new Date()
+      ]);
+    }
+    ensureActiveTemplateProperty_(type);
+  });
+  if (rowsToAppend.length>0){
+    rowsToAppend.forEach(row=>sheet.appendRow(row));
+  }
+}
+
+function ensureActiveTemplateProperty_(type){
+  const props = PropertiesService.getScriptProperties();
+  const key = TEMPLATE_PROP_PREFIX + type.toUpperCase();
+  const stored = props.getProperty(key);
+  if (!stored){
+    props.setProperty(key, EMAIL_TEMPLATE_DEFS[type].defaultName);
+  }
+}
+
+function getActiveTemplateName_(type){
+  const props = PropertiesService.getScriptProperties();
+  const key = TEMPLATE_PROP_PREFIX + type.toUpperCase();
+  const stored = props.getProperty(key);
+  const cache = getTemplateCache_();
+  const list = cache[type] || [];
+  if (stored && list.some(t=>t.name===stored)) return stored;
+  const fallback = EMAIL_TEMPLATE_DEFS[type].defaultName;
+  props.setProperty(key, fallback);
+  return fallback;
+}
+
+function setActiveTemplateName_(type, name){
+  const props = PropertiesService.getScriptProperties();
+  const key = TEMPLATE_PROP_PREFIX + type.toUpperCase();
+  props.setProperty(key, name);
+  resetTemplateCache_();
+}
+
+function getActiveTemplate_(type){
+  const cache = getTemplateCache_();
+  const list = cache[type] || [];
+  if (list.length === 0) return null;
+  const activeName = getActiveTemplateName_(type);
+  return list.find(t=>t.name===activeName) || list[0];
+}
+
+function applyTemplateString_(template, ctx, opts){
+  const escapeHtml = opts && opts.escapeHtml;
+  if (!template) return '';
+  return String(template).replace(/\{\{(\w+)\}\}/g,(match,key)=>{
+    if (!Object.prototype.hasOwnProperty.call(ctx,key)) return '';
+    let value = ctx[key];
+    if (value === null || value === undefined) value = '';
+    if (escapeHtml && !RAW_HTML_PLACEHOLDERS.has(key)) value = escapeHtml_(value);
+    return String(value);
+  });
+}
+
+function renderEmailTemplate_(type, ctx){
+  const def = EMAIL_TEMPLATE_DEFS[type];
+  if (!def) throw new Error('Unknown template type: '+type);
+  const context = Object.assign({}, ctx || {});
+  if (type === 'receipt' && context.group){
+    const scheduleParts = getScheduleLineParts_(context.group);
+    if (scheduleParts.text && !context.scheduleLine) context.scheduleLine = scheduleParts.text;
+    if (scheduleParts.plain && !context.scheduleLinePlain) context.scheduleLinePlain = scheduleParts.plain;
+    if (scheduleParts.html && !context.scheduleLineHtml) context.scheduleLineHtml = scheduleParts.html;
+  }
+  const tmpl = getActiveTemplate_(type);
+  const subjectTpl = tmpl && tmpl.subject ? tmpl.subject : def.defaultSubject;
+  const plainTpl = tmpl && tmpl.plainBody ? tmpl.plainBody : def.defaultPlain;
+  const htmlTpl = tmpl && tmpl.htmlBody ? tmpl.htmlBody : def.defaultHtml;
+  
+  // Apply template substitutions to get the body content
+  const bodyContent = applyTemplateString_(htmlTpl, context, {escapeHtml:true});
+  
+  // Wrap the rendered body content in the standard email template design
+  const wrappedHtml = getStandardEmailTemplate_(bodyContent);
+  
+  return {
+    subject: applyTemplateString_(subjectTpl, context, {escapeHtml:false}),
+    plain: applyTemplateString_(plainTpl, context, {escapeHtml:false}),
+    html: wrappedHtml
+  };
+}
+
+function validateTemplateType_(type){
+  if (!EMAIL_TEMPLATE_DEFS[type]) throw new Error('Unsupported template type: '+type);
+}
+
+function upsertEmailTemplate_(data){
+  validateTemplateType_(data.type);
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ensureTemplateSheet_(ss);
+  seedDefaultTemplatesIfNeeded_(sheet);
+  const name = String(data.name||'').trim();
+  if (!name) throw new Error('Template name is required.');
+  const type = data.type;
+  const subject = String(data.subject||'');
+  const plain = String(data.plainBody||'');
+  const html = String(data.htmlBody||'');
+  const lastRow = sheet.getLastRow();
+  let targetRow = -1;
+  if (lastRow > 1){
+    const values = sheet.getRange(2,1,lastRow-1,2).getValues();
+    values.forEach((row,idx)=>{
+      const rowType = String(row[0]||'').trim();
+      const rowName = String(row[1]||'').trim();
+      if (rowType===type && rowName===name) targetRow = idx+2;
+    });
+  }
+  if (targetRow === -1){
+    sheet.appendRow([type,name,subject,plain,html,new Date()]);
+  }else{
+    sheet.getRange(targetRow,1,1,TEMPLATE_SHEET_COLUMNS.length).setValues([[type,name,subject,plain,html,new Date()]]);
+  }
+  resetTemplateCache_();
+  return {type,name};
+}
+
+function removeEmailTemplate_(type, name){
+  validateTemplateType_(type);
+  const trimmedName = String(name||'').trim();
+  if (!trimmedName) throw new Error('Template name is required.');
+  const def = EMAIL_TEMPLATE_DEFS[type];
+  if (trimmedName === def.defaultName) throw new Error('The default template cannot be deleted.');
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ensureTemplateSheet_(ss);
+  const lastRow = sheet.getLastRow();
+  if (lastRow <=1) throw new Error('Template not found.');
+  let removed = false;
+  for (let row=2; row<=lastRow; row++){
+    const rowType = String(sheet.getRange(row,1).getValue()||'').trim();
+    const rowName = String(sheet.getRange(row,2).getValue()||'').trim();
+    if (rowType===type && rowName===trimmedName){
+      sheet.deleteRow(row);
+      removed = true;
+      break;
+    }
+  }
+  if (!removed) throw new Error('Template not found.');
+  const activeName = getActiveTemplateName_(type);
+  if (activeName === trimmedName){
+    setActiveTemplateName_(type, EMAIL_TEMPLATE_DEFS[type].defaultName);
+  } else {
+    resetTemplateCache_();
+  }
+}
+
+function getEmailTemplatesPayload(){
+  const cache = getTemplateCache_();
+  const types = Object.keys(EMAIL_TEMPLATE_DEFS).map(id=>({
+    id,
+    label: EMAIL_TEMPLATE_DEFS[id].label,
+    placeholders: EMAIL_TEMPLATE_DEFS[id].placeholders
+  }));
+  const active = {};
+  types.forEach(t=>{ active[t.id] = getActiveTemplateName_(t.id); });
+  const templates = {};
+  Object.keys(cache).forEach(type=>{
+    templates[type] = cache[type].map(t=>({
+      name: t.name,
+      subject: t.subject,
+      plainBody: t.plainBody,
+      htmlBody: t.htmlBody,
+      updatedAt: t.updatedAt ? t.updatedAt.toISOString() : ''
+    }));
+  });
+  const defaults = {};
+  Object.keys(EMAIL_TEMPLATE_DEFS).forEach(type=>{
+    const def = EMAIL_TEMPLATE_DEFS[type];
+    defaults[type] = {
+      name: def.defaultName,
+      subject: def.defaultSubject,
+      plainBody: def.defaultPlain,
+      htmlBody: def.defaultHtml
+    };
+  });
+  return {types, templates, active, defaults};
+}
+
+function saveEmailTemplate(data){
+  if (!data) throw new Error('Template data is required.');
+  if (!data.type) throw new Error('Template type is required.');
+  upsertEmailTemplate_(data);
+  return getEmailTemplatesPayload();
+}
+
+function setActiveEmailTemplate(type, name){
+  validateTemplateType_(type);
+  const cache = getTemplateCache_();
+  const list = cache[type] || [];
+  if (!list.some(t=>t.name===name)) throw new Error('Template not found.');
+  setActiveTemplateName_(type, name);
+  return getEmailTemplatesPayload();
+}
+
+function deleteEmailTemplate(data){
+  removeEmailTemplate_(data.type, data.name);
+  return getEmailTemplatesPayload();
+}
+
+
+/* ========= Menu ========= */
+function onOpen(){
+  try {
+    SpreadsheetApp.getUi().createMenu('Zelle')
+      .addItem('✓ Authorize Script','authorizeScript')
+      .addSeparator()
+      .addItem('Update','logNewPayments')
+      .addItem('Send Test Email to Admin','sendAdminTestEmail')
+      .addSeparator()
+      .addItem('Start Reminder Cron (every 5m)','startReminderCron')
+      .addItem('Stop Reminder Cron','stopReminderCron')
+      .addItem('Send Test Reminder (next slot)','sendTestReminder')
+      .addSeparator()
+      .addItem('Start Post-Class Audit (every 5m)','startPostClassAuditCron')
+      .addItem('Stop Post-Class Audit','stopPostClassAuditCron')
+      .addItem('Send Test Pending Notice','sendTestPendingNotice')
+      .addSeparator()
+      .addItem('Rebuild Log (clear & rescan, newest first)','rebuildLog')
+      .addSeparator()
+      .addItem('Add Student','showAddStudentDialog')
+    .addItem('Edit Student','showEditStudentDialog')
+      .addItem('Manage Email Templates','showTemplateManagerDialog')
+    .addItem('Manage Group Schedules','showGroupScheduleDialog')
+      .addToUi();
+  } catch(e) {
+    // onOpen can only run when spreadsheet is opened, not from script editor
+    Logger.log('onOpen error (this is normal if run from script editor): ' + e);
+  }
+}
+
+/* ========= Authorization Helper ========= */
+function authorizeScript(){
+  // This function requests all necessary permissions
+  // Run this once from the script editor to authorize
+  try {
+    SpreadsheetApp.getActive();
+    GmailApp.search('test', 0, 1);
+    PropertiesService.getScriptProperties();
+    UrlFetchApp.fetch('https://www.google.com', {muteHttpExceptions: true});
+    SpreadsheetApp.getActive().toast('✅ Authorization successful! You can now use all features.', 'Authorization Complete', 5);
+  } catch(e) {
+    Logger.log('Authorization error: ' + e);
+    throw e;
+  }
+}
+
+/* ========= CORE ========= */
+function bootstrap_(fresh){
+ const ss=SpreadsheetApp.getActive();
+ const logS=getOrCreateLogSheet_(ss);
+ const procS=getOrCreateProcessedSheet_(ss);
+ let procIds=new Set();
+ if(!fresh){
+   const ids=readCol_(procS,1).slice(1).filter(Boolean);
+   procIds=new Set(ids);
+ }
+ return {logS,procS,procIds};
+}
+
+
+/* ========= Public actions (logging) ========= */
+function logNewPayments(){
+ const {logS,procS,procIds}=bootstrap_();
+ const {newRows,processedRows}=harvestEmails_(procIds, {sendEmails: true});
+ if(newRows.length===0){ Logger.log('No new Zelle payments found.'); return; }
+
+
+ newRows.sort((a,b)=>b[0]-a[0]);
+ insertRowsTop_(logS,newRows);
+ appendRows_(procS,processedRows);
+
+
+ const lastCol=CFG.columns.length;
+ logS.setRowHeights(2,newRows.length,25);
+ logS.getRange(2,1,newRows.length,1).setNumberFormat(CFG.dateFormat);
+ logS.getRange(2,6,newRows.length,1).setNumberFormat(CFG.currencyFormat);
+ logS.getRange(2,1,newRows.length,lastCol).setVerticalAlignment('middle');
+
+
+ // Ensure conditional formatting exists (applies automatically to new rows)
+ ensureGroupConditionalFormatting_(logS);
+}
+
+
+function rebuildLog(){
+ const {logS,procS}=bootstrap_(true);
+ safeClearBelowHeader_(logS,CFG.columns.length);
+ safeClearBelowHeader_(procS,6);
+
+
+ const {newRows,processedRows}=harvestEmails_(new Set(), {sendEmails: false});
+ newRows.sort((a,b)=>b[0]-a[0]);
+ insertRowsTop_(logS,newRows);
+ appendRows_(procS,processedRows);
+
+
+ const lastRow=Math.max(2,logS.getLastRow());
+ const lastCol=CFG.columns.length;
+ if (CFG.freezeHeader) logS.setFrozenRows(1);
+ logS.getRange(1,1,1,lastCol).setFontWeight('bold').setVerticalAlignment('middle');
+ logS.setRowHeight(1,30);
+ if (lastRow>1){
+   logS.getRange(2,1,lastRow-1,1).setNumberFormat(CFG.dateFormat);
+   logS.getRange(2,6,lastRow-1,1).setNumberFormat(CFG.currencyFormat);
+   logS.getRange(2,1,lastRow-1,lastCol).setVerticalAlignment('middle');
+   logS.setRowHeights(2,lastRow-1,25);
+ }
+
+
+ // Reinstall/refresh conditional formatting on Group column
+ ensureGroupConditionalFormatting_(logS);
+
+
+ Logger.log(`Rebuilt. Logged ${newRows.length} payment(s), newest first.`);
+}
+
+
+/* ========= Admin test: exact student email (via alias) ========= */
+function sendAdminTestEmail(){
+ try{
+   const to = CFG.email.testRecipient || 'easylearnrn@gmail.com';
+   const sampleStudent = 'Test Student';
+   const sampleAmount = 100;
+   const sampleWhen = new Date();
+   const sampleGroup = 'C';
+   const bodies = buildReceiptEmailBodies_(sampleStudent, sampleAmount, sampleWhen, sampleGroup);
+   sendViaAlias_({
+     to,
+     subject: bodies.subject,
+     plainBody: bodies.plain,
+     htmlBody: bodies.html
+   });
+   SpreadsheetApp.getActive().toast('Sent exact student email to '+to,'Admin Test',3);
+ }catch(e){
+   Logger.log('sendAdminTestEmail error: '+e);
+   SpreadsheetApp.getActive().toast('Failed to send test: '+e,'Admin Test',5);
+ }
+}
+
+
+/* ========= Reminders: trigger management ========= */
+function startReminderCron(){
+ stopReminderCron();
+ ScriptApp.newTrigger('reminderCron_').timeBased().everyMinutes(5).create();
+ SpreadsheetApp.getActive().toast('Reminder cron started (every 5m).','Reminders',3);
+}
+function stopReminderCron(){
+ ScriptApp.getProjectTriggers().forEach(t=>{
+   if (t.getHandlerFunction && t.getHandlerFunction()==='reminderCron_') ScriptApp.deleteTrigger(t);
+ });
+ SpreadsheetApp.getActive().toast('Reminder cron stopped.','Reminders',3);
+}
+
+
+/* ========= Reminders: main cron ========= */
+function reminderCron_(){
+ try{
+   if (!CFG.reminders.enabled) return;
+   const tz = CFG.tz || Session.getScriptTimeZone();
+   const nowLocal = toTZ_(new Date(), tz); // LA local time
+   const dow = nowLocal.getDay();
+
+
+  const toSend = [];
+  const scheduleSlots = getGroupScheduleSlots_();
+  const reminderTimes = CFG.reminders.times || [720, 30, 0]; // array of minutes before class
+  
+  Object.keys(scheduleSlots).forEach(group=>{
+    (scheduleSlots[group]||[]).forEach(slot=>{
+       if (!slot.dow.includes(dow)) return;
+       const classDate = new Date(nowLocal.getFullYear(), nowLocal.getMonth(), nowLocal.getDate(), slot.hour, slot.minute, 0, 0);
+       const diffMin = Math.round((classDate - nowLocal) / 60000);
+       
+       // Check if current time matches any of the configured reminder times (within ±2 min tolerance)
+       const matchesReminderTime = reminderTimes.some(reminderMin => {
+         return Math.abs(diffMin - reminderMin) <= 2;
+       });
+       
+       if (matchesReminderTime && diffMin > 0) toSend.push({group, classDate});
+     });
+   });
+   if (toSend.length===0) return;
+
+
+   const sentKeySet = getSentReminderKeys_();
+   const newKeys = new Set();
+
+
+   toSend.forEach(({group,classDate})=>{
+     const key = buildReminderKey_(group, classDate);
+     if (sentKeySet.has(key)) return;
+     const students = getStudentsInGroup_(group);
+     const classTimeStr = formatTime_(classDate, tz);
+     students.forEach(st=>{ if (st.email) sendReminderEmail_(st.email, st.name, group, classTimeStr); });
+     newKeys.add(key);
+   });
+
+
+   if (newKeys.size>0) saveSentReminderKeys_(newKeys);
+ } catch(e){
+   Logger.log('reminderCron_ error: '+e);
+ }
+}
+
+
+/* ========= Reminders: test ========= */
+function sendTestReminder(){
+ try{
+   const tz = CFG.tz || Session.getScriptTimeZone();
+   const to = CFG.email.testRecipient || 'easylearnrn@gmail.com';
+   const now = toTZ_(new Date(), tz);
+
+
+  const candidates = [];
+  const scheduleSlots = getGroupScheduleSlots_();
+  Object.keys(scheduleSlots).forEach(group=>{
+    (scheduleSlots[group]||[]).forEach(slot=>{
+       [0,1].forEach(offset=>{
+         const d = new Date(now);
+         d.setDate(d.getDate()+offset);
+         if (!slot.dow.includes(d.getDay())) return;
+         const dt = new Date(d.getFullYear(), d.getMonth(), d.getDate(), slot.hour, slot.minute, 0, 0);
+         const diff = dt - now;
+         if (diff >= 0) candidates.push({group, dt});
+       });
+     });
+   });
+   if (candidates.length===0){ SpreadsheetApp.getActive().toast('No upcoming slots found to test.','Reminder Test',5); return; }
+   candidates.sort((a,b)=>a.dt-b.dt);
+   const {group, dt} = candidates[0];
+   const classTimeStr = formatTime_(dt, tz);
+
+
+   const bodies = buildReminderEmailBodies_('Test Student', group, classTimeStr);
+   Logger.log('Test Reminder - Subject: ' + bodies.subject);
+   Logger.log('Test Reminder - Plain length: ' + (bodies.plain ? bodies.plain.length : 0));
+   Logger.log('Test Reminder - HTML length: ' + (bodies.html ? bodies.html.length : 0));
+   
+   sendViaAlias_({
+     to,
+     subject: bodies.subject,
+     plainBody: bodies.plain,
+     htmlBody: bodies.html
+   });
+
+
+   SpreadsheetApp.getActive().toast(`Sent test reminder for Group ${group} at ${classTimeStr} to ${to}`,'Reminder Test',3);
+ }catch(e){
+   Logger.log('sendTestReminder error: '+e);
+   SpreadsheetApp.getActive().toast('Failed to send test reminder: '+e,'Reminder Test',5);
+ }
+}
+
+
+/* ========= NEW: Post-Class Payment Audit ========= */
+function startPostClassAuditCron(){
+ stopPostClassAuditCron();
+ ScriptApp.newTrigger('postClassAuditCron_').timeBased().everyMinutes(5).create();
+ SpreadsheetApp.getActive().toast('Post-Class Audit cron started (every 5m).','Post-Class',3);
+}
+function stopPostClassAuditCron(){
+ ScriptApp.getProjectTriggers().forEach(t=>{
+   if (t.getHandlerFunction && t.getHandlerFunction()==='postClassAuditCron_') ScriptApp.deleteTrigger(t);
+ });
+ SpreadsheetApp.getActive().toast('Post-Class Audit cron stopped.','Post-Class',3);
+}
+
+
+function postClassAuditCron_(){
+ try{
+   if (!CFG.postClassAudit.enabled) return;
+   const tz = CFG.tz || Session.getScriptTimeZone();
+   const now = toTZ_(new Date(), tz);
+   const dow = now.getDay();
+
+
+   // Build list of today slots that have ENDED within the audit window
+   const endedSlots = [];
+  const scheduleSlots = getGroupScheduleSlots_();
+  Object.keys(scheduleSlots).forEach(group=>{
+    (scheduleSlots[group]||[]).forEach(slot=>{
+       if (!slot.dow.includes(dow)) return;
+       const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), slot.hour, slot.minute, 0, 0);
+       const duration = Number(slot.durationMin || CFG.postClassAudit.defaultDurationMin);
+       const end = new Date(start.getTime() + duration*60000);
+       const diffAfterEndMin = Math.round((now - end)/60000);
+       if (diffAfterEndMin >= CFG.postClassAudit.windowAfterEndMin && diffAfterEndMin <= CFG.postClassAudit.windowAfterEndMax){
+         endedSlots.push({group, start, end});
+       }
+     });
+   });
+   if (endedSlots.length===0) return;
+
+
+   const sentKeys = getSentPendingKeys_();
+   const newKeys = new Set();
+
+
+   // For each slot, check each student in that group for a payment today
+   const {logS} = bootstrap_();
+   const logData = fetchLogRows_(logS); // [{date,name,email,group,payer,amount,message}]
+
+
+   // Define today's day-range in TZ
+   const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0,0,0,0);
+   const dayEnd   = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23,59,59,999);
+
+
+   endedSlots.forEach(({group, start, end})=>{
+     const students = getStudentsInGroup_(group).filter(st=>st.email && !/teacher/i.test(st.name));
+     students.forEach(st=>{
+       const key = buildPendingKey_(st.name, group, dayStart);
+       if (sentKeys.has(key)) return; // already notified today
+       const paidToday = hasPaymentToday_(logData, st.name, dayStart, dayEnd, tz);
+       if (!paidToday){
+         const bodies = buildPendingEmailBodies_(st.name, group, start, tz);
+         try {
+           sendViaAlias_({
+             to: st.email,
+             subject: bodies.subject,
+             plainBody: bodies.plain,
+             htmlBody: bodies.html
+           });
+           newKeys.add(key);
+         } catch(e){ Logger.log('postClassAudit email failed for '+st.name+': '+e); }
+       }
+     });
+   });
+
+
+   if (newKeys.size>0) saveSentPendingKeys_(newKeys);
+ } catch(e){
+   Logger.log('postClassAuditCron_ error: '+e);
+ }
+}
+
+
+function sendTestPendingNotice(){
+ try{
+   const tz = CFG.tz || Session.getScriptTimeZone();
+   const to = CFG.email.testRecipient || 'easylearnrn@gmail.com';
+   const now = toTZ_(new Date(), tz);
+   const sampleStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours()-2, now.getMinutes(), 0, 0);
+   const bodies = buildPendingEmailBodies_('Test Student', 'C', sampleStart, tz);
+   sendViaAlias_({
+     to,
+     subject: bodies.subject,
+     plainBody: bodies.plain,
+     htmlBody: bodies.html
+   });
+   SpreadsheetApp.getActive().toast('Sent test pending notice to '+to,'Post-Class Test',3);
+ }catch(e){
+   Logger.log('sendTestPendingNotice error: '+e);
+   SpreadsheetApp.getActive().toast('Failed to send test pending: '+e,'Post-Class Test',5);
+ }
+}
+
+
+// Drop-in replacement for your existing buildPendingEmailBodies_
+function buildPendingEmailBodies_(studentName, group, classStart, tz){
+ const subject = CFG.postClassAudit.subject;
+ const tzLabel = tz || Session.getScriptTimeZone();
+ const whenStr = Utilities.formatDate(classStart, tzLabel, "EEEE, MMM d 'at' h:mm a");
+
+
+ const plain = `Hello ${studentName},\n\nThis is a quick, automated check regarding your class today at ${whenStr}.\n\nOur records show that your payment hasn't been posted yet.\n\nIf you have already paid: Great! Please simply reply with the screenshot of your transfer. That's all we need to update our log and ensure you don't receive any more reminders.\n\nif you still plan to pay:  Please submit the payment at your earliest convenience. the system can only process and send your notes once payment is confirmed.\n\nThank you for your prompt attention to this!\n\nBest regards,\n\nARNOMA Team`;
+
+
+ // Build body content with info-box for date
+ const bodyContent = `
+        <p>Hello <strong>${escapeHtml_(studentName)}</strong>,</p>
+        <p>This is a quick, automated check regarding your recent classes:</p>
+        <div class="info-box">
+          <p><strong>${escapeHtml_(whenStr)}</strong></p>
+        </div>
+        <p>Our records show that your payment hasn't been posted yet.</p>
+        <p><strong>If you have already paid:</strong> Great! Please simply reply with the screenshot of your transfer. That's all we need to update our log and ensure you don't receive any more reminders.</p>
+        <p><strong>If you still plan to pay:</strong> Please submit the payment at your earliest convenience. The system can only process and send your notes once payment is confirmed.</p>
+        ${CFG.reminders.qrFileId ? `
+        <div class="payment-frame">
+          <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;"><strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong></p>
+          <p style="margin: 0 0 16px 0; font-size: 14px; color: #6b7280;">Scan in your banking app to pay.</p>
+          <div style="margin: 16px 0;">
+            <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 600; color: #1f2937;">Arnoma</p>
+            <p style="margin: 0 0 16px 0; font-size: 16px; color: #4b5563;">909-300-5155</p>
+          </div>
+          <img src="https://drive.google.com/uc?export=view&id=14LMuyziZ4igOY-Ek8I1kTWM3jJm1b4K-" alt="Zelle QR Code" style="max-width:240px;height:auto;border:0;display:block;margin:0 auto" />
+          <p style="margin: 16px 0 0 0; font-size: 18px; color: #9ca3af;"><strong style="color: #764ba2;">Zelle</strong></p>
+        </div>` : `<p>Please send a <strong>Zelle payment to 909&nbsp;300&nbsp;5155</strong>. Thank you!</p>`}
+        <p>Thank you for your prompt attention to this!</p>
+        <p>Best regards,<br><strong>ARNOMA Team</strong></p>
+ `;
+ 
+ const html = getStandardEmailTemplate_(bodyContent);
+
+ return {subject, plain, html};
+}
+
+
+// Has a payment in log today for this student?
+function hasPaymentToday_(logData, studentName, dayStart, dayEnd, tz){
+ const keyName = normalizeName_(studentName);
+ for (const row of logData){
+   if (!row.date) continue;
+   const d = toTZ_(row.date, tz);
+   if (d >= dayStart && d <= dayEnd){
+     const nm = normalizeName_(row.name || '');
+     if (nm === keyName) return true;
+   }
+ }
+ return false;
+}
+
+
+// Read log into objects
+function fetchLogRows_(s){
+ const lastRow = s.getLastRow();
+ if (lastRow <= 1) return [];
+ const rng = s.getRange(2,1,lastRow-1, CFG.columns.length).getValues();
+ return rng.map(r=>({
+   date: r[0] instanceof Date ? r[0] : (r[0] ? new Date(r[0]) : null),
+   name: r[1]||'',
+   email: r[2]||'',
+   group: r[3]||'',
+   payer: r[4]||'',
+   amount: r[5]||'',
+   message: r[6]||''
+ }));
+}
+
+
+/* ========= Pending de-dup ========= */
+function buildPendingKey_(studentName, group, dayStart){
+ const y=dayStart.getFullYear(), m=String(dayStart.getMonth()+1).padStart(2,'0'), d=String(dayStart.getDate()).padStart(2,'0');
+ return `${y}-${m}-${d}_G${group}_S${normalizeKey_(studentName)}`;
+}
+function getSentPendingKeys_(){
+ const prop = PropertiesService.getScriptProperties().getProperty('PENDING_SENT_KEYS') || '[]';
+ try{
+   const arr = JSON.parse(prop);
+   // purge older than dedupHours
+   const cutoffMs = (CFG.postClassAudit.dedupHours||48)*3600*1000;
+   const now = Date.now();
+   const keep = (arr||[]).filter(o=>{
+     if (typeof o === 'string') return true; // legacy support
+     return (now - (o.t||0)) < cutoffMs;
+   }).map(o=> typeof o==='string'? o : o.k);
+   if (keep.length !== arr.length) PropertiesService.getScriptProperties().setProperty('PENDING_SENT_KEYS', JSON.stringify(keep.map(k=>({k,t:now}))));
+   return new Set(keep);
+ }catch(e){ return new Set(); }
+}
+function saveSentPendingKeys_(newKeys){
+ const set = getSentPendingKeys_(); newKeys.forEach(k=>set.add(k));
+ const now = Date.now();
+ PropertiesService.getScriptProperties().setProperty('PENDING_SENT_KEYS', JSON.stringify(Array.from(set).map(k=>({k,t:now}))));
+}
+
+
+/* ========= Receipt emails (via alias) ========= */
+function sendPaymentEmail_(to, studentName, amount, whenDate, group){
+ const bodies = buildReceiptEmailBodies_(studentName, amount, whenDate, group);
+ const opts = {
+   to,
+   subject: bodies.subject,
+   plainBody: bodies.plain,
+   htmlBody: bodies.html
+ };
+ // NOTE: BCC removed per request — no BCC is added to student receipt emails.
+ sendViaAlias_(opts);
+}
+
+
+function buildReceiptEmailBodies_(studentName, amount, whenDate, group){
+ const amountStr = formatUsd_(Number(amount) || 0);
+ const subject = CFG.email.subject;
+ const scheduleParts = getScheduleLineParts_(group);
+
+ const plainSections = [
+   `Dear ${studentName},`,
+   '',
+   `Thank you for your payment of ${amountStr}. Your payment has been successfully registered.`
+ ];
+ if (scheduleParts.plainInline) plainSections.push('', scheduleParts.plainInline);
+ plainSections.push(
+   '',
+   'You can expect your notes to be posted on Google Classroom within 30 minutes of your payment receipt.',
+   '',
+   'Best regards,',
+   'ARNOMA NCLEX-RN'
+ );
+ const plain = plainSections.join('\n');
+
+ // Build body content for template
+ const bodyContent = `
+        <p>Dear <strong>${escapeHtml_(studentName)}</strong>,</p>
+        <p>Thank you for your payment of <strong>${escapeHtml_(amountStr)}</strong>. Your payment has been successfully registered.</p>
+        ${scheduleParts.html || ''}
+        <p>You can expect your notes to be posted on <em>Google Classroom</em> within 30 minutes of your payment receipt.</p>
+        <p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>
+ `;
+ 
+ const html = getStandardEmailTemplate_(bodyContent);
+
+ return { subject, plain, html };
+}
+
+
+/* ========= Reminder emails (via alias, with inline QR) ========= */
+function sendReminderEmail_(to, studentName, group, classTimeStr){
+ const bodies = buildReminderEmailBodies_(studentName, group, classTimeStr);
+ sendViaAlias_({
+   to,
+   subject: bodies.subject,
+   plainBody: bodies.plain,
+   htmlBody: bodies.html
+ });
+}
+
+
+function buildReminderEmailBodies_(studentName, group, classTimeStr){
+ const subject = CFG.reminders.subject;
+ const plain =
+`Dear ${studentName},\n\nThis is a friendly reminder that your Group ${group} class starts at ${classTimeStr}.\nThe link to the class will be emailed to you in about 30 minutes. Please be ready.\n\nIf you haven’t made your payment yet, please do so by sending a Zelle payment to 909 300 5155. Thank you!\n\nBest regards,\nARNOMA NCLEX-RN`;
+ const qrCid = CFG.reminders.qrCid || 'zelleQr';
+ 
+ // Build body content for template with info-box for date/time
+ const bodyContent = `
+        <p>Dear <strong>${escapeHtml_(studentName)}</strong>,</p>
+        <p>This is a friendly reminder for your <strong>Group ${escapeHtml_(group)}</strong> class:</p>
+        <div class="info-box">
+          <p><strong>${escapeHtml_(classTimeStr)}</strong></p>
+        </div>
+        <p>The link to the class will be emailed to you in about <strong>30 minutes</strong>. Please be ready.</p>
+        ${CFG.reminders.qrFileId ? `
+        <div class="payment-frame">
+          <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;"><strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong></p>
+          <p style="margin: 0 0 16px 0; font-size: 14px; color: #6b7280;">Scan in your banking app to pay.</p>
+          <div style="margin: 16px 0;">
+            <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 600; color: #1f2937;">Arnoma</p>
+            <p style="margin: 0 0 16px 0; font-size: 16px; color: #4b5563;">909-300-5155</p>
+          </div>
+          <img src="https://drive.google.com/uc?export=view&id=14LMuyziZ4igOY-Ek8I1kTWM3jJm1b4K-" alt="Zelle QR Code" style="max-width:240px;height:auto;border:0;display:block;margin:0 auto" />
+          <p style="margin: 16px 0 0 0; font-size: 18px; color: #9ca3af;"><strong style="color: #764ba2;">Zelle</strong></p>
+        </div>` : `<p>If you haven't made your payment yet, please send a <strong>Zelle payment to 909&nbsp;300&nbsp;5155</strong>. Thank you!</p>`}
+        <p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>
+ `;
+ 
+ const html = getStandardEmailTemplate_(bodyContent);
+ return { subject, plain, html };
+}
+
+
+/* ========= Group schedule storage ========= */
+function resetGroupScheduleCache_(){ GROUP_SCHEDULE_CACHE = null; }
+
+function getDowMeta_(){ return GROUP_SCHEDULE_DOW_META.map(item=>Object.assign({}, item)); }
+
+function sanitizeScheduleLabel_(label){
+  if (label === null || label === undefined) return '';
+  return String(label).trim();
+}
+
+function sanitizeScheduleSlots_(slots){
+  if (!Array.isArray(slots)) return [];
+  const seen = new Set();
+  const out = [];
+  slots.forEach(slot=>{
+    if (!slot) return;
+    let days = [];
+    if (Array.isArray(slot.dow)) days = slot.dow;
+    else if (Array.isArray(slot.days)) days = slot.days;
+    else if (typeof slot.dow === 'string') days = slot.dow.split(',');
+    else if (typeof slot.days === 'string') days = slot.days.split(',');
+    days = days.map(v=>Number(v)).filter(v=>Number.isFinite(v) && v>=0 && v<=6);
+    days = Array.from(new Set(days)).sort((a,b)=>a-b);
+    if (days.length === 0) return;
+
+    let hour = null;
+    let minute = null;
+    if (typeof slot.time === 'string'){
+      const match = slot.time.trim().match(/^(\d{1,2}):(\d{2})$/);
+      if (match){
+        hour = Number(match[1]);
+        minute = Number(match[2]);
+      }
+    }
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)){
+      if (slot.hour !== undefined && slot.minute !== undefined){
+        hour = Number(slot.hour);
+        minute = Number(slot.minute);
+      }
+    }
+    if (!Number.isFinite(hour) || !Number.isFinite(minute)) return;
+    hour = Math.floor(hour);
+    minute = Math.floor(minute);
+    if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return;
+
+    let durationMin;
+    if (slot.durationMin !== undefined){
+      const d = Number(slot.durationMin);
+      if (Number.isFinite(d) && d > 0) durationMin = Math.round(d);
+    } else if (slot.duration !== undefined){
+      const d = Number(slot.duration);
+      if (Number.isFinite(d) && d > 0) durationMin = Math.round(d);
+    }
+
+    const key = `${days.join('-')}|${hour}:${String(minute).padStart(2,'0')}|${durationMin||0}`;
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    const normalized = { dow: days, hour, minute };
+    if (durationMin) normalized.durationMin = durationMin;
+    out.push(normalized);
+  });
+  return out;
+}
+
+function normalizeSlotsForCompare_(slots){
+  return (slots || []).map(slot=>{
+    const dow = Array.isArray(slot.dow) ? slot.dow.slice().sort((a,b)=>a-b) : [];
+    const hour = Number(slot.hour);
+    const minute = Number(slot.minute);
+    const duration = slot.durationMin !== undefined ? Number(slot.durationMin) : 0;
+    return { dow, hour, minute, duration };
+  }).sort((a,b)=>{
+    if (a.hour !== b.hour) return a.hour - b.hour;
+    if (a.minute !== b.minute) return a.minute - b.minute;
+    const aDow = a.dow.join('-');
+    const bDow = b.dow.join('-');
+    if (aDow !== bDow) return aDow < bDow ? -1 : 1;
+    return a.duration - b.duration;
+  });
+}
+
+function compareScheduleSlots_(a,b){
+  const aNorm = normalizeSlotsForCompare_(sanitizeScheduleSlots_(a));
+  const bNorm = normalizeSlotsForCompare_(sanitizeScheduleSlots_(b));
+  if (aNorm.length !== bNorm.length) return false;
+  for (let i=0; i<aNorm.length; i++){
+    const x = aNorm[i];
+    const y = bNorm[i];
+    if (x.hour !== y.hour || x.minute !== y.minute) return false;
+    if (x.duration !== y.duration) return false;
+    if (x.dow.length !== y.dow.length) return false;
+    for (let j=0; j<x.dow.length; j++){
+      if (x.dow[j] !== y.dow[j]) return false;
+    }
+  }
+  return true;
+}
+
+function cloneScheduleConfig_(cfg){
+  const slots = {};
+  Object.keys(cfg.slots || {}).forEach(group=>{
+    slots[group] = (cfg.slots[group] || []).map(slot=>({
+      dow: Array.isArray(slot.dow) ? slot.dow.slice() : [],
+      hour: slot.hour,
+      minute: slot.minute,
+      durationMin: slot.durationMin
+    }));
+  });
+  return {
+    slots,
+    pretty: Object.assign({}, cfg.pretty || {})
+  };
+}
+
+function getStoredGroupScheduleConfig_(){
+  const raw = PropertiesService.getScriptProperties().getProperty(GROUP_SCHEDULE_PROP_KEY);
+  if (!raw) return { slots: {}, pretty: {} };
+  try{
+    const parsed = JSON.parse(raw);
+    const slots = {};
+    const pretty = {};
+    if (parsed && parsed.slots){
+      Object.keys(parsed.slots).forEach(group=>{
+        slots[group] = sanitizeScheduleSlots_(parsed.slots[group]);
+      });
+    }
+    if (parsed && parsed.pretty){
+      Object.keys(parsed.pretty).forEach(group=>{
+        pretty[group] = sanitizeScheduleLabel_(parsed.pretty[group]);
+      });
+    }
+    return { slots, pretty };
+  }catch(e){
+    Logger.log('Failed to parse stored schedule config: '+e);
+    return { slots: {}, pretty: {} };
+  }
+}
+
+function setStoredGroupScheduleConfig_(cfg){
+  const sanitized = { slots: {}, pretty: {} };
+  if (cfg && cfg.slots){
+    Object.keys(cfg.slots).forEach(group=>{
+      sanitized.slots[group] = sanitizeScheduleSlots_(cfg.slots[group]);
+    });
+  }
+  if (cfg && cfg.pretty){
+    Object.keys(cfg.pretty).forEach(group=>{
+      sanitized.pretty[group] = sanitizeScheduleLabel_(cfg.pretty[group]);
+    });
+  }
+  PropertiesService.getScriptProperties().setProperty(GROUP_SCHEDULE_PROP_KEY, JSON.stringify(sanitized));
+  resetGroupScheduleCache_();
+  return sanitized;
+}
+
+function getAllGroupScheduleKeys_(stored){
+  const set = new Set();
+  Object.keys(CFG.groupScheduleSlots || {}).forEach(g=>set.add(g));
+  Object.keys(CFG.groupSchedules || {}).forEach(g=>set.add(g));
+  Object.values(CFG.groups || {}).forEach(g=>{ if (g) set.add(g); });
+  if (stored && stored.slots) Object.keys(stored.slots).forEach(g=>set.add(g));
+  if (stored && stored.pretty) Object.keys(stored.pretty).forEach(g=>set.add(g));
+  return Array.from(set).sort();
+}
+
+function getDefaultGroupScheduleConfig_(){
+  const slots = {};
+  const pretty = {};
+  const groups = getAllGroupScheduleKeys_();
+  groups.forEach(group=>{
+    const defaultSlots = (CFG.groupScheduleSlots && CFG.groupScheduleSlots[group]) || [];
+    const defaultLabel = (CFG.groupSchedules && CFG.groupSchedules[group]) || '';
+    slots[group] = sanitizeScheduleSlots_(defaultSlots);
+    pretty[group] = sanitizeScheduleLabel_(defaultLabel);
+  });
+  return { slots, pretty };
+}
+
+function mergeScheduleConfigWithDefaults_(stored){
+  const defaults = getDefaultGroupScheduleConfig_();
+  const groups = getAllGroupScheduleKeys_(stored);
+  const slots = {};
+  const pretty = {};
+  groups.forEach(group=>{
+    const hasStoredSlots = stored && stored.slots && Object.prototype.hasOwnProperty.call(stored.slots, group);
+    const slotSource = hasStoredSlots ? stored.slots[group] : defaults.slots[group];
+    slots[group] = sanitizeScheduleSlots_(slotSource);
+    const hasStoredLabel = stored && stored.pretty && Object.prototype.hasOwnProperty.call(stored.pretty, group);
+    const labelSource = hasStoredLabel ? stored.pretty[group] : defaults.pretty[group];
+    pretty[group] = sanitizeScheduleLabel_(labelSource);
+  });
+  return { slots, pretty };
+}
+
+function getGroupScheduleConfig_(){
+  if (GROUP_SCHEDULE_CACHE && Date.now() - GROUP_SCHEDULE_CACHE.ts < 5 * 60 * 1000){
+    return cloneScheduleConfig_(GROUP_SCHEDULE_CACHE.value);
+  }
+  const stored = getStoredGroupScheduleConfig_();
+  const merged = mergeScheduleConfigWithDefaults_(stored);
+  GROUP_SCHEDULE_CACHE = { value: merged, ts: Date.now() };
+  return cloneScheduleConfig_(merged);
+}
+
+function getGroupScheduleSlots_(){
+  const cfg = getGroupScheduleConfig_();
+  return cfg.slots;
+}
+
+function getGroupScheduleLabels_(){
+  const cfg = getGroupScheduleConfig_();
+  return cfg.pretty;
+}
+
+function getGroupSchedulePayload(){
+  const merged = getGroupScheduleConfig_();
+  const defaults = getDefaultGroupScheduleConfig_();
+  const stored = getStoredGroupScheduleConfig_();
+  const groups = getAllGroupScheduleKeys_(stored);
+  const schedules = {};
+  groups.forEach(group=>{
+    schedules[group] = {
+      label: merged.pretty[group] || '',
+      slots: (merged.slots[group] || []).map(slot=>({
+        dow: Array.isArray(slot.dow) ? slot.dow.slice() : [],
+        hour: slot.hour,
+        minute: slot.minute,
+        durationMin: slot.durationMin || null
+      }))
+    };
+  });
+  const defaultMap = {};
+  groups.forEach(group=>{
+    defaultMap[group] = {
+      label: defaults.pretty[group] || '',
+      slots: (defaults.slots[group] || []).map(slot=>({
+        dow: Array.isArray(slot.dow) ? slot.dow.slice() : [],
+        hour: slot.hour,
+        minute: slot.minute,
+        durationMin: slot.durationMin || null
+      }))
+    };
+  });
+  return {
+    tz: CFG.tz || Session.getScriptTimeZone(),
+    groups,
+    schedules,
+    defaults: defaultMap,
+    dowMeta: getDowMeta_(),
+    reminderTimes: CFG.reminders.times || [720, 30, 0]
+  };
+}
+
+function saveGroupSchedule(data){
+  const group = String(data && data.group || '').trim().toUpperCase();
+  if (!group) throw new Error('Group is required.');
+  const label = sanitizeScheduleLabel_(data.label);
+  const slots = sanitizeScheduleSlots_(Array.isArray(data.slots) ? data.slots : []);
+  const defaults = getDefaultGroupScheduleConfig_();
+  const stored = getStoredGroupScheduleConfig_();
+  const defaultSlots = defaults.slots[group] || [];
+  const defaultLabel = defaults.pretty[group] || '';
+  const slotsSame = compareScheduleSlots_(slots, defaultSlots);
+  const labelSame = label === defaultLabel;
+
+  if (!stored.slots) stored.slots = {};
+  if (!stored.pretty) stored.pretty = {};
+
+  if (slotsSame) delete stored.slots[group];
+  else stored.slots[group] = slots;
+
+  if (labelSame) delete stored.pretty[group];
+  else stored.pretty[group] = label;
+
+  setStoredGroupScheduleConfig_(stored);
+  
+  if (Array.isArray(data.reminderTimes) && data.reminderTimes.length >= 3){
+    const time1 = Number(data.reminderTimes[0]);
+    const time2 = Number(data.reminderTimes[1]);
+    const time3 = Number(data.reminderTimes[2]);
+    if (Number.isFinite(time1) && Number.isFinite(time2) && Number.isFinite(time3) && 
+        time1 >= 0 && time2 >= 0 && time3 >= 0){
+      CFG.reminders.times = [time1, time2, time3];
+    }
+  }
+  
+  return getGroupSchedulePayload();
+}
+
+function resetGroupSchedule(data){
+  const group = String(data && data.group || '').trim().toUpperCase();
+  if (!group) throw new Error('Group is required.');
+  const stored = getStoredGroupScheduleConfig_();
+  if (stored.slots) delete stored.slots[group];
+  if (stored.pretty) delete stored.pretty[group];
+  setStoredGroupScheduleConfig_(stored);
+  return getGroupSchedulePayload();
+}
+
+function sendTestScheduleEmail(data){
+  const group = String(data && data.group || 'A').trim().toUpperCase();
+  if (!group) throw new Error('Group is required.');
+  
+  const adminEmail = CFG.email.admin;
+  if (!adminEmail) throw new Error('Admin email not configured.');
+  
+  const scheduleParts = getScheduleLineParts_(group);
+  const tz = CFG.tz || Session.getScriptTimeZone();
+  const now = toTZ_(new Date(), tz);
+  const nextHour = new Date(now.getTime() + 60*60*1000);
+  
+  const testContext = {
+    studentName: 'Test Student',
+    studentEmail: adminEmail,
+    studentGroup: group,
+    classDate: nextHour,
+    scheduleLine: scheduleParts.text,
+    scheduleHtml: scheduleParts.html
+  };
+  
+  const subject = `[TEST] Class Reminder - Group ${group}`;
+  const nextClassStr = Utilities.formatDate(nextHour, tz, 'MMM d, yyyy h:mm a');
+  const plainBody = `This is a test reminder email.\n\nGroup: ${group}\n${scheduleParts.plainInline}\n\nNext class: ${nextClassStr}`;
+  const bodyContent = `<p>This is a <strong>test reminder email</strong>.</p>${scheduleParts.html}<p>Next class: ${nextClassStr}</p>`;
+  const htmlBody = getStandardEmailTemplate_(bodyContent);
+  
+  GmailApp.sendEmail(adminEmail, subject, plainBody, {
+    htmlBody: htmlBody,
+    name: CFG.senderName || 'Class Reminder'
+  });
+  
+  return `Test reminder email sent to ${adminEmail}`;
+}
+
+function sendTestTemplateEmail(data){
+  const type = String(data && data.type || 'receipt').trim();
+  if (!type) throw new Error('Template type is required.');
+  
+  const adminEmail = CFG.email.admin;
+  if (!adminEmail) throw new Error('Admin email not configured.');
+  
+  const tz = CFG.tz || Session.getScriptTimeZone();
+  const now = toTZ_(new Date(), tz);
+  
+  const testContext = {
+    studentName: 'Test Student',
+    studentEmail: adminEmail,
+    studentGroup: 'A',
+    classDate: now,
+    paymentAmount: '$100.00',
+    paymentDate: Utilities.formatDate(now, tz, 'MMM d, yyyy'),
+    scheduleLine: 'Mon/Wed 8:00 PM, Sat 10:00 AM',
+    scheduleHtml: '<p>You\'re in <strong>Group A</strong>. Class times: <em>Mon/Wed 8:00 PM, Sat 10:00 AM</em>.</p>'
+  };
+  
+  const rendered = renderEmailTemplate_(type, testContext);
+  const subject = `[TEST] ${rendered.subject}`;
+  
+  GmailApp.sendEmail(adminEmail, subject, rendered.plain, {
+    htmlBody: rendered.html,
+    name: CFG.senderName || 'Payment Notification'
+  });
+  
+  return `Test ${type} email sent to ${adminEmail}`;
+}
+
+
+/* ========= Group helpers ========= */
+function getScheduleLine_(group){
+  const labels = getGroupScheduleLabels_();
+  return labels[group] || '';
+}
+
+function getScheduleLineParts_(group){
+  const line = group ? getScheduleLine_(group) : '';
+  if (!line) return { text: '', plain: '', plainInline: '', html: '' };
+  const plainInline = `You're in Group ${group}. Class times: ${line}`;
+  const plain = `\n${plainInline}\n`;
+  const html = `<p>You're in <strong>Group ${escapeHtml_(group)}</strong>. Class times: <em>${escapeHtml_(line)}</em>.</p>`;
+  return { text: line, plain, plainInline, html };
+}
+
+
+/* ========= Reminder de-dup ========= */
+function buildReminderKey_(group, classDate){
+ const tz = CFG.tz || Session.getScriptTimeZone();
+ const d = toTZ_(classDate, tz);
+ const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+ const hh=String(d.getHours()).padStart(2,'0'), mm=String(d.getMinutes()).padStart(2,'0');
+ return `${y}-${m}-${day}_${hh}:${mm}_G${group}`;
+}
+function getSentReminderKeys_(){
+ const prop = PropertiesService.getScriptProperties().getProperty('REMINDER_SENT_KEYS') || '[]';
+ try{
+   const arr = JSON.parse(prop);
+   const tz = CFG.tz || Session.getScriptTimeZone();
+   const now = toTZ_(new Date(), tz);
+   const keep = arr.filter(k=>{
+     const m=k.match(/^(\d{4}-\d{2}-\d{2})_(\d{2}:\d{2})_G/); if(!m) return false;
+     const dt=new Date(`${m[1]}T${m[2]}:00`);
+     return (now - dt) < 2*24*60*60000;
+   });
+   if (keep.length !== arr.length) PropertiesService.getScriptProperties().setProperty('REMINDER_SENT_KEYS', JSON.stringify(keep));
+   return new Set(keep);
+ }catch(e){ return new Set(); }
+}
+function saveSentReminderKeys_(newKeys){
+ const set = getSentReminderKeys_(); newKeys.forEach(k=>set.add(k));
+ PropertiesService.getScriptProperties().setProperty('REMINDER_SENT_KEYS', JSON.stringify(Array.from(set)));
+}
+
+
+/* ========= Time utils ========= */
+function toTZ_(date, tz){
+ const y = Utilities.formatDate(date, tz, 'yyyy');
+ const m = Utilities.formatDate(date, tz, 'MM');
+ const d = Utilities.formatDate(date, tz, 'dd');
+ const hh = Utilities.formatDate(date, tz, 'HH');
+ const mm = Utilities.formatDate(date, tz, 'mm');
+ const ss = Utilities.formatDate(date, tz, 'ss');
+ return new Date(Number(y), Number(m)-1, Number(d), Number(hh), Number(mm), Number(ss));
+}
+function formatTime_(date, tz){
+ return Utilities.formatDate(date, tz, "EEEE, MMM d 'at' h:mm a");
+}
+
+
+/* ========= Gmail harvesting & parsing ========= */
+function harvestEmails_(processedIds, opts){
+ const sendEmails = !!(opts && opts.sendEmails && CFG.email.enabled);
+ const threads=GmailApp.search(CFG.gmailQuery,0,200);
+ const newRows=[]; const processedRows=[];
+
+
+ for (const th of threads){
+   const msgs=th.getMessages();
+   for (const msg of msgs){
+     const id=msg.getId(); if(processedIds.has(id)) continue;
+
+
+     const subject=msg.getSubject()||'';
+     const body=buildSearchableBody_(msg);
+
+
+     const amount=parseAmount_(body || subject);
+     const payerRaw=cleanPayerRaw_(guessPayerName_USBank_(body));
+     const message=extractMessageFromSubject_(subject)||parseMessageFromBody_(body);
+     const whenDate=msg.getDate();
+
+
+     if(amount && whenDate){
+       const student=normalizeName_(payerRaw);
+       const email=getEmailForStudent_(student, payerRaw);
+       const group=getGroupForStudent_(student, payerRaw);
+
+
+       newRows.push([whenDate,student,email,group,payerRaw,amount,message]);
+
+
+       if (sendEmails && email && !/teacher/i.test(student)) {
+         try { sendPaymentEmail_(email, student, amount, whenDate, group); }
+         catch(e){ Logger.log('Email send failed for '+student+' <'+email+'>: '+e); }
+       }
+     }
+
+
+     processedRows.push([id,new Date(),message||'',payerRaw||'',amount||'',whenDate||'']);
+     processedIds.add(id);
+   }
+ }
+ return {newRows,processedRows};
+}
+
+
+/* ========= Parsing & misc utils ========= */
+function stripHtml_(h){ return String(h).replace(/<[^>]+>/g,' '); }
+function parseAmount_(t){
+ const m=String(t||'').match(/\$\s*([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2})|[0-9]+(?:\.[0-9]{2}))/);
+ if(m) return Number(m[1].replace(/,/g,''));
+ const f=String(t||'').match(/\b([0-9]{1,3}(?:,[0-9]{3})*(?:\.[0-9]{2}))\b/);
+ return f?Number(f[1].replace(/,/g,'')):0;
+}
+function guessPayerName_USBank_(t){
+ let m=String(t||'').match(/\bfrom\s+(.+?)\s+was\s+deposited\b/i); if(m) return m[1].trim();
+ m=String(t||'').match(/\bfrom\s+(.+?)\s+was\s+credited\b/i); if(m) return m[1].trim();
+ m=String(t||'').match(/\b(.+?)\s+sent\s+you\b/i); if(m) return m[1].trim();
+ return '';
+}
+function extractMessageFromSubject_(s){ if(!s) return ''; const m=s.match(/\bMessage\s*[:\-–—]\s*(.+)$/i); return m?m[1].trim():''; }
+function parseMessageFromBody_(t){ const m=String(t||'').match(/Message\s+from\s+.*?:\s*(.+)/i); return m?m[1].trim():''; }
+function cleanPayerRaw_(n){ if(!n) return ''; n=n.replace(/^from\s+/i,'').trim().replace(/\s+/g,' ').replace(/[.,;:]+$/,''); return n; }
+function normalizeName_(n){
+  if(!n) return '';
+  const c = n.replace(/\s+/g,' ').trim();
+  const key = normalizeKey_(c);
+  const dynAlias = getDynamicIndexes_().alias;
+  if (dynAlias[key]) return dynAlias[key];
+  if (ALIAS_INDEX[key]) return ALIAS_INDEX[key];
+  return c.replace(/\b([A-Za-z])([A-Za-z']*)/g,(_,a,b)=>a.toUpperCase()+b.toLowerCase());
+}
+
+function formatUsd_(value){
+  const num = Number(value);
+  if (!isFinite(num)) return '$0.00';
+  return '$' + num.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function getEmailForStudent_(studentName, rawPayer){
+  const tryKeys=[]; if(studentName) tryKeys.push(normalizeKey_(studentName)); if(rawPayer) tryKeys.push(normalizeKey_(rawPayer));
+  const dyn = getDynamicIndexes_();
+  for (const k of tryKeys){
+    if (dyn.contacts[k]) return dyn.contacts[k];
+    if (CONTACTS_INDEX[k]) return CONTACTS_INDEX[k];
+  }
+  return '';
+}
+
+function getGroupForStudent_(studentName, rawPayer){
+  const tryKeys=[]; if(studentName) tryKeys.push(normalizeKey_(studentName)); if(rawPayer) tryKeys.push(normalizeKey_(rawPayer));
+  const dyn = getDynamicIndexes_();
+  for (const k of tryKeys){
+    if (dyn.groups[k]) return dyn.groups[k];
+    if (GROUPS_INDEX[k]) return GROUPS_INDEX[k];
+  }
+  return '';
+}
+
+function getStudentsInGroup_(group){
+  const res=[]; const seen=new Set();
+  const dyn = getDynamicIndexes_();
+  for (const name in CFG.groups){
+    if (CFG.groups[name]!==group) continue;
+    const key = normalizeKey_(name); if (seen.has(key)) continue;
+    seen.add(key);
+    res.push({name, email: getEmailForStudent_(name)});
+  }
+  dyn.students.filter(st=>st.group===group).forEach(st=>{
+    const key = normalizeKey_(st.name); if (seen.has(key)) return;
+    seen.add(key);
+    res.push({name: st.name, email: st.email});
+  });
+  return res;
+}
+
+
+/* ========= Sheet helpers ========= */
+function buildSearchableBody_(msg){
+ const subj=msg.getSubject()||'', plain=msg.getPlainBody()||'', html=stripHtml_(msg.getBody()||'');
+ return (subj+'\n'+plain+'\n'+html).replace(/\u00A0/g,' ');
+}
+function getOrCreateLogSheet_(ss){
+ let s=ss.getSheetByName(CFG.logSheet); if(!s) s=ss.insertSheet(CFG.logSheet);
+ ensureHeaders_(s,CFG.columns);
+ // Ensure Group column conditional formatting exists
+ ensureGroupConditionalFormatting_(s);
+ return s;
+}
+function getOrCreateProcessedSheet_(ss){
+ let s=ss.getSheetByName(CFG.processedSheet); if(!s) s=ss.insertSheet(CFG.processedSheet);
+ ensureHeaders_(s,['MessageID','ProcessedAt','Message','Payer','Amount','EmailDate']); return s;
+}
+function ensureHeaders_(s,headers){
+ s.getRange(1,1,1,headers.length).setValues([headers]);
+ const maxCols=s.getMaxColumns(); if(maxCols>headers.length) s.deleteColumns(headers.length+1,maxCols-headers.length);
+}
+function appendRows_(s,rows){ if(!rows||rows.length===0) return; const start=s.getLastRow()+1; s.getRange(start,1,rows.length,rows[0].length).setValues(rows); }
+function insertRowsTop_(s,rows){ if(!rows||rows.length===0) return; s.insertRows(2,rows.length); s.getRange(2,1,rows.length,rows[0].length).setValues(rows); }
+function safeClearBelowHeader_(s,numCols){
+ const last=s.getLastRow(); if(last<=1) return;
+ s.getRange(2,1,last-1,numCols).clearContent().clearDataValidations().setNumberFormat('@');
+ const f=s.getFilter(); if(f){ s.setFrozenRows(0); f.remove(); }
+ s.getBandings().forEach(b=>b.remove());
+}
+function readCol_(s,col){ const n=Math.max(1,s.getLastRow()); return s.getRange(1,col,n,1).getValues().map(r=>r[0]); }
+
+
+/* ========= Conditional formatting for Group column ========= */
+/**
+* Adds/refreshes CF rules for Group column (D):
+*  - D → light blue  (#cfe8ff)
+*  - A → light green (#d5f5d5)
+*  - C → light purple(#eadcff)
+*/
+function ensureGroupConditionalFormatting_(sheet){
+ const GROUP_COL = 4; // column D (1-based)
+ const startRow = 2;
+ const numRows = sheet.getMaxRows() - startRow + 1;
+ if (numRows < 1) return;
+
+
+ const range = sheet.getRange(startRow, GROUP_COL, numRows, 1);
+
+
+ const existing = sheet.getConditionalFormatRules();
+ const keep = [];
+
+
+ // Keep rules that do NOT overlap column D
+ for (const r of existing){
+   const ranges = r.getRanges();
+   const overlapsD = ranges.some(g => {
+     const c = g.getColumn();
+     const w = g.getNumColumns();
+     return (c <= GROUP_COL) && (c + w - 1 >= GROUP_COL);
+   });
+   if (!overlapsD) keep.push(r);
+ }
+
+
+ const rulesToAdd = [
+   { val: 'D', color: '#cfe8ff' }, // light blue
+   { val: 'A', color: '#d5f5d5' }, // light green
+   { val: 'C', color: '#eadcff' }  // light purple
+ ].map(cfg =>
+   SpreadsheetApp.newConditionalFormatRule()
+     .whenTextEqualTo(cfg.val)
+     .setBackground(cfg.color)
+     .setRanges([range])
+     .build()
+ );
+
+
+ sheet.setConditionalFormatRules(keep.concat(rulesToAdd));
+}
+
+
+/* ========= Inline image helper ========= */
+function getQrBlob_(){
+ try{
+   const id = (CFG.reminders && CFG.reminders.qrFileId) ? CFG.reminders.qrFileId.trim() : '';
+   if (!id) return null;
+   const file = DriveApp.getFileById(id);
+   return file.getBlob().setName('zelle-qr');
+ }catch(e){
+   Logger.log('getQrBlob_ error: ' + e);
+   return null;
+ }
+}
+
+
+/* ========= ALIAS SENDER (Gmail API raw MIME) ========= */
+/**
+* Sends an email via the Gmail API from the configured alias.
+* Options:
+*  - to (required)
+*  - subject (required)
+*  - plainBody (optional but recommended)
+*  - htmlBody (optional)
+*  - bcc (optional), cc (optional)
+*  - inlineImages: [{ cid, blob, mimeType, filename }]
+*/
+function sendViaAlias_(opts){
+ if (!opts || !opts.to) throw new Error('sendViaAlias_: missing "to"');
+ const fromEmail = CFG.email.fromAlias || Session.getActiveUser().getEmail();
+ const fromName  = CFG.email.senderName || 'ARNOMA NCLEX-RN';
+
+
+ const to = opts.to;
+ const cc = opts.cc || '';
+ const bcc = opts.bcc || '';
+ const subject = opts.subject || '';
+ const plain = opts.plainBody || '';
+ const html = opts.htmlBody || '';
+ const inlineImages = Array.isArray(opts.inlineImages) ? opts.inlineImages : [];
+
+
+ const boundaryOuter = 'bndry_outer_' + Utilities.getUuid();
+ const boundaryAlt   = 'bndry_alt_' + Utilities.getUuid();
+
+
+ // Build multipart/alternative correctly
+ let altSection = '';
+ if (plain) {
+   altSection +=
+     '--' + boundaryAlt + '\r\n' +
+     'Content-Type: text/plain; charset=UTF-8\r\n' +
+     'Content-Transfer-Encoding: 7bit\r\n' +
+     '\r\n' +
+     plain + '\r\n';
+ }
+ if (html) {
+   altSection +=
+     '--' + boundaryAlt + '\r\n' +
+     'Content-Type: text/html; charset=UTF-8\r\n' +
+     'Content-Transfer-Encoding: 7bit\r\n' +
+     '\r\n' +
+     html + '\r\n';
+ }
+ altSection += '--' + boundaryAlt + '--\r\n';
+
+
+ // Top-level multipart/related body (alternative + inline images)
+ let relatedParts =
+   '--' + boundaryOuter + '\r\n' +
+   'Content-Type: multipart/alternative; boundary="' + boundaryAlt + '"\r\n' +
+   '\r\n' +
+   altSection;
+
+
+ for (const img of inlineImages){
+   const bytes = img.blob.getBytes();
+   const base64 = Utilities.base64Encode(bytes);
+   relatedParts +=
+     '--' + boundaryOuter + '\r\n' +
+     'Content-Type: ' + (img.mimeType || 'image/png') + '\r\n' +
+     'Content-Transfer-Encoding: base64\r\n' +
+     'Content-ID: <' + img.cid + '>\r\n' +
+     'Content-Disposition: inline; filename="' + (img.filename || 'image') + '"\r\n' +
+     '\r\n' +
+     base64 + '\r\n';
+ }
+ relatedParts += '--' + boundaryOuter + '--';
+
+
+ // Headers
+ const headerLines = [
+   'From: ' + (fromName ? `"${fromName.replace(/\\"/g,'\\"')}" ` : '') + `<${fromEmail}>`,
+   'To: ' + to,
+   cc ? ('Cc: ' + cc) : '',
+   bcc ? ('Bcc: ' + bcc) : '',
+   'Subject: ' + subject,
+   'MIME-Version: 1.0',
+   'Content-Type: multipart/related; boundary="' + boundaryOuter + '"'
+ ].filter(Boolean);
+
+
+ const raw = headerLines.join('\r\n') + '\r\n\r\n' + relatedParts;
+ const rawWebSafe = Utilities.base64EncodeWebSafe(raw);
+ Gmail.Users.Messages.send({ raw: rawWebSafe }, 'me'); // Advanced Gmail API
+}
+
+
+/* ========= NEW: Dynamic student index management ========= */
+const STUDENT_SHEET_HEADERS = ['Name','Email','Group','Aliases','Notes','CreatedAt'];
+let DYNAMIC_INDEX_CACHE = null;
+
+function resetDynamicIndexes_(){ DYNAMIC_INDEX_CACHE = null; }
+function getDynamicIndexes_(){
+  if (DYNAMIC_INDEX_CACHE && Date.now() - DYNAMIC_INDEX_CACHE.ts < 5 * 60 * 1000) return DYNAMIC_INDEX_CACHE;
+  const students = loadStudents_();
+  const alias = {};
+  const contacts = {};
+  const groups = {};
+  students.forEach(st=>{
+    const key = normalizeKey_(st.name);
+    contacts[key] = st.email;
+    groups[key] = st.group;
+    alias[key] = st.name;
+    (st.aliases||[]).forEach(a=>{ const ak=normalizeKey_(a); if (ak) alias[ak]=st.name; });
+  });
+  DYNAMIC_INDEX_CACHE = { alias, contacts, groups, students, ts: Date.now() };
+  return DYNAMIC_INDEX_CACHE;
+}
+
+function showAddStudentDialog(){
+  const labels = getGroupScheduleLabels_();
+  const groups = Object.keys(labels || {}).length ? Object.keys(labels || {}).sort() : Array.from(new Set(Object.values(CFG.groups || {}))).sort();
+  const html = HtmlService.createHtmlOutput(getAddStudentDialogHtml_(groups))
+    .setWidth(420)
+    .setHeight(460);
+  SpreadsheetApp.getUi().showModalDialog(html,'Add Student');
+}
+
+function getAddStudentDialogHtml_(groups){
+  const groupOpts = groups.map(g=>`<option value="${g}">${g}</option>`).join('');
+  return `
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:18px;}
+      label{display:block;margin:12px 0 4px;font-weight:bold;}
+      input,select,textarea{width:100%;box-sizing:border-box;padding:6px 8px;font-size:13px;}
+      .actions{margin-top:16px;display:flex;gap:12px;align-items:center;}
+      button{padding:8px 14px;font-size:13px;}
+      .status{margin-top:12px;color:#006400;}
+      .error{margin-top:12px;color:#b00020;}
+    </style>
+  </head>
+  <body>
+    <h3 style="margin-top:0">Add Student</h3>
+    <form id="studentForm">
+      <label>Name</label>
+      <input name="name" required />
+      <label>Email</label>
+      <input name="email" type="email" required />
+      <label>Group</label>
+      <select name="group" required>
+        <option value="">Select…</option>
+        ${groupOpts}
+      </select>
+      <label>Aliases (comma separated, optional)</label>
+      <textarea name="aliases" rows="2"></textarea>
+      <label>Notes (optional)</label>
+      <textarea name="notes" rows="3"></textarea>
+      <div class="actions">
+        <button type="submit">Save</button>
+        <button type="button" onclick="google.script.host.close()">Cancel</button>
+      </div>
+      <div id="status" class="status"></div>
+      <div id="error" class="error"></div>
+    </form>
+    <script>
+      const form=document.getElementById('studentForm');
+      form.addEventListener('submit',e=>{
+        e.preventDefault();
+        document.getElementById('status').textContent='';
+        document.getElementById('error').textContent='';
+        const data = Object.fromEntries(new FormData(form).entries());
+        google.script.run
+          .withSuccessHandler(msg=>{
+            document.getElementById('status').textContent=msg;
+            form.reset();
+            form.name.focus();
+          })
+          .withFailureHandler(err=>{
+            document.getElementById('error').textContent=err && err.message ? err.message : String(err);
+          })
+          .addStudentFromDialog(data);
+      });
+    </script>
+  </body>
+</html>`;
+}
+
+function showEditStudentDialog(){
+  const html = HtmlService.createHtmlOutput(getEditStudentDialogHtml_())
+    .setWidth(500)
+    .setHeight(520);
+  SpreadsheetApp.getUi().showModalDialog(html,'Edit Student');
+}
+
+function getEditStudentDialogHtml_(){
+  return `
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:18px;background:#fafafa;}
+      h3{margin:0 0 16px;}
+      label{display:block;margin:12px 0 4px;font-weight:bold;}
+      select,input,textarea{width:100%;box-sizing:border-box;padding:6px 8px;font-size:13px;}
+      textarea{min-height:70px;}
+      .row{margin-bottom:12px;}
+      .actions{margin-top:16px;display:flex;gap:12px;align-items:center;}
+      button{padding:8px 14px;font-size:13px;}
+      .status{margin-top:12px;color:#0b8043;}
+      .error{margin-top:12px;color:#b00020;}
+      .hint{font-size:12px;color:#555;}
+    </style>
+  </head>
+  <body>
+    <h3>Edit Student</h3>
+    <form id="editForm">
+      <div class="row">
+        <label for="studentSelect">Student</label>
+        <select id="studentSelect">
+          <option value="">-- New Student --</option>
+        </select>
+        <div class="hint">Choose an existing student to edit, or select "New" to add one.</div>
+      </div>
+      <div class="row">
+        <label for="studentName">Name</label>
+        <input id="studentName" required />
+      </div>
+      <div class="row">
+        <label for="studentEmail">Email</label>
+        <input id="studentEmail" type="email" required />
+      </div>
+      <div class="row">
+        <label for="studentGroup">Group</label>
+        <select id="studentGroup" required>
+          <option value="">Select…</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="studentAliases">Aliases (comma separated)</label>
+        <textarea id="studentAliases" rows="2"></textarea>
+      </div>
+      <div class="row">
+        <label for="studentNotes">Notes</label>
+        <textarea id="studentNotes" rows="3"></textarea>
+      </div>
+      <div class="actions">
+        <button type="submit" id="saveBtn">Save</button>
+        <button type="button" id="closeBtn">Close</button>
+      </div>
+      <div id="status" class="status"></div>
+      <div id="error" class="error"></div>
+    </form>
+    <script>
+      (function(){
+        var studentSelect = document.getElementById('studentSelect');
+        var nameInput = document.getElementById('studentName');
+        var emailInput = document.getElementById('studentEmail');
+        var groupSelect = document.getElementById('studentGroup');
+        var aliasesInput = document.getElementById('studentAliases');
+        var notesInput = document.getElementById('studentNotes');
+        var statusEl = document.getElementById('status');
+        var errorEl = document.getElementById('error');
+        var saveBtn = document.getElementById('saveBtn');
+        var form = document.getElementById('editForm');
+        var originalName = '';
+        var state = { students: [], groups: [], labels: {} };
+
+        function clearMessages(){ statusEl.textContent=''; errorEl.textContent=''; }
+        function showStatus(msg){ statusEl.textContent = msg || ''; }
+        function showError(msg){ errorEl.textContent = msg || ''; }
+
+        function renderGroupOptions(selected){
+          var current = selected !== undefined ? selected : groupSelect.value;
+          groupSelect.innerHTML = '';
+          var placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = 'Select…';
+          groupSelect.appendChild(placeholder);
+          (state.groups || []).forEach(function(group){
+            var opt = document.createElement('option');
+            opt.value = group;
+            var labelMap = state.labels || {};
+            var summary = labelMap && labelMap[group] ? ' — ' + labelMap[group] : '';
+            opt.textContent = 'Group ' + group + summary;
+            groupSelect.appendChild(opt);
+          });
+          if (current && Array.prototype.some.call(groupSelect.options, function(opt){ return opt.value === current; })){
+            groupSelect.value = current;
+          }
+        }
+
+        function renderStudentOptions(selected){
+          var current = selected !== undefined ? selected : studentSelect.value;
+          studentSelect.innerHTML = '';
+          var newOpt = document.createElement('option');
+          newOpt.value = '';
+          newOpt.textContent = '-- New Student --';
+          studentSelect.appendChild(newOpt);
+          (state.students || []).forEach(function(student){
+            var opt = document.createElement('option');
+            opt.value = student.name;
+            var label = student.name;
+            if (student.group) label += ' (' + student.group + ')';
+            opt.textContent = label;
+            studentSelect.appendChild(opt);
+          });
+          if (current && Array.prototype.some.call(studentSelect.options, function(opt){ return opt.value === current; })){
+            studentSelect.value = current;
+          } else {
+            studentSelect.value = '';
+          }
+        }
+
+        function findStudent(name){
+          for (var i=0; i<(state.students || []).length; i++){
+            if (state.students[i].name === name) return state.students[i];
+          }
+          return null;
+        }
+
+        function populateFields(student){
+          if (student){
+            nameInput.value = student.name || '';
+            emailInput.value = student.email || '';
+            groupSelect.value = student.group || '';
+            aliasesInput.value = student.aliases || '';
+            notesInput.value = student.notes || '';
+            originalName = student.name || '';
+          } else {
+            nameInput.value = '';
+            emailInput.value = '';
+            groupSelect.value = '';
+            aliasesInput.value = '';
+            notesInput.value = '';
+            originalName = '';
+          }
+        }
+
+        function handleStudentChange(){
+          clearMessages();
+          var selected = studentSelect.value;
+          var student = findStudent(selected);
+          populateFields(student);
+        }
+
+        function refreshState(selectName){
+          renderGroupOptions();
+          renderStudentOptions(selectName);
+          handleStudentChange();
+        }
+
+        function loadData(selectName){
+          google.script.run
+            .withSuccessHandler(function(data){
+              state = data || { students: [], groups: [], labels: {} };
+              refreshState(selectName);
+            })
+            .withFailureHandler(function(err){
+              showError(err && err.message ? err.message : String(err));
+            })
+            .getStudentRosterPayload();
+        }
+
+        function saveStudent(){
+          clearMessages();
+          var name = nameInput.value ? nameInput.value.trim() : '';
+          var email = emailInput.value ? emailInput.value.trim() : '';
+          var group = groupSelect.value ? groupSelect.value.trim() : '';
+          if (!name){ showError('Name is required.'); nameInput.focus(); return; }
+          if (!email){ showError('Email is required.'); emailInput.focus(); return; }
+          if (!group){ showError('Group is required.'); groupSelect.focus(); return; }
+
+          saveBtn.disabled = true;
+          var payload = {
+            originalName: originalName,
+            name: name,
+            email: email,
+            group: group,
+            aliases: aliasesInput.value || '',
+            notes: notesInput.value || ''
+          };
+
+          google.script.run
+            .withSuccessHandler(function(message){
+              saveBtn.disabled = false;
+              showStatus(message);
+              loadData(payload.name);
+            })
+            .withFailureHandler(function(err){
+              saveBtn.disabled = false;
+              showError(err && err.message ? err.message : String(err));
+            })
+            .addStudentFromDialog(payload);
+        }
+
+        studentSelect.addEventListener('change', handleStudentChange);
+        document.getElementById('closeBtn').addEventListener('click', function(){ google.script.host.close(); });
+        form.addEventListener('submit', function(evt){ evt.preventDefault(); saveStudent(); });
+
+        loadData('');
+      })();
+    </script>
+  </body>
+</html>`;
+}
+
+function showTemplateManagerDialog(){
+  const html = HtmlService.createHtmlOutput(getEmailTemplateDialogHtml_())
+    .setWidth(720)
+    .setHeight(640);
+  SpreadsheetApp.getUi().showModalDialog(html,'Email Templates');
+}
+
+function getEmailTemplateDialogHtml_(){
+  return `
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:18px;background:#fafafa;color:#222;}
+      h3{margin:0 0 16px;font-size:16px;}
+      label{display:block;margin:12px 0 4px;font-weight:bold;}
+      select,input,textarea{width:100%;box-sizing:border-box;padding:6px 8px;font-size:13px;}
+      textarea{min-height:100px;font-family:monospace;}
+      .row{margin-bottom:12px;}
+      .inline{display:flex;gap:8px;align-items:center;}
+      .inline select{flex:1;}
+      .inline button{padding:6px 10px;font-size:12px;}
+      .button-bar{display:flex;gap:12px;margin-top:16px;}
+      .button-bar button{padding:8px 14px;font-size:13px;}
+      .status{margin-top:14px;color:#0b8043;}
+      .error{margin-top:14px;color:#b00020;}
+      ul{margin:8px 0 0 16px;padding:0;}
+      li{margin:0 0 4px 0;}
+      .active-hint{font-size:12px;color:#555;margin-top:4px;}
+    </style>
+  </head>
+  <body>
+    <h3>Email Templates</h3>
+    <div class="row">
+      <label for="typeSelect">Template Type</label>
+      <select id="typeSelect"></select>
+      <div class="active-hint" id="activeHint"></div>
+    </div>
+    <div class="row">
+      <label for="templateSelect">Templates</label>
+      <div class="inline">
+        <select id="templateSelect"></select>
+        <button type="button" id="newTemplateBtn">New Template</button>
+      </div>
+    </div>
+    <div class="row">
+      <label for="templateName">Name</label>
+      <input id="templateName" placeholder="Template name" />
+    </div>
+    <div class="row">
+      <label for="templateSubject">Subject</label>
+      <input id="templateSubject" />
+    </div>
+    <div class="row">
+      <label for="templatePlain">Plain Text Body</label>
+      <textarea id="templatePlain"></textarea>
+    </div>
+    <div class="row">
+      <label for="templateHtml">HTML Body</label>
+      <textarea id="templateHtml"></textarea>
+    </div>
+    <div class="button-bar">
+      <button type="button" id="saveBtn">Save Template</button>
+      <button type="button" id="setActiveBtn">Set Active</button>
+      <button type="button" id="deleteBtn">Delete Template</button>
+      <button type="button" id="testBtn" style="background:#8b5cf6;border-color:#7c3aed;">Send Test</button>
+    </div>
+    <div id="status" class="status"></div>
+    <div id="error" class="error"></div>
+    <div class="row">
+      <label>Available Placeholders</label>
+      <ul id="placeholderList"></ul>
+    </div>
+    <script>
+      (function(){
+        const typeSelect = document.getElementById('typeSelect');
+        const templateSelect = document.getElementById('templateSelect');
+        const nameInput = document.getElementById('templateName');
+        const subjectInput = document.getElementById('templateSubject');
+        const plainInput = document.getElementById('templatePlain');
+        const htmlInput = document.getElementById('templateHtml');
+        const placeholderList = document.getElementById('placeholderList');
+        const statusEl = document.getElementById('status');
+        const errorEl = document.getElementById('error');
+        const activeHint = document.getElementById('activeHint');
+        const newBtn = document.getElementById('newTemplateBtn');
+        const saveBtn = document.getElementById('saveBtn');
+        const activeBtn = document.getElementById('setActiveBtn');
+        const deleteBtn = document.getElementById('deleteBtn');
+        const testBtn = document.getElementById('testBtn');
+
+        let state = { types: [], templates: {}, active: {}, defaults: {} };
+
+        function showStatus(msg){ statusEl.textContent = msg || ''; }
+        function showError(msg){ errorEl.textContent = msg || ''; }
+        function clearMessages(){ showStatus(''); showError(''); }
+
+        function renderTypes(selected){
+          typeSelect.innerHTML = '';
+          state.types.forEach(t=>{
+            const option = document.createElement('option');
+            option.value = t.id;
+            option.textContent = t.label;
+            typeSelect.appendChild(option);
+          });
+          if (!state.types.length) return;
+          if (selected && state.types.some(t=>t.id===selected)){
+            typeSelect.value = selected;
+          } else {
+            typeSelect.value = state.types[0].id;
+          }
+          renderPlaceholders();
+          renderTemplates();
+        }
+
+        function renderPlaceholders(){
+          placeholderList.innerHTML = '';
+          const type = typeSelect.value;
+          const meta = state.types.find(t=>t.id===type);
+          if (!meta || !meta.placeholders) return;
+          meta.placeholders.forEach(ph=>{
+            const li = document.createElement('li');
+            li.textContent = '{{' + ph.key + '}} - ' + ph.description;
+            placeholderList.appendChild(li);
+          });
+        }
+
+        function renderTemplates(selectedName){
+          const type = typeSelect.value;
+          const list = state.templates[type] || [];
+          templateSelect.innerHTML = '';
+          const newOpt = document.createElement('option');
+          newOpt.value = '';
+          newOpt.textContent = '-- New Template --';
+          templateSelect.appendChild(newOpt);
+          list.forEach(t=>{
+            const option = document.createElement('option');
+            option.value = t.name;
+            const isActive = state.active[type] === t.name;
+            option.textContent = isActive ? t.name + ' (Active)' : t.name;
+            templateSelect.appendChild(option);
+          });
+          if (selectedName && list.some(t=>t.name===selectedName)){
+            templateSelect.value = selectedName;
+          } else if (list.some(t=>t.name===state.active[type])){
+            templateSelect.value = state.active[type];
+          } else {
+            templateSelect.value = '';
+          }
+          loadTemplateFields();
+          updateButtons();
+        }
+
+        function loadTemplateFields(){
+          const type = typeSelect.value;
+          const selected = templateSelect.value;
+          clearMessages();
+          const defaults = (state.defaults && state.defaults[type]) || {};
+          activeHint.textContent = 'Active template: ' + (state.active[type] || defaults.name || 'None');
+          if (!selected){
+            nameInput.value = '';
+            subjectInput.value = defaults.subject || '';
+            plainInput.value = defaults.plainBody || '';
+            htmlInput.value = defaults.htmlBody || '';
+          } else {
+            const template = (state.templates[type] || []).find(t=>t.name===selected);
+            if (template){
+              nameInput.value = template.name;
+              subjectInput.value = template.subject || '';
+              plainInput.value = template.plainBody || '';
+              htmlInput.value = template.htmlBody || '';
+            }
+          }
+        }
+
+        function updateButtons(){
+          const type = typeSelect.value;
+          const selected = templateSelect.value;
+          const isDefault = selected && state.defaults && state.defaults[type] && state.defaults[type].name === selected;
+          activeBtn.disabled = !selected;
+          deleteBtn.disabled = !selected || isDefault;
+        }
+
+        function refreshState(data, preserveType, preserveTemplate){
+          state = data;
+          renderTypes(preserveType || typeSelect.value);
+          if (preserveTemplate){
+            renderTemplates(preserveTemplate);
+          }
+        }
+
+        function saveTemplate(){
+          clearMessages();
+          const type = typeSelect.value;
+          const name = nameInput.value.trim();
+          if (!name){ showError('Template name is required.'); return; }
+          const payload = {
+            type,
+            name,
+            subject: subjectInput.value || '',
+            plainBody: plainInput.value || '',
+            htmlBody: htmlInput.value || ''
+          };
+          saveBtn.disabled = true;
+          google.script.run
+            .withSuccessHandler(data=>{
+              saveBtn.disabled = false;
+              showStatus('Template saved.');
+              refreshState(data, type, name);
+            })
+            .withFailureHandler(err=>{
+              saveBtn.disabled = false;
+              showError(err && err.message ? err.message : String(err));
+            })
+            .saveEmailTemplate(payload);
+        }
+
+        function setActive(){
+          clearMessages();
+          const type = typeSelect.value;
+          const selected = templateSelect.value || nameInput.value.trim();
+          if (!selected){ showError('Select or save a template before activating.'); return; }
+          activeBtn.disabled = true;
+          google.script.run
+            .withSuccessHandler(data=>{
+              activeBtn.disabled = false;
+              showStatus('Template activated.');
+              refreshState(data, type, selected);
+            })
+            .withFailureHandler(err=>{
+              activeBtn.disabled = false;
+              showError(err && err.message ? err.message : String(err));
+            })
+            .setActiveEmailTemplate(type, selected);
+        }
+
+        function deleteTemplate(){
+          clearMessages();
+          const type = typeSelect.value;
+          const selected = templateSelect.value;
+          if (!selected){ showError('Select a template to delete.'); return; }
+          if (!confirm('Delete template "' + selected + '"?')) return;
+          deleteBtn.disabled = true;
+          google.script.run
+            .withSuccessHandler(data=>{
+              deleteBtn.disabled = false;
+              showStatus('Template deleted.');
+              refreshState(data, type, '');
+            })
+            .withFailureHandler(err=>{
+              deleteBtn.disabled = false;
+              showError(err && err.message ? err.message : String(err));
+            })
+            .deleteEmailTemplate({type, name: selected});
+        }
+
+        function loadData(){
+          google.script.run
+            .withSuccessHandler(data=>{
+              state = data;
+              renderTypes();
+            })
+            .withFailureHandler(err=>{
+              showError(err && err.message ? err.message : String(err));
+            })
+            .getEmailTemplatesPayload();
+        }
+
+        typeSelect.addEventListener('change',()=>{
+          renderPlaceholders();
+          renderTemplates();
+        });
+
+        templateSelect.addEventListener('change',()=>{
+          loadTemplateFields();
+          updateButtons();
+        });
+
+        newBtn.addEventListener('click',()=>{
+          templateSelect.value = '';
+          loadTemplateFields();
+          updateButtons();
+        });
+
+        saveBtn.addEventListener('click', saveTemplate);
+        activeBtn.addEventListener('click', setActive);
+        deleteBtn.addEventListener('click', deleteTemplate);
+        testBtn.addEventListener('click', function(){
+          clearMessages();
+          const type = typeSelect.value;
+          if (!type){ showError('Select a template type.'); return; }
+          if (!confirm('Send a test email using the current ' + type + ' template?')) return;
+          testBtn.disabled = true;
+          showStatus('Sending test email...');
+          google.script.run
+            .withSuccessHandler(msg=>{
+              testBtn.disabled = false;
+              showStatus(msg || 'Test email sent!');
+            })
+            .withFailureHandler(err=>{
+              testBtn.disabled = false;
+              showError(err && err.message ? err.message : String(err));
+            })
+            .sendTestTemplateEmail({ type: type });
+        });
+
+        loadData();
+      })();
+    </script>
+  </body>
+</html>`;
+}
+
+function showGroupScheduleDialog(){
+  const html = HtmlService.createHtmlOutput(getGroupScheduleDialogHtml_())
+    .setWidth(760)
+    .setHeight(640);
+  SpreadsheetApp.getUi().showModalDialog(html,'Group Class Schedules');
+}
+
+function getGroupScheduleDialogHtml_(){
+  return `
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <style>
+      body{font-family:Arial,sans-serif;font-size:13px;margin:0;padding:18px;background:#fafafa;color:#222;}
+      h3{margin:0 0 16px;font-size:16px;}
+      label{display:block;margin:12px 0 4px;font-weight:bold;}
+      select,input,textarea{width:100%;box-sizing:border-box;padding:6px 8px;font-size:13px;}
+      .row{margin-bottom:14px;}
+      .inline{display:flex;gap:8px;align-items:center;}
+      button{padding:8px 14px;font-size:13px;}
+  .slot-list{display:flex;flex-direction:column;gap:12px;margin-top:10px;}
+  .slot-row{background:#fff;border:1px solid #d0d7de;border-radius:12px;padding:16px 18px;box-shadow:0 16px 38px -24px rgba(15,23,42,0.55);}
+  .slot-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;color:#0b3d62;font-weight:600;font-size:13px;text-transform:uppercase;letter-spacing:0.04em;}
+  .slot-days{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+  .day-chip{position:relative;display:inline-flex;align-items:center;}
+  .day-chip input{display:none;}
+  .day-chip span{display:inline-flex;align-items:center;justify-content:center;padding:7px 12px;border-radius:999px;border:1px solid #cbd5e1;background:#f8fafc;color:#475569;font-weight:600;min-width:44px;transition:all .16s ease;box-shadow:0 6px 18px -18px rgba(37,99,235,.6);}
+  .day-chip input:checked + span{background:#2563eb;border-color:#2563eb;color:#fff;box-shadow:0 10px 22px -16px rgba(37,99,235,.75);}
+  .slot-controls{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:14px;}
+  .slot-fields{display:flex;flex-wrap:wrap;gap:14px;min-width:280px;}
+  .slot-field{display:flex;flex-direction:column;gap:4px;min-width:130px;flex:1;}
+  .slot-field label{margin:0;font-size:12px;font-weight:600;color:#475569;letter-spacing:0.01em;text-transform:uppercase;}
+  .slot-field input{padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:13px;background:#fdfefe;transition:border-color .16s ease, box-shadow .16s ease;}
+  .slot-field input:focus{outline:none;border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.18);}
+  .slot-remove{padding:8px 14px;font-size:12px;border:1px solid #fecaca;border-radius:8px;background:#fff5f5;color:#c1121f;font-weight:600;cursor:pointer;transition:background .16s ease, border .16s ease;}
+  .slot-remove:hover{background:#fee2e2;border-color:#fca5a5;}
+      .button-bar{display:flex;gap:12px;margin-top:18px;}
+      .status{margin-top:12px;color:#0b8043;}
+      .error{margin-top:12px;color:#b00020;}
+      .hint{font-size:12px;color:#555;margin-top:-6px;}
+      .note{font-size:12px;color:#444;}
+      .no-slots{padding:12px;border:1px dashed #bbb;border-radius:6px;background:#fff;color:#666;font-style:italic;}
+    </style>
+  </head>
+  <body>
+    <h3>Group Class Schedules</h3>
+    <div class="row">
+      <label for="groupSelect">Group</label>
+      <select id="groupSelect"></select>
+    </div>
+    <div class="row note" id="tzNote"></div>
+    <div class="row">
+      <label for="scheduleLabel">Schedule Summary</label>
+      <input id="scheduleLabel" placeholder="e.g. Monday & Wednesday at 8:00 PM" />
+      <div class="hint">Shown in payment emails and templates. Keep it short and friendly.</div>
+    </div>
+    <div class="row">
+      <label>Class Slots & Reminder Timing</label>
+      <div class="hint" style="margin-bottom:10px;">Reminders are sent automatically before each class. Adjust the timing window below.</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:14px;padding:10px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:8px;">
+        <div style="display:flex;gap:14px;align-items:center;">
+          <label style="margin:0;font-size:12px;font-weight:600;color:#0c4a6e;width:120px;">First Reminder:</label>
+          <select id="reminder1Input" style="width:90px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;"></select>
+          <span style="font-size:13px;color:#475569;">minutes before class</span>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;">
+          <label style="margin:0;font-size:12px;font-weight:600;color:#0c4a6e;width:120px;">Second Reminder:</label>
+          <select id="reminder2Input" style="width:90px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;"></select>
+          <span style="font-size:13px;color:#475569;">minutes before class</span>
+        </div>
+        <div style="display:flex;gap:14px;align-items:center;">
+          <label style="margin:0;font-size:12px;font-weight:600;color:#0c4a6e;width:120px;">Third Reminder:</label>
+          <select id="reminder3Input" style="width:90px;padding:6px 8px;border:1px solid #cbd5e1;border-radius:6px;font-size:13px;"></select>
+          <span style="font-size:13px;color:#475569;">minutes before class</span>
+        </div>
+      </div>
+      <div id="slotsContainer" class="slot-list"></div>
+      <div id="noSlotsMessage" class="no-slots" style="display:none;">No slots configured for this group.</div>
+      <button type="button" id="addSlotBtn">Add Slot</button>
+    </div>
+    <div class="button-bar">
+      <button type="button" id="saveBtn">Save Changes</button>
+      <button type="button" id="resetBtn">Reset to Default</button>
+      <button type="button" id="testEmailBtn" style="background:#8b5cf6;border-color:#7c3aed;">Send Test Email</button>
+    </div>
+    <div id="status" class="status"></div>
+    <div id="error" class="error"></div>
+    <script>
+      (function(){
+        var groupSelect = document.getElementById('groupSelect');
+        var scheduleLabelInput = document.getElementById('scheduleLabel');
+        var slotsContainer = document.getElementById('slotsContainer');
+        var addSlotBtn = document.getElementById('addSlotBtn');
+        var saveBtn = document.getElementById('saveBtn');
+        var resetBtn = document.getElementById('resetBtn');
+        var testEmailBtn = document.getElementById('testEmailBtn');
+        var statusEl = document.getElementById('status');
+        var errorEl = document.getElementById('error');
+        var tzNote = document.getElementById('tzNote');
+        var noSlotsMessage = document.getElementById('noSlotsMessage');
+        var reminder1Input = document.getElementById('reminder1Input');
+        var reminder2Input = document.getElementById('reminder2Input');
+        var reminder3Input = document.getElementById('reminder3Input');
+
+        var state = null;
+        var currentGroup = '';
+        var DEFAULT_DAY_META = [
+          { value: 0, short: 'Sun' },
+          { value: 1, short: 'Mon' },
+          { value: 2, short: 'Tue' },
+          { value: 3, short: 'Wed' },
+          { value: 4, short: 'Thu' },
+          { value: 5, short: 'Fri' },
+          { value: 6, short: 'Sat' }
+        ];
+
+        function clearMessages(){ statusEl.textContent=''; errorEl.textContent=''; }
+        function showStatus(msg){ statusEl.textContent = msg || ''; }
+        function showError(msg){ errorEl.textContent = msg || ''; }
+
+        function pad(value){ return String(value).length===1 ? '0'+value : String(value); }
+
+        function populateReminderSelects(){
+          reminder1Input.innerHTML = '';
+          reminder2Input.innerHTML = '';
+          reminder3Input.innerHTML = '';
+          // Generate options from 0 min to unlimited in 30-minute increments
+          for (var minutes = 0; minutes <= 1440; minutes += 30){
+            var opt1 = document.createElement('option');
+            opt1.value = minutes;
+            opt1.textContent = minutes + ' min';
+            if (minutes === 720) opt1.selected = true;
+            reminder1Input.appendChild(opt1);
+            
+            var opt2 = document.createElement('option');
+            opt2.value = minutes;
+            opt2.textContent = minutes + ' min';
+            if (minutes === 30) opt2.selected = true;
+            reminder2Input.appendChild(opt2);
+            
+            var opt3 = document.createElement('option');
+            opt3.value = minutes;
+            opt3.textContent = minutes + ' min';
+            if (minutes === 0) opt3.selected = true;
+            reminder3Input.appendChild(opt3);
+          }
+        }
+
+        function updateEmptyState(){
+          var hasRows = slotsContainer.querySelectorAll('.slot-row').length > 0;
+          noSlotsMessage.style.display = hasRows ? 'none' : 'block';
+        }
+
+        function generateScheduleLabel(){
+          var rows = slotsContainer.querySelectorAll('.slot-row');
+          if (rows.length === 0) return 'Schedule TBD';
+          
+          var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          var slots = [];
+          
+          for (var i = 0; i < rows.length; i++){
+            var row = rows[i];
+            var checked = [];
+            var boxes = row.querySelectorAll('.slot-days input[type="checkbox"]');
+            for (var j = 0; j < boxes.length; j++){
+              if (boxes[j].checked) checked.push(Number(boxes[j].value));
+            }
+            var timeSelect = row.querySelector('.slot-time');
+            var timeVal = timeSelect ? timeSelect.value : '';
+            
+            if (checked.length > 0 && timeVal){
+              var timeParts = timeVal.split(':');
+              if (timeParts.length === 2){
+                var hour = Number(timeParts[0]);
+                var minute = Number(timeParts[1]);
+                var timeStr = formatTimeValue(hour, minute);
+                
+                var daysList = checked.map(function(d){ return dayNames[d]; }).join('/');
+                slots.push(daysList + ' ' + timeStr);
+              }
+            }
+          }
+          
+          return slots.length > 0 ? slots.join(', ') : 'Schedule TBD';
+        }
+
+        function updateScheduleLabel(){
+          scheduleLabelInput.value = generateScheduleLabel();
+        }
+
+        function createDayCheckbox(day, isChecked){
+          var label = document.createElement('label');
+          label.className = 'day-chip';
+          var input = document.createElement('input');
+          input.type = 'checkbox';
+          input.value = day.value;
+          if (isChecked) input.checked = true;
+          var span = document.createElement('span');
+          span.textContent = day.short;
+          label.appendChild(input);
+          label.appendChild(span);
+          return label;
+        }
+
+        function formatTimeValue(hour, minute){
+          var h = Number(hour);
+          var m = Number(minute);
+          if (!isFinite(h) || h < 0) h = 9;
+          if (!isFinite(m) || m < 0) m = 0;
+          var suffix = h >= 12 ? 'PM' : 'AM';
+          var display = h % 12;
+          if (display === 0) display = 12;
+          return pad(display) + ':' + pad(m) + ' ' + suffix;
+        }
+
+        function generateTimeOptions(){
+          var options = [];
+          for (var h = 0; h < 24; h++){
+            for (var m = 0; m < 60; m += 30){
+              var suffix = h >= 12 ? 'PM' : 'AM';
+              var display = h % 12;
+              if (display === 0) display = 12;
+              var label = pad(display) + ':' + pad(m) + ' ' + suffix;
+              var value = pad(h) + ':' + pad(m);
+              options.push({ label: label, value: value });
+            }
+          }
+          return options;
+        }
+
+        function addSlotRow(slot){
+          var row = document.createElement('div');
+          row.className = 'slot-row';
+
+          var header = document.createElement('div');
+          header.className = 'slot-header';
+          var title = document.createElement('div');
+          title.textContent = 'Class Slot';
+          header.appendChild(title);
+          row.appendChild(header);
+
+          var daysWrap = document.createElement('div');
+          daysWrap.className = 'slot-days';
+          var selected = slot && Array.isArray(slot.dow) ? slot.dow : [];
+          var meta = state && state.dowMeta ? state.dowMeta : DEFAULT_DAY_META;
+          meta.forEach(function(day){
+            var checkbox = createDayCheckbox(day, selected.indexOf(day.value) !== -1);
+            daysWrap.appendChild(checkbox);
+          });
+          row.appendChild(daysWrap);
+
+          var controls = document.createElement('div');
+          controls.className = 'slot-controls';
+
+          var fields = document.createElement('div');
+          fields.className = 'slot-fields';
+
+          var timeField = document.createElement('div');
+          timeField.className = 'slot-field';
+          var timeLabel = document.createElement('label');
+          timeLabel.textContent = 'Start Time';
+          timeField.appendChild(timeLabel);
+          var timeSelect = document.createElement('select');
+          timeSelect.className = 'slot-time';
+          var timeOptions = generateTimeOptions();
+          var currentValue = pad(slot ? slot.hour : 20) + ':' + pad(slot ? slot.minute : 0);
+          timeOptions.forEach(function(opt){
+            var option = document.createElement('option');
+            option.value = opt.value;
+            option.textContent = opt.label;
+            if (opt.value === currentValue) option.selected = true;
+            timeSelect.appendChild(option);
+          });
+          timeField.appendChild(timeSelect);
+          fields.appendChild(timeField);
+
+          var durationField = document.createElement('div');
+          durationField.className = 'slot-field';
+          var durationLabel = document.createElement('label');
+          durationLabel.textContent = 'Duration (min)';
+          durationField.appendChild(durationLabel);
+          var durationInput = document.createElement('input');
+          durationInput.type = 'number';
+          durationInput.className = 'slot-duration';
+          durationInput.min = '15';
+          durationInput.step = '5';
+          durationInput.placeholder = 'Optional';
+          if (slot && slot.durationMin) durationInput.value = slot.durationMin;
+          durationField.appendChild(durationInput);
+          fields.appendChild(durationField);
+
+          controls.appendChild(fields);
+
+          var removeBtn = document.createElement('button');
+          removeBtn.type = 'button';
+          removeBtn.className = 'slot-remove';
+          removeBtn.textContent = 'Remove';
+          removeBtn.addEventListener('click', function(){
+            row.parentNode.removeChild(row);
+            updateEmptyState();
+            updateScheduleLabel();
+          });
+          controls.appendChild(removeBtn);
+
+          row.appendChild(controls);
+          slotsContainer.appendChild(row);
+          
+          // Add change listeners to update schedule label
+          var dayCheckboxes = row.querySelectorAll('.slot-days input[type="checkbox"]');
+          for (var i = 0; i < dayCheckboxes.length; i++){
+            dayCheckboxes[i].addEventListener('change', updateScheduleLabel);
+          }
+          timeSelect.addEventListener('change', updateScheduleLabel);
+          
+          updateEmptyState();
+        }
+
+        function renderGroups(){
+          var opts = state.groups || [];
+          groupSelect.innerHTML = '';
+          opts.forEach(function(group){
+            var option = document.createElement('option');
+            option.value = group;
+            option.textContent = 'Group ' + group;
+            groupSelect.appendChild(option);
+          });
+          if (opts.length === 0) return;
+          if (currentGroup && opts.indexOf(currentGroup) !== -1) groupSelect.value = currentGroup;
+          else {
+            currentGroup = opts[0];
+            groupSelect.value = currentGroup;
+          }
+        }
+
+        function renderGroup(){
+          if (!state || !state.schedules) return;
+          currentGroup = groupSelect.value;
+          var schedule = state.schedules[currentGroup] || { label: '', slots: [] };
+          slotsContainer.innerHTML = '';
+          (schedule.slots || []).forEach(function(slot){ addSlotRow(slot); });
+          updateEmptyState();
+          
+          // Auto-generate schedule label from slots
+          var generatedLabel = generateScheduleLabel();
+          scheduleLabelInput.value = generatedLabel;
+        }
+
+        function parseTimeInput(value){
+          if (!value) return null;
+          var cleaned = String(value).replace(/\s+/g, ' ').trim().toUpperCase();
+          
+          // Try matching HH:MM AM/PM or HH:MM:SS AM/PM (with flexible whitespace)
+          var match = cleaned.match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?$/i);
+          if (!match) return null;
+          
+          var hour = Number(match[1]);
+          var minute = Number(match[2]);
+          if (!isFinite(hour) || !isFinite(minute)) return null;
+          
+          var suffix = (match[4] || '').toUpperCase();
+          
+          // Convert 12-hour to 24-hour
+          if (suffix === 'PM' && hour < 12) hour += 12;
+          if (suffix === 'AM' && hour === 12) hour = 0;
+          
+          // If no AM/PM suffix and hour is 1-12, assume it might need conversion
+          // But if hour is already 13-23, keep as-is
+          if (!suffix && hour <= 12) {
+            // No conversion - could be 24-hour format like 09:00
+          }
+          
+          if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+          return { hour: hour, minute: minute };
+        }
+
+        function collectSlots(){
+          var rows = slotsContainer.querySelectorAll('.slot-row');
+          var results = [];
+          for (var i=0; i<rows.length; i++){
+            var row = rows[i];
+            var checked = [];
+            var boxes = row.querySelectorAll('.slot-days input[type="checkbox"]');
+            for (var j=0; j<boxes.length; j++){
+              if (boxes[j].checked) checked.push(Number(boxes[j].value));
+            }
+            var timeSelect = row.querySelector('.slot-time');
+            var timeVal = timeSelect ? String(timeSelect.value || '').trim() : '';
+            var durationInput = row.querySelector('.slot-duration');
+            var durationVal = durationInput ? String(durationInput.value || '').trim() : '';
+
+            if (checked.length === 0)
+              return { error: 'Select at least one day of week for each slot.' };
+            if (!timeVal)
+              return { error: 'Provide a start time for each slot.' };
+            
+            // Parse HH:MM format directly from dropdown value
+            var timeParts = timeVal.split(':');
+            if (timeParts.length !== 2)
+              return { error: 'Invalid time format.' };
+            var hour = Number(timeParts[0]);
+            var minute = Number(timeParts[1]);
+            if (!isFinite(hour) || !isFinite(minute) || hour < 0 || hour > 23 || minute < 0 || minute > 59)
+              return { error: 'Invalid time values.' };
+
+            var slot = { dow: checked, time: timeVal };
+            if (durationVal){
+              var durNum = Number(durationVal);
+              if (!isFinite(durNum) || durNum <= 0)
+                return { error: 'Duration must be a positive number of minutes.' };
+              slot.durationMin = Math.round(durNum);
+            }
+            results.push(slot);
+          }
+          return { slots: results };
+        }
+
+        function applyState(data){
+          state = data;
+          currentGroup = groupSelect.value || (data.groups && data.groups[0]) || '';
+          tzNote.textContent = 'Timezone: ' + (data.tz || '') + ' (24-hour clock)';
+          
+          // Set reminder values after ensuring options exist
+          var reminder1Val = (data.reminderTimes && data.reminderTimes[0]) || 720;
+          var reminder2Val = (data.reminderTimes && data.reminderTimes[1]) || 30;
+          var reminder3Val = (data.reminderTimes && data.reminderTimes[2]) || 0;
+          
+          // Ensure the values exist in the dropdown
+          if (reminder1Input.querySelector('option[value="' + reminder1Val + '"]')){
+            reminder1Input.value = reminder1Val;
+          } else {
+            reminder1Input.value = 720;
+          }
+          
+          if (reminder2Input.querySelector('option[value="' + reminder2Val + '"]')){
+            reminder2Input.value = reminder2Val;
+          } else {
+            reminder2Input.value = 30;
+          }
+          
+          if (reminder3Input.querySelector('option[value="' + reminder3Val + '"]')){
+            reminder3Input.value = reminder3Val;
+          } else {
+            reminder3Input.value = 0;
+          }
+          
+          renderGroups();
+          renderGroup();
+        }
+
+        function saveSchedule(){
+          clearMessages();
+          var collected = collectSlots();
+          if (collected && collected.error){ showError(collected.error); return; }
+          
+          var reminder1 = Number(reminder1Input.value);
+          var reminder2 = Number(reminder2Input.value);
+          var reminder3 = Number(reminder3Input.value);
+          if (!isFinite(reminder1) || reminder1 < 0){ reminder1 = 720; }
+          if (!isFinite(reminder2) || reminder2 < 0){ reminder2 = 30; }
+          if (!isFinite(reminder3) || reminder3 < 0){ reminder3 = 0; }
+          
+          var payload = {
+            group: groupSelect.value,
+            label: scheduleLabelInput.value || '',
+            slots: collected ? collected.slots : [],
+            reminderTimes: [reminder1, reminder2, reminder3]
+          };
+          saveBtn.disabled = true;
+          google.script.run
+            .withSuccessHandler(function(data){
+              saveBtn.disabled = false;
+              showStatus('Schedule saved.');
+              applyState(data);
+            })
+            .withFailureHandler(function(err){
+              saveBtn.disabled = false;
+              showError(err && err.message ? err.message : String(err));
+            })
+            .saveGroupSchedule(payload);
+        }
+
+        function resetSchedule(){
+          clearMessages();
+          if (!groupSelect.value){ showError('Select a group to reset.'); return; }
+          if (!confirm('Reset Group ' + groupSelect.value + ' to the default schedule?')) return;
+          resetBtn.disabled = true;
+          google.script.run
+            .withSuccessHandler(function(data){
+              resetBtn.disabled = false;
+              showStatus('Group reset to default.');
+              applyState(data);
+            })
+            .withFailureHandler(function(err){
+              resetBtn.disabled = false;
+              showError(err && err.message ? err.message : String(err));
+            })
+            .resetGroupSchedule({ group: groupSelect.value });
+        }
+
+        groupSelect.addEventListener('change', function(){ clearMessages(); renderGroup(); });
+        addSlotBtn.addEventListener('click', function(){
+          clearMessages();
+          if (!state){ showError('Still loading schedules. Please wait.'); return; }
+          addSlotRow({ dow: [], hour: 20, minute: 0 });
+          updateScheduleLabel();
+        });
+        saveBtn.addEventListener('click', saveSchedule);
+        resetBtn.addEventListener('click', resetSchedule);
+        testEmailBtn.addEventListener('click', function(){
+          clearMessages();
+          var group = groupSelect.value;
+          if (!group){ showError('Select a group first.'); return; }
+          if (!confirm('Send a test reminder email for Group ' + group + '?')) return;
+          testEmailBtn.disabled = true;
+          showStatus('Sending test email...');
+          google.script.run
+            .withSuccessHandler(function(msg){
+              testEmailBtn.disabled = false;
+              showStatus(msg || 'Test email sent!');
+            })
+            .withFailureHandler(function(err){
+              testEmailBtn.disabled = false;
+              showError(err && err.message ? err.message : String(err));
+            })
+            .sendTestScheduleEmail({ group: group });
+        });
+
+        populateReminderSelects();
+
+        google.script.run
+          .withSuccessHandler(function(data){
+            applyState(data);
+          })
+          .withFailureHandler(function(err){
+            showError(err && err.message ? err.message : String(err));
+          })
+          .getGroupSchedulePayload();
+      })();
+    </script>
+  </body>
+</html>`;
+}
+
+function addStudentFromDialog(data){
+  if (!data) throw new Error('No student payload received.');
+  const student = {
+    name: String(data.name||'').trim(),
+    email: String(data.email||'').trim(),
+    group: String(data.group||'').trim(),
+    aliases: parseAliases_(data.aliases||''),
+    notes: String(data.notes||'').trim()
+  };
+  const originalName = String(data.originalName||'').trim();
+  if (!student.name) throw new Error('Name is required.');
+  if (!student.email) throw new Error('Email is required.');
+  if (!student.group) throw new Error('Group is required.');
+  const result = addOrUpdateStudent_(student, originalName);
+  resetDynamicIndexes_();
+  if (result.action === 'created'){
+    return `Added ${student.name} in group ${student.group}.`;
+  }
+  if (result.action === 'renamed'){
+    const prev = originalName || result.previousName || student.name;
+    return `Renamed ${prev} to ${student.name} in group ${student.group}.`;
+  }
+  return `Updated ${student.name} in group ${student.group}.`;
+}
+
+function addOrUpdateStudent_(student, originalName){
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ensureStudentSheet_(ss);
+  const values = sheet.getDataRange().getValues();
+  const headers = values.shift();
+  const nameCol = headers.indexOf('Name');
+  const emailCol = headers.indexOf('Email');
+  const groupCol = headers.indexOf('Group');
+  const aliasCol = headers.indexOf('Aliases');
+  const notesCol = headers.indexOf('Notes');
+  const createdCol = headers.indexOf('CreatedAt');
+
+  const key = normalizeKey_(student.name);
+  const originalKey = originalName ? normalizeKey_(originalName) : '';
+  let rowIndex = -1;
+  let existingRow = null;
+
+  if (originalKey){
+    for (let idx=0; idx<values.length; idx++){
+      const row = values[idx];
+      const rowKey = normalizeKey_(row[nameCol] || '');
+      if (rowKey === originalKey){
+        rowIndex = idx + 2;
+        existingRow = row;
+        break;
+      }
+    }
+  }
+
+  if (rowIndex === -1){
+    for (let idx=0; idx<values.length; idx++){
+      const row = values[idx];
+      const rowKey = normalizeKey_(row[nameCol] || '');
+      if (rowKey === key){
+        rowIndex = idx + 2;
+        existingRow = row;
+        break;
+      }
+    }
+  }
+
+  let createdAt = new Date();
+  if (existingRow && createdCol > -1){
+    const existingCreated = existingRow[createdCol];
+    if (existingCreated instanceof Date) createdAt = existingCreated;
+    else if (existingCreated) createdAt = new Date(existingCreated);
+  }
+
+  const rowValues = [
+    student.name,
+    student.email,
+    student.group,
+    student.aliases.join(', '),
+    student.notes || '',
+    createdAt
+  ];
+
+  if (rowIndex > -1) {
+    sheet.getRange(rowIndex, 1, 1, headers.length).setValues([rowValues]);
+    const renamed = !!(originalKey && originalKey !== key);
+    return { action: renamed ? 'renamed' : 'updated', row: rowIndex, previousName: originalName };
+  }
+
+  sheet.appendRow(rowValues);
+  return { action: 'created', row: sheet.getLastRow(), previousName: originalName };
+}
+
+function ensureStudentSheet_(ss){
+  const name = CFG.studentSheet || 'Students';
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.getRange(1,1,1,STUDENT_SHEET_HEADERS.length).setValues([STUDENT_SHEET_HEADERS]);
+    sheet.setFrozenRows(1);
+  }
+  const headers = sheet.getRange(1,1,1,STUDENT_SHEET_HEADERS.length).getValues()[0];
+  if (headers.join('') !== STUDENT_SHEET_HEADERS.join('')) {
+    sheet.getRange(1,1,1,STUDENT_SHEET_HEADERS.length).setValues([STUDENT_SHEET_HEADERS]);
+  }
+  return sheet;
+}
+
+function loadStudents_(){
+  const ss = SpreadsheetApp.getActive();
+  const sheet = ensureStudentSheet_(ss);
+  const lastRow = sheet.getLastRow();
+  if (lastRow <= 1) return [];
+  const values = sheet.getRange(2,1,lastRow-1,STUDENT_SHEET_HEADERS.length).getValues();
+  return values
+    .map(row=>({
+      name: String(row[0]||'').trim(),
+      email: String(row[1]||'').trim(),
+      group: String(row[2]||'').trim(),
+      aliases: parseAliases_(row[3]||''),
+      notes: String(row[4]||'').trim(),
+      createdAt: row[5] instanceof Date ? row[5] : (row[5] ? new Date(row[5]) : null)
+    }))
+    .filter(st=>st.name && st.email && st.group);
+}
+
+function parseAliases_(value){
+  return String(value||'')
+    .split(',')
+    .map(s=>s.trim())
+    .filter(Boolean);
+}
+
+function getStudentRosterPayload(){
+  const students = loadStudents_()
+    .map(st=>({
+      name: st.name,
+      email: st.email,
+      group: st.group,
+      aliases: (st.aliases || []).join(', '),
+      notes: st.notes || ''
+    }))
+    .sort((a,b)=>a.name.localeCompare(b.name));
+
+  const labels = getGroupScheduleLabels_();
+  const groupSet = new Set();
+  Object.keys(labels || {}).forEach(g=>{ if (g) groupSet.add(g); });
+  students.forEach(st=>{ if (st.group) groupSet.add(st.group); });
+  Object.values(CFG.groups || {}).forEach(g=>{ if (g) groupSet.add(g); });
+  const groups = Array.from(groupSet).sort();
+
+  return { students, groups, labels };
+}
+
+function escapeHtml_(value){
+  return String(value || '')
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;')
+    .replace(/'/g,'&#39;');
+}
+
+function getStandardEmailTemplate_(bodyContent){
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ARNOMA NCLEX-RN Email</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 40px 20px;
+    }
+
+    .email-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .email-container {
+      background-color: #ffffff;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    /* ==================== HEADER ==================== */
+    .email-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 45px 35px 35px;
+      text-align: center;
+    }
+
+    .email-header img {
+      width: 140px;
+      height: 140px;
+      margin-bottom: 15px;
+      filter: drop-shadow(0 0 6px rgba(255,255,255,0.7))
+              drop-shadow(0 0 12px rgba(255,255,255,0.4))
+              drop-shadow(0 0 3px rgba(255,255,255,0.8));
+      animation: fadeIn 1.5s ease-in-out;
+    }
+
+    .email-header h1 {
+      color: #fff;
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: -0.5px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    /* ==================== BODY ==================== */
+    .email-body {
+      padding: 35px;
+      color: #333;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    .email-body p {
+      margin: 0 0 16px 0;
+    }
+
+    /* Automatically style inline images */
+    .email-body img {
+      display: block;
+      max-width: 100%;
+      height: auto;
+      margin: 20px auto;
+      border-radius: 12px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    /* 🖼️ QR Code / Payment frame styling */
+    .payment-frame {
+      background-color: #f8f9fc;
+      border: 2px solid #e5e7eb;
+      border-radius: 16px;
+      padding: 30px;
+      margin: 24px 0;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .payment-frame img {
+      margin: 20px auto;
+      border-radius: 8px;
+      box-shadow: none;
+    }
+
+    /* 📦 Reusable highlight/date/info box */
+    .info-box {
+      background-color: #f6f8fe;
+      border-left: 3px solid #3b82f6;
+      border-radius: 10px;
+      padding: 14px 18px;
+      font-size: 15px;
+      line-height: 1.5;
+      color: #1e293b;
+      margin: 20px 0;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .info-box p {
+      margin: 6px 0;
+      text-align: left;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.3) 20%, rgba(255,255,255,0.3) 80%, transparent);
+      margin: 24px 0;
+      border: none;
+    }
+
+    /* ==================== FOOTER ==================== */
+    .email-footer {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #fff;
+      text-align: center;
+      padding: 30px 20px;
+    }
+
+    .email-footer img {
+      width: 100px;
+      height: 100px;
+      margin: 10px 0;
+      filter: drop-shadow(0 0 5px rgba(255,255,255,0.6))
+              drop-shadow(0 0 10px rgba(255,255,255,0.3))
+              drop-shadow(0 0 2px rgba(255,255,255,0.8));
+    }
+
+    .email-footer p {
+      margin: 6px 0;
+      font-size: 13px;
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 600px) {
+      body { padding: 20px 10px; }
+      .email-body { padding: 25px 20px; font-size: 15px; }
+      .email-header img { width: 110px; height: 110px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="email-wrapper">
+    <div class="email-container">
+      <div class="email-header">
+        <img src="https://richyfesta.com/richyfesta-logo.png" alt="ARNOMA Logo">
+        <h1>ARNOMA NCLEX-RN</h1>
+      </div>
+
+      <div class="email-body">
+        ${bodyContent}
+        <div class="divider"></div>
+        <p style="color: #7f8c8d; font-size: 14px; text-align: center;">
+          <em>Need help? Simply reply to this email and we'll assist you promptly.</em>
+        </p>
+      </div>
+
+      <div class="email-footer">
+        <img src="https://richyfesta.com/richyfesta-logo.png" alt="ARNOMA Logo">
+        <p><strong style="font-size: 18px;">ARNOMA – NCLEX RN</strong></p>
+        <p style="font-size: 14px;">Professional NCLEX Preparation & Medical Education</p>
+        <p style="font-size: 13px;">
+          nclex.rn@arnoma.us<br>
+          richy@arnoma.us<br>
+          909-808-1818
+        </p>
+        <p style="font-size: 12px; color: #95a5a6;">
+          © 2025 ARNOMA. All rights reserved.
+        </p>
+        <p style="font-size: 12px; color: #7f8c8d;">
+          This is an automated notification from your ARNOMA NCLEX prep program.
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`;
+}
+
+
+

@@ -9767,12 +9767,6 @@
       if (filterDropdown) {
         filterDropdown.addEventListener('change', renderPaymentEmailsView);
       }
-      
-      // Initialize Payment Reminder Manager (auto-send reminders for unpaid classes)
-      if (window.PaymentReminderManager) {
-        await window.PaymentReminderManager.initialize();
-        console.log('✅ Payment Reminder Manager initialized');
-      }
     }
     
     // ============================
@@ -13319,11 +13313,11 @@
         }
         
         studentsHTML += `
-          <div style="padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; margin-bottom: 10px; transition: all 0.2s;">
-            <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer;"
-                 onclick="showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
-                 onmouseover="this.closest('div[style*=padding]').style.background='rgba(255,255,255,0.06)'; this.closest('div[style*=padding]').style.borderColor='rgba(138,180,255,0.3)';"
-                 onmouseout="this.closest('div[style*=padding]').style.background='rgba(255,255,255,0.03)'; this.closest('div[style*=padding]').style.borderColor='rgba(255,255,255,0.08)';">
+          <div style="padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; margin-bottom: 10px; transition: all 0.2s; cursor: pointer;"
+               onclick="showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
+               onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(138,180,255,0.3)';"
+               onmouseout="this.style.background='rgba(255,255,255,0.03)'; this.style.borderColor='rgba(255,255,255,0.08)';">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
               <div>
                 <div style="font-size: 15px; font-weight: 700; color: white; margin-bottom: 4px;">${escapeHtml(student.name)}</div>
                 <div style="font-size: 11px; color: rgba(255,255,255,0.5);">Group ${student.group || 'N/A'} • ${formatCurrency(pricePerClass, '$')}/class</div>
@@ -13334,17 +13328,6 @@
               </div>
             </div>
             ${balance > 0 ? `<div style="margin-top: 8px; font-size: 10px; color: #eab308;">💰 Balance: ${formatCurrency(balance, '$')}</div>` : ''}
-            <div style="margin-top: 10px; display: flex; gap: 8px;">
-              <button onclick="event.stopPropagation(); toggleAutoReminder('${student.id}', this);" 
-                      id="reminderBtn_${student.id}"
-                      style="flex: 1; padding: 6px 10px; background: ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)'}; 
-                             border: 2px solid ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? 'rgba(34,197,94,0.4)' : 'rgba(234,179,8,0.4)'}; 
-                             border-radius: 8px; color: white; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
-                      onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.3)';"
-                      onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? '▶️ Resume Auto-Reminders' : '⏸️ Pause Auto-Reminders'}
-              </button>
-            </div>
           </div>
         `;
       });
@@ -13431,24 +13414,6 @@
       // closeDayDetails();
       
       // Show class details modal
-    
-    // Toggle auto-reminder pause/resume for a student
-    async function toggleAutoReminder(studentId, buttonElement) {
-      if (!window.PaymentReminderManager) {
-        showNotification('❌ Payment Reminder Manager not available', 'error');
-        return;
-      }
-      
-      const success = await window.PaymentReminderManager.togglePause(studentId);
-      
-      if (success) {
-        // Update button appearance
-        const isPaused = window.PaymentReminderManager.isPaused(studentId);
-        buttonElement.style.background = isPaused ? 'rgba(34,197,94,0.2)' : 'rgba(234,179,8,0.2)';
-        buttonElement.style.borderColor = isPaused ? 'rgba(34,197,94,0.4)' : 'rgba(234,179,8,0.4)';
-        buttonElement.textContent = isPaused ? '▶️ Resume Auto-Reminders' : '⏸️ Pause Auto-Reminders';
-      }
-    }
       showClassDetails(studentId, dateStr, classInfo);
     }
     
@@ -13779,326 +13744,6 @@
     
     // ============================================================================
     // END EARNING FORECAST SYSTEM
-    // ============================================================================
-    
-    // ============================================================================
-    // PAYMENT REMINDER MANAGER - Auto-send reminders for unpaid classes ☁️ CLOUD SYNC
-    // ============================================================================
-    /**
-     * Payment Reminder Manager
-     * - Detects red dots (unpaid classes) daily
-     * - Calculates class end time (start + 2 hours)
-     * - Sends payment reminders ONLY after class ends
-     * - Tracks sent reminders to prevent duplicates
-     * - Manual pause/resume per student
-     * - Stops when red dot resolves (paid/absent)
-     */
-    window.PaymentReminderManager = (function() {
-      let pausedStudents = {}; // {studentId: true/false}
-      let sentReminders = {}; // {studentId: {date: timestamp}}
-      let lastCheckDate = null;
-      
-      // Load paused students from Supabase
-      async function loadPausedFromSupabase() {
-        try {
-          const { data, error } = await supabase
-            .from('auto_reminder_paused')
-            .select('*');
-          
-          if (error) {
-            console.error('[PaymentReminderManager] ❌ Error loading paused students:', error);
-            return;
-          }
-          
-          pausedStudents = {};
-          if (data && data.length > 0) {
-            data.forEach(row => {
-              pausedStudents[row.student_id] = row.paused;
-            });
-          }
-          
-          console.log('✅ [PaymentReminderManager] Loaded', Object.keys(pausedStudents).length, 'paused states from Supabase');
-        } catch (error) {
-          console.error('[PaymentReminderManager] ❌ Exception loading paused students:', error);
-        }
-      }
-      
-      // Save paused state to Supabase
-      async function savePausedToSupabase(studentId, paused) {
-        try {
-          const { error } = await supabase
-            .from('auto_reminder_paused')
-            .upsert({
-              student_id: studentId,
-              paused: paused,
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'student_id'
-            });
-          
-          if (error) {
-            console.error('[PaymentReminderManager] ❌ Error saving paused state:', error);
-            return false;
-          }
-          
-          pausedStudents[studentId] = paused;
-          console.log('✅ [PaymentReminderManager] Saved paused state for student:', studentId, paused);
-          return true;
-        } catch (error) {
-          console.error('[PaymentReminderManager] ❌ Exception saving paused state:', error);
-          return false;
-        }
-      }
-      
-      // Check if student is paused
-      function isPaused(studentId) {
-        return pausedStudents[studentId] === true;
-      }
-      
-      // Toggle pause state
-      async function togglePause(studentId) {
-        const currentState = isPaused(studentId);
-        const newState = !currentState;
-        const success = await savePausedToSupabase(studentId, newState);
-        if (success) {
-          showNotification(
-            newState ? '⏸️ Auto-reminders paused for this student' : '▶️ Auto-reminders resumed for this student',
-            'success'
-          );
-        }
-        return success;
-      }
-      
-      // Get class end time (start time + 2 hours)
-      function getClassEndTime(groupName, dateStr) {
-        try {
-          // Find the group
-          const group = groups.find(g => g.name === groupName);
-          if (!group || !group.schedule) {
-            console.warn('[PaymentReminderManager] No schedule found for group:', groupName);
-            return null;
-          }
-          
-          // Parse schedule to get class time for this date
-          const classDate = new Date(dateStr + 'T00:00:00');
-          const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][classDate.getDay()];
-          
-          const scheduleSlots = parseSchedule(group.schedule);
-          const todaySlot = scheduleSlots.find(slot => slot.day === dayName);
-          
-          if (!todaySlot) {
-            console.warn('[PaymentReminderManager] No class scheduled for', dayName, 'in group:', groupName);
-            return null;
-          }
-          
-          // Parse time (e.g., "8:00 PM" -> 20:00)
-          const timeParts = todaySlot.time.match(/(\d+):(\d+)\s*(AM|PM)/i);
-          if (!timeParts) {
-            console.warn('[PaymentReminderManager] Invalid time format:', todaySlot.time);
-            return null;
-          }
-          
-          let hours = parseInt(timeParts[1]);
-          const minutes = parseInt(timeParts[2]);
-          const period = timeParts[3].toUpperCase();
-          
-          // Convert to 24-hour format
-          if (period === 'PM' && hours !== 12) hours += 12;
-          if (period === 'AM' && hours === 12) hours = 0;
-          
-          // Create start time
-          const startTime = new Date(dateStr + 'T00:00:00');
-          startTime.setHours(hours, minutes, 0, 0);
-          
-          // Add 2 hours for end time
-          const endTime = new Date(startTime);
-          endTime.setHours(endTime.getHours() + 2);
-          
-          return endTime;
-        } catch (error) {
-          console.error('[PaymentReminderManager] Error calculating class end time:', error);
-          return null;
-        }
-      }
-      
-      // Check if reminder was already sent today
-      function wasReminderSentToday(studentId, dateStr) {
-        if (!sentReminders[studentId]) return false;
-        if (!sentReminders[studentId][dateStr]) return false;
-        
-        const sentTime = sentReminders[studentId][dateStr];
-        const now = new Date().getTime();
-        const oneDayMs = 24 * 60 * 60 * 1000;
-        
-        // Check if less than 24 hours have passed
-        return (now - sentTime) < oneDayMs;
-      }
-      
-      // Mark reminder as sent
-      function markReminderSent(studentId, dateStr) {
-        if (!sentReminders[studentId]) {
-          sentReminders[studentId] = {};
-        }
-        sentReminders[studentId][dateStr] = new Date().getTime();
-        
-        // Save to localStorage for persistence
-        try {
-          localStorage.setItem('paymentReminders_sent', JSON.stringify(sentReminders));
-        } catch (error) {
-          console.error('[PaymentReminderManager] Error saving sent reminders:', error);
-        }
-      }
-      
-      // Load sent reminders from localStorage
-      function loadSentReminders() {
-        try {
-          const stored = localStorage.getItem('paymentReminders_sent');
-          if (stored) {
-            sentReminders = JSON.parse(stored);
-          }
-        } catch (error) {
-          console.error('[PaymentReminderManager] Error loading sent reminders:', error);
-          sentReminders = {};
-        }
-      }
-      
-      // Send payment reminder via email system
-      async function sendPaymentReminder(student, dateStr, amount) {
-        try {
-          // Call the email system iframe to send payment reminder
-          const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
-          if (!emailFrame) {
-            console.error('[PaymentReminderManager] Email system iframe not found');
-            return false;
-          }
-          
-          // Send message to email system
-          emailFrame.contentWindow.postMessage({
-            action: 'sendAutoReminder',
-            student: {
-              name: student.name,
-              email: student.email,
-              balance: amount
-            },
-            classDate: dateStr
-          }, '*');
-          
-          console.log('📧 [PaymentReminderManager] Sent auto-reminder for:', student.name, 'Date:', dateStr, 'Amount:', amount);
-          return true;
-        } catch (error) {
-          console.error('[PaymentReminderManager] Error sending reminder:', error);
-          return false;
-        }
-      }
-      
-      // Main function: Check and send reminders
-      async function checkAndSendReminders() {
-        try {
-          const today = getLADate();
-          const todayStr = formatDateYYYYMMDD(today);
-          
-          // Only check once per day
-          if (lastCheckDate === todayStr) {
-            return;
-          }
-          lastCheckDate = todayStr;
-          
-          console.log('🔍 [PaymentReminderManager] Starting daily reminder check for:', todayStr);
-          
-          // Get current calendar data
-          const calendarData = window.currentCalendarData || await generateCalendarData();
-          if (!calendarData || !calendarData.students) {
-            console.warn('[PaymentReminderManager] No calendar data available');
-            return;
-          }
-          
-          let remindersSent = 0;
-          
-          // Check each student
-          for (const studentData of calendarData.students) {
-            const student = studentData.student;
-            const studentId = student.id;
-            
-            // Skip if paused
-            if (isPaused(studentId)) {
-              console.log('[PaymentReminderManager] Skipping paused student:', student.name);
-              continue;
-            }
-            
-            // Skip if reminder already sent today
-            if (wasReminderSentToday(studentId, todayStr)) {
-              console.log('[PaymentReminderManager] Reminder already sent today for:', student.name);
-              continue;
-            }
-            
-            // Find today's class in student's attendance
-            const todayClass = studentData.attendance.find(a => a.date === todayStr);
-            if (!todayClass) {
-              continue; // No class today
-            }
-            
-            // Check if class is unpaid (has red dot)
-            if (todayClass.status !== 'unpaid') {
-              continue; // Not unpaid
-            }
-            
-            // Check if class has ended (current time > class end time)
-            const classEndTime = getClassEndTime(student.group, todayStr);
-            if (!classEndTime) {
-              console.warn('[PaymentReminderManager] Could not determine class end time for:', student.name);
-              continue;
-            }
-            
-            const now = new Date();
-            if (now < classEndTime) {
-              console.log('[PaymentReminderManager] Class not ended yet for:', student.name, 'Ends at:', classEndTime.toLocaleTimeString());
-              continue;
-            }
-            
-            // All checks passed - send reminder
-            const amount = todayClass.balance || 0;
-            const sent = await sendPaymentReminder(student, todayStr, amount);
-            
-            if (sent) {
-              markReminderSent(studentId, todayStr);
-              remindersSent++;
-            }
-          }
-          
-          if (remindersSent > 0) {
-            console.log('✅ [PaymentReminderManager] Sent', remindersSent, 'auto-reminders');
-          } else {
-            console.log('✅ [PaymentReminderManager] No reminders needed today');
-          }
-        } catch (error) {
-          console.error('[PaymentReminderManager] ❌ Error in checkAndSendReminders:', error);
-        }
-      }
-      
-      // Initialize
-      async function initialize() {
-        await loadPausedFromSupabase();
-        loadSentReminders();
-        
-        // Check immediately on load
-        checkAndSendReminders();
-        
-        // Check every hour
-        setInterval(checkAndSendReminders, 60 * 60 * 1000);
-      }
-      
-      // Public API
-      return {
-        initialize,
-        togglePause,
-        isPaused,
-        checkAndSendReminders,
-        reloadFromSupabase: loadPausedFromSupabase
-      };
-    })();
-    
-    // ============================================================================
-    // END PAYMENT REMINDER MANAGER
     // ============================================================================
     
     // Initialize on page load
