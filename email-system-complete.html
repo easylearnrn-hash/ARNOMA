@@ -1314,7 +1314,11 @@ ARNOMA Team"></textarea>
             trigger: 'manual',
             active: true
           }
-
+        ];
+      },
+      
+      renderTemplates() {
+        const grid = document.getElementById('templatesGrid');
         
         if (this._templates.length === 0) {
           grid.innerHTML = `
