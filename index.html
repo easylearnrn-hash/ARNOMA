@@ -9821,11 +9821,32 @@
         filterDropdown.addEventListener('change', renderPaymentEmailsView);
       }
       
+      // Create hidden email system iframe for postMessage communication
+      initializeEmailSystemIframe();
+      
       // Initialize Payment Reminder Manager (auto-send reminders for unpaid classes)
       if (window.PaymentReminderManager) {
         await window.PaymentReminderManager.initialize();
         console.log('✅ Payment Reminder Manager initialized');
       }
+    }
+    
+    // Initialize hidden email system iframe
+    function initializeEmailSystemIframe() {
+      // Check if iframe already exists
+      if (document.querySelector('iframe[src*="email-system-complete.html"]')) {
+        return;
+      }
+      
+      // Create hidden iframe for email system postMessage communication
+      const iframe = document.createElement('iframe');
+      iframe.src = 'email-system-complete.html?v=' + Date.now();
+      iframe.style.cssText = 'position: absolute; width: 1px; height: 1px; top: -9999px; left: -9999px; border: none; visibility: hidden;';
+      iframe.setAttribute('aria-hidden', 'true');
+      iframe.id = 'hiddenEmailSystemIframe';
+      document.body.appendChild(iframe);
+      
+      debugLog('✅ Hidden email system iframe initialized');
     }
     
     // ============================
