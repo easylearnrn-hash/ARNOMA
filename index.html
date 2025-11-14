@@ -58,21 +58,67 @@
         // Hide the page content
         document.body.style.display = 'none';
         
-        // Prompt for password
-        const enteredPassword = prompt('🔐 Enter password to access ARNOMA:');
+        // Create custom password modal with hidden input
+        const modalHTML = `
+          <div id="passwordModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); display: flex; align-items: center; justify-content: center; z-index: 999999;">
+            <div style="background: rgba(255,255,255,0.05); padding: 40px; border-radius: 16px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.5); max-width: 400px; width: 90%;">
+              <div style="text-align: center; margin-bottom: 24px;">
+                <div style="font-size: 48px; margin-bottom: 16px;">🔐</div>
+                <h2 style="margin: 0; font-size: 24px; font-weight: 900; color: white; font-family: system-ui;">ARNOMA Access</h2>
+                <p style="margin: 8px 0 0 0; font-size: 14px; color: #94a3b8; font-family: system-ui;">Enter password to continue</p>
+              </div>
+              <input type="password" id="passwordInput" placeholder="Enter password" style="width: 100%; padding: 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 16px; font-family: system-ui; box-sizing: border-box; margin-bottom: 16px;" autofocus />
+              <button id="passwordSubmit" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 10px; color: white; font-size: 16px; font-weight: 700; cursor: pointer; font-family: system-ui; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                Unlock
+              </button>
+              <div id="passwordError" style="margin-top: 12px; font-size: 13px; color: #ef4444; text-align: center; font-family: system-ui; display: none;"></div>
+            </div>
+          </div>
+        `;
         
-        if (enteredPassword === APP_PASSWORD) {
-          // Correct password
-          sessionStorage.setItem(SESSION_KEY, 'true');
-          document.body.style.display = 'block';
-          console.log('✅ Access granted');
-        } else {
-          // Wrong password
-          alert('❌ Incorrect password. Access denied.');
-          // Redirect away or show blank page
-          document.body.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: #ef4444;">Access Denied</div>';
-          throw new Error('Authentication failed');
+        document.body.insertAdjacentHTML('beforeend', modalHTML);
+        document.body.style.display = 'block';
+        
+        const input = document.getElementById('passwordInput');
+        const submitBtn = document.getElementById('passwordSubmit');
+        const errorDiv = document.getElementById('passwordError');
+        
+        function checkPasswordInput() {
+          const enteredPassword = input.value;
+          
+          if (enteredPassword === APP_PASSWORD) {
+            // Correct password
+            sessionStorage.setItem(SESSION_KEY, 'true');
+            document.getElementById('passwordModal').remove();
+            console.log('✅ Access granted');
+          } else {
+            // Wrong password
+            errorDiv.textContent = '❌ Incorrect password. Please try again.';
+            errorDiv.style.display = 'block';
+            input.value = '';
+            input.focus();
+            
+            // Shake animation
+            input.style.animation = 'shake 0.5s';
+            setTimeout(() => input.style.animation = '', 500);
+          }
         }
+        
+        submitBtn.onclick = checkPasswordInput;
+        input.onkeypress = (e) => {
+          if (e.key === 'Enter') checkPasswordInput();
+        };
+        
+        // Add shake animation
+        const style = document.createElement('style');
+        style.textContent = `
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+          }
+        `;
+        document.head.appendChild(style);
       }
     })();
     
