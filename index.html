@@ -13089,6 +13089,18 @@
         return false;
       });
       
+      // DEBUG: Log for today's students with payments
+      if (dateStr === '2025-11-14' && studentPayments.length > 0) {
+        console.log(`💰 ${student.name} has ${studentPayments.length} payment(s) on ${dateStr}:`, 
+          studentPayments.map(p => ({
+            date: formatDateYYYYMMDD(toLADate(new Date(p.emailDate || p.date))),
+            from: p.payerNameRaw,
+            student: p.studentName,
+            amount: p.amount
+          }))
+        );
+      }
+      
       // DEBUG: Log filtered payments
       if (dateStr === '2025-11-12' && student.name === 'Stella Ghazaryan') {
         console.log('🔍 Found payments for Stella on Nov 12:', studentPayments.length);
@@ -13102,6 +13114,11 @@
         
         const paymentDate = toLADate(new Date(paymentTimestamp));
         const paymentDateStr = formatDateYYYYMMDD(paymentDate);
+        
+        // DEBUG: Log date comparison for today
+        if (dateStr === '2025-11-14') {
+          console.log(`   🔍 Checking payment: ${paymentDateStr} vs ${dateStr} for ${student.name}`);
+        }
         
         // Exact date match
         if (paymentDateStr === dateStr) return true;
