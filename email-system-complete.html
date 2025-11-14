@@ -1357,17 +1357,22 @@ ARNOMA Team"></textarea>
       renderTemplates() {
         const grid = document.getElementById('templatesGrid');
         
+        // Always show "Create Template" card first
+        let html = `
+          <div class="template-card" onclick="openEditor()" style="cursor: pointer; border: 2px dashed rgba(165,180,252,.4); background: linear-gradient(135deg, rgba(102,126,234,.1), rgba(118,75,162,.1)); display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 250px;">
+            <div style="font-size: 64px; opacity: 0.6; margin-bottom: 16px;">✨</div>
+            <h3 style="margin: 0 0 8px 0; font-size: 20px; color: var(--primary-bright);">Create New Template</h3>
+            <p style="font-size: 14px; color: var(--secondary); margin: 0;">Click to add a new email template</p>
+          </div>
+        `;
+        
         if (this._templates.length === 0) {
-          grid.innerHTML = `
-            <div style="text-align: center; padding: 80px 20px; color: var(--secondary);">
-              <div style="font-size: 72px; opacity: 0.3; margin-bottom: 20px;">📧</div>
-              <p style="font-size: 18px;">No templates yet. Create your first one!</p>
-            </div>
-          `;
+          grid.innerHTML = html;
           return;
         }
         
-        grid.innerHTML = this._templates.map(template => {
+        // Add existing templates
+        html += this._templates.map(template => {
           const isHTML = template.body.includes('<!DOCTYPE html>');
           const bodyPreview = isHTML ? 'Full HTML Email Template' : template.body.substring(0, 200);
           
@@ -1414,6 +1419,8 @@ ARNOMA Team"></textarea>
             </div>
           `;
         }).join('');
+        
+        grid.innerHTML = html;
       },
       
       getTriggerLabel(trigger) {
