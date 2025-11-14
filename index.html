@@ -7026,36 +7026,6 @@
     
     /**
      * Create Auto Backup
-     * Stores automatic backups in localStorage (keeps last 5)
-     */
-    function createAutoBackup(backupData) {
-      try {
-        // Get existing auto backups
-        const autoBackupsRaw = localStorage.getItem('autoBackups:v2');
-        let autoBackups = autoBackupsRaw ? JSON.parse(autoBackupsRaw) : [];
-        
-        // Add new backup
-        autoBackups.push({
-          timestamp: backupData.timestamp,
-          data: backupData
-        });
-        
-        // Keep only last 5 backups
-        if (autoBackups.length > 5) {
-          autoBackups = autoBackups.slice(-5);
-        }
-        
-        // Save back to localStorage
-        localStorage.setItem('autoBackups:v2', JSON.stringify(autoBackups));
-        
-        // Also save as lastAutoBackup for quick access
-        localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
-      } catch (error) {
-        console.error('Error creating auto backup:', error);
-      }
-    }
-    /**
-     * Create Auto Backup
      * All data is already in Supabase, so this just logs the backup event
      */
     async function createAutoBackup(backupData) {
