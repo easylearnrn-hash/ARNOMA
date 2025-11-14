@@ -8393,7 +8393,13 @@
     async function deleteStudent(studentId) {
       console.log('🗑️ deleteStudent called with ID:', studentId);
       
-      const students = getCachedStudents();
+      // Load students from cache, or from Supabase if cache is empty
+      let students = getCachedStudents();
+      if (!students || students.length === 0) {
+        console.log('📥 Cache empty, loading students from Supabase...');
+        students = await loadStudents();
+      }
+      
       const student = students.find(s => s.id === studentId);
       if (!student) {
         console.error('❌ Student not found:', studentId);
