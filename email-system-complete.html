@@ -480,18 +480,10 @@
 
             <div id="groupSelection" style="display: none;">
               <div id="groupList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
-                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
-                  <input type="checkbox" name="groups" value="A" style="margin-right: 6px;">
-                  <span style="font-weight: 600; color: white;">Group A</span>
-                </label>
-                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
-                  <input type="checkbox" name="groups" value="B" style="margin-right: 6px;">
-                  <span style="font-weight: 600; color: white;">Group B</span>
-                </label>
-                <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
-                  <input type="checkbox" name="groups" value="C" style="margin-right: 6px;">
-                  <span style="font-weight: 600; color: white;">Group C</span>
-                </label>
+                <!-- Groups will be loaded dynamically from Supabase -->
+                <div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--secondary);">
+                  Loading groups...
+                </div>
               </div>
             </div>
 
@@ -976,7 +968,7 @@ ARNOMA Team"></textarea>
       }
     }
     // Send email to multiple recipients
-    async function sendBulkEmails(recipients, subject, htmlBody) {
+    async function sendBulkEmails(recipients, subject, htmlBody, templateName = 'Unknown') {
       if (!useSupabaseEmail && !isGmailConnected()) {
         showNotification('❌ Please connect Gmail first', 'error');
         return;
@@ -989,6 +981,8 @@ ARNOMA Team"></textarea>
         const success = await sendEmail(email, subject, htmlBody);
         if (success) {
           successCount++;
+          // Track sent email in Supabase
+          await trackSentEmail(email, subject, templateName);
         } else {
           failCount++;
         }
@@ -2025,13 +2019,40 @@ ARNOMA Team"></textarea>
       if (automation.recipientType === 'individual') {
         recipients = automation.emails || [];
       } else if (automation.recipientType === 'group') {
-        // TODO: Fetch student emails from groups via parent window
-        showNotification('⚠️ Group email sending coming soon. Use individual emails for now.', 'warning');
-        return;
+        // Fetch student emails from selected groups
+        const selectedGroups = automation.selectedGroups || [];
+        if (selectedGroups.length === 0) {
+          showNotification('❌ No groups selected', 'error');
+          return;
+        }
+        
+        try {
+          const { data: students, error } = await supabase
+            .from('students')
+            .select('email, group_name')
+            .in('group_name', selectedGroups);
+          
+          if (error) throw error;
+          recipients = students.map(s => s.email).filter(email => email);
+        } catch (error) {
+          console.error('❌ Error fetching students:', error);
+          showNotification('❌ Error fetching students from groups', 'error');
+          return;
+        }
       } else if (automation.recipientType === 'all') {
-        // TODO: Fetch all student emails via parent window
-        showNotification('⚠️ Send to all coming soon. Use individual emails for now.', 'warning');
-        return;
+        // Fetch all active student emails
+        try {
+          const { data: students, error } = await supabase
+            .from('students')
+            .select('email');
+          
+          if (error) throw error;
+          recipients = students.map(s => s.email).filter(email => email);
+        } catch (error) {
+          console.error('❌ Error fetching all students:', error);
+          showNotification('❌ Error fetching all students', 'error');
+          return;
+        }
       }
 
       if (recipients.length === 0) {
@@ -2045,11 +2066,79 @@ ARNOMA Team"></textarea>
       }
 
       showNotification(`📧 Sending emails...`, 'info');
-      await sendBulkEmails(recipients, template.subject, template.body);
+      await sendBulkEmails(recipients, template.subject, template.body, template.name);
+    }
+
+    // Load groups from Supabase and populate group selection
+    async function loadGroupsFromSupabase() {
+      try {
+        const { data: groups, error } = await supabase
+          .from('groups')
+          .select('group_name')
+          .order('group_name');
+        
+        if (error) throw error;
+        
+        const groupList = document.getElementById('groupList');
+        if (!groups || groups.length === 0) {
+          groupList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--secondary);">No groups found. Please add groups in Group Manager.</div>';
+          return;
+        }
+        
+        groupList.innerHTML = groups.map(g => `
+          <label style="background: rgba(255,255,255,.05); padding: 10px; border-radius: 8px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; text-align: center;">
+            <input type="checkbox" name="groups" value="${g.group_name}" style="margin-right: 6px;">
+            <span style="font-weight: 600; color: white;">${g.group_name}</span>
+          </label>
+        `).join('');
+        
+        console.log('✅ Loaded', groups.length, 'groups from Supabase');
+      } catch (error) {
+        console.error('❌ Error loading groups:', error);
+        const groupList = document.getElementById('groupList');
+        groupList.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--error);">Error loading groups</div>';
+      }
+    }
+
+    // Track sent emails in Supabase
+    async function trackSentEmail(recipient, subject, template_name) {
+      try {
+        const { error } = await supabase
+          .from('sent_emails')
+          .insert([{
+            recipient_email: recipient,
+            subject: subject,
+            template_name: template_name,
+            sent_at: new Date().toISOString()
+          }]);
+        
+        if (error) throw error;
+        console.log('✅ Tracked sent email to', recipient);
+      } catch (error) {
+        console.error('❌ Error tracking sent email:', error);
+      }
+    }
+
+    // Load sent emails history
+    async function loadSentEmails() {
+      try {
+        const { data: emails, error } = await supabase
+          .from('sent_emails')
+          .select('*')
+          .order('sent_at', { ascending: false })
+          .limit(100);
+        
+        if (error) throw error;
+        return emails || [];
+      } catch (error) {
+        console.error('❌ Error loading sent emails:', error);
+        return [];
+      }
     }
 
     // Initialize
     emailSystem.init();
+    loadGroupsFromSupabase();
     
     // Check Gmail connection on load
     if (!useSupabaseEmail) { handleGmailOAuthCallback(); }
