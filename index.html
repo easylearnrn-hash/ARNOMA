@@ -13869,7 +13869,7 @@
         return success;
       }
       
-      // Get class end time (start time + 2 hours)
+      // Get class end time (start time + 2 hours) - FORCED LA TIMEZONE
       function getClassEndTime(groupName, dateStr) {
         try {
           // Find the group
@@ -13880,8 +13880,13 @@
           }
           
           // Parse schedule to get class time for this date
-          const classDate = new Date(dateStr + 'T00:00:00');
-          const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][classDate.getDay()];
+          // CRITICAL: Use LA timezone for date parsing
+          const classDate = new Date(dateStr + 'T00:00:00-08:00'); // Force PST/PDT
+          const laDateStr = classDate.toLocaleString('en-US', { 
+            timeZone: 'America/Los_Angeles',
+            weekday: 'long'
+          });
+          const dayName = laDateStr.split(',')[0]; // Get day name in LA timezone
           
           const scheduleSlots = parseSchedule(group.schedule);
           const todaySlot = scheduleSlots.find(slot => slot.day === dayName);
@@ -13906,13 +13911,25 @@
           if (period === 'PM' && hours !== 12) hours += 12;
           if (period === 'AM' && hours === 12) hours = 0;
           
-          // Create start time
-          const startTime = new Date(dateStr + 'T00:00:00');
-          startTime.setHours(hours, minutes, 0, 0);
+          // CRITICAL: Create start time in LA timezone
+          // Parse the dateStr as LA date and set the hours/minutes
+          const [year, month, day] = dateStr.split('-').map(Number);
+          
+          // Create date string in ISO format for LA timezone
+          const laDateTimeStr = `${dateStr}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+          
+          // Create Date object and force interpretation as LA time
+          const startTime = new Date(laDateTimeStr);
+          
+          // Convert to LA timezone explicitly using Intl API
+          const laStartTime = new Date(startTime.toLocaleString('en-US', { 
+            timeZone: 'America/Los_Angeles' 
+          }));
           
           // Add 2 hours for end time
-          const endTime = new Date(startTime);
-          endTime.setHours(endTime.getHours() + 2);
+          const endTime = new Date(laStartTime.getTime() + (2 * 60 * 60 * 1000));
+          
+          console.log(`[PaymentReminderManager] 🕐 Class end time for ${groupName} on ${dateStr}: ${endTime.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', hour12: true })}`);
           
           return endTime;
         } catch (error) {
@@ -13921,25 +13938,31 @@
         }
       }
       
-      // Check if reminder was already sent today
+      // Check if reminder was already sent today - FORCED LA TIMEZONE
       function wasReminderSentToday(studentId, dateStr) {
         if (!sentReminders[studentId]) return false;
         if (!sentReminders[studentId][dateStr]) return false;
         
         const sentTime = sentReminders[studentId][dateStr];
-        const now = new Date().getTime();
+        
+        // CRITICAL: Use LA timezone for current time
+        const nowLA = getLADate();
+        const nowMs = nowLA.getTime();
         const oneDayMs = 24 * 60 * 60 * 1000;
         
         // Check if less than 24 hours have passed
-        return (now - sentTime) < oneDayMs;
+        return (nowMs - sentTime) < oneDayMs;
       }
       
-      // Mark reminder as sent
+      // Mark reminder as sent - FORCED LA TIMEZONE
       function markReminderSent(studentId, dateStr) {
         if (!sentReminders[studentId]) {
           sentReminders[studentId] = {};
         }
-        sentReminders[studentId][dateStr] = new Date().getTime();
+        
+        // CRITICAL: Use LA timezone for timestamp
+        const nowLA = getLADate();
+        sentReminders[studentId][dateStr] = nowLA.getTime();
         
         // Save to localStorage for persistence
         try {
@@ -14049,11 +14072,21 @@
               continue;
             }
             
-            const now = new Date();
-            if (now < classEndTime) {
-              console.log('[PaymentReminderManager] Class not ended yet for:', student.name, 'Ends at:', classEndTime.toLocaleTimeString());
+            // CRITICAL: Use LA timezone for current time comparison
+            const nowLA = getLADate();
+            const nowLAStr = nowLA.toLocaleString('en-US', { 
+              timeZone: 'America/Los_Angeles',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            });
+            
+            if (nowLA < classEndTime) {
+              console.log(`[PaymentReminderManager] Class not ended yet for: ${student.name} | Current LA Time: ${nowLAStr} | Class ends at: ${classEndTime.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', hour12: true })}`);
               continue;
             }
+            
+            console.log(`[PaymentReminderManager] ✅ Class ended for: ${student.name} | Current LA Time: ${nowLAStr} | Class ended at: ${classEndTime.toLocaleString('en-US', { timeZone: 'America/Los_Angeles', hour: '2-digit', minute: '2-digit', hour12: true })}`);
             
             // All checks passed - send reminder
             const amount = todayClass.balance || 0;
