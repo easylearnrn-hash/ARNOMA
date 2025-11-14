@@ -45,6 +45,56 @@
         console.log('🔥 ARNOMA v2.1.0 Ready');    // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzA0NjU0NDgsImV4cCI6MjA0NjA0MTQ0OH0.xJxL6HXuCVlxvnEqmRO8yXQMY1GCFMGCo4e2MhEFT-Y';
+    
+    // ============================================================================
+    // CRITICAL: API KEY VALIDATION - PREVENTS INVALID KEY DEPLOYMENTS
+    // ============================================================================
+    (function validateSupabaseKey() {
+        try {
+            // Decode JWT to verify it's valid
+            const parts = SUPABASE_ANON_KEY.split('.');
+            if (parts.length !== 3) {
+                throw new Error('Invalid JWT format - must have 3 parts');
+            }
+            
+            const payload = JSON.parse(atob(parts[1]));
+            
+            // Verify required fields
+            if (payload.iss !== 'supabase') {
+                throw new Error('Invalid issuer - must be "supabase"');
+            }
+            if (payload.ref !== 'zlvnxvrzotamhpezqedr') {
+                throw new Error('Invalid ref - must match project ID');
+            }
+            if (payload.role !== 'anon') {
+                throw new Error('Invalid role - must be "anon"');
+            }
+            
+            // Verify issued date is in the PAST (not future)
+            const iat = payload.iat;
+            const now = Math.floor(Date.now() / 1000);
+            if (iat > now) {
+                throw new Error(`INVALID KEY: Issued date is in the FUTURE (${iat} > ${now})`);
+            }
+            
+            // Verify expiration is in the FUTURE
+            const exp = payload.exp;
+            if (exp < now) {
+                throw new Error(`EXPIRED KEY: Expiration date has passed (${exp} < ${now})`);
+            }
+            
+            console.log('✅ Supabase ANON_KEY validated successfully');
+            console.log('   - Issued:', new Date(iat * 1000).toISOString());
+            console.log('   - Expires:', new Date(exp * 1000).toISOString());
+            
+        } catch (error) {
+            console.error('🚨 CRITICAL: INVALID SUPABASE KEY DETECTED!');
+            console.error('   Error:', error.message);
+            alert(`🚨 CRITICAL ERROR: Invalid Supabase API Key!\n\n${error.message}\n\nData will NOT load. Contact developer immediately.`);
+            throw error; // Stop execution
+        }
+    })();
+    
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     // ============================================================================
@@ -94,6 +144,95 @@
     window.clearSession = window.forceLogoutAndClear;
     
     console.log('💡 Tip: If stuck with auth errors, run: forceLogoutAndClear() or clearSession()');
+    
+    // ============================================================================
+    // AUTOMATIC DATA INTEGRITY MONITOR - PREVENTS SILENT DATA LOSS
+    // ============================================================================
+    
+    /**
+     * CRITICAL: Monitors data integrity and alerts if data mysteriously disappears
+     * Prevents the "empty database" scenario from going unnoticed
+     */
+    window.DataIntegrityMonitor = {
+      lastKnownCounts: null,
+      checkIntervalMinutes: 5,
+      
+      async checkDataIntegrity() {
+        try {
+          // Only check if user is authenticated
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) return; // Not logged in, skip check
+          
+          // Query all tables
+          const [paymentsResult, studentsResult, groupsResult] = await Promise.all([
+            supabase.from('payments').select('id', { count: 'exact', head: true }),
+            supabase.from('students').select('id', { count: 'exact', head: true }),
+            supabase.from('groups').select('id', { count: 'exact', head: true })
+          ]);
+          
+          const currentCounts = {
+            payments: paymentsResult.count || 0,
+            students: studentsResult.count || 0,
+            groups: groupsResult.count || 0
+          };
+          
+          console.log('🔍 Data Integrity Check:', currentCounts);
+          
+          // First run - just store baseline
+          if (!this.lastKnownCounts) {
+            this.lastKnownCounts = currentCounts;
+            console.log('✅ Baseline established:', currentCounts);
+            return;
+          }
+          
+          // Check for catastrophic data loss (>50% drop in any table)
+          const paymentsDrop = this.lastKnownCounts.payments - currentCounts.payments;
+          const studentsDrop = this.lastKnownCounts.students - currentCounts.students;
+          
+          if (paymentsDrop > this.lastKnownCounts.payments * 0.5) {
+            console.error('🚨 CRITICAL: Massive payment data loss detected!');
+            console.error(`   Before: ${this.lastKnownCounts.payments}, Now: ${currentCounts.payments}`);
+            alert(`🚨 CRITICAL DATA LOSS DETECTED!\n\nPayments dropped from ${this.lastKnownCounts.payments} to ${currentCounts.payments}!\n\nDO NOT make any changes. Contact developer immediately.`);
+          }
+          
+          if (studentsDrop > this.lastKnownCounts.students * 0.5) {
+            console.error('🚨 CRITICAL: Massive student data loss detected!');
+            console.error(`   Before: ${this.lastKnownCounts.students}, Now: ${currentCounts.students}`);
+            alert(`🚨 CRITICAL DATA LOSS DETECTED!\n\nStudents dropped from ${this.lastKnownCounts.students} to ${currentCounts.students}!\n\nDO NOT make any changes. Contact developer immediately.`);
+          }
+          
+          // Check for EMPTY database (all zero)
+          if (currentCounts.payments === 0 && currentCounts.students === 0 && 
+              this.lastKnownCounts.payments > 0 && this.lastKnownCounts.students > 0) {
+            console.error('🚨 CRITICAL: DATABASE IS COMPLETELY EMPTY!');
+            alert(`🚨 CATASTROPHIC DATA LOSS!\n\nDatabase is completely empty!\nPreviously had:\n- ${this.lastKnownCounts.payments} payments\n- ${this.lastKnownCounts.students} students\n\nDO NOT PROCEED. Contact developer NOW.`);
+          }
+          
+          // Update baseline (only if no major loss detected)
+          if (paymentsDrop <= 10 && studentsDrop <= 5) {
+            this.lastKnownCounts = currentCounts;
+          }
+          
+        } catch (error) {
+          console.error('❌ Data integrity check failed:', error);
+          // Don't alert on check failures, just log
+        }
+      },
+      
+      startMonitoring() {
+        // Initial check after 10 seconds (let app initialize first)
+        setTimeout(() => this.checkDataIntegrity(), 10000);
+        
+        // Then check every N minutes
+        const intervalMs = this.checkIntervalMinutes * 60 * 1000;
+        setInterval(() => this.checkDataIntegrity(), intervalMs);
+        
+        console.log(`✅ Data Integrity Monitor started (checking every ${this.checkIntervalMinutes} minutes)`);
+      }
+    };
+    
+    // Start monitoring immediately
+    DataIntegrityMonitor.startMonitoring();
     
     
     // Global data caches for performance
