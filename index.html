@@ -47,6 +47,54 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
+    // ============================================================================
+    // EMERGENCY SESSION CLEAR (Available Immediately)
+    // ============================================================================
+    
+    /**
+     * Force logout and clear all cached session data
+     * Use when stuck with invalid session (Safari cache issues)
+     */
+    window.forceLogoutAndClear = async function() {
+      try {
+        console.log('🔄 Force logout - clearing all sessions...');
+        
+        // Sign out from Supabase
+        if (window.supabase) {
+          await supabase.auth.signOut();
+        }
+        
+        // Clear all local storage auth data
+        const keysToRemove = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && (key.includes('supabase') || key.includes('arnoma') || key.includes('auth'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach(key => localStorage.removeItem(key));
+        
+        // Clear session storage
+        sessionStorage.clear();
+        
+        console.log('✅ Force logout complete - refreshing page...');
+        alert('✅ Session cleared! Page will refresh. Please log in again.');
+        
+        // Hard refresh to clear everything
+        window.location.reload(true);
+        
+      } catch (error) {
+        console.error('❌ Force logout error:', error);
+        alert('⚠️ Logout completed with errors. Refreshing page...');
+        window.location.reload(true);
+      }
+    };
+    
+    // Quick access function for console
+    window.clearSession = window.forceLogoutAndClear;
+    
+    console.log('💡 Tip: If stuck with auth errors, run: forceLogoutAndClear() or clearSession()');
+    
     
     // Global data caches for performance
     window.paymentsCache = [];
@@ -2117,6 +2165,13 @@
         </button>
         
         <div id="authError" style="display: none; margin-top: 16px; padding: 12px; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; color: #dc2626; font-size: 14px; text-align: center;"></div>
+        
+        <!-- Troubleshooting link for stuck sessions -->
+        <div style="margin-top: 16px; text-align: center;">
+          <a href="javascript:void(0)" onclick="forceLogoutAndClear()" style="color: #94a3b8; font-size: 12px; text-decoration: none; transition: color 0.2s;" onmouseover="this.style.color='#667eea'" onmouseout="this.style.color='#94a3b8'">
+            🔧 Clear session & force re-login
+          </a>
+        </div>
       </form>
       
       <!-- Footer -->
@@ -2678,7 +2733,15 @@
               📧 Email System
             </div>
             
+            <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Diagnostics</div>
+            <div onclick="runSupabaseDiagnostics(); document.getElementById('settingsMenu').style.display='none';" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(59,130,246,0.15)'" onmouseout="this.style.background='transparent'">
+              🔍 Run Connection Test
+            </div>
+            
             <div style="padding: 12px 18px; border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 11px; font-weight: 700; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px; margin-top: 8px;">Data Management</div>
+            <div onclick="exportSupabaseBackup()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(34,197,94,0.15)'" onmouseout="this.style.background='transparent'">
+              📦 Export from Supabase Cloud
+            </div>
             <div onclick="exportFullBackup()" style="padding: 14px 18px; cursor: pointer; color: white; font-size: 14px; font-weight: 600; transition: all 0.2s; border-bottom: 1px solid rgba(255,255,255,0.05);" onmouseover="this.style.background='rgba(34,197,94,0.15)'" onmouseout="this.style.background='transparent'">
               💾 Export Full Backup
             </div>
@@ -3078,6 +3141,11 @@
               hint: error.hint
             });
             console.error('📋 Failed payload sample:', paymentsForSupabase[0]);
+            
+            // Check if this is an auth error
+            if (window.handleSupabaseError && window.handleSupabaseError(error, 'PaymentStore.save')) {
+              return; // Auth error handled, user will be prompted to login
+            }
             
             // Try to save to cache anyway so data isn't lost
             window.paymentsCache = payments;
@@ -6998,6 +7066,204 @@
         debugLog('✅ Auto-backup completed');
       } catch (error) {
         console.error('Error creating auto-backup metadata:', error);
+      }
+    }
+    
+    /**
+     * Export Complete Supabase Backup
+     * Downloads ALL data from Supabase cloud database
+     */
+    async function exportSupabaseBackup() {
+      try {
+        showNotification('📦 Exporting from Supabase...', 'info');
+        
+        // Fetch all data from Supabase
+        const [paymentsResult, studentsResult, groupsResult] = await Promise.all([
+          supabase.from('payments').select('*').order('date', { ascending: false }),
+          supabase.from('students').select('*').order('name', { ascending: true }),
+          supabase.from('groups').select('*').order('group_name', { ascending: true })
+        ]);
+        
+        // Check for errors
+        if (paymentsResult.error) {
+          console.error('❌ Error fetching payments:', paymentsResult.error);
+          throw new Error('Failed to fetch payments: ' + paymentsResult.error.message);
+        }
+        
+        if (studentsResult.error) {
+          console.error('❌ Error fetching students:', studentsResult.error);
+          throw new Error('Failed to fetch students: ' + studentsResult.error.message);
+        }
+        
+        if (groupsResult.error) {
+          console.error('❌ Error fetching groups:', groupsResult.error);
+          throw new Error('Failed to fetch groups: ' + groupsResult.error.message);
+        }
+        
+        // Create comprehensive backup object
+        const backup = {
+          version: '3.0-supabase',
+          source: 'supabase-cloud-export',
+          timestamp: new Date().toISOString(),
+          supabase_project: SUPABASE_URL,
+          
+          // Metadata
+          counts: {
+            payments: paymentsResult.data?.length || 0,
+            students: studentsResult.data?.length || 0,
+            groups: groupsResult.data?.length || 0
+          },
+          
+          // All data (raw from Supabase)
+          payments: paymentsResult.data || [],
+          students: studentsResult.data || [],
+          groups: groupsResult.data || [],
+          
+          // Additional metadata for restore verification
+          export_info: {
+            exported_by: currentUser?.email || 'unknown',
+            export_timestamp_utc: new Date().toISOString(),
+            export_timestamp_la: new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })
+          }
+        };
+        
+        // Convert to formatted JSON
+        const jsonString = JSON.stringify(backup, null, 2);
+        
+        // Create downloadable file
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        // Create filename with timestamp
+        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+        a.download = `ARNOMA_Supabase_Backup_${timestamp}.json`;
+        
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        // Show success with counts
+        showNotification(
+          `✅ Supabase backup exported!\n` +
+          `💳 ${backup.counts.payments} payments\n` +
+          `👥 ${backup.counts.students} students\n` +
+          `📚 ${backup.counts.groups} groups`,
+          'success'
+        );
+        
+        console.log('✅ Supabase backup exported:', backup.counts);
+        
+      } catch (error) {
+        console.error('❌ Error exporting Supabase backup:', error);
+        showNotification('❌ Failed to export from Supabase: ' + error.message, 'error');
+      }
+    }
+    
+    /**
+     * Import Supabase Backup
+     * Restores data to Supabase from a backup file
+     */
+    async function importSupabaseBackup(jsonData) {
+      try {
+        // Confirm before overwriting cloud data
+        const confirmed = await customConfirm(
+          '⚠️ WARNING: This will OVERWRITE all data in Supabase!\n\n' +
+          'Current cloud data will be REPLACED with backup data.\n\n' +
+          'Create a backup first if you want to keep current data.\n\n' +
+          'Continue with restore?',
+          {
+            title: '⚠️ Restore to Supabase Cloud',
+            icon: '☁️',
+            okText: 'RESTORE TO CLOUD',
+            type: 'danger'
+          }
+        );
+        
+        if (!confirmed) return;
+        
+        // Parse backup data
+        let backup;
+        try {
+          backup = JSON.parse(jsonData);
+        } catch (parseError) {
+          showNotification('❌ Invalid backup file format', 'error');
+          return;
+        }
+        
+        // Validate backup
+        if (!backup.version || !backup.timestamp) {
+          showNotification('❌ Invalid backup: missing version info', 'error');
+          return;
+        }
+        
+        if (!backup.payments && !backup.students && !backup.groups) {
+          showNotification('❌ Invalid backup: no data found', 'error');
+          return;
+        }
+        
+        showNotification('🔄 Restoring to Supabase...', 'info');
+        
+        // Restore each table
+        const errors = [];
+        
+        // Restore payments
+        if (backup.payments && backup.payments.length > 0) {
+          const { error } = await supabase
+            .from('payments')
+            .upsert(backup.payments, { onConflict: 'id' });
+          
+          if (error) {
+            console.error('❌ Error restoring payments:', error);
+            errors.push('Payments: ' + error.message);
+          } else {
+            console.log('✅ Restored', backup.payments.length, 'payments');
+          }
+        }
+        
+        // Restore students
+        if (backup.students && backup.students.length > 0) {
+          const { error } = await supabase
+            .from('students')
+            .upsert(backup.students, { onConflict: 'id' });
+          
+          if (error) {
+            console.error('❌ Error restoring students:', error);
+            errors.push('Students: ' + error.message);
+          } else {
+            console.log('✅ Restored', backup.students.length, 'students');
+          }
+        }
+        
+        // Restore groups
+        if (backup.groups && backup.groups.length > 0) {
+          const { error } = await supabase
+            .from('groups')
+            .upsert(backup.groups, { onConflict: 'id' });
+          
+          if (error) {
+            console.error('❌ Error restoring groups:', error);
+            errors.push('Groups: ' + error.message);
+          } else {
+            console.log('✅ Restored', backup.groups.length, 'groups');
+          }
+        }
+        
+        // Show results
+        if (errors.length > 0) {
+          showNotification('⚠️ Restore completed with errors:\n' + errors.join('\n'), 'warning');
+        } else {
+          showNotification('✅ Successfully restored all data to Supabase!', 'success');
+        }
+        
+        // Reload data from cloud
+        await restoreFromCloud();
+        
+      } catch (error) {
+        console.error('❌ Error importing Supabase backup:', error);
+        showNotification('❌ Failed to restore: ' + error.message, 'error');
       }
     }
     
@@ -14341,6 +14607,216 @@
     // Authentication State Management
     let currentUser = null;
 
+    // ============================================================================
+    // SUPABASE DIAGNOSTIC & DEBUGGING TOOLS
+    // ============================================================================
+    
+    /**
+     * Run comprehensive Supabase diagnostics
+     * Checks connection, auth, data loading, and RLS policies
+     */
+    async function runSupabaseDiagnostics() {
+      console.log('🔍 ========================================');
+      console.log('🔍 SUPABASE DIAGNOSTICS STARTING...');
+      console.log('🔍 ========================================');
+      
+      const results = {
+        connection: false,
+        auth: false,
+        paymentsRead: false,
+        studentsRead: false,
+        groupsRead: false,
+        counts: { payments: 0, students: 0, groups: 0 },
+        errors: []
+      };
+      
+      try {
+        // 1. Check Supabase client initialization
+        console.log('✅ Step 1: Supabase client initialized');
+        console.log('   URL:', SUPABASE_URL);
+        console.log('   Key:', SUPABASE_ANON_KEY.substring(0, 20) + '...');
+        results.connection = true;
+        
+        // 2. Check authentication
+        const { data: { session }, error: authError } = await supabase.auth.getSession();
+        if (authError) {
+          console.error('❌ Step 2: Auth check FAILED:', authError);
+          results.errors.push('Auth: ' + authError.message);
+        } else if (session) {
+          console.log('✅ Step 2: User authenticated');
+          console.log('   Email:', session.user.email);
+          console.log('   User ID:', session.user.id);
+          results.auth = true;
+        } else {
+          console.warn('⚠️ Step 2: No active session (not logged in)');
+          results.errors.push('No active session - please log in');
+        }
+        
+        // 3. Test reading payments table
+        console.log('🔄 Step 3: Testing payments table read...');
+        const { data: payments, error: paymentsError } = await supabase
+          .from('payments')
+          .select('*', { count: 'exact' })
+          .limit(5);
+        
+        if (paymentsError) {
+          console.error('❌ Step 3: Payments read FAILED:', paymentsError);
+          results.errors.push('Payments: ' + paymentsError.message);
+        } else {
+          console.log('✅ Step 3: Payments read SUCCESS');
+          console.log('   Records fetched:', payments?.length || 0);
+          results.paymentsRead = true;
+          results.counts.payments = payments?.length || 0;
+          if (payments && payments.length > 0) {
+            console.log('   Sample payment:', {
+              id: payments[0].id,
+              amount: payments[0].amount,
+              date: payments[0].date,
+              payer: payments[0].payer_name
+            });
+          }
+        }
+        
+        // 4. Test reading students table
+        console.log('🔄 Step 4: Testing students table read...');
+        const { data: students, error: studentsError } = await supabase
+          .from('students')
+          .select('*', { count: 'exact' })
+          .limit(5);
+        
+        if (studentsError) {
+          console.error('❌ Step 4: Students read FAILED:', studentsError);
+          results.errors.push('Students: ' + studentsError.message);
+        } else {
+          console.log('✅ Step 4: Students read SUCCESS');
+          console.log('   Records fetched:', students?.length || 0);
+          results.studentsRead = true;
+          results.counts.students = students?.length || 0;
+          if (students && students.length > 0) {
+            console.log('   Sample student:', {
+              id: students[0].id,
+              name: students[0].name,
+              group: students[0].group_name
+            });
+          }
+        }
+        
+        // 5. Test reading groups table
+        console.log('🔄 Step 5: Testing groups table read...');
+        const { data: groups, error: groupsError } = await supabase
+          .from('groups')
+          .select('*', { count: 'exact' })
+          .limit(5);
+        
+        if (groupsError) {
+          console.error('❌ Step 5: Groups read FAILED:', groupsError);
+          results.errors.push('Groups: ' + groupsError.message);
+        } else {
+          console.log('✅ Step 5: Groups read SUCCESS');
+          console.log('   Records fetched:', groups?.length || 0);
+          results.groupsRead = true;
+          results.counts.groups = groups?.length || 0;
+          if (groups && groups.length > 0) {
+            console.log('   Sample group:', {
+              id: groups[0].id,
+              name: groups[0].group_name,
+              schedule: groups[0].schedule
+            });
+          }
+        }
+        
+        // 6. Summary
+        console.log('🔍 ========================================');
+        console.log('🔍 DIAGNOSTICS SUMMARY:');
+        console.log('🔍 ========================================');
+        console.log('Connection:', results.connection ? '✅' : '❌');
+        console.log('Authentication:', results.auth ? '✅' : '❌');
+        console.log('Payments Table:', results.paymentsRead ? '✅' : '❌', `(${results.counts.payments} records)`);
+        console.log('Students Table:', results.studentsRead ? '✅' : '❌', `(${results.counts.students} records)`);
+        console.log('Groups Table:', results.groupsRead ? '✅' : '❌', `(${results.counts.groups} records)`);
+        
+        if (results.errors.length > 0) {
+          console.error('❌ ERRORS FOUND:');
+          results.errors.forEach(err => console.error('   -', err));
+        } else {
+          console.log('✅ NO ERRORS - All checks passed!');
+        }
+        
+        console.log('🔍 ========================================');
+        
+        // Show user-friendly summary
+        if (results.errors.length > 0) {
+          const errorMsg = `⚠️ Supabase Issues Detected:\n\n${results.errors.join('\n')}\n\nCheck browser console for details.`;
+          if (typeof showNotification === 'function') {
+            showNotification(errorMsg, 'error');
+          } else {
+            alert(errorMsg);
+          }
+        } else {
+          const successMsg = `✅ Supabase Connection OK!\n\n💳 ${results.counts.payments} payments\n👥 ${results.counts.students} students\n📚 ${results.counts.groups} groups`;
+          if (typeof showNotification === 'function') {
+            showNotification(successMsg, 'success');
+          } else {
+            alert(successMsg);
+          }
+        }
+        
+        return results;
+        
+      } catch (error) {
+        console.error('❌ DIAGNOSTIC FAILED:', error);
+        results.errors.push('Diagnostic exception: ' + error.message);
+        return results;
+      }
+    }
+    
+    // Add to window for easy console access
+    window.runSupabaseDiagnostics = runSupabaseDiagnostics;
+    
+    // ============================================================================
+    // GLOBAL ERROR HANDLER FOR AUTH FAILURES
+    // ============================================================================
+    
+    /**
+     * Handle Supabase errors globally - auto-logout on 403/401
+     */
+    window.handleSupabaseError = function(error, context = 'Unknown') {
+      if (!error) return;
+      
+      console.error(`❌ Supabase Error in ${context}:`, error);
+      
+      // Check for authentication/authorization errors
+      if (error.code === 'PGRST301' || // JWT expired
+          error.message?.includes('JWT') ||
+          error.message?.includes('expired') ||
+          error.message?.includes('Invalid API key') ||
+          error.status === 401 ||
+          error.status === 403) {
+        
+        console.warn('🔐 Authentication error detected - forcing logout');
+        
+        // Clear current user and show login
+        currentUser = null;
+        showAuthScreen();
+        
+        // Sign out to clear invalid session
+        supabase.auth.signOut().catch(err => {
+          console.error('Error during forced logout:', err);
+        });
+        
+        // Show user-friendly message
+        if (typeof showNotification === 'function') {
+          showNotification('🔐 Session expired. Please log in again.', 'warning');
+        } else {
+          alert('Session expired. Please log in again.');
+        }
+        
+        return true; // Indicate error was handled
+      }
+      
+      return false; // Error not handled
+    };
+    
     // Check authentication on page load
     async function checkAuth() {
       try {
@@ -14351,6 +14827,21 @@
         if (session) {
           currentUser = session.user;
           console.log('✅ User authenticated:', currentUser.email);
+          
+          // Verify session is actually valid by testing a simple query
+          const { error: testError } = await supabase.from('students').select('id').limit(1);
+          
+          if (testError) {
+            // Session exists but is invalid/expired - force re-login
+            console.warn('⚠️ Session exists but is invalid - forcing re-login');
+            console.error('Auth test error:', testError);
+            await supabase.auth.signOut(); // Clear invalid session
+            currentUser = null;
+            showAuthScreen();
+            showNotification('⚠️ Session expired. Please log in again.', 'warning');
+            return;
+          }
+          
           showMainApp();
         } else {
           console.log('🔒 No active session - showing login');
@@ -14407,6 +14898,12 @@
         
         showMainApp();
         
+        // Run diagnostics after login to check data connection
+        setTimeout(() => {
+          console.log('🔄 Running post-login diagnostics...');
+          runSupabaseDiagnostics();
+        }, 2000); // Wait 2 seconds for app to initialize
+        
       } catch (error) {
         console.error('❌ Login error:', error);
         
@@ -14445,6 +14942,44 @@
         console.error('❌ Logout error:', error);
       }
     }
+    
+    // Force logout and clear all cached data (for troubleshooting)
+    async function forceLogoutAndClear() {
+      try {
+        console.log('🔄 Force logout - clearing all sessions...');
+        
+        // Sign out from Supabase
+        await supabase.auth.signOut();
+        
+        // Clear all local storage auth data
+        localStorage.removeItem('arnoma-remember');
+        localStorage.removeItem('supabase.auth.token');
+        
+        // Clear session storage
+        sessionStorage.clear();
+        
+        // Clear current user
+        currentUser = null;
+        
+        // Show login screen
+        showAuthScreen();
+        
+        // Clear form
+        document.getElementById('loginEmail').value = '';
+        document.getElementById('loginPassword').value = '';
+        document.getElementById('rememberMe').checked = false;
+        
+        console.log('✅ Force logout complete');
+        alert('✅ Session cleared. Please log in again.');
+        
+      } catch (error) {
+        console.error('❌ Force logout error:', error);
+        alert('⚠️ Logout completed with errors. Refresh page and try logging in again.');
+      }
+    }
+    
+    // Add to window for console access
+    window.forceLogoutAndClear = forceLogoutAndClear;
 
     // Add logout button to nav (will be added after DOM loads)
     window.addEventListener('load', () => {
