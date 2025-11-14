@@ -2398,12 +2398,17 @@ ARNOMA Team"></textarea>
           
           // Replace variables in template
           let subject = welcomeTemplate.subject
-            .replace(/\{\{StudentName\}\}/g, student.name);
+            .replace(/\{\{StudentName\}\}/g, student.name)
+            .replace(/\{\{Group\}\}/g, student.group || 'Not assigned')
+            .replace(/\{\{GroupName\}\}/g, student.group || 'Not assigned');
           
           let body = welcomeTemplate.body
             .replace(/\{\{StudentName\}\}/g, student.name)
+            .replace(/\{\{Group\}\}/g, student.group || 'Not assigned')
             .replace(/\{\{GroupName\}\}/g, student.group || 'Not assigned')
-            .replace(/\{\{GroupSchedule\}\}/g, student.groupSchedule || 'To be determined');
+            .replace(/\{\{GroupSchedule\}\}/g, student.groupSchedule || 'To be determined')
+            .replace(/\{\{NextClass\}\}/g, student.groupSchedule || 'To be determined')
+            .replace(/\{\{ClassTime\}\}/g, student.classTime || 'TBD');
           
           // Send email via Supabase Edge Function
           const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
