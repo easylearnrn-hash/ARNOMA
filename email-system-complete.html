@@ -1210,7 +1210,7 @@ ARNOMA Team"></textarea>
     // EmailSystem object (matches index.html exactly)
     const emailSystem = {
       _templates: [],
-      _storageKey: 'arnoma-email-templates-v4',
+      _storageKey: 'arnoma-email-templates-v5',
       
       init() {
         this.loadTemplates();
@@ -1246,28 +1246,6 @@ ARNOMA Team"></textarea>
       getDefaultTemplates() {
         const timestamp = Date.now();
         return [
-          {
-            id: `${timestamp}_welcome`,
-            name: 'Welcome Email',
-            subject: 'Welcome to ARNOMA NCLEX-RN - {{Group}}',
-            body: generateEmailHTML(
-              'Welcome to ARNOMA NCLEX-RN',
-              `<p>Dear <strong>{{StudentName}}</strong>,</p>
-              <p>Welcome to <strong>Group {{Group}}</strong>! We're excited to have you join our NCLEX preparation program.</p>
-              <div class="info-box">
-                <p><strong>📅 Your Next Class:</strong></p>
-                <p>{{NextClass}} at {{ClassTime}}</p>
-              </div>
-              <p>Your notes and materials will be posted on <em>Google Classroom</em> within 30 minutes after each session.</p>
-              <p>Best regards,<br><strong>ARNOMA NCLEX-RN Team</strong></p>
-              <div class="divider"></div>
-              <p style="color: #7f8c8d; font-size: 14px; text-align: center;">
-                <em>Need help? Simply reply to this email and we'll assist you promptly.</em>
-              </p>`
-            ),
-            trigger: 'new_student',
-            active: true
-          },
           {
             id: `${timestamp}_payment`,
             name: 'Payment Reminder',
