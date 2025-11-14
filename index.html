@@ -13511,6 +13511,12 @@
       // RULE 3: Dynamic calculation for TODAY, recent past (< 2 weeks), and FUTURE dates
       const balance = student.balance || 0;
       
+      // DEBUG: Log student matching for specific cases
+      if (dateStr === '2025-11-14' && student.name.includes('Narine')) {
+        console.log(`🔍 Checking payments for "${student.name}" on ${dateStr}`);
+        console.log('   Student aliases:', student.aliases);
+      }
+      
       // Find all payments for this student (by name or alias match)
       // Check BOTH studentName AND payerName fields
       const studentPayments = payments.filter(p => {
@@ -13548,6 +13554,15 @@
         
         return false;
       });
+      
+      // DEBUG: Log filtered payments
+      if (dateStr === '2025-11-14' && student.name.includes('Narine')) {
+        console.log(`   Found ${studentPayments.length} payments:`, studentPayments.map(p => ({
+          from: p.payerNameRaw,
+          studentName: p.studentName,
+          amount: p.amount
+        })));
+      }
       
       // DEBUG: Log filtered payments
       if (dateStr === '2025-11-12' && student.name === 'Stella Ghazaryan') {
