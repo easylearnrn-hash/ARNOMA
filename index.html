@@ -8389,11 +8389,13 @@
     }
 
     async function deleteStudent(studentId) {
-      console.log('🗑️ deleteStudent called with ID:', studentId);
+      console.log('🗑️ deleteStudent called with ID:', studentId, typeof studentId);
       
-      const student = students.find(s => s.id === studentId);
+      // Handle both string and number IDs
+      const student = students.find(s => s.id == studentId || String(s.id) === String(studentId));
       if (!student) {
         console.error('❌ Student not found:', studentId);
+        console.log('Available students:', students.map(s => ({ id: s.id, name: s.name })));
         return;
       }
 
