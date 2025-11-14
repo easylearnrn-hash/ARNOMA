@@ -8391,18 +8391,25 @@
     }
 
     async function deleteStudent(studentId) {
-      console.log('🗑️ deleteStudent called with ID:', studentId);
+      console.log('🗑️ deleteStudent called with ID:', studentId, 'Type:', typeof studentId);
+      
+      // Ensure numeric ID
+      const numericId = parseInt(studentId);
       
       // Load students from cache, or from Supabase if cache is empty
       let students = getCachedStudents();
+      console.log('📋 Students in cache:', students.length);
+      
       if (!students || students.length === 0) {
         console.log('📥 Cache empty, loading students from Supabase...');
         students = await loadStudents();
+        console.log('✅ Loaded', students.length, 'students from Supabase');
       }
       
-      const student = students.find(s => s.id === studentId);
+      const student = students.find(s => s.id === numericId);
       if (!student) {
-        console.error('❌ Student not found:', studentId);
+        console.error('❌ Student not found:', numericId, 'Available IDs:', students.map(s => s.id));
+        showNotificationSimple('Student not found', 'error');
         return;
       }
 
@@ -8428,7 +8435,7 @@
         return;
       }
 
-      const updatedStudents = students.filter(s => s.id !== studentId);
+      const updatedStudents = students.filter(s => s.id !== numericId);
       window.studentsCache = updatedStudents;
       window.dispatchEvent(new CustomEvent('students:updated', { detail: updatedStudents }));
 
