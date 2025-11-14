@@ -1167,7 +1167,7 @@ ARNOMA Team"></textarea>
     // EmailSystem object (matches index.html exactly)
     const emailSystem = {
       _templates: [],
-      _storageKey: 'arnoma-email-templates-v3',
+      _storageKey: 'arnoma-email-templates-v4',
       
       init() {
         this.loadTemplates();
@@ -1609,7 +1609,7 @@ ARNOMA Team"></textarea>
 
       loadAutomations() {
         try {
-          const stored = localStorage.getItem('arnoma-automations-v2');
+          const stored = localStorage.getItem('arnoma-automations-v3');
           if (stored) {
             this._automations = JSON.parse(stored);
           }
@@ -1621,7 +1621,7 @@ ARNOMA Team"></textarea>
 
       saveAutomations() {
         try {
-          localStorage.setItem('arnoma-automations-v2', JSON.stringify(this._automations));
+          localStorage.setItem('arnoma-automations-v3', JSON.stringify(this._automations));
         } catch (e) {
           console.error('Failed to save automations:', e);
           showNotification('Failed to save automations.', 'error');
@@ -2137,6 +2137,14 @@ ARNOMA Team"></textarea>
     }
 
     // Initialize
+    // Clear old cache versions
+    ['arnoma-email-templates-v2', 'arnoma-email-templates-v3', 'arnoma-automations-v2'].forEach(key => {
+      if (localStorage.getItem(key)) {
+        localStorage.removeItem(key);
+        console.log('🧹 Cleared old cache:', key);
+      }
+    });
+    
     emailSystem.init();
     loadGroupsFromSupabase();
     
