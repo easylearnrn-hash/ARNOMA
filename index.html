@@ -42,7 +42,41 @@
         }, 300);
 
         // VERSION CHECK - This should appear FIRST in console
-        console.log('🔥 ARNOMA v2.1.0 Ready');    // Supabase Client Initialization
+        console.log('🔥 ARNOMA v2.1.0 Ready');
+    
+    // ============================================================================
+    // SIMPLE PASSWORD PROTECTION (No RLS changes)
+    // ============================================================================
+    (function checkPassword() {
+      const APP_PASSWORD = 'Hrachya9!'; // Change this to your desired password
+      const SESSION_KEY = 'arnoma_auth';
+      
+      // Check if already authenticated in this session
+      const isAuthenticated = sessionStorage.getItem(SESSION_KEY) === 'true';
+      
+      if (!isAuthenticated) {
+        // Hide the page content
+        document.body.style.display = 'none';
+        
+        // Prompt for password
+        const enteredPassword = prompt('🔐 Enter password to access ARNOMA:');
+        
+        if (enteredPassword === APP_PASSWORD) {
+          // Correct password
+          sessionStorage.setItem(SESSION_KEY, 'true');
+          document.body.style.display = 'block';
+          console.log('✅ Access granted');
+        } else {
+          // Wrong password
+          alert('❌ Incorrect password. Access denied.');
+          // Redirect away or show blank page
+          document.body.innerHTML = '<div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: #ef4444;">Access Denied</div>';
+          throw new Error('Authentication failed');
+        }
+      }
+    })();
+    
+    // Supabase Client Initialization
     const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
