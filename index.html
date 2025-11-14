@@ -11549,12 +11549,6 @@
         skippedClasses[groupName][dateStr] = true;
         saveSkippedClasses();
         
-        
-        // Dispatch event for calendar refresh
-        window.dispatchEvent(new CustomEvent('classSkipped', { 
-          detail: { groupName, date: dateStr, classInfo } 
-        }));
-        
         // Refresh timer display
         if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
           window.ClassCountdownTimer.destroy();
@@ -11582,12 +11576,6 @@
           }
           saveSkippedClasses();
         }
-        
-        
-        // Dispatch event for calendar refresh
-        window.dispatchEvent(new CustomEvent('classUnskipped', { 
-          detail: { groupName, date: dateStr } 
-        }));
         
         // Refresh timer display
         if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
@@ -11829,13 +11817,6 @@
       SkipClassManager.init();
     }
 
-    // Listen for skip events to update calendar
-    window.addEventListener('classSkipped', (event) => {
-    });
-
-    window.addEventListener('classUnskipped', (event) => {
-    });
-    
     // ============================================================================
     // END SKIP CLASS MANAGER
     // ============================================================================
