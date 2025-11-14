@@ -1268,7 +1268,7 @@ ARNOMA Team"></textarea>
             active: true
           },
           {
-            id: 'payment-receipt',
+            id: `${timestamp}_receipt`,
             name: 'Payment Receipt',
             subject: 'Payment Received - ARNOMA NCLEX-RN',
             body: generateEmailHTML(
@@ -1282,7 +1282,7 @@ ARNOMA Team"></textarea>
             active: true
           },
           {
-            id: 'class-reminder',
+            id: `${timestamp}_classreminder`,
             name: 'Class Reminder',
             subject: 'Class Starting Soon - ARNOMA NCLEX-RN',
             body: generateEmailHTML(
