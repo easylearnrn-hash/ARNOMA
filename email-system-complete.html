@@ -1266,6 +1266,53 @@ ARNOMA Team"></textarea>
             ),
             trigger: 'manual',
             active: true
+          },
+          {
+            id: 'payment-receipt',
+            name: 'Payment Receipt',
+            subject: 'Payment Received - ARNOMA NCLEX-RN',
+            body: generateEmailHTML(
+              'Payment Receipt',
+              `<p>Dear <strong>{{StudentName}}</strong>,</p>
+              <p>Thank you for your payment of <strong>{{PaymentAmount}}</strong>. Your payment has been successfully registered.</p>
+              <p>You can expect your notes to be posted on <em>Google Classroom</em> within 30 minutes of your payment receipt.</p>
+              <p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>`
+            ),
+            trigger: 'manual',
+            active: true
+          },
+          {
+            id: 'class-reminder',
+            name: 'Class Reminder',
+            subject: 'Class Starting Soon - ARNOMA NCLEX-RN',
+            body: generateEmailHTML(
+              'Class Reminder',
+              `<p>Dear <strong>{{StudentName}}</strong>,</p>
+              <p>This is a friendly reminder for your <strong>Group {{GroupName}}</strong> class:</p>
+              <div class="info-box">
+                <p><strong>{{ClassTime}}</strong></p>
+              </div>
+              <p>The link to the class will be emailed to you in about <strong>30 minutes</strong>. Please be ready.</p>
+              <div class="payment-frame">
+                <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;">
+                  <strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong>
+                </p>
+                <p style="margin: 0 0 16px 0; font-size: 14px; color: #6b7280;">
+                  Scan in your banking app to pay.
+                </p>
+                <div style="margin: 16px 0;">
+                  <p style="margin: 0 0 4px 0; font-size: 18px; font-weight: 600; color: #1f2937;">Arnoma</p>
+                  <p style="margin: 0 0 16px 0; font-size: 16px; color: #4b5563;">909-300-5155</p>
+                </div>
+                <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/Arnoma%20Zelle.JPG" alt="Zelle QR Code" style="max-width:240px;height:auto;border:0;display:block;margin:0 auto" />
+                <p style="margin: 16px 0 0 0; font-size: 18px; color: #9ca3af;">
+                  <strong style="color: #764ba2;">Zelle</strong>
+                </p>
+              </div>
+              <p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>`
+            ),
+            trigger: 'manual',
+            active: true
           }
 
         
