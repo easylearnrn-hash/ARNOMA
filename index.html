@@ -13271,8 +13271,8 @@
              date.getFullYear() === today.getFullYear();
     }
     
-    // Toggle auto-reminder pause/resume for a student
-    async function toggleAutoReminder(studentId, buttonElement) {
+    // Toggle auto-reminder pause/resume for a student (GLOBAL SCOPE)
+    window.toggleAutoReminder = async function(studentId, buttonElement) {
       if (!window.PaymentReminderManager) {
         showNotification('❌ Payment Reminder Manager not available', 'error');
         return;
@@ -13289,7 +13289,7 @@
         buttonElement.textContent = isPaused ? '▶' : '⏸';
         buttonElement.title = isPaused ? 'Auto-reminders paused - Click to resume' : 'Auto-reminders active - Click to pause';
       }
-    }
+    };
     
     // Open day details panel showing all students scheduled that day
     function openDayDetails(dateStr, dayData) {
