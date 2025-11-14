@@ -1210,7 +1210,7 @@ ARNOMA Team"></textarea>
     // EmailSystem object (matches index.html exactly)
     const emailSystem = {
       _templates: [],
-      _storageKey: 'arnoma-email-templates-v5',
+      _storageKey: 'arnoma-email-templates-v6',
       
       init() {
         this.loadTemplates();
@@ -1509,6 +1509,20 @@ ARNOMA Team"></textarea>
           .replace(/\{\{ClassTime\}\}/g, '6:00 PM PST')
           .replace(/\{\{PaymentAmount\}\}/g, '$120.00')
           .replace(/\{\{UnpaidClasses\}\}/g, 'Nov 4, Nov 6, Nov 8 (3 classes)');
+        
+        // Add Group Name + Group Schedule box after greeting
+        const groupInfoBox = `
+              <div class="info-box" style="background-color: rgba(255,255,255,0.9); border-left: 3px solid #764ba2; border-radius: 10px; padding: 14px 18px; font-size: 15px; line-height: 1.5; color: #1e293b; margin: 20px 0; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
+                <p style="margin: 6px 0;"><strong>Group:</strong> Group E</p>
+                <p style="margin: 6px 0;"><strong>Schedule:</strong> Monday & Wednesday — 8:00 PM (Los Angeles Time)</p>
+              </div>`;
+        
+        // Find the first <p> tag after greeting and insert the box
+        const firstParagraphMatch = previewHTML.match(/(<p[^>]*>.*?<\/p>)/i);
+        if (firstParagraphMatch) {
+          const insertPosition = previewHTML.indexOf(firstParagraphMatch[0]) + firstParagraphMatch[0].length;
+          previewHTML = previewHTML.slice(0, insertPosition) + groupInfoBox + previewHTML.slice(insertPosition);
+        }
         
         openPreviewModal(previewHTML);
       }
@@ -2416,6 +2430,247 @@ ARNOMA Team"></textarea>
         }
       }
     });
+
+    // ============================================
+    // AUTOMATION ENGINE - Class Reminder System
+    // ============================================
+    
+    let groupsData = [];
+    let studentsData = [];
+    let sentReminders = new Set(); // Track sent reminders to avoid duplicates
+    
+    // Listen for data from parent window (index.html)
+    window.addEventListener('message', function(event) {
+      if (event.data.action === 'updateGroupsData') {
+        groupsData = event.data.groups || [];
+        studentsData = event.data.students || [];
+        console.log('📊 Automation Engine: Received groups data:', groupsData.length, 'groups,', studentsData.length, 'students');
+      }
+    });
+    
+    // Request initial data from parent
+    function requestDataFromParent() {
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ action: 'requestGroupsData' }, '*');
+      }
+    }
+    
+    // Parse schedule string like "Mon/Wed 8:00 PM, Fri 9:30 PM"
+    function parseScheduleString(schedule) {
+      if (!schedule || typeof schedule !== 'string') return [];
+      
+      const sessions = [];
+      const parts = schedule.split(',').map(s => s.trim());
+      
+      parts.forEach(part => {
+        const match = part.match(/((?:[A-Za-z]+(?:\/[A-Za-z]+)*)\s+)?(\\d{1,2}:\\d{2}\\s*(?:AM|PM))/i);
+        if (!match) return;
+        
+        const daysStr = match[1]?.trim() || '';
+        const time = match[2].trim();
+        
+        const dayMap = {
+          'mon': 'Monday', 'monday': 'Monday',
+          'tue': 'Tuesday', 'tues': 'Tuesday', 'tuesday': 'Tuesday',
+          'wed': 'Wednesday', 'weds': 'Wednesday', 'wednesday': 'Wednesday',
+          'thu': 'Thursday', 'thur': 'Thursday', 'thurs': 'Thursday', 'thursday': 'Thursday',
+          'fri': 'Friday', 'friday': 'Friday',
+          'sat': 'Saturday', 'saturday': 'Saturday',
+          'sun': 'Sunday', 'sunday': 'Sunday'
+        };
+        
+        const days = daysStr.split('/').map(d => {
+          const normalized = dayMap[d.toLowerCase()];
+          return normalized || d;
+        }).filter(Boolean);
+        
+        days.forEach(day => {
+          sessions.push({ day, time });
+        });
+      });
+      
+      return sessions;
+    }
+    
+    // Get current Los Angeles time
+    function getCurrentLATime() {
+      const now = new Date();
+      const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+      return laTime;
+    }
+    
+    // Parse time string to minutes since midnight
+    function parseTimeToMinutes(timeStr) {
+      const match = timeStr.match(/(\\d{1,2}):(\\d{2})\\s*(AM|PM)/i);
+      if (!match) return null;
+      
+      let hours = parseInt(match[1]);
+      const minutes = parseInt(match[2]);
+      const period = match[3].toUpperCase();
+      
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+      
+      return hours * 60 + minutes;
+    }
+    
+    // Check if automation should trigger
+    async function checkAutomations() {
+      try {
+        const automations = automationSystem._automations.filter(a => a.active && a.frequency === 'before_class');
+        
+        if (automations.length === 0) return;
+        
+        const laTime = getCurrentLATime();
+        const currentDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][laTime.getDay()];
+        const currentMinutes = laTime.getHours() * 60 + laTime.getMinutes();
+        
+        console.log(`🔍 Automation Check: ${currentDay} ${laTime.getHours()}:${String(laTime.getMinutes()).padStart(2, '0')}`);
+        
+        // Check each group for upcoming classes
+        for (const group of groupsData) {
+          if (!group.schedule) continue;
+          
+          const sessions = parseScheduleString(group.schedule);
+          
+          for (const session of sessions) {
+            if (session.day !== currentDay) continue;
+            
+            const classMinutes = parseTimeToMinutes(session.time);
+            if (classMinutes === null) continue;
+            
+            const minutesUntilClass = classMinutes - currentMinutes;
+            
+            // Check each automation
+            for (const automation of automations) {
+              const triggerMinutes = parseInt(automation.beforeClassTime);
+              
+              // Trigger window: within 2 minutes of the target time to account for check intervals
+              if (Math.abs(minutesUntilClass - triggerMinutes) <= 2) {
+                const reminderKey = `${group.name}_${session.day}_${session.time}_${triggerMinutes}`;
+                
+                // Check if already sent today
+                if (sentReminders.has(reminderKey)) {
+                  console.log(`⏭️ Already sent: ${reminderKey}`);
+                  continue;
+                }
+                
+                console.log(`🚀 TRIGGERING AUTOMATION: ${automation.name} for ${group.name} (${minutesUntilClass} min until class)`);
+                
+                // Get students in this group
+                const groupStudents = studentsData.filter(s => 
+                  s.group && s.group.split(',').map(g => g.trim()).includes(group.name) && s.email
+                );
+                
+                if (groupStudents.length === 0) {
+                  console.log(`⚠️ No students with emails in ${group.name}`);
+                  continue;
+                }
+                
+                // Find the template
+                const template = emailSystem._templates.find(t => t.id === automation.templateId);
+                if (!template) {
+                  console.error(`❌ Template not found: ${automation.templateName}`);
+                  continue;
+                }
+                
+                // Send to each student in the group
+                for (const student of groupStudents) {
+                  await sendClassReminderEmail(student, group, session, template);
+                }
+                
+                // Mark as sent
+                sentReminders.add(reminderKey);
+                console.log(`✅ Sent ${groupStudents.length} emails for ${group.name}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('❌ Automation check error:', error);
+      }
+    }
+    
+    // Send class reminder email
+    async function sendClassReminderEmail(student, group, session, template) {
+      try {
+        let subject = template.subject
+          .replace(/\\{\\{StudentName\\}\\}/g, student.name)
+          .replace(/\\{\\{Group\\}\\}/g, group.name)
+          .replace(/\\{\\{GroupName\\}\\}/g, group.name);
+        
+        let body = template.body
+          .replace(/\\{\\{StudentName\\}\\}/g, student.name)
+          .replace(/\\{\\{Group\\}\\}/g, group.name)
+          .replace(/\\{\\{GroupName\\}\\}/g, group.name)
+          .replace(/\\{\\{ClassTime\\}\\}/g, session.time)
+          .replace(/\\{\\{NextClass\\}\\}/g, `${session.day}, ${session.time}`);
+        
+        const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            to: student.email,
+            subject: subject,
+            html: body
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to send email: ${response.statusText}`);
+        }
+        
+        await trackSentEmail(student.email, subject, 'Class Reminder (Auto)');
+        console.log(`📧 Class reminder sent to ${student.name} (${student.email})`);
+        
+      } catch (error) {
+        console.error(`❌ Failed to send reminder to ${student.name}:`, error);
+      }
+    }
+    
+    // Reset sent reminders at midnight
+    function resetDailyReminders() {
+      const laTime = getCurrentLATime();
+      const nextMidnight = new Date(laTime);
+      nextMidnight.setHours(24, 0, 0, 0);
+      const msUntilMidnight = nextMidnight - laTime;
+      
+      setTimeout(() => {
+        console.log('🌙 Midnight - Resetting sent reminders');
+        sentReminders.clear();
+        resetDailyReminders(); // Schedule next reset
+      }, msUntilMidnight);
+    }
+    
+    // Initialize automation engine
+    function initAutomationEngine() {
+      console.log('⚡ Automation Engine initialized');
+      
+      // Request data from parent immediately
+      requestDataFromParent();
+      
+      // Request data every 30 seconds
+      setInterval(requestDataFromParent, 30000);
+      
+      // Check automations every minute
+      setInterval(checkAutomations, 60000);
+      
+      // Run first check after 5 seconds
+      setTimeout(checkAutomations, 5000);
+      
+      // Setup midnight reset
+      resetDailyReminders();
+    }
+    
+    // Start engine when page loads
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initAutomationEngine);
+    } else {
+      initAutomationEngine();
+    }
   </script>
 </body>
 </html>

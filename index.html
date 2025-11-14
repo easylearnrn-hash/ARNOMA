@@ -9847,7 +9847,40 @@
       document.body.appendChild(iframe);
       
       debugLog('✅ Hidden email system iframe initialized');
+      
+      // Listen for data requests from automation engine
+      window.addEventListener('message', function(event) {
+        if (event.data.action === 'requestGroupsData') {
+          sendGroupsDataToEmailSystem();
+        }
+      });
+      
+      // Send initial data after iframe loads
+      iframe.addEventListener('load', function() {
+        setTimeout(sendGroupsDataToEmailSystem, 1000);
+      });
     }
+    
+    // Send groups and students data to email system for automation
+    function sendGroupsDataToEmailSystem() {
+      const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+      if (!emailFrame) return;
+      
+      const groups = window.groupsCache || window.globalData?.groups || [];
+      const students = window.studentsCache || [];
+      
+      emailFrame.contentWindow.postMessage({
+        action: 'updateGroupsData',
+        groups: groups,
+        students: students
+      }, '*');
+      
+      debugLog(`📤 Sent automation data: ${groups.length} groups, ${students.length} students`);
+    }
+    
+    // Call this whenever groups or students are updated
+    window.addEventListener('groups:updated', sendGroupsDataToEmailSystem);
+    window.addEventListener('students:updated', sendGroupsDataToEmailSystem);
     
     // ============================
     // BEGIN QUICK VIEW FUNCTIONS
