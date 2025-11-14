@@ -8389,8 +8389,15 @@
     }
 
     async function deleteStudent(studentId) {
+      console.log('🗑️ deleteStudent called with ID:', studentId);
+      
       const student = students.find(s => s.id === studentId);
-      if (!student) return;
+      if (!student) {
+        console.error('❌ Student not found:', studentId);
+        return;
+      }
+
+      console.log('👤 Attempting to delete student:', student.name);
 
       const confirmed = await customConfirm(
         `Delete ${student.name}?\n\nThis will permanently remove all records.`,
@@ -8401,6 +8408,8 @@
           type: 'danger'
         }
       );
+      
+      console.log('✅ User confirmation:', confirmed);
       
       if (!confirmed) return;
 
