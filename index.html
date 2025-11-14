@@ -13518,6 +13518,7 @@
         
         const paymentStudentName = (p.studentName || '').toLowerCase().trim();
         const paymentPayerName = (p.payerName || '').toLowerCase().trim();
+        const paymentPayerNameRaw = (p.payerNameRaw || '').toLowerCase().trim();
         const studentNameLower = (student.name || '').toLowerCase().trim();
         
         // Check if studentName matches
@@ -13526,12 +13527,23 @@
         // Check if payerName matches (for cases where parent pays)
         if (paymentPayerName === studentNameLower) return true;
         
+        // Check if payerNameRaw matches (original sender name from email)
+        if (paymentPayerNameRaw === studentNameLower) return true;
+        
         // Check if payment matches any student alias
         if (student.aliases && Array.isArray(student.aliases)) {
-          return student.aliases.some(alias => {
+          const matched = student.aliases.some(alias => {
             const aliasLower = alias.toLowerCase().trim();
-            return aliasLower === paymentStudentName || aliasLower === paymentPayerName;
+            return aliasLower === paymentStudentName || 
+                   aliasLower === paymentPayerName ||
+                   aliasLower === paymentPayerNameRaw;
           });
+          
+          if (matched) {
+            debugLog(`✅ Alias match found for ${student.name}: payment from ${paymentPayerNameRaw}`);
+          }
+          
+          return matched;
         }
         
         return false;
