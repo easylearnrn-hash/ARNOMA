@@ -1573,7 +1573,14 @@ ARNOMA Team"></textarea>
     }
 
     function openEditor() {
-      document.getElementById('editorModal').classList.add('active');
+      console.log('🔵 Opening editor modal...');
+      const modal = document.getElementById('editorModal');
+      if (!modal) {
+        console.error('❌ Editor modal not found!');
+        return;
+      }
+      console.log('✅ Modal found, adding active class');
+      modal.classList.add('active');
     }
 
     function closeEditor() {
