@@ -435,69 +435,67 @@
           <div style="background: rgba(165,180,252,.12); padding: 20px; border-radius: 14px; border: 2px solid rgba(165,180,252,.35); margin-bottom: 20px;">
             <h3 style="margin: 0 0 16px 0; color: var(--primary-bright); font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 20px;">👥</span>
-              Recipients
+              Recipients <span style="font-size: 12px; font-weight: 400; color: rgba(255,255,255,0.6); margin-left: 8px;">(Select one or more)</span>
             </h3>
             
-            <div style="display: flex; gap: 12px; margin-bottom: 14px;">
-              <label style="flex: 1; background: rgba(255,255,255,.05); padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; transition: all 0.2s;">
-                <input type="radio" name="recipientType" value="individual" checked onchange="toggleRecipientType()" style="margin-right: 8px;">
-                <span style="font-weight: 600; color: white;">📧 Individual Students</span>
+            <!-- Groups Selection (Always visible) -->
+            <div style="margin-bottom: 16px;">
+              <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer;">
+                <input type="checkbox" id="includeGroups" onchange="toggleRecipientSections()" style="width: 18px; height: 18px;">
+                <span style="font-weight: 600; color: white; font-size: 15px;">� Include Groups</span>
               </label>
-              <label style="flex: 1; background: rgba(255,255,255,.05); padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; transition: all 0.2s;">
-                <input type="radio" name="recipientType" value="group" onchange="toggleRecipientType()" style="margin-right: 8px;">
-                <span style="font-weight: 600; color: white;">👥 Entire Groups</span>
-              </label>
-              <label style="flex: 1; background: rgba(255,255,255,.05); padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; transition: all 0.2s;">
-                <input type="radio" name="recipientType" value="all" onchange="toggleRecipientType()" style="margin-right: 8px;">
-                <span style="font-weight: 600; color: white;">🌐 All Students</span>
-              </label>
-              <label style="flex: 1; background: rgba(255,255,255,.05); padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; transition: all 0.2s;">
-                <input type="radio" name="recipientType" value="teacher" onchange="toggleRecipientType()" style="margin-right: 8px;">
-                <span style="font-weight: 600; color: white;">👨‍🏫 Teacher</span>
-              </label>
-            </div>
-
-            <div id="individualSelection" style="display: block;">
-              <div style="margin-bottom: 12px;">
-                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--ink); font-size: 13px;">Add Email Address</label>
-                <div style="display: flex; gap: 8px;">
-                  <input type="email" id="emailInput" placeholder="student@example.com" style="flex: 1; padding: 12px; background: rgba(248,250,252,.08); border: 2px solid rgba(165,180,252,.3); border-radius: 10px; color: white; font-size: 14px;">
-                  <button type="button" onclick="addEmailToList()" class="btn btn-primary" style="padding: 12px 20px; white-space: nowrap;">
-                    ➕ Add
-                  </button>
-                </div>
-              </div>
-              <div id="emailList" style="max-height: 200px; overflow-y: auto; background: rgba(15,23,42,.4); border-radius: 10px; padding: 12px; border: 1px solid rgba(165,180,252,.2);">
-                <div id="emailListContent" style="display: flex; flex-direction: column; gap: 8px;">
-                  <div style="color: var(--secondary); font-size: 13px; text-align: center; padding: 20px;">
-                    No email addresses added yet
+              <div id="groupSelection" style="display: none; margin-left: 26px;">
+                <div id="groupList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
+                  <!-- Groups will be loaded dynamically from Supabase -->
+                  <div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--secondary);">
+                    Loading groups...
                   </div>
                 </div>
               </div>
             </div>
 
-            <div id="groupSelection" style="display: none;">
-              <div id="groupList" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px;">
-                <!-- Groups will be loaded dynamically from Supabase -->
-                <div style="grid-column: 1/-1; text-align: center; padding: 20px; color: var(--secondary);">
-                  Loading groups...
+            <!-- All Students Selection -->
+            <div style="margin-bottom: 16px;">
+              <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                <input type="checkbox" id="includeAllStudents" onchange="toggleRecipientSections()" style="width: 18px; height: 18px;">
+                <span style="font-weight: 600; color: white; font-size: 15px;">🌐 Include All Active Students</span>
+              </label>
+            </div>
+
+            <!-- Individual Emails Selection -->
+            <div style="margin-bottom: 16px;">
+              <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer;">
+                <input type="checkbox" id="includeIndividual" onchange="toggleRecipientSections()" style="width: 18px; height: 18px;">
+                <span style="font-weight: 600; color: white; font-size: 15px;">� Include Individual Emails</span>
+              </label>
+              <div id="individualSelection" style="display: none; margin-left: 26px;">
+                <div style="margin-bottom: 12px;">
+                  <label style="display: block; margin-bottom: 8px; font-weight: 600; color: var(--ink); font-size: 13px;">Add Email Address</label>
+                  <div style="display: flex; gap: 8px;">
+                    <input type="email" id="emailInput" placeholder="student@example.com" style="flex: 1; padding: 12px; background: rgba(248,250,252,.08); border: 2px solid rgba(165,180,252,.3); border-radius: 10px; color: white; font-size: 14px;">
+                    <button type="button" onclick="addEmailToList()" class="btn btn-primary" style="padding: 12px 20px; white-space: nowrap;">
+                      ➕ Add
+                    </button>
+                  </div>
+                </div>
+                <div id="emailList" style="max-height: 200px; overflow-y: auto; background: rgba(15,23,42,.4); border-radius: 10px; padding: 12px; border: 1px solid rgba(165,180,252,.2);">
+                  <div id="emailListContent" style="display: flex; flex-direction: column; gap: 8px;">
+                    <div style="color: var(--secondary); font-size: 13px; text-align: center; padding: 20px;">
+                      No email addresses added yet
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div id="allSelection" style="display: none;">
-              <div style="background: rgba(34,197,94,.1); padding: 12px; border-radius: 8px; border: 2px solid rgba(34,197,94,.3); text-align: center;">
-                <div style="font-size: 18px; margin-bottom: 6px;">🌐</div>
-                <div style="font-weight: 600; color: #22c55e; margin-bottom: 4px;">All Active Students</div>
-                <div style="font-size: 12px; color: rgba(255,255,255,.7);">Email will be sent to all active students in your database</div>
-              </div>
-            </div>
-
-            <div id="teacherSelection" style="display: none;">
-              <div style="background: rgba(245,158,11,.1); padding: 12px; border-radius: 8px; border: 2px solid rgba(245,158,11,.3); text-align: center;">
-                <div style="font-size: 18px; margin-bottom: 6px;">👨‍🏫</div>
-                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 8px;">Teacher Email</div>
-                <input type="email" id="teacherEmail" placeholder="teacher@example.com" style="width: 100%; max-width: 400px; padding: 12px; background: rgba(248,250,252,.08); border: 2px solid rgba(245,158,11,.4); border-radius: 10px; color: white; font-size: 14px; text-align: center;">
+            <!-- Teacher Selection -->
+            <div style="margin-bottom: 16px;">
+              <label style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px; cursor: pointer;">
+                <input type="checkbox" id="includeTeacher" onchange="toggleRecipientSections()" style="width: 18px; height: 18px;">
+                <span style="font-weight: 600; color: white; font-size: 15px;">👨‍🏫 Include Teacher</span>
+              </label>
+              <div id="teacherSelection" style="display: none; margin-left: 26px;">
+                <input type="email" id="teacherEmail" placeholder="teacher@example.com" style="width: 100%; max-width: 400px; padding: 12px; background: rgba(248,250,252,.08); border: 2px solid rgba(245,158,11,.4); border-radius: 10px; color: white; font-size: 14px;">
               </div>
             </div>
           </div>
@@ -1830,17 +1828,40 @@ ARNOMA Team"></textarea>
       },
 
       getRecipientLabel(automation) {
-        if (automation.recipientType === 'all') return 'All Students';
-        if (automation.recipientType === 'group') {
-          return `Groups: ${automation.groups.join(', ')}`;
+        const parts = [];
+        
+        if (automation.groups && automation.groups.length > 0) {
+          parts.push(`Groups: ${automation.groups.join(', ')}`);
         }
-        if (automation.recipientType === 'individual' && automation.emails) {
-          return `${automation.emails.length} Email${automation.emails.length !== 1 ? 's' : ''}`;
+        
+        if (automation.includeAllStudents) {
+          parts.push('All Students');
         }
-        if (automation.recipientType === 'teacher' && automation.teacherEmail) {
-          return `👨‍🏫 ${automation.teacherEmail}`;
+        
+        if (automation.emails && automation.emails.length > 0) {
+          parts.push(`${automation.emails.length} Email${automation.emails.length !== 1 ? 's' : ''}`);
         }
-        return `${automation.students ? automation.students.length : 0} Individual Students`;
+        
+        if (automation.teacherEmail) {
+          parts.push(`👨‍🏫 ${automation.teacherEmail}`);
+        }
+        
+        // Backward compatibility for old single-type automations
+        if (parts.length === 0) {
+          if (automation.recipientType === 'all') return 'All Students';
+          if (automation.recipientType === 'group' && automation.groups) {
+            return `Groups: ${automation.groups.join(', ')}`;
+          }
+          if (automation.recipientType === 'individual' && automation.emails) {
+            return `${automation.emails.length} Email${automation.emails.length !== 1 ? 's' : ''}`;
+          }
+          if (automation.recipientType === 'teacher' && automation.teacherEmail) {
+            return `👨‍🏫 ${automation.teacherEmail}`;
+          }
+          return `${automation.students ? automation.students.length : 0} Individual Students`;
+        }
+        
+        return parts.join(' + ');
       },
 
       getScheduleLabel(automation) {
@@ -2184,11 +2205,17 @@ ARNOMA Team"></textarea>
       groupCheckboxes.forEach(cb => { cb.checked = false; });
       const weekdayCheckboxes = document.querySelectorAll('input[name="weekdays"]');
       weekdayCheckboxes.forEach(cb => { cb.checked = false; });
+      
+      // Reset recipient checkboxes
+      document.getElementById('includeGroups').checked = false;
+      document.getElementById('includeAllStudents').checked = false;
+      document.getElementById('includeIndividual').checked = false;
+      document.getElementById('includeTeacher').checked = false;
+      document.getElementById('teacherEmail').value = '';
 
       document.getElementById('automationFrequency').value = 'once';
       toggleFrequencyOptions();
-      document.querySelector('input[name="recipientType"][value="individual"]').checked = true;
-      toggleRecipientType();
+      toggleRecipientSections();
 
       renderEmailList();
       
@@ -2199,24 +2226,32 @@ ARNOMA Team"></textarea>
           document.getElementById('automationId').value = automation.id;
           document.getElementById('automationName').value = automation.name;
           document.getElementById('automationTemplate').value = automation.templateId;
-          document.querySelector(`input[name="recipientType"][value="${automation.recipientType}"]`).checked = true;
-          toggleRecipientType();
           
-          if (automation.recipientType === 'group') {
+          // Handle multiple recipient types
+          if (automation.groups && automation.groups.length > 0) {
+            document.getElementById('includeGroups').checked = true;
             automation.groups.forEach(group => {
               const checkbox = document.querySelector(`input[name="groups"][value="${group}"]`);
               if (checkbox) checkbox.checked = true;
             });
           }
           
-          if (automation.recipientType === 'individual' && automation.emails && automation.emails.length) {
+          if (automation.includeAllStudents) {
+            document.getElementById('includeAllStudents').checked = true;
+          }
+          
+          if (automation.emails && automation.emails.length > 0) {
+            document.getElementById('includeIndividual').checked = true;
             currentEmails = [...automation.emails];
             renderEmailList();
           }
           
-          if (automation.recipientType === 'teacher' && automation.teacherEmail) {
+          if (automation.teacherEmail) {
+            document.getElementById('includeTeacher').checked = true;
             document.getElementById('teacherEmail').value = automation.teacherEmail;
           }
+          
+          toggleRecipientSections();
           
           document.getElementById('automationFrequency').value = automation.frequency;
           toggleFrequencyOptions();
@@ -2252,12 +2287,15 @@ ARNOMA Team"></textarea>
       document.getElementById('automationEditorModal').classList.remove('active');
     }
 
-    function toggleRecipientType() {
-      const type = document.querySelector('input[name="recipientType"]:checked').value;
-      document.getElementById('individualSelection').style.display = type === 'individual' ? 'block' : 'none';
-      document.getElementById('groupSelection').style.display = type === 'group' ? 'block' : 'none';
-      document.getElementById('allSelection').style.display = type === 'all' ? 'block' : 'none';
-      document.getElementById('teacherSelection').style.display = type === 'teacher' ? 'block' : 'none';
+    function toggleRecipientSections() {
+      const includeGroups = document.getElementById('includeGroups').checked;
+      const includeAll = document.getElementById('includeAllStudents').checked;
+      const includeIndividual = document.getElementById('includeIndividual').checked;
+      const includeTeacher = document.getElementById('includeTeacher').checked;
+      
+      document.getElementById('groupSelection').style.display = includeGroups ? 'block' : 'none';
+      document.getElementById('individualSelection').style.display = includeIndividual ? 'block' : 'none';
+      document.getElementById('teacherSelection').style.display = includeTeacher ? 'block' : 'none';
     }
 
     function toggleFrequencyOptions() {
@@ -2291,9 +2329,20 @@ ARNOMA Team"></textarea>
         return;
       }
 
-      const recipientType = document.querySelector('input[name="recipientType"]:checked').value;
       const frequency = document.getElementById('automationFrequency').value;
       const active = document.getElementById('automationActive').checked;
+      
+      // Check which recipient types are selected
+      const includeGroups = document.getElementById('includeGroups').checked;
+      const includeAllStudents = document.getElementById('includeAllStudents').checked;
+      const includeIndividual = document.getElementById('includeIndividual').checked;
+      const includeTeacher = document.getElementById('includeTeacher').checked;
+      
+      // Validate at least one recipient type is selected
+      if (!includeGroups && !includeAllStudents && !includeIndividual && !includeTeacher) {
+        showNotification('⚠️ Please select at least one recipient type.', 'error');
+        return;
+      }
 
       const automation = {
         ...(existingAutomation || {}),
@@ -2301,7 +2350,6 @@ ARNOMA Team"></textarea>
         name,
         templateId,
         templateName: template.name,
-        recipientType,
         frequency,
         active,
         updatedAt: new Date().toISOString()
@@ -2311,26 +2359,39 @@ ARNOMA Team"></textarea>
         automation.createdAt = new Date().toISOString();
       }
 
-      // Normalize recipient collections
+      // Clear previous recipient data
       delete automation.groups;
-      delete automation.students;
       delete automation.emails;
       delete automation.teacherEmail;
+      delete automation.includeAllStudents;
+      delete automation.recipientType; // Remove old single-type field
 
-      if (recipientType === 'group') {
+      // Handle Groups
+      if (includeGroups) {
         const groups = Array.from(document.querySelectorAll('input[name="groups"]:checked')).map(cb => cb.value);
-        if (!groups.length) {
+        if (groups.length === 0) {
           showNotification('⚠️ Please select at least one group.', 'error');
           return;
         }
         automation.groups = groups;
-      } else if (recipientType === 'individual') {
+      }
+      
+      // Handle All Students
+      if (includeAllStudents) {
+        automation.includeAllStudents = true;
+      }
+      
+      // Handle Individual Emails
+      if (includeIndividual) {
         if (currentEmails.length === 0) {
           showNotification('⚠️ Please add at least one email address.', 'error');
           return;
         }
         automation.emails = [...currentEmails];
-      } else if (recipientType === 'teacher') {
+      }
+      
+      // Handle Teacher
+      if (includeTeacher) {
         const teacherEmail = document.getElementById('teacherEmail').value.trim();
         if (!teacherEmail) {
           showNotification('⚠️ Please enter a teacher email address.', 'error');
@@ -2464,37 +2525,40 @@ ARNOMA Team"></textarea>
         return;
       }
 
-      // Get recipient emails
+      // Get recipient emails from all selected types
       let recipients = [];
       
-      if (automation.recipientType === 'individual') {
-        recipients = automation.emails || [];
-      } else if (automation.recipientType === 'teacher') {
-        recipients = automation.teacherEmail ? [automation.teacherEmail] : [];
-      } else if (automation.recipientType === 'group') {
-        // Fetch student emails from selected groups (ACTIVE students only)
-        const selectedGroups = automation.selectedGroups || [];
-        if (selectedGroups.length === 0) {
-          showNotification('❌ No groups selected', 'error');
-          return;
-        }
-        
+      // Add individual emails
+      if (automation.emails && automation.emails.length > 0) {
+        recipients.push(...automation.emails);
+      }
+      
+      // Add teacher email
+      if (automation.teacherEmail) {
+        recipients.push(automation.teacherEmail);
+      }
+      
+      // Add group students
+      if (automation.groups && automation.groups.length > 0) {
         try {
           const { data: students, error } = await supabase
             .from('students')
             .select('email, group_name, status')
-            .in('group_name', selectedGroups)
+            .in('group_name', automation.groups)
             .eq('status', 'active');
           
           if (error) throw error;
-          recipients = students.map(s => s.email).filter(email => email);
+          const groupEmails = students.map(s => s.email).filter(email => email);
+          recipients.push(...groupEmails);
         } catch (error) {
-          console.error('❌ Error fetching students:', error);
+          console.error('❌ Error fetching students from groups:', error);
           showNotification('❌ Error fetching students from groups', 'error');
           return;
         }
-      } else if (automation.recipientType === 'all') {
-        // Fetch all ACTIVE student emails only
+      }
+      
+      // Add all students
+      if (automation.includeAllStudents) {
         try {
           const { data: students, error } = await supabase
             .from('students')
@@ -2502,13 +2566,17 @@ ARNOMA Team"></textarea>
             .eq('status', 'active');
           
           if (error) throw error;
-          recipients = students.map(s => s.email).filter(email => email);
+          const allEmails = students.map(s => s.email).filter(email => email);
+          recipients.push(...allEmails);
         } catch (error) {
           console.error('❌ Error fetching all students:', error);
           showNotification('❌ Error fetching all students', 'error');
           return;
         }
       }
+      
+      // Remove duplicates
+      recipients = [...new Set(recipients)];
 
       if (recipients.length === 0) {
         showNotification('❌ No recipients found', 'error');
@@ -2876,23 +2944,49 @@ ARNOMA Team"></textarea>
                 
                 console.log(`🚀 TRIGGERING AUTOMATION: ${automation.name} for ${group.name} (${minutesUntilClass} min until class)`);
                 
-                // Determine recipients based on recipientType
+                // Collect all recipients from multiple sources
                 let recipients = [];
                 
-                if (automation.recipientType === 'teacher' && automation.teacherEmail) {
-                  // Send to teacher
-                  recipients = [{ email: automation.teacherEmail, name: 'Teacher' }];
-                } else {
-                  // Get ACTIVE students in this group (filter by status)
-                  const groupStudents = studentsData.filter(s => 
-                    s.group && 
-                    s.group.split(',').map(g => g.trim()).includes(group.name) && 
-                    s.email &&
-                    (!s.status || s.status === 'active')  // Only active students
-                  );
-                  
-                  recipients = groupStudents;
+                // Get ACTIVE students in this group
+                const groupStudents = studentsData.filter(s => 
+                  s.group && 
+                  s.group.split(',').map(g => g.trim()).includes(group.name) && 
+                  s.email &&
+                  (!s.status || s.status === 'active')  // Only active students
+                );
+                
+                // Add students from groups (if groups are selected)
+                if (automation.groups && automation.groups.includes(group.name)) {
+                  recipients.push(...groupStudents);
                 }
+                
+                // Add all active students (if includeAllStudents is true)
+                if (automation.includeAllStudents) {
+                  recipients.push(...groupStudents);
+                }
+                
+                // Add individual emails (if any)
+                if (automation.emails && automation.emails.length > 0) {
+                  automation.emails.forEach(email => {
+                    recipients.push({ email: email, name: 'Student' });
+                  });
+                }
+                
+                // Add teacher (if teacher email exists)
+                if (automation.teacherEmail) {
+                  recipients.push({ email: automation.teacherEmail, name: 'Teacher' });
+                }
+                
+                // Remove duplicates based on email
+                const uniqueRecipients = [];
+                const seenEmails = new Set();
+                for (const recipient of recipients) {
+                  if (!seenEmails.has(recipient.email)) {
+                    seenEmails.add(recipient.email);
+                    uniqueRecipients.push(recipient);
+                  }
+                }
+                recipients = uniqueRecipients;
                 
                 if (recipients.length === 0) {
                   console.log(`⚠️ No recipients for ${group.name}`);
