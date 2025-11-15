@@ -1946,7 +1946,7 @@ ARNOMA Team"></textarea>
         if (freq === 'before_class') {
           // Get groups data from global variable (populated by message listener)
           const availableGroups = (typeof groupsData !== 'undefined' && groupsData) ? groupsData : [];
-          const selectedGroups = automation.selectedGroups || [];
+          const selectedGroups = automation.groups || automation.selectedGroups || [];
           
           console.log(`[DEBUG] before_class check:`, {
             availableGroupsCount: availableGroups.length,
@@ -2937,7 +2937,7 @@ ARNOMA Team"></textarea>
         
         // Check each automation
         for (const automation of automations) {
-          const selectedGroups = automation.selectedGroups || [];
+          const selectedGroups = automation.groups || automation.selectedGroups || [];
           const triggerMinutes = parseInt(automation.beforeClassTime);
           
           // Check only the selected groups for this automation
