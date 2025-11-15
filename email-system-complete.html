@@ -1935,13 +1935,14 @@ ARNOMA Team"></textarea>
         
         if (freq === 'before_class') {
           // Get groups data from global variable (populated by message listener)
-          const availableGroups = (typeof groupsData !== 'undefined' && groupsData) ? groupsData : [];
+          const availableGroups = (typeof window.groupsData !== 'undefined' && window.groupsData) ? window.groupsData : [];
           const selectedGroups = automation.groups || automation.selectedGroups || [];
           
           console.log(`[DEBUG] before_class check:`, {
             availableGroupsCount: availableGroups.length,
             selectedGroups: selectedGroups,
-            groupsData: availableGroups
+            hasWindowGroupsData: typeof window.groupsData !== 'undefined',
+            windowGroupsDataLength: window.groupsData ? window.groupsData.length : 0
           });
           
           if (selectedGroups.length === 0 || availableGroups.length === 0) return null;
@@ -2828,16 +2829,16 @@ ARNOMA Team"></textarea>
     // AUTOMATION ENGINE - Class Reminder System
     // ============================================
     
-    let groupsData = [];
-    let studentsData = [];
+    window.groupsData = [];
+    window.studentsData = [];
     let sentReminders = new Set(); // Track sent reminders to avoid duplicates
     
     // Listen for data from parent window (index.html)
     window.addEventListener('message', function(event) {
       if (event.data.action === 'updateGroupsData') {
-        groupsData = event.data.groups || [];
-        studentsData = event.data.students || [];
-        console.log('📊 Automation Engine: Received groups data:', groupsData.length, 'groups,', studentsData.length, 'students');
+        window.groupsData = event.data.groups || [];
+        window.studentsData = event.data.students || [];
+        console.log('📊 Automation Engine: Received groups data:', window.groupsData.length, 'groups,', window.studentsData.length, 'students');
         
         // Re-render automations now that we have groups data for countdown calculations
         if (typeof automationSystem !== 'undefined' && automationSystem.renderAutomations) {
@@ -2932,7 +2933,7 @@ ARNOMA Team"></textarea>
           
           // Check only the selected groups for this automation
           for (const groupName of selectedGroups) {
-            const group = groupsData.find(g => g.name === groupName);
+            const group = window.groupsData.find(g => g.name === groupName);
             if (!group || !group.schedule) continue;
             
             const sessions = parseScheduleString(group.schedule);
@@ -2961,7 +2962,7 @@ ARNOMA Team"></textarea>
                 let recipients = [];
                 
                 // Get ACTIVE students in this group
-                const groupStudents = studentsData.filter(s => 
+                const groupStudents = window.studentsData.filter(s => 
                   s.group && 
                   s.group.split(',').map(g => g.trim()).includes(group.name) && 
                   s.email &&
