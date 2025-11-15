@@ -2072,8 +2072,33 @@ ARNOMA Team"></textarea>
 
     // Automation Modal Functions
     function openAutomations() {
-      automationSystem.loadAutomations();
       document.getElementById('automationsModal').classList.add('active');
+      
+      // Request fresh data from parent
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ action: 'requestGroupsData' }, '*');
+      }
+      
+      // If we already have groups data, render immediately
+      if (window.groupsData && window.groupsData.length > 0) {
+        automationSystem.loadAutomations();
+      } else {
+        // Wait for groups data to arrive, then render
+        const checkData = setInterval(() => {
+          if (window.groupsData && window.groupsData.length > 0) {
+            clearInterval(checkData);
+            automationSystem.loadAutomations();
+          }
+        }, 50);
+        
+        // Timeout after 2 seconds and render anyway
+        setTimeout(() => {
+          clearInterval(checkData);
+          if (!automationSystem._automations || automationSystem._automations.length === 0) {
+            automationSystem.loadAutomations();
+          }
+        }, 2000);
+      }
     }
 
     function closeAutomations() {
@@ -2836,12 +2861,16 @@ ARNOMA Team"></textarea>
     // Listen for data from parent window (index.html)
     window.addEventListener('message', function(event) {
       if (event.data.action === 'updateGroupsData') {
+        const hadData = window.groupsData && window.groupsData.length > 0;
         window.groupsData = event.data.groups || [];
         window.studentsData = event.data.students || [];
         console.log('📊 Automation Engine: Received groups data:', window.groupsData.length, 'groups,', window.studentsData.length, 'students');
         
         // Re-render automations now that we have groups data for countdown calculations
-        if (typeof automationSystem !== 'undefined' && automationSystem.renderAutomations) {
+        // Only re-render if automations are already loaded OR if the modal is open
+        const modalOpen = document.getElementById('automationsModal')?.classList.contains('active');
+        if (modalOpen && typeof automationSystem !== 'undefined' && automationSystem._automations) {
+          console.log('🔄 Re-rendering automations with fresh groups data');
           automationSystem.renderAutomations();
         }
       }
