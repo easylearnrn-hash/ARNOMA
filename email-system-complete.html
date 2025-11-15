@@ -1024,8 +1024,8 @@ ARNOMA Team"></textarea>
         const success = await sendEmail(email, subject, htmlBody);
         if (success) {
           successCount++;
-          // Track sent email in Supabase
-          await trackSentEmail(email, subject, templateName);
+          // Track sent email in Supabase with full HTML content
+          await trackSentEmail(email, subject, templateName, htmlBody);
         } else {
           failCount++;
         }
@@ -1826,6 +1826,20 @@ ARNOMA Team"></textarea>
     function closeSentEmails() {
       document.getElementById('sentEmailsModal').classList.remove('active');
     }
+    
+    // View exact email that was sent
+    function viewSentEmail(emailId) {
+      const emails = window._sentEmailsCache || [];
+      const email = emails.find(e => e.id == emailId);
+      
+      if (!email || !email.html_content) {
+        showNotification('Email content not available', 'error');
+        return;
+      }
+      
+      // Open preview modal with the exact HTML that was sent
+      openPreviewModal(email.html_content);
+    }
 
     async function renderSentEmails() {
       const container = document.getElementById('sentEmailsList');
@@ -1844,17 +1858,29 @@ ARNOMA Team"></textarea>
         return;
       }
       
+      // Store emails globally for viewSentEmail function
+      window._sentEmailsCache = emails;
+      
       container.innerHTML = emails.map(email => {
         const date = new Date(email.sent_at);
-        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        const dateStr = date.toLocaleDateString('en-US', { 
+          month: 'short', 
+          day: 'numeric', 
+          year: 'numeric',
+          timeZone: 'America/Los_Angeles'
+        });
+        const timeStr = date.toLocaleTimeString('en-US', { 
+          hour: 'numeric', 
+          minute: '2-digit',
+          timeZone: 'America/Los_Angeles'
+        });
         
         return `
-          <div style="background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.1); border-radius: 12px; padding: 16px;">
+          <div style="background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.1); border-radius: 12px; padding: 16px; transition: all 0.2s;">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
               <div style="flex: 1;">
                 <div style="font-weight: 600; color: var(--ink); font-size: 15px; margin-bottom: 4px;">
-                  ${email.recipient_email}
+                  📧 ${email.recipient_email}
                 </div>
                 <div style="color: var(--primary); font-size: 13px; font-weight: 600;">
                   ${email.template_name || 'Email'}
@@ -1862,13 +1888,22 @@ ARNOMA Team"></textarea>
               </div>
               <div style="text-align: right;">
                 <div style="font-size: 12px; color: var(--secondary);">${dateStr}</div>
-                <div style="font-size: 12px; color: var(--secondary);">${timeStr}</div>
+                <div style="font-size: 12px; color: var(--secondary);">${timeStr} LA</div>
               </div>
             </div>
-            <div style="background: rgba(0,0,0,.2); padding: 10px 12px; border-radius: 8px; border-left: 3px solid var(--primary);">
+            <div style="background: rgba(0,0,0,.2); padding: 10px 12px; border-radius: 8px; border-left: 3px solid var(--primary); margin-bottom: 12px;">
               <div style="font-size: 12px; color: var(--secondary); margin-bottom: 4px; font-weight: 600;">Subject:</div>
               <div style="color: var(--ink-dim); font-size: 13px;">${email.subject}</div>
             </div>
+            ${email.html_content ? `
+              <button onclick="viewSentEmail('${email.id}')" class="btn btn-secondary" style="width: 100%; padding: 10px; font-size: 13px;">
+                👁️ View Exact Email Sent
+              </button>
+            ` : `
+              <div style="text-align: center; padding: 8px; color: var(--secondary); font-size: 12px; font-style: italic;">
+                Email content not stored (sent before Nov 15, 2025)
+              </div>
+            `}
           </div>
         `;
       }).join('');
@@ -2244,8 +2279,8 @@ ARNOMA Team"></textarea>
       }
     }
 
-    // Track sent emails in Supabase
-    async function trackSentEmail(recipient, subject, template_name) {
+    // Track sent emails in Supabase with full HTML content
+    async function trackSentEmail(recipient, subject, template_name, htmlContent = null) {
       try {
         const { error } = await supabase
           .from('sent_emails')
@@ -2253,6 +2288,7 @@ ARNOMA Team"></textarea>
             recipient_email: recipient,
             subject: subject,
             template_name: template_name,
+            html_content: htmlContent,
             sent_at: new Date().toISOString()
           }]);
         
@@ -2356,8 +2392,8 @@ ARNOMA Team"></textarea>
             throw new Error(`Failed to send email: ${response.statusText}`);
           }
           
-          // Track sent email
-          await trackSentEmail(student.email, subject, 'Auto Payment Reminder');
+          // Track sent email with full HTML content
+          await trackSentEmail(student.email, subject, 'Auto Payment Reminder', body);
           
           console.log('✅ Auto-reminder sent successfully to:', student.name);
           
@@ -2420,8 +2456,8 @@ ARNOMA Team"></textarea>
             throw new Error(`Failed to send email: ${response.statusText}`);
           }
           
-          // Track sent email
-          await trackSentEmail(student.email, subject, 'Welcome Email');
+          // Track sent email with full HTML content
+          await trackSentEmail(student.email, subject, 'Welcome Email', body);
           
           console.log('✅ Welcome email sent successfully to:', student.name);
           
@@ -2623,7 +2659,8 @@ ARNOMA Team"></textarea>
           throw new Error(`Failed to send email: ${response.statusText}`);
         }
         
-        await trackSentEmail(student.email, subject, 'Class Reminder (Auto)');
+        // Track sent email with full HTML content
+        await trackSentEmail(student.email, subject, 'Class Reminder (Auto)', body);
         console.log(`📧 Class reminder sent to ${student.name} (${student.email})`);
         
       } catch (error) {
