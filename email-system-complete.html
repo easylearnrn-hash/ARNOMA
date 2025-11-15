@@ -1908,24 +1908,37 @@ ARNOMA Team"></textarea>
         }
         
         if (freq === 'before_class') {
-          // Get groups data from parent window
-          const groupsData = window.parent.groups || [];
+          // Get groups data from global variable (populated by message listener)
+          const availableGroups = (typeof groupsData !== 'undefined' && groupsData) ? groupsData : [];
           const selectedGroups = automation.selectedGroups || [];
           
-          if (selectedGroups.length === 0) return null;
+          console.log(`[DEBUG] before_class check:`, {
+            availableGroupsCount: availableGroups.length,
+            selectedGroups: selectedGroups,
+            groupsData: availableGroups
+          });
+          
+          if (selectedGroups.length === 0 || availableGroups.length === 0) return null;
           
           // Parse schedule for selected groups and find next class
           let earliestClass = null;
           
           for (const groupName of selectedGroups) {
-            const group = groupsData.find(g => g.name === groupName);
-            if (!group || !group.schedule) continue;
+            const group = availableGroups.find(g => g.name === groupName);
+            if (!group || !group.schedule) {
+              console.log(`[DEBUG] Group ${groupName}: not found or no schedule`, { group });
+              continue;
+            }
+            
+            console.log(`[DEBUG] Processing group ${groupName}:`, { schedule: group.schedule });
             
             // Parse schedule (e.g., "Mon 10:00 AM, Wed 2:00 PM")
             const scheduleSlots = this.parseGroupSchedule(group.schedule);
+            console.log(`[DEBUG] Parsed schedule slots for ${groupName}:`, scheduleSlots);
             
             for (const slot of scheduleSlots) {
               const nextClass = this.getNextClassTime(slot.day, slot.time, laTime);
+              console.log(`[DEBUG] Next class for ${slot.day} ${slot.time}:`, nextClass);
               if (nextClass && (!earliestClass || nextClass < earliestClass)) {
                 earliestClass = nextClass;
               }
