@@ -2867,9 +2867,38 @@ ARNOMA Team"></textarea>
     // AUTOMATION ENGINE - Class Reminder System
     // ============================================
     
-    // Initialize globals only if they don't exist (prevent reset on script re-run)
+    // Use localStorage to persist groups data across iframe reloads
+    function loadGroupsDataFromStorage() {
+      try {
+        const stored = localStorage.getItem('arnoma-groups-cache');
+        if (stored) {
+          const data = JSON.parse(stored);
+          // Check if data is less than 5 minutes old
+          if (data.timestamp && (Date.now() - data.timestamp < 5 * 60 * 1000)) {
+            return data.groups || [];
+          }
+        }
+      } catch (e) {
+        console.error('Error loading groups from storage:', e);
+      }
+      return [];
+    }
+    
+    function saveGroupsDataToStorage(groups) {
+      try {
+        localStorage.setItem('arnoma-groups-cache', JSON.stringify({
+          groups: groups,
+          timestamp: Date.now()
+        }));
+      } catch (e) {
+        console.error('Error saving groups to storage:', e);
+      }
+    }
+    
+    // Initialize globals - try to load from localStorage first
     if (typeof window.groupsData === 'undefined') {
-      window.groupsData = [];
+      window.groupsData = loadGroupsDataFromStorage();
+      console.log('📦 [Init] Loaded groups from localStorage:', window.groupsData.length);
     }
     if (typeof window.studentsData === 'undefined') {
       window.studentsData = [];
@@ -2882,6 +2911,9 @@ ARNOMA Team"></textarea>
         const hadData = window.groupsData && window.groupsData.length > 0;
         window.groupsData = event.data.groups || [];
         window.studentsData = event.data.students || [];
+        
+        // Save to localStorage for persistence across iframe reloads
+        saveGroupsDataToStorage(window.groupsData);
         
         console.log('📊 Automation Engine: Received groups data:', window.groupsData.length, 'groups,', window.studentsData.length, 'students');
         console.log('📊 [VERIFY] window.groupsData NOW has:', window.groupsData.length, 'items');
