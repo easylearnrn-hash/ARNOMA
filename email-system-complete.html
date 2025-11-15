@@ -2792,27 +2792,29 @@ ARNOMA Team"></textarea>
         
         console.log(`🔍 Automation Check: ${currentDay} ${laTime.getHours()}:${String(laTime.getMinutes()).padStart(2, '0')}`);
         
-        // Check each group for upcoming classes
-        for (const group of groupsData) {
-          if (!group.schedule) continue;
+        // Check each automation
+        for (const automation of automations) {
+          const selectedGroups = automation.selectedGroups || [];
+          const triggerMinutes = parseInt(automation.beforeClassTime);
           
-          const sessions = parseScheduleString(group.schedule);
-          
-          for (const session of sessions) {
-            if (session.day !== currentDay) continue;
+          // Check only the selected groups for this automation
+          for (const groupName of selectedGroups) {
+            const group = groupsData.find(g => g.name === groupName);
+            if (!group || !group.schedule) continue;
             
-            const classMinutes = parseTimeToMinutes(session.time);
-            if (classMinutes === null) continue;
+            const sessions = parseScheduleString(group.schedule);
             
-            const minutesUntilClass = classMinutes - currentMinutes;
-            
-            // Check each automation
-            for (const automation of automations) {
-              const triggerMinutes = parseInt(automation.beforeClassTime);
+            for (const session of sessions) {
+              if (session.day !== currentDay) continue;
+              
+              const classMinutes = parseTimeToMinutes(session.time);
+              if (classMinutes === null) continue;
+              
+              const minutesUntilClass = classMinutes - currentMinutes;
               
               // Trigger window: within 2 minutes of the target time to account for check intervals
               if (Math.abs(minutesUntilClass - triggerMinutes) <= 2) {
-                const reminderKey = `${group.name}_${session.day}_${session.time}_${triggerMinutes}`;
+                const reminderKey = `${automation.id}_${group.name}_${session.day}_${session.time}_${triggerMinutes}`;
                 
                 // Check if already sent today
                 if (sentReminders.has(reminderKey)) {
@@ -2822,13 +2824,16 @@ ARNOMA Team"></textarea>
                 
                 console.log(`🚀 TRIGGERING AUTOMATION: ${automation.name} for ${group.name} (${minutesUntilClass} min until class)`);
                 
-                // Get students in this group
+                // Get ACTIVE students in this group (filter by status)
                 const groupStudents = studentsData.filter(s => 
-                  s.group && s.group.split(',').map(g => g.trim()).includes(group.name) && s.email
+                  s.group && 
+                  s.group.split(',').map(g => g.trim()).includes(group.name) && 
+                  s.email &&
+                  (!s.status || s.status === 'active')  // Only active students
                 );
                 
                 if (groupStudents.length === 0) {
-                  console.log(`⚠️ No students with emails in ${group.name}`);
+                  console.log(`⚠️ No active students with emails in ${group.name}`);
                   continue;
                 }
                 
