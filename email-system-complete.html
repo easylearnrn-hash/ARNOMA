@@ -2855,8 +2855,13 @@ ARNOMA Team"></textarea>
     // AUTOMATION ENGINE - Class Reminder System
     // ============================================
     
-    window.groupsData = [];
-    window.studentsData = [];
+    // Initialize globals only if they don't exist (prevent reset on script re-run)
+    if (typeof window.groupsData === 'undefined') {
+      window.groupsData = [];
+    }
+    if (typeof window.studentsData === 'undefined') {
+      window.studentsData = [];
+    }
     let sentReminders = new Set(); // Track sent reminders to avoid duplicates
     
     // Listen for data from parent window (index.html)
