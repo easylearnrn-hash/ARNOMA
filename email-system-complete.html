@@ -1942,7 +1942,8 @@ ARNOMA Team"></textarea>
             availableGroupsCount: availableGroups.length,
             selectedGroups: selectedGroups,
             hasWindowGroupsData: typeof window.groupsData !== 'undefined',
-            windowGroupsDataLength: window.groupsData ? window.groupsData.length : 0
+            windowGroupsDataLength: window.groupsData ? window.groupsData.length : 0,
+            windowGroupsDataSample: window.groupsData ? window.groupsData.slice(0, 2) : 'none'
           });
           
           if (selectedGroups.length === 0 || availableGroups.length === 0) return null;
@@ -2864,7 +2865,10 @@ ARNOMA Team"></textarea>
         const hadData = window.groupsData && window.groupsData.length > 0;
         window.groupsData = event.data.groups || [];
         window.studentsData = event.data.students || [];
+        
         console.log('📊 Automation Engine: Received groups data:', window.groupsData.length, 'groups,', window.studentsData.length, 'students');
+        console.log('📊 [VERIFY] window.groupsData NOW has:', window.groupsData.length, 'items');
+        console.log('📊 [VERIFY] First group:', window.groupsData[0]);
         
         // Re-render automations now that we have groups data for countdown calculations
         // Only re-render if automations are already loaded OR if the modal is open
