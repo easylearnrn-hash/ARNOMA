@@ -3131,11 +3131,11 @@ ARNOMA Team"></textarea>
         }
         
         // Track sent email with full HTML content
-        await trackSentEmail(student.email, subject, 'Class Reminder (Auto)', body);
-        console.log(`📧 Class reminder sent to ${student.name} (${student.email})`);
+        await trackSentEmail(recipient.email, subject, 'Class Reminder (Auto)', body);
+        console.log(`📧 Class reminder sent to ${recipientName} (${recipient.email})`);
         
       } catch (error) {
-        console.error(`❌ Failed to send reminder to ${student.name}:`, error);
+        console.error(`❌ Failed to send reminder to ${recipientName}:`, error);
       }
     }
     
