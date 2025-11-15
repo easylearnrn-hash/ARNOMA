@@ -1908,11 +1908,105 @@ ARNOMA Team"></textarea>
         }
         
         if (freq === 'before_class') {
-          // This requires calendar data - return placeholder
-          return null;
+          // Get groups data from parent window
+          const groupsData = window.parent.groups || [];
+          const selectedGroups = automation.selectedGroups || [];
+          
+          if (selectedGroups.length === 0) return null;
+          
+          // Parse schedule for selected groups and find next class
+          let earliestClass = null;
+          
+          for (const groupName of selectedGroups) {
+            const group = groupsData.find(g => g.name === groupName);
+            if (!group || !group.schedule) continue;
+            
+            // Parse schedule (e.g., "Mon 10:00 AM, Wed 2:00 PM")
+            const scheduleSlots = this.parseGroupSchedule(group.schedule);
+            
+            for (const slot of scheduleSlots) {
+              const nextClass = this.getNextClassTime(slot.day, slot.time, laTime);
+              if (nextClass && (!earliestClass || nextClass < earliestClass)) {
+                earliestClass = nextClass;
+              }
+            }
+          }
+          
+          if (!earliestClass) return null;
+          
+          // Subtract the "before" time (e.g., 30 minutes)
+          const minutesBefore = automation.beforeClassTime || 30;
+          const reminderTime = new Date(earliestClass.getTime() - (minutesBefore * 60 * 1000));
+          
+          return reminderTime > laTime ? reminderTime : null;
         }
         
         return null;
+      },
+
+      parseGroupSchedule(scheduleStr) {
+        // Parse "Mon 10:00 AM, Wed 2:00 PM" format
+        if (!scheduleStr) return [];
+        
+        const dayMap = {
+          'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday',
+          'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday', 'sun': 'Sunday',
+          'monday': 'Monday', 'tuesday': 'Tuesday', 'wednesday': 'Wednesday',
+          'thursday': 'Thursday', 'friday': 'Friday', 'saturday': 'Saturday', 'sunday': 'Sunday'
+        };
+        
+        const slots = [];
+        const parts = scheduleStr.split(',');
+        
+        for (const part of parts) {
+          const match = part.trim().match(/(\w+)\s+(\d+:\d+\s*[AP]M)/i);
+          if (match) {
+            const dayKey = match[1].toLowerCase();
+            const day = dayMap[dayKey] || match[1];
+            const time = match[2];
+            slots.push({ day, time });
+          }
+        }
+        
+        return slots;
+      },
+
+      getNextClassTime(dayName, timeStr, fromDate) {
+        // Convert day name to day number (0=Sunday, 1=Monday, etc.)
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+        const targetDay = dayNames.indexOf(dayName);
+        if (targetDay === -1) return null;
+        
+        // Parse time (e.g., "10:00 AM")
+        const match = timeStr.match(/(\d+):(\d+)\s*([AP]M)/i);
+        if (!match) return null;
+        
+        let hours = parseInt(match[1]);
+        const minutes = parseInt(match[2]);
+        const ampm = match[3].toUpperCase();
+        
+        if (ampm === 'PM' && hours !== 12) hours += 12;
+        if (ampm === 'AM' && hours === 12) hours = 0;
+        
+        // Find next occurrence of this day
+        const currentDay = fromDate.getDay();
+        let daysUntil = targetDay - currentDay;
+        if (daysUntil < 0) daysUntil += 7;
+        
+        // If it's today, check if time has passed
+        if (daysUntil === 0) {
+          const todayClass = new Date(fromDate);
+          todayClass.setHours(hours, minutes, 0, 0);
+          if (todayClass > fromDate) {
+            return todayClass;
+          }
+          daysUntil = 7; // Next week
+        }
+        
+        const nextClass = new Date(fromDate);
+        nextClass.setDate(nextClass.getDate() + daysUntil);
+        nextClass.setHours(hours, minutes, 0, 0);
+        return nextClass;
       },
 
       formatCountdown(nextRunTime) {
