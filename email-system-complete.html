@@ -1684,7 +1684,6 @@ ARNOMA Team"></textarea>
       _automations: [],
 
       loadAutomations() {
-        console.log('📥 [loadAutomations] Loading from localStorage, window.groupsData.length:', window.groupsData ? window.groupsData.length : 'undefined');
         try {
           const stored = localStorage.getItem('arnoma-automations-v3');
           if (stored) {
@@ -1693,7 +1692,6 @@ ARNOMA Team"></textarea>
         } catch (e) {
           console.error('Error loading automations:', e);
         }
-        console.log('🎨 [loadAutomations] Calling renderAutomations(), window.groupsData.length:', window.groupsData ? window.groupsData.length : 'undefined');
         this.renderAutomations();
       },
 
@@ -1707,7 +1705,6 @@ ARNOMA Team"></textarea>
       },
 
       renderAutomations() {
-        console.log('🎨 [renderAutomations] START - window.groupsData.length:', window.groupsData ? window.groupsData.length : 'undefined');
         const container = document.getElementById('automationsList');
         
         if (this._automations.length === 0) {
@@ -1941,14 +1938,6 @@ ARNOMA Team"></textarea>
           const availableGroups = (typeof window.groupsData !== 'undefined' && window.groupsData) ? window.groupsData : [];
           const selectedGroups = automation.groups || automation.selectedGroups || [];
           
-          console.log(`[DEBUG] before_class check:`, {
-            availableGroupsCount: availableGroups.length,
-            selectedGroups: selectedGroups,
-            hasWindowGroupsData: typeof window.groupsData !== 'undefined',
-            windowGroupsDataLength: window.groupsData ? window.groupsData.length : 0,
-            windowGroupsDataSample: window.groupsData ? window.groupsData.slice(0, 2) : 'none'
-          });
-          
           if (selectedGroups.length === 0 || availableGroups.length === 0) return null;
           
           // Parse schedule for selected groups and find next class
@@ -1957,19 +1946,14 @@ ARNOMA Team"></textarea>
           for (const groupName of selectedGroups) {
             const group = availableGroups.find(g => g.name === groupName);
             if (!group || !group.schedule) {
-              console.log(`[DEBUG] Group ${groupName}: not found or no schedule`, { group });
               continue;
             }
             
-            console.log(`[DEBUG] Processing group ${groupName}:`, { schedule: group.schedule });
-            
             // Parse schedule (e.g., "Mon 10:00 AM, Wed 2:00 PM")
             const scheduleSlots = this.parseGroupSchedule(group.schedule);
-            console.log(`[DEBUG] Parsed schedule slots for ${groupName}:`, scheduleSlots);
             
             for (const slot of scheduleSlots) {
               const nextClass = this.getNextClassTime(slot.day, slot.time, laTime);
-              console.log(`[DEBUG] Next class for ${slot.day} ${slot.time}:`, nextClass);
               if (nextClass && (!earliestClass || nextClass < earliestClass)) {
                 earliestClass = nextClass;
               }
@@ -2076,28 +2060,20 @@ ARNOMA Team"></textarea>
 
     // Automation Modal Functions
     function openAutomations() {
-      console.log('🚪 [openAutomations] Modal opening, window.groupsData.length:', window.groupsData ? window.groupsData.length : 'undefined');
       document.getElementById('automationsModal').classList.add('active');
       
       // Request fresh data from parent
       if (window.parent && window.parent !== window) {
-        console.log('📤 [openAutomations] Requesting groups data from parent');
         window.parent.postMessage({ action: 'requestGroupsData' }, '*');
       }
       
       // If we already have groups data, render immediately
       if (window.groupsData && window.groupsData.length > 0) {
-        console.log('✅ [openAutomations] Data already available, rendering immediately');
         automationSystem.loadAutomations();
       } else {
-        console.log('⏳ [openAutomations] No data yet, starting poll...');
         // Wait for groups data to arrive, then render
-        let pollCount = 0;
         const checkData = setInterval(() => {
-          pollCount++;
-          console.log(`🔄 [Poll ${pollCount}] window.groupsData.length:`, window.groupsData ? window.groupsData.length : 'undefined');
           if (window.groupsData && window.groupsData.length > 0) {
-            console.log('✅ [Poll] Data arrived! Rendering...');
             clearInterval(checkData);
             automationSystem.loadAutomations();
           }
@@ -2105,7 +2081,6 @@ ARNOMA Team"></textarea>
         
         // Timeout after 2 seconds and render anyway
         setTimeout(() => {
-          console.log('⏱️ [Timeout] 2 seconds elapsed, forcing render');
           clearInterval(checkData);
           if (!automationSystem._automations || automationSystem._automations.length === 0) {
             automationSystem.loadAutomations();
@@ -2898,7 +2873,6 @@ ARNOMA Team"></textarea>
     // Initialize globals - try to load from localStorage first
     if (typeof window.groupsData === 'undefined') {
       window.groupsData = loadGroupsDataFromStorage();
-      console.log('📦 [Init] Loaded groups from localStorage:', window.groupsData.length);
     }
     if (typeof window.studentsData === 'undefined') {
       window.studentsData = [];
@@ -2908,22 +2882,15 @@ ARNOMA Team"></textarea>
     // Listen for data from parent window (index.html)
     window.addEventListener('message', function(event) {
       if (event.data.action === 'updateGroupsData') {
-        const hadData = window.groupsData && window.groupsData.length > 0;
         window.groupsData = event.data.groups || [];
         window.studentsData = event.data.students || [];
         
         // Save to localStorage for persistence across iframe reloads
         saveGroupsDataToStorage(window.groupsData);
         
-        console.log('📊 Automation Engine: Received groups data:', window.groupsData.length, 'groups,', window.studentsData.length, 'students');
-        console.log('📊 [VERIFY] window.groupsData NOW has:', window.groupsData.length, 'items');
-        console.log('📊 [VERIFY] First group:', window.groupsData[0]);
-        
         // Re-render automations now that we have groups data for countdown calculations
-        // Only re-render if automations are already loaded OR if the modal is open
         const modalOpen = document.getElementById('automationsModal')?.classList.contains('active');
         if (modalOpen && typeof automationSystem !== 'undefined' && automationSystem._automations) {
-          console.log('🔄 Re-rendering automations with fresh groups data');
           automationSystem.renderAutomations();
         }
       }
