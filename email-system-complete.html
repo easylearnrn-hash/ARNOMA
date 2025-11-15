@@ -2296,6 +2296,29 @@ ARNOMA Team"></textarea>
       document.getElementById('groupSelection').style.display = includeGroups ? 'block' : 'none';
       document.getElementById('individualSelection').style.display = includeIndividual ? 'block' : 'none';
       document.getElementById('teacherSelection').style.display = includeTeacher ? 'block' : 'none';
+      
+      // Update button highlighting
+      const groupsBtn = document.getElementById('groupsToggleBtn');
+      const allBtn = document.getElementById('allStudentsToggleBtn');
+      const individualBtn = document.getElementById('individualToggleBtn');
+      const teacherBtn = document.getElementById('teacherToggleBtn');
+      
+      if (groupsBtn) {
+        groupsBtn.style.background = includeGroups ? 'rgba(99,102,241,.3)' : 'rgba(255,255,255,.05)';
+        groupsBtn.style.borderColor = includeGroups ? 'rgba(99,102,241,.6)' : 'rgba(255,255,255,.1)';
+      }
+      if (allBtn) {
+        allBtn.style.background = includeAll ? 'rgba(34,197,94,.3)' : 'rgba(255,255,255,.05)';
+        allBtn.style.borderColor = includeAll ? 'rgba(34,197,94,.6)' : 'rgba(255,255,255,.1)';
+      }
+      if (individualBtn) {
+        individualBtn.style.background = includeIndividual ? 'rgba(59,130,246,.3)' : 'rgba(255,255,255,.05)';
+        individualBtn.style.borderColor = includeIndividual ? 'rgba(59,130,246,.6)' : 'rgba(255,255,255,.1)';
+      }
+      if (teacherBtn) {
+        teacherBtn.style.background = includeTeacher ? 'rgba(245,158,11,.3)' : 'rgba(255,255,255,.05)';
+        teacherBtn.style.borderColor = includeTeacher ? 'rgba(245,158,11,.6)' : 'rgba(255,255,255,.1)';
+      }
     }
 
     function toggleFrequencyOptions() {
