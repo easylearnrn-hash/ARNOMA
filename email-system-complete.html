@@ -2331,7 +2331,7 @@ ARNOMA Team"></textarea>
       if (automation.recipientType === 'individual') {
         recipients = automation.emails || [];
       } else if (automation.recipientType === 'group') {
-        // Fetch student emails from selected groups
+        // Fetch student emails from selected groups (ACTIVE students only)
         const selectedGroups = automation.selectedGroups || [];
         if (selectedGroups.length === 0) {
           showNotification('❌ No groups selected', 'error');
@@ -2341,8 +2341,9 @@ ARNOMA Team"></textarea>
         try {
           const { data: students, error } = await supabase
             .from('students')
-            .select('email, group_name')
-            .in('group_name', selectedGroups);
+            .select('email, group_name, status')
+            .in('group_name', selectedGroups)
+            .eq('status', 'active');
           
           if (error) throw error;
           recipients = students.map(s => s.email).filter(email => email);
@@ -2352,11 +2353,12 @@ ARNOMA Team"></textarea>
           return;
         }
       } else if (automation.recipientType === 'all') {
-        // Fetch all active student emails
+        // Fetch all ACTIVE student emails only
         try {
           const { data: students, error } = await supabase
             .from('students')
-            .select('email');
+            .select('email, status')
+            .eq('status', 'active');
           
           if (error) throw error;
           recipients = students.map(s => s.email).filter(email => email);

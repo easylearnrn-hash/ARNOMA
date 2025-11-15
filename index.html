@@ -14825,6 +14825,13 @@
             
             console.log(`\n[Student ${studentsChecked}/${calendarData.students.length}] ${student.name}`);
             
+            // Skip if student is not active
+            if (student.status && student.status !== 'active') {
+              console.log(`  ⏭️  Student status is '${student.status}' (not active) - skipping`);
+              studentsPaused++;
+              continue;
+            }
+            
             // Skip if paused
             if (isPaused(studentId)) {
               console.log('  ⏸️  Auto-reminders PAUSED for this student - skipping');
