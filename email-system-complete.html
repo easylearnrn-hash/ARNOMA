@@ -1720,6 +1720,24 @@ ARNOMA Team"></textarea>
           return;
         }
 
+        // Sort automations by next run time (soonest first)
+        const sortedAutomations = [...this._automations].sort((a, b) => {
+          const nextRunA = this.getNextRunTime(a);
+          const nextRunB = this.getNextRunTime(b);
+          
+          // Active automations with a next run time come first
+          if (nextRunA && !nextRunB) return -1;
+          if (!nextRunA && nextRunB) return 1;
+          if (nextRunA && nextRunB) return nextRunA - nextRunB;
+          
+          // If both don't have next run, active ones come first
+          if (a.active && !b.active) return -1;
+          if (!a.active && b.active) return 1;
+          
+          // Otherwise maintain original order
+          return 0;
+        });
+
         const html = `
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
             <h3 style="margin: 0;">Active Automations (${this._automations.filter(a => a.active).length})</h3>
@@ -1728,12 +1746,10 @@ ARNOMA Team"></textarea>
             </button>
           </div>
           <div style="display: grid; gap: 16px;">
-            ${this._automations.map(automation => {
+            ${sortedAutomations.map(automation => {
               const nextRun = this.getNextRunTime(automation);
               const countdown = this.formatCountdown(nextRun);
               const automationId = automation.id;
-              
-              console.log(`[Automation] ${automation.name}: nextRun=${nextRun}, countdown=${countdown}, freq=${automation.frequency}`);
               
               return `
               <div class="template-card" style="border-left: 4px solid ${automation.active ? '#22c55e' : '#64748b'};">
