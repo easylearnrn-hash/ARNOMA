@@ -451,6 +451,10 @@
                 <input type="radio" name="recipientType" value="all" onchange="toggleRecipientType()" style="margin-right: 8px;">
                 <span style="font-weight: 600; color: white;">🌐 All Students</span>
               </label>
+              <label style="flex: 1; background: rgba(255,255,255,.05); padding: 12px; border-radius: 10px; border: 2px solid rgba(255,255,255,.1); cursor: pointer; transition: all 0.2s;">
+                <input type="radio" name="recipientType" value="teacher" onchange="toggleRecipientType()" style="margin-right: 8px;">
+                <span style="font-weight: 600; color: white;">👨‍🏫 Teacher</span>
+              </label>
             </div>
 
             <div id="individualSelection" style="display: block;">
@@ -486,6 +490,14 @@
                 <div style="font-size: 18px; margin-bottom: 6px;">🌐</div>
                 <div style="font-weight: 600; color: #22c55e; margin-bottom: 4px;">All Active Students</div>
                 <div style="font-size: 12px; color: rgba(255,255,255,.7);">Email will be sent to all active students in your database</div>
+              </div>
+            </div>
+
+            <div id="teacherSelection" style="display: none;">
+              <div style="background: rgba(245,158,11,.1); padding: 12px; border-radius: 8px; border: 2px solid rgba(245,158,11,.3); text-align: center;">
+                <div style="font-size: 18px; margin-bottom: 6px;">👨‍🏫</div>
+                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 8px;">Teacher Email</div>
+                <input type="email" id="teacherEmail" placeholder="teacher@example.com" style="width: 100%; max-width: 400px; padding: 12px; background: rgba(248,250,252,.08); border: 2px solid rgba(245,158,11,.4); border-radius: 10px; color: white; font-size: 14px; text-align: center;">
               </div>
             </div>
           </div>
@@ -1825,6 +1837,9 @@ ARNOMA Team"></textarea>
         if (automation.recipientType === 'individual' && automation.emails) {
           return `${automation.emails.length} Email${automation.emails.length !== 1 ? 's' : ''}`;
         }
+        if (automation.recipientType === 'teacher' && automation.teacherEmail) {
+          return `👨‍🏫 ${automation.teacherEmail}`;
+        }
         return `${automation.students ? automation.students.length : 0} Individual Students`;
       },
 
@@ -2199,6 +2214,10 @@ ARNOMA Team"></textarea>
             renderEmailList();
           }
           
+          if (automation.recipientType === 'teacher' && automation.teacherEmail) {
+            document.getElementById('teacherEmail').value = automation.teacherEmail;
+          }
+          
           document.getElementById('automationFrequency').value = automation.frequency;
           toggleFrequencyOptions();
           
@@ -2238,6 +2257,7 @@ ARNOMA Team"></textarea>
       document.getElementById('individualSelection').style.display = type === 'individual' ? 'block' : 'none';
       document.getElementById('groupSelection').style.display = type === 'group' ? 'block' : 'none';
       document.getElementById('allSelection').style.display = type === 'all' ? 'block' : 'none';
+      document.getElementById('teacherSelection').style.display = type === 'teacher' ? 'block' : 'none';
     }
 
     function toggleFrequencyOptions() {
@@ -2295,6 +2315,7 @@ ARNOMA Team"></textarea>
       delete automation.groups;
       delete automation.students;
       delete automation.emails;
+      delete automation.teacherEmail;
 
       if (recipientType === 'group') {
         const groups = Array.from(document.querySelectorAll('input[name="groups"]:checked')).map(cb => cb.value);
@@ -2309,6 +2330,17 @@ ARNOMA Team"></textarea>
           return;
         }
         automation.emails = [...currentEmails];
+      } else if (recipientType === 'teacher') {
+        const teacherEmail = document.getElementById('teacherEmail').value.trim();
+        if (!teacherEmail) {
+          showNotification('⚠️ Please enter a teacher email address.', 'error');
+          return;
+        }
+        if (!teacherEmail.includes('@')) {
+          showNotification('⚠️ Please enter a valid email address.', 'error');
+          return;
+        }
+        automation.teacherEmail = teacherEmail;
       }
 
       // Clear previous schedule state
@@ -2437,6 +2469,8 @@ ARNOMA Team"></textarea>
       
       if (automation.recipientType === 'individual') {
         recipients = automation.emails || [];
+      } else if (automation.recipientType === 'teacher') {
+        recipients = automation.teacherEmail ? [automation.teacherEmail] : [];
       } else if (automation.recipientType === 'group') {
         // Fetch student emails from selected groups (ACTIVE students only)
         const selectedGroups = automation.selectedGroups || [];
@@ -2842,16 +2876,26 @@ ARNOMA Team"></textarea>
                 
                 console.log(`🚀 TRIGGERING AUTOMATION: ${automation.name} for ${group.name} (${minutesUntilClass} min until class)`);
                 
-                // Get ACTIVE students in this group (filter by status)
-                const groupStudents = studentsData.filter(s => 
-                  s.group && 
-                  s.group.split(',').map(g => g.trim()).includes(group.name) && 
-                  s.email &&
-                  (!s.status || s.status === 'active')  // Only active students
-                );
+                // Determine recipients based on recipientType
+                let recipients = [];
                 
-                if (groupStudents.length === 0) {
-                  console.log(`⚠️ No active students with emails in ${group.name}`);
+                if (automation.recipientType === 'teacher' && automation.teacherEmail) {
+                  // Send to teacher
+                  recipients = [{ email: automation.teacherEmail, name: 'Teacher' }];
+                } else {
+                  // Get ACTIVE students in this group (filter by status)
+                  const groupStudents = studentsData.filter(s => 
+                    s.group && 
+                    s.group.split(',').map(g => g.trim()).includes(group.name) && 
+                    s.email &&
+                    (!s.status || s.status === 'active')  // Only active students
+                  );
+                  
+                  recipients = groupStudents;
+                }
+                
+                if (recipients.length === 0) {
+                  console.log(`⚠️ No recipients for ${group.name}`);
                   continue;
                 }
                 
@@ -2862,14 +2906,14 @@ ARNOMA Team"></textarea>
                   continue;
                 }
                 
-                // Send to each student in the group
-                for (const student of groupStudents) {
-                  await sendClassReminderEmail(student, group, session, template);
+                // Send to each recipient
+                for (const recipient of recipients) {
+                  await sendClassReminderEmail(recipient, group, session, template);
                 }
                 
                 // Mark as sent
                 sentReminders.add(reminderKey);
-                console.log(`✅ Sent ${groupStudents.length} emails for ${group.name}`);
+                console.log(`✅ Sent ${recipients.length} emails for ${group.name}`);
               }
             }
           }
@@ -2880,15 +2924,17 @@ ARNOMA Team"></textarea>
     }
     
     // Send class reminder email
-    async function sendClassReminderEmail(student, group, session, template) {
+    async function sendClassReminderEmail(recipient, group, session, template) {
       try {
+        const recipientName = recipient.name || 'Teacher';
+        
         let subject = template.subject
-          .replace(/\\{\\{StudentName\\}\\}/g, student.name)
+          .replace(/\\{\\{StudentName\\}\\}/g, recipientName)
           .replace(/\\{\\{Group\\}\\}/g, group.name)
           .replace(/\\{\\{GroupName\\}\\}/g, group.name);
         
         let body = template.body
-          .replace(/\\{\\{StudentName\\}\\}/g, student.name)
+          .replace(/\\{\\{StudentName\\}\\}/g, recipientName)
           .replace(/\\{\\{Group\\}\\}/g, group.name)
           .replace(/\\{\\{GroupName\\}\\}/g, group.name)
           .replace(/\\{\\{ClassTime\\}\\}/g, session.time)
@@ -2901,7 +2947,7 @@ ARNOMA Team"></textarea>
             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
           },
           body: JSON.stringify({
-            to: student.email,
+            to: recipient.email,
             subject: subject,
             html: body
           })
