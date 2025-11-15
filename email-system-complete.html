@@ -2723,6 +2723,11 @@ ARNOMA Team"></textarea>
         groupsData = event.data.groups || [];
         studentsData = event.data.students || [];
         console.log('📊 Automation Engine: Received groups data:', groupsData.length, 'groups,', studentsData.length, 'students');
+        
+        // Re-render automations now that we have groups data for countdown calculations
+        if (typeof automationSystem !== 'undefined' && automationSystem.renderAutomations) {
+          automationSystem.renderAutomations();
+        }
       }
     });
     
