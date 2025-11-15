@@ -1740,7 +1740,12 @@ ARNOMA Team"></textarea>
             </button>
           </div>
           <div style="display: grid; gap: 16px;">
-            ${this._automations.map(automation => `
+            ${this._automations.map(automation => {
+              const nextRun = this.getNextRunTime(automation);
+              const countdown = this.formatCountdown(nextRun);
+              const automationId = automation.id;
+              
+              return `
               <div class="template-card" style="border-left: 4px solid ${automation.active ? '#22c55e' : '#64748b'};">
                 <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
                   <div style="flex: 1;">
@@ -1757,6 +1762,11 @@ ARNOMA Team"></textarea>
                       <span style="font-size: 12px; background: rgba(59,130,246,.2); padding: 4px 10px; border-radius: 6px; color: #bfdbfe;">
                         ⏰ ${this.getScheduleLabel(automation)}
                       </span>
+                      ${automation.active && nextRun ? `
+                        <span id="countdown-${automationId}" style="font-size: 12px; background: rgba(34,197,94,.2); padding: 4px 10px; border-radius: 6px; color: #86efac; font-weight: 600;">
+                          ⏱️ Next in: ${countdown}
+                        </span>
+                      ` : ''}
                     </div>
                   </div>
                   <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -1775,11 +1785,38 @@ ARNOMA Team"></textarea>
                   </div>
                 </div>
               </div>
-            `).join('')}
+            `;
+            }).join('')}
           </div>
         `;
         
         container.innerHTML = html;
+        
+        // Start countdown timer updates
+        this.startCountdownUpdates();
+      },
+
+      startCountdownUpdates() {
+        // Clear any existing interval
+        if (this._countdownInterval) {
+          clearInterval(this._countdownInterval);
+        }
+        
+        // Update countdowns every second
+        this._countdownInterval = setInterval(() => {
+          this._automations.forEach(automation => {
+            if (!automation.active) return;
+            
+            const countdownEl = document.getElementById(`countdown-${automation.id}`);
+            if (!countdownEl) return;
+            
+            const nextRun = this.getNextRunTime(automation);
+            const countdown = this.formatCountdown(nextRun);
+            
+            // Update only the countdown text, preserve the rest
+            countdownEl.textContent = `⏱️ Next in: ${countdown}`;
+          });
+        }, 1000);
       },
 
       getRecipientLabel(automation) {
@@ -1805,6 +1842,99 @@ ARNOMA Team"></textarea>
         if (freq === 'monthly') return `Monthly on ${automation.monthlyDay} at ${automation.monthlyTime}`;
         if (freq === 'before_class') return `${automation.beforeClassTime} min before class`;
         return freq;
+      },
+
+      getNextRunTime(automation) {
+        if (!automation.active) return null;
+        
+        const now = new Date();
+        const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+        
+        const freq = automation.frequency;
+        
+        if (freq === 'once') {
+          const runDate = new Date(`${automation.onceDate}T${automation.onceTime}`);
+          return runDate > laTime ? runDate : null;
+        }
+        
+        if (freq === 'daily') {
+          const [hours, minutes] = automation.dailyTime.split(':').map(Number);
+          const nextRun = new Date(laTime);
+          nextRun.setHours(hours, minutes, 0, 0);
+          
+          if (nextRun <= laTime) {
+            nextRun.setDate(nextRun.getDate() + 1);
+          }
+          return nextRun;
+        }
+        
+        if (freq === 'weekly') {
+          const [hours, minutes] = automation.weeklyTime.split(':').map(Number);
+          const currentDay = laTime.getDay();
+          let daysUntilNext = Infinity;
+          
+          for (const targetDay of automation.weekdays) {
+            let diff = targetDay - currentDay;
+            if (diff < 0) diff += 7;
+            if (diff === 0) {
+              const todayRun = new Date(laTime);
+              todayRun.setHours(hours, minutes, 0, 0);
+              if (todayRun > laTime) {
+                daysUntilNext = 0;
+                break;
+              } else {
+                diff = 7;
+              }
+            }
+            if (diff < daysUntilNext) daysUntilNext = diff;
+          }
+          
+          if (daysUntilNext === Infinity) return null;
+          
+          const nextRun = new Date(laTime);
+          nextRun.setDate(nextRun.getDate() + daysUntilNext);
+          nextRun.setHours(hours, minutes, 0, 0);
+          return nextRun;
+        }
+        
+        if (freq === 'monthly') {
+          const [hours, minutes] = automation.monthlyTime.split(':').map(Number);
+          const nextRun = new Date(laTime);
+          nextRun.setDate(automation.monthlyDay);
+          nextRun.setHours(hours, minutes, 0, 0);
+          
+          if (nextRun <= laTime) {
+            nextRun.setMonth(nextRun.getMonth() + 1);
+          }
+          return nextRun;
+        }
+        
+        if (freq === 'before_class') {
+          // This requires calendar data - return placeholder
+          return null;
+        }
+        
+        return null;
+      },
+
+      formatCountdown(nextRunTime) {
+        if (!nextRunTime) return 'Calculating...';
+        
+        const now = new Date();
+        const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+        const diff = nextRunTime - laTime;
+        
+        if (diff <= 0) return 'Running soon...';
+        
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+        
+        if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+        if (hours > 0) return `${hours}h ${minutes}m ${seconds}s`;
+        if (minutes > 0) return `${minutes}m ${seconds}s`;
+        return `${seconds}s`;
       }
     };
 
@@ -1815,6 +1945,11 @@ ARNOMA Team"></textarea>
     }
 
     function closeAutomations() {
+      // Clear countdown interval when closing
+      if (automationSystem._countdownInterval) {
+        clearInterval(automationSystem._countdownInterval);
+        automationSystem._countdownInterval = null;
+      }
       document.getElementById('automationsModal').classList.remove('active');
     }
 
