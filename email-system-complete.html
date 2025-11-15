@@ -1684,6 +1684,7 @@ ARNOMA Team"></textarea>
       _automations: [],
 
       loadAutomations() {
+        console.log('📥 [loadAutomations] Loading from localStorage, window.groupsData.length:', window.groupsData ? window.groupsData.length : 'undefined');
         try {
           const stored = localStorage.getItem('arnoma-automations-v3');
           if (stored) {
@@ -1692,6 +1693,7 @@ ARNOMA Team"></textarea>
         } catch (e) {
           console.error('Error loading automations:', e);
         }
+        console.log('🎨 [loadAutomations] Calling renderAutomations(), window.groupsData.length:', window.groupsData ? window.groupsData.length : 'undefined');
         this.renderAutomations();
       },
 
@@ -1705,6 +1707,7 @@ ARNOMA Team"></textarea>
       },
 
       renderAutomations() {
+        console.log('🎨 [renderAutomations] START - window.groupsData.length:', window.groupsData ? window.groupsData.length : 'undefined');
         const container = document.getElementById('automationsList');
         
         if (this._automations.length === 0) {
@@ -2073,20 +2076,28 @@ ARNOMA Team"></textarea>
 
     // Automation Modal Functions
     function openAutomations() {
+      console.log('🚪 [openAutomations] Modal opening, window.groupsData.length:', window.groupsData ? window.groupsData.length : 'undefined');
       document.getElementById('automationsModal').classList.add('active');
       
       // Request fresh data from parent
       if (window.parent && window.parent !== window) {
+        console.log('📤 [openAutomations] Requesting groups data from parent');
         window.parent.postMessage({ action: 'requestGroupsData' }, '*');
       }
       
       // If we already have groups data, render immediately
       if (window.groupsData && window.groupsData.length > 0) {
+        console.log('✅ [openAutomations] Data already available, rendering immediately');
         automationSystem.loadAutomations();
       } else {
+        console.log('⏳ [openAutomations] No data yet, starting poll...');
         // Wait for groups data to arrive, then render
+        let pollCount = 0;
         const checkData = setInterval(() => {
+          pollCount++;
+          console.log(`🔄 [Poll ${pollCount}] window.groupsData.length:`, window.groupsData ? window.groupsData.length : 'undefined');
           if (window.groupsData && window.groupsData.length > 0) {
+            console.log('✅ [Poll] Data arrived! Rendering...');
             clearInterval(checkData);
             automationSystem.loadAutomations();
           }
@@ -2094,6 +2105,7 @@ ARNOMA Team"></textarea>
         
         // Timeout after 2 seconds and render anyway
         setTimeout(() => {
+          console.log('⏱️ [Timeout] 2 seconds elapsed, forcing render');
           clearInterval(checkData);
           if (!automationSystem._automations || automationSystem._automations.length === 0) {
             automationSystem.loadAutomations();
