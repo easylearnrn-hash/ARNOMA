@@ -2988,6 +2988,22 @@ ARNOMA Team"></textarea>
           
           console.log('✅ Welcome email sent successfully to:', student.name);
           
+          // Send notification to parent window
+          window.parent.postMessage({
+            action: 'addNotification',
+            notification: {
+              type: 'email',
+              title: 'Welcome Email Sent',
+              description: `Sent to ${student.name}`,
+              groupName: student.group || 'No group',
+              metadata: {
+                recipientName: student.name,
+                recipientEmail: student.email,
+                emailType: 'welcome'
+              }
+            }
+          }, '*');
+          
         } catch (error) {
           console.error('❌ Error sending welcome email:', error);
           console.error('❌ Full error details:', JSON.stringify(error, null, 2));
@@ -3171,6 +3187,23 @@ ARNOMA Team"></textarea>
           );
           
           console.log('✅ Profile update email sent successfully to:', student.name);
+          
+          // Send notification to parent window
+          window.parent.postMessage({
+            action: 'addNotification',
+            notification: {
+              type: 'email',
+              title: 'Profile Updated',
+              description: `${changes.length} change${changes.length !== 1 ? 's' : ''} sent to ${student.name}`,
+              groupName: student.group || 'No group',
+              metadata: {
+                recipientName: student.name,
+                recipientEmail: student.email,
+                changesCount: changes.length,
+                emailType: 'profile_update'
+              }
+            }
+          }, '*');
           
         } catch (error) {
           console.error('❌ Error sending profile update email:', error);
