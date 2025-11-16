@@ -2126,6 +2126,9 @@
         <span id="notificationCount" style="font-size: 13px; color: rgba(255, 255, 255, 0.6); font-weight: 500;"></span>
       </div>
       <div style="display: flex; align-items: center; gap: 8px;">
+        <button onclick="createTestNotification()" style="padding: 8px 14px; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px; color: #22c55e; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(34, 197, 94, 0.25)'" onmouseout="this.style.background='rgba(34, 197, 94, 0.15)'">
+          Test Notification
+        </button>
         <button onclick="markAllNotificationsAsRead()" style="padding: 8px 14px; background: rgba(138, 180, 255, 0.15); border: 1px solid rgba(138, 180, 255, 0.3); border-radius: 8px; color: #8ab4ff; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(138, 180, 255, 0.25)'" onmouseout="this.style.background='rgba(138, 180, 255, 0.15)'">
           Mark All Read
         </button>
@@ -12983,6 +12986,35 @@
         overlay.style.display = 'none';
         panel.style.display = 'none';
       }, 300);
+    }
+    
+    async function createTestNotification() {
+      console.log('[NotificationCenter] 🧪 Creating test notification...');
+      
+      if (!window.NotificationCenter) {
+        console.error('[NotificationCenter] ❌ NotificationCenter not initialized');
+        return;
+      }
+      
+      const testNotification = {
+        type: 'automation',
+        title: 'Test Automation Email Sent',
+        description: `Successfully sent 5 reminder emails for "Monday Intermediate Class"`,
+        student_name: null,
+        group_name: 'Monday Intermediate Class',
+        metadata: {
+          automation_name: 'Before Class Reminder',
+          recipient_count: 5,
+          sent_at: new Date().toISOString()
+        }
+      };
+      
+      await window.NotificationCenter.add(testNotification);
+      console.log('[NotificationCenter] ✅ Test notification created');
+      
+      // Reload the notifications view
+      await window.NotificationCenter.initialize();
+      renderNotifications();
     }
     
     function renderNotifications() {
