@@ -23,7 +23,7 @@ serve(async (req) => {
     const resend = new Resend(resendApiKey)
 
     // Parse request body
-    const { to, subject, html, from = 'ARNOMA <onboarding@resend.dev>' } = await req.json()
+    const { to, subject, html, from = 'ARNOMA <info@mail.arnoma.us>' } = await req.json()
 
     // Validate required fields
     if (!to || !subject || !html) {
