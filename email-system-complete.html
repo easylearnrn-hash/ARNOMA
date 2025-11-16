@@ -2936,6 +2936,12 @@ ARNOMA Team"></textarea>
           }
           
           console.log('📤 Sending welcome email to:', student.email);
+          console.log('🔑 Using Supabase URL:', SUPABASE_URL);
+          console.log('📬 Request payload:', {
+            to: student.email,
+            subject: subject,
+            htmlLength: body.length
+          });
           
           // Send email via Supabase Edge Function
           const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
@@ -2951,11 +2957,19 @@ ARNOMA Team"></textarea>
             })
           });
           
+          console.log('📊 Response status:', response.status, response.statusText);
+          
           const responseData = await response.json();
           console.log('📬 Supabase response:', responseData);
           
           if (!response.ok) {
+            console.error('❌ Response not OK:', response.status, response.statusText);
             throw new Error(`Failed to send email: ${response.statusText} - ${JSON.stringify(responseData)}`);
+          }
+          
+          if (responseData.error) {
+            console.error('❌ Error in response data:', responseData.error);
+            throw new Error(`Supabase returned error: ${responseData.error}`);
           }
           
           // Track sent email with full HTML content
