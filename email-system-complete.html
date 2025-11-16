@@ -3636,6 +3636,10 @@ ARNOMA Team"></textarea>
       console.log('[AutomationEngine] 📍 Location: email-system-complete.html (iframe)');
       console.log('[AutomationEngine] ========================================');
       
+      // Load automations from localStorage
+      automationSystem.loadAutomations();
+      console.log('[AutomationEngine] 📋 Loaded automations from localStorage:', automationSystem._automations.length);
+      
       // Request data from parent immediately
       requestDataFromParent();
       console.log('[AutomationEngine] 📡 Requested groups/students data from parent window');
