@@ -8351,6 +8351,9 @@
     }
 
     async function saveStudentFromModal() {
+      console.log('🚀 saveStudentFromModal() called');
+      console.log('   - editingStudentId:', editingStudentId);
+      
       const name = document.getElementById('studentName').value.trim();
       const payPerClass = parseFloat(document.getElementById('studentPay').value) || 0;
       const balance = parseFloat(document.getElementById('studentBalance').value) || 0;
