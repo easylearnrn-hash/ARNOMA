@@ -8066,6 +8066,7 @@
     }
 
     async function saveInlineEdit(studentId) {
+      console.log('🚀 saveInlineEdit() called for studentId:', studentId);
       
       // Convert to number for comparison (passed as string from onclick)
       const numericId = parseInt(studentId);
@@ -8105,6 +8106,38 @@
         return;
       }
 
+      // Track changes for email notification
+      let changes = [];
+      console.log('🔍 Checking for profile changes (inline edit)...');
+      console.log('Old student:', JSON.parse(JSON.stringify(student))); // Deep copy for logging
+      
+      // Compare and track changes BEFORE modifying the student object
+      if (student.email !== email && email) {
+        changes.push({ field: 'Email', old: student.email || 'Not set', new: email });
+        console.log('✉️ Email changed:', student.email, '→', email);
+      }
+      if (student.phone !== phone && phone) {
+        changes.push({ field: 'Phone Number', old: student.phone || 'Not set', new: phone });
+        console.log('📱 Phone changed:', student.phone, '→', phone);
+      }
+      if (student.group !== group) {
+        changes.push({ field: 'Group/Schedule', old: student.group || 'Not set', new: group });
+        console.log('👥 Group changed:', student.group, '→', group);
+      }
+      
+      // Compare aliases arrays
+      const oldAliasesArray = student.aliases || [];
+      const newAliasesArray = aliases || [];
+      const oldAliases = oldAliasesArray.join(', ');
+      const newAliases = newAliasesArray.join(', ');
+      
+      if (oldAliases !== newAliases) {
+        changes.push({ field: 'Aliases', old: oldAliases || 'None', new: newAliases || 'None' });
+        console.log('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
+      }
+      
+      console.log('📝 Total changes detected:', changes.length, changes);
+
       student.name = name;
       student.group = group;
       student.payPerClass = payPerClass;
@@ -8115,7 +8148,30 @@
       student.notes = notes;
 
       // Save only this student to Supabase
-      await saveStudent(student);
+      const savedRecord = await saveStudent(student);
+      
+      if (!savedRecord) {
+        showNotificationSimple('Error saving student', 'error');
+        return;
+      }
+
+      console.log('💾 Student saved successfully (inline):', savedRecord.name);
+      console.log('📧 Student email:', savedRecord.email);
+      console.log('🔄 Changes to notify:', changes);
+
+      // Send profile update email if there are changes and student has email
+      console.log('🔍 Checking if should send profile update email...');
+      console.log('   - Changes count:', changes.length);
+      console.log('   - Has email:', savedRecord.email ? 'Yes' : 'No');
+      
+      if (changes.length > 0 && savedRecord.email && savedRecord.email.trim() !== '') {
+        console.log('✅ Sending profile update email for', changes.length, 'changes');
+        sendProfileUpdateEmail(savedRecord, changes);
+      } else {
+        console.log('⏭️ Skipping profile update email');
+        if (changes.length === 0) console.log('   Reason: No changes detected');
+        if (!savedRecord.email) console.log('   Reason: No email address');
+      }
       
       // No longer need localStorage for balance - it's in Supabase now
       
