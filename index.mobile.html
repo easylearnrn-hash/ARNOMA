@@ -10,19 +10,23 @@
   
   <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
   <meta name="version" content="2.1.0-20251112-0240">
-
-  <!-- Mobile PWA Meta Tags -->
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="ARNOMA">
-  <meta name="theme-color" content="#1e1e2e">
   
-  <!-- Touch Icons for iOS -->
-  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-
+  <!-- Mobile Device Detection and Redirect -->
+  <script>
+    (function() {
+      // Check if user is on mobile device
+      const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|Windows Phone/i.test(navigator.userAgent);
+      const isSmallScreen = window.innerWidth <= 768;
+      
+      // Only redirect if on mobile AND not already on mobile version
+      if ((isMobile || isSmallScreen) && !window.location.pathname.includes('index.mobile.html')) {
+        // Preserve any query parameters or hash
+        const currentPath = window.location.pathname;
+        const newPath = currentPath.replace(/index\.html$|$/, 'index.mobile.html');
+        window.location.replace(newPath + window.location.search + window.location.hash);
+      }
+    })();
+  </script>
   
   <!-- Supabase Configuration -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
@@ -303,7 +307,6 @@
   </script>
   <!-- END POPUP BACK & EXIT FIX -->
   
-
   <!-- MOBILE-SPECIFIC STYLESHEET - Loaded after base styles -->
   <link rel="stylesheet" href="styles.mobile.css">
 
@@ -2104,31 +2107,6 @@
   </style>
 </head>
 <body>
-  <!-- ============================================================================
-       ARNOMA MOBILE VERSION
-       Optimized for iPhone and mobile browsers
-       ============================================================================
-       
-       TODO: MOBILE ENHANCEMENTS
-       - [ ] Implement swipe gestures for calendar month navigation
-       - [ ] Add pull-to-refresh for notification center
-       - [ ] Optimize lazy loading for payment records
-       - [ ] Add haptic feedback for button taps (iOS)
-       - [ ] Implement offline mode with local storage
-       - [ ] Add voice search for students/groups
-       - [ ] Optimize animations for battery saving
-       - [ ] Add biometric authentication option
-       - [ ] Implement share functionality for payment receipts
-       - [ ] Add quick actions from home screen (3D Touch/Haptic Touch)
-       
-
-  <!-- Mobile Version Indicator & Desktop Switch -->
-  <div style="position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); z-index: 9998; padding: 6px 12px; background: rgba(30, 30, 46, 0.9); border-radius: 20px; font-size: 11px; color: rgba(255,255,255,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
-    📱 Mobile Version • <a href="index.html" style="color: #8ab4ff; text-decoration: none;">Switch to Desktop</a>
-  </div>
-
-       ============================================================================ -->
-
   <!-- ========== SKIP CLASS DIALOG ========== -->
   <div id="skipClassOverlay"></div>
   <div id="skipClassDialog">
@@ -15160,14 +15138,20 @@
       // Save notification to Supabase
       async function saveToSupabase(notification) {
         try {
+          // Ensure all text fields respect 50-char Supabase limit
+          const truncate = (str, maxLen = 50) => {
+            if (!str) return null;
+            return str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
+          };
+          
           const { data, error } = await supabase
             .from('notifications')
             .insert({
               type: notification.type,
-              title: notification.title,
-              description: notification.description,
-              student_name: notification.studentName || null,
-              group_name: notification.groupName || null,
+              title: truncate(notification.title, 50),
+              description: truncate(notification.description, 50),
+              student_name: truncate(notification.studentName, 50),
+              group_name: truncate(notification.groupName, 50),
               metadata: notification.metadata || {},
               timestamp: notification.timestamp.toISOString(),
               read: false

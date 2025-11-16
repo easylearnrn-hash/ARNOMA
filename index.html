@@ -15135,14 +15135,20 @@
       // Save notification to Supabase
       async function saveToSupabase(notification) {
         try {
+          // Ensure all text fields respect 50-char Supabase limit
+          const truncate = (str, maxLen = 50) => {
+            if (!str) return null;
+            return str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
+          };
+          
           const { data, error } = await supabase
             .from('notifications')
             .insert({
               type: notification.type,
-              title: notification.title,
-              description: notification.description,
-              student_name: notification.studentName || null,
-              group_name: notification.groupName || null,
+              title: truncate(notification.title, 50),
+              description: truncate(notification.description, 50),
+              student_name: truncate(notification.studentName, 50),
+              group_name: truncate(notification.groupName, 50),
               metadata: notification.metadata || {},
               timestamp: notification.timestamp.toISOString(),
               read: false
