@@ -15113,24 +15113,46 @@
       // Save notification to Supabase
       async function saveToSupabase(notification) {
         try {
-          // Ensure all text fields respect 50-char Supabase limit
+          // CRITICAL: Ensure all text fields respect 50-char Supabase limit
           const truncate = (str, maxLen = 50) => {
             if (!str) return null;
-            return str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
+            const text = String(str);
+            return text.length > maxLen ? text.substring(0, maxLen - 3) + '...' : text;
           };
+          
+          // Log what we're about to save for debugging
+          console.log('[NotificationCenter] 💾 Saving notification:', {
+            title: notification.title,
+            titleLength: notification.title?.length,
+            description: notification.description,
+            descLength: notification.description?.length,
+            groupName: notification.groupName,
+            groupLength: notification.groupName?.length
+          });
+          
+          const payload = {
+            type: notification.type,
+            title: truncate(notification.title, 50),
+            description: truncate(notification.description, 50),
+            student_name: truncate(notification.studentName, 50),
+            group_name: truncate(notification.groupName, 50),
+            metadata: notification.metadata || {},
+            timestamp: notification.timestamp.toISOString(),
+            read: false
+          };
+          
+          console.log('[NotificationCenter] 📦 Payload after truncation:', {
+            title: payload.title,
+            titleLen: payload.title?.length,
+            description: payload.description,
+            descLen: payload.description?.length,
+            group_name: payload.group_name,
+            groupLen: payload.group_name?.length
+          });
           
           const { data, error } = await supabase
             .from('notifications')
-            .insert({
-              type: notification.type,
-              title: truncate(notification.title, 50),
-              description: truncate(notification.description, 50),
-              student_name: truncate(notification.studentName, 50),
-              group_name: truncate(notification.groupName, 50),
-              metadata: notification.metadata || {},
-              timestamp: notification.timestamp.toISOString(),
-              read: false
-            })
+            .insert(payload)
             .select()
             .single();
           
