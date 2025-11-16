@@ -2185,12 +2185,27 @@ ARNOMA Team"></textarea>
           timeZone: 'America/Los_Angeles'
         });
         
+        // Extract recipient info from metadata if available
+        let recipientDisplay = email.recipient_email;
+        if (email.metadata) {
+          try {
+            const metadata = typeof email.metadata === 'string' ? JSON.parse(email.metadata) : email.metadata;
+            if (metadata.recipientName) {
+              recipientDisplay = `${metadata.recipientName} <${email.recipient_email}>`;
+            } else if (metadata.recipientType) {
+              recipientDisplay = `${metadata.recipientType} <${email.recipient_email}>`;
+            }
+          } catch (e) {
+            // Use email only if metadata parsing fails
+          }
+        }
+        
         return `
           <div style="background: rgba(255,255,255,.05); border: 2px solid rgba(255,255,255,.1); border-radius: 12px; padding: 16px; transition: all 0.2s;">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
               <div style="flex: 1;">
                 <div style="font-weight: 600; color: var(--ink); font-size: 15px; margin-bottom: 4px;">
-                  📧 ${email.recipient_email}
+                  📧 ${recipientDisplay}
                 </div>
                 <div style="color: var(--primary); font-size: 13px; font-weight: 600;">
                   ${email.template_name || 'Email'}
@@ -2681,7 +2696,7 @@ ARNOMA Team"></textarea>
     }
 
     // Track sent emails in Supabase with full HTML content
-    async function trackSentEmail(recipient, subject, template_name, htmlContent = null) {
+    async function trackSentEmail(recipient, subject, template_name, htmlContent = null, metadata = {}) {
       try {
         const { error } = await supabase
           .from('sent_emails')
@@ -2690,11 +2705,12 @@ ARNOMA Team"></textarea>
             subject: subject,
             template_name: template_name,
             html_content: htmlContent,
+            metadata: metadata,
             sent_at: new Date().toISOString()
           }]);
         
         if (error) throw error;
-        console.log('✅ Tracked sent email to', recipient);
+        console.log('✅ Tracked sent email to', recipient, metadata.recipientName ? `(${metadata.recipientName})` : '');
       } catch (error) {
         console.error('❌ Error tracking sent email:', error);
       }
@@ -3019,6 +3035,11 @@ ARNOMA Team"></textarea>
         const currentDay = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][laTime.getDay()];
         const currentMinutes = laTime.getHours() * 60 + laTime.getMinutes();
         
+        // DEBUG: Check window.studentsData right before using it
+        console.log(`[AutomationEngine] 🔍 DEBUG: window.studentsData type: ${typeof window.studentsData}`);
+        console.log(`[AutomationEngine] 🔍 DEBUG: window.studentsData isArray: ${Array.isArray(window.studentsData)}`);
+        console.log(`[AutomationEngine] 🔍 DEBUG: window.studentsData value:`, window.studentsData);
+        
         console.log(`[AutomationEngine] 🕐 Current LA Time: ${currentDay} ${laTime.getHours()}:${String(laTime.getMinutes()).padStart(2, '0')}`);
         console.log(`[AutomationEngine] 📊 Groups available: ${window.groupsData?.length || 0}`);
         console.log(`[AutomationEngine] 👥 Students available: ${window.studentsData?.length || 0}`);
@@ -3242,8 +3263,13 @@ ARNOMA Team"></textarea>
           throw new Error(`Failed to send email: ${response.statusText}`);
         }
         
-        // Track sent email with full HTML content
-        await trackSentEmail(recipient.email, subject, 'Class Reminder (Auto)', body);
+        // Track sent email with full HTML content and recipient metadata
+        await trackSentEmail(recipient.email, subject, 'Class Reminder (Auto)', body, {
+          recipientName: recipientName,
+          recipientType: recipient.type || 'Unknown',
+          groupName: groupName,
+          automationName: automation.name
+        });
         console.log(`[AutomationEngine] ✅ Email sent successfully to ${recipientName}`);
         
         return true;
