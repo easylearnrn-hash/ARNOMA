@@ -2125,14 +2125,28 @@ ARNOMA Team"></textarea>
     
     // View exact email that was sent
     function viewSentEmail(emailId) {
+      console.log('👁️ viewSentEmail called with emailId:', emailId);
+      
       const emails = window._sentEmailsCache || [];
+      console.log('📧 Available emails:', emails.length);
+      
       const email = emails.find(e => e.id == emailId);
       
-      if (!email || !email.html_content) {
+      if (!email) {
+        console.error('❌ Email not found with id:', emailId);
+        showNotification('Email not found', 'error');
+        return;
+      }
+      
+      console.log('✅ Found email:', email);
+      
+      if (!email.html_content) {
+        console.warn('⚠️ Email has no html_content');
         showNotification('Email content not available', 'error');
         return;
       }
       
+      console.log('✅ Opening preview modal with HTML content');
       // Open preview modal with the exact HTML that was sent
       openPreviewModal(email.html_content);
     }
@@ -2900,6 +2914,13 @@ ARNOMA Team"></textarea>
       if (event.data.action === 'updateGroupsData') {
         window.groupsData = event.data.groups || [];
         window.studentsData = event.data.students || [];
+        
+        console.log(`📨 Received data from parent: ${window.groupsData.length} groups, ${window.studentsData.length} students`);
+        if (window.studentsData.length > 0) {
+          console.log(`👥 Student names:`, window.studentsData.slice(0, 3).map(s => s.name || s.student_name));
+        } else {
+          console.warn('⚠️ Received 0 students from parent window!');
+        }
         
         // Save to localStorage for persistence across iframe reloads
         saveGroupsDataToStorage(window.groupsData);

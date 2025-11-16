@@ -10025,10 +10025,16 @@
     // Send groups and students data to email system for automation
     function sendGroupsDataToEmailSystem() {
       const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
-      if (!emailFrame) return;
+      if (!emailFrame) {
+        console.warn('⚠️ Email iframe not found, cannot send data');
+        return;
+      }
       
       const groups = window.groupsCache || window.globalData?.groups || [];
-      const students = window.studentsCache || [];
+      const students = window.studentsCache || window.globalData?.students || [];
+      
+      console.log(`📤 Sending automation data: ${groups.length} groups, ${students.length} students`);
+      console.log(`📦 Students sample:`, students.slice(0, 2).map(s => s.name));
       
       emailFrame.contentWindow.postMessage({
         action: 'updateGroupsData',
