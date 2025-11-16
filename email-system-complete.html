@@ -2933,12 +2933,14 @@ ARNOMA Team"></textarea>
       window.studentsData = [];
     }
     let sentReminders = new Set(); // Track sent reminders to avoid duplicates
+    let dataReceived = false; // Flag to track if we've received data from parent
     
     // Listen for data from parent window (index.html)
     window.addEventListener('message', function(event) {
       if (event.data.action === 'updateGroupsData') {
         window.groupsData = event.data.groups || [];
         window.studentsData = event.data.students || [];
+        dataReceived = true; // Mark that we've received data
         
         console.log(`📨 Received data from parent: ${window.groupsData.length} groups, ${window.studentsData.length} students`);
         if (window.studentsData.length > 0) {
@@ -3321,11 +3323,23 @@ ARNOMA Team"></textarea>
       setInterval(checkAutomations, 60000);
       console.log('[AutomationEngine] ⏰ Scheduled automation checks every 60 seconds');
       
-      // Run first check after 5 seconds
-      setTimeout(() => {
-        console.log('[AutomationEngine] 🔄 Running FIRST automation check (5 seconds after init)...');
-        checkAutomations();
-      }, 5000);
+      // Run first check after data is received (max wait: 10 seconds)
+      let firstCheckAttempts = 0;
+      const waitForDataAndCheck = () => {
+        firstCheckAttempts++;
+        if (dataReceived || firstCheckAttempts >= 10) {
+          if (dataReceived) {
+            console.log('[AutomationEngine] 🔄 Running FIRST automation check (data received)...');
+          } else {
+            console.log('[AutomationEngine] 🔄 Running FIRST automation check (timeout reached)...');
+          }
+          checkAutomations();
+        } else {
+          console.log(`[AutomationEngine] ⏳ Waiting for data... (attempt ${firstCheckAttempts}/10)`);
+          setTimeout(waitForDataAndCheck, 1000);
+        }
+      };
+      setTimeout(waitForDataAndCheck, 1000); // Start checking after 1 second
       
       // Setup midnight reset
       resetDailyReminders();
