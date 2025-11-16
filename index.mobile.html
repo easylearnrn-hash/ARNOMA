@@ -11,22 +11,6 @@
   <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
   <meta name="version" content="2.1.0-20251112-0240">
   
-  <!-- Mobile Device Detection and Redirect -->
-  <script>
-    (function() {
-      // Check if user is on mobile device
-      const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|Windows Phone/i.test(navigator.userAgent);
-      const isSmallScreen = window.innerWidth <= 768;
-      
-      // Only redirect if on mobile AND not already on mobile version
-      if ((isMobile || isSmallScreen) && !window.location.pathname.includes('index.mobile.html')) {
-        // Preserve any query parameters or hash
-        const currentPath = window.location.pathname;
-        const newPath = currentPath.replace(/index\.html$|$/, 'index.mobile.html');
-        window.location.replace(newPath + window.location.search + window.location.hash);
-      }
-    })();
-  </script>
   
   <!-- Supabase Configuration -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
