@@ -863,6 +863,59 @@ body {
    🎛 GLOBAL MOBILE COMPONENTS
    ============================================================================ */
 
+/* 🚨 CRITICAL: Convert ALL centered modals to fullscreen on mobile */
+#paymentActionsPopup,
+#fullSyncModal,
+#linkStudentModal,
+#classDetailModal {
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
+  min-width: 100% !important;
+  max-width: 100% !important;
+  border-radius: 0 !important;
+  padding: 20px !important;
+  padding-top: calc(20px + env(safe-area-inset-top)) !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch !important;
+}
+
+/* Quick View Modal - Mobile Fullscreen */
+#quickViewModal > div {
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  transform: none !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  border-radius: 0 !important;
+}
+
+/* Quick View Tabs - Mobile Stacked */
+#quickViewModal > div > div:nth-child(2) {
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+#quickViewModal > div > div:nth-child(2) button {
+  width: 100% !important;
+}
+
+/* Close button positioning for fullscreen modals */
+#paymentActionsPopup button:first-of-type,
+#fullSyncModal button:first-of-type,
+#linkStudentModal button:first-of-type,
+#classDetailModal button:first-of-type {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  z-index: 10;
+}
+
 /* Primary Button */
 .btn-mobile-primary {
   width: 100%;
