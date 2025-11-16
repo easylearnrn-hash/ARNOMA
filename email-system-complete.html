@@ -242,6 +242,15 @@
     .modal.active {
       display: flex;
     }
+    
+    /* Ensure preview modal appears above sent emails modal */
+    #sentEmailsModal {
+      z-index: 1000;
+    }
+    
+    #previewModal {
+      z-index: 1001;
+    }
 
     .modal-content {
       background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
