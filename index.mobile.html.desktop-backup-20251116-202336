@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ARNOMA - Student Management [v2.1.0]</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ARNOMA - Mobile [v2.1.0]</title>
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0">
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="-1">
@@ -11,25 +11,6 @@
   <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
   <meta name="version" content="2.1.0-20251112-0240">
   
-  <!-- Mobile Device Detection and Redirect -->
-  <script>
-    (function() {
-      // Check if already on mobile version or explicitly requested desktop
-      if (window.location.pathname.includes('index.mobile.html')) return;
-      if (window.location.search.includes('desktop=1')) return;
-      
-      // Check if user is on mobile device
-      const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|Windows Phone/i.test(navigator.userAgent);
-      const isSmallScreen = window.innerWidth <= 768;
-      
-      // Redirect to mobile version
-      if (isMobile || isSmallScreen) {
-        console.log('📱 Mobile detected - redirecting to index.mobile.html');
-        const baseUrl = window.location.origin + window.location.pathname.replace(/index\.html$/, '');
-        window.location.replace(baseUrl + 'index.mobile.html' + window.location.search + window.location.hash);
-      }
-    })();
-  </script>
   
   <!-- Supabase Configuration -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
@@ -310,6 +291,9 @@
   </script>
   <!-- END POPUP BACK & EXIT FIX -->
   
+  <!-- MOBILE-SPECIFIC STYLESHEET - Loaded after base styles -->
+  <link rel="stylesheet" href="styles.mobile.css">
+
   <style>
     :root {
       --primary: #3b82f6;
@@ -2065,6 +2049,35 @@
 
     /* END CLASS COUNTDOWN TIMER */
     /* Responsive adjustments */
+    @media (max-width: 600px) {
+      .floating-nav {
+        bottom: 12px;
+        right: 12px;
+        padding: 8px 10px;
+        gap: 6px;
+      }
+      .floating-nav .nav-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+      }
+      #classCountdownOverlay,
+      #enhancedCountdownTimer {
+        width: calc(100vw - 32px);
+        max-width: 380px;
+        max-height: 70vh;
+      }
+      #enhancedCountdownTimer .timer-class-group {
+        font-size: 13px;
+      }
+      #enhancedCountdownTimer .timer-class-countdown {
+        font-size: 12px;
+      }
+      #enhancedCountdownTimer .timer-class-details {
+        font-size: 10px;
+      }
+    }
+
     /* Refresh animation */
     body.refreshing {
       animation: refreshPulse 0.8s ease;
@@ -8375,40 +8388,6 @@
         return;
       }
 
-      // Track changes for email notification
-      let changes = [];
-      let oldStudent = null;
-      
-      if (editingStudentId) {
-        oldStudent = students.find(s => s.id === editingStudentId);
-        if (oldStudent) {
-          console.log('🔍 Checking for profile changes...');
-          console.log('Old student:', oldStudent);
-          
-          // Compare and track changes
-          if (oldStudent.email !== email && email) {
-            changes.push({ field: 'Email', old: oldStudent.email || 'Not set', new: email });
-            console.log('✉️ Email changed:', oldStudent.email, '→', email);
-          }
-          if (oldStudent.phone !== phone && phone) {
-            changes.push({ field: 'Phone Number', old: oldStudent.phone || 'Not set', new: phone });
-            console.log('📱 Phone changed:', oldStudent.phone, '→', phone);
-          }
-          if (oldStudent.group !== group) {
-            changes.push({ field: 'Group/Schedule', old: oldStudent.group || 'Not set', new: group });
-            console.log('👥 Group changed:', oldStudent.group, '→', group);
-          }
-          const oldAliases = (oldStudent.aliases || []).join(', ');
-          const newAliases = aliases.join(', ');
-          if (oldAliases !== newAliases) {
-            changes.push({ field: 'Aliases', old: oldAliases || 'None', new: newAliases || 'None' });
-            console.log('🏷️ Aliases changed:', oldAliases, '→', newAliases);
-          }
-          
-          console.log('📝 Total changes detected:', changes.length, changes);
-        }
-      }
-
       let savedStudent;
       
       if (editingStudentId) {
@@ -8458,11 +8437,6 @@
       // Send welcome email if: new student with email OR existing student just got email added
       if (nowHasEmail && (isNewStudent || hadNoEmail)) {
         sendWelcomeEmail(savedRecord);
-      }
-      
-      // Send profile update email if there are changes and student has email
-      if (changes.length > 0 && savedRecord.email && savedRecord.email.trim() !== '') {
-        sendProfileUpdateEmail(savedRecord, changes);
       }
       
       // No longer need to save balance to localStorage - it's in Supabase now
@@ -8526,53 +8500,6 @@
         showNotificationSimple('📧 Welcome email sent to ' + student.name, 'success');
       } catch (error) {
         console.error('❌ Error sending welcome email:', error);
-      }
-    }
-    
-    // Send profile update email when student information changes
-    async function sendProfileUpdateEmail(student, changes) {
-      if (!student.email || changes.length === 0) {
-        return;
-      }
-      
-      try {
-        const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
-        if (!emailFrame) {
-          console.warn('⚠️ Email iframe not found');
-          return;
-        }
-        
-        // Get group schedule
-        const groupNames = student.group ? student.group.split(',').map(g => g.trim()) : [];
-        let groupSchedule = 'Not assigned';
-        
-        if (groupNames.length > 0 && window.groupsCache) {
-          const groupSchedules = groupNames.map(groupName => {
-            const group = window.groupsCache.find(g => g.name === groupName);
-            return group?.schedule || groupName;
-          });
-          groupSchedule = groupSchedules.join(', ');
-        }
-        
-        // Send message to email system iframe
-        emailFrame.contentWindow.postMessage({
-          action: 'sendProfileUpdateEmail',
-          student: {
-            name: student.name,
-            email: student.email,
-            group: student.group || 'Not assigned',
-            groupSchedule: groupSchedule,
-            phone: student.phone || 'Not set',
-            aliases: (student.aliases || []).join(', ') || 'None'
-          },
-          changes: changes
-        }, '*');
-        
-        console.log('📧 Profile update email sent to:', student.name, student.email);
-        console.log('📝 Changes notified:', changes.map(c => c.field).join(', '));
-        showNotificationSimple('📧 Profile update email sent to ' + student.name, 'success');
-      } catch (error) {
-        console.error('❌ Error sending profile update email:', error);
       }
     }
 
@@ -9976,13 +9903,6 @@
         window.globalData.students = students;
         window.globalData.payments = payments;
         
-        // Also populate the cache objects used by email system
-        window.groupsCache = groups;
-        window.studentsCache = students;
-        window.paymentsCache = payments;
-        
-        console.log(`✅ Loaded ${students.length} students into cache for email system`);
-        
       } catch (error) {
         console.error('❌ Error loading data from Supabase:', error);
       }
@@ -10041,12 +9961,6 @@
       
       // Create hidden email system iframe for postMessage communication
       initializeEmailSystemIframe();
-      
-      // Send initial data to email system after iframe loads (with delay for iframe initialization)
-      setTimeout(() => {
-        sendGroupsDataToEmailSystem();
-        console.log('✅ Sent initial data to email system iframe');
-      }, 2000);
       
       // Initialize Payment Reminder Manager (auto-send reminders for unpaid classes)
       if (window.PaymentReminderManager) {
@@ -10114,16 +10028,10 @@
     // Send groups and students data to email system for automation
     function sendGroupsDataToEmailSystem() {
       const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
-      if (!emailFrame) {
-        console.warn('⚠️ Email iframe not found, cannot send data');
-        return;
-      }
+      if (!emailFrame) return;
       
       const groups = window.groupsCache || window.globalData?.groups || [];
-      const students = window.studentsCache || window.globalData?.students || [];
-      
-      console.log(`📤 Sending automation data: ${groups.length} groups, ${students.length} students`);
-      console.log(`📦 Students sample:`, students.slice(0, 2).map(s => s.name));
+      const students = window.studentsCache || [];
       
       emailFrame.contentWindow.postMessage({
         action: 'updateGroupsData',
@@ -13092,11 +13000,10 @@
         return;
       }
       
-      // CRITICAL FIX: Keep title and description under 50 characters (database limit)
       const testNotification = {
         type: 'automation',
         title: 'Test Automation',
-        description: 'Sent 5 emails for Monday Class',  // Under 50 chars
+        description: 'Sent 5 emails for Monday Intermediate Class',
         student_name: null,
         group_name: 'Monday Class',
         metadata: {
@@ -15190,19 +15097,13 @@
           }
           
           if (data && data.length > 0) {
-            // Truncate helper for loading (handles old data that may exceed limits)
-            const safeTruncate = (str, maxLen = 50) => {
-              if (!str) return null;
-              return str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
-            };
-            
             notifications = data.map(n => ({
               id: n.id,
               type: n.type,
-              title: safeTruncate(n.title, 50),
-              description: safeTruncate(n.description, 50),
-              studentName: safeTruncate(n.student_name, 50),
-              groupName: safeTruncate(n.group_name, 50),
+              title: n.title,
+              description: n.description,
+              studentName: n.student_name,
+              groupName: n.group_name,
               metadata: n.metadata || {},
               timestamp: new Date(n.timestamp),
               read: n.read || false
@@ -15221,46 +15122,24 @@
       // Save notification to Supabase
       async function saveToSupabase(notification) {
         try {
-          // CRITICAL: Ensure all text fields respect 50-char Supabase limit
+          // Ensure all text fields respect 50-char Supabase limit
           const truncate = (str, maxLen = 50) => {
             if (!str) return null;
-            const text = String(str);
-            return text.length > maxLen ? text.substring(0, maxLen - 3) + '...' : text;
+            return str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
           };
-          
-          // Log what we're about to save for debugging
-          console.log('[NotificationCenter] 💾 Saving notification:', {
-            title: notification.title,
-            titleLength: notification.title?.length,
-            description: notification.description,
-            descLength: notification.description?.length,
-            groupName: notification.groupName,
-            groupLength: notification.groupName?.length
-          });
-          
-          const payload = {
-            type: notification.type,
-            title: truncate(notification.title, 50),
-            description: truncate(notification.description, 50),
-            student_name: truncate(notification.studentName, 50),
-            group_name: truncate(notification.groupName, 50),
-            metadata: notification.metadata || {},
-            timestamp: notification.timestamp.toISOString(),
-            read: false
-          };
-          
-          console.log('[NotificationCenter] 📦 Payload after truncation:', {
-            title: payload.title,
-            titleLen: payload.title?.length,
-            description: payload.description,
-            descLen: payload.description?.length,
-            group_name: payload.group_name,
-            groupLen: payload.group_name?.length
-          });
           
           const { data, error } = await supabase
             .from('notifications')
-            .insert(payload)
+            .insert({
+              type: notification.type,
+              title: truncate(notification.title, 50),
+              description: truncate(notification.description, 50),
+              student_name: truncate(notification.studentName, 50),
+              group_name: truncate(notification.groupName, 50),
+              metadata: notification.metadata || {},
+              timestamp: notification.timestamp.toISOString(),
+              read: false
+            })
             .select()
             .single();
           
@@ -15277,35 +15156,17 @@
       }
       
       // Add a notification
-      async function add(typeOrObject, title, description, options = {}) {
-        // Support both object-based and individual parameter signatures
-        let notification;
-        
-        if (typeof typeOrObject === 'object' && typeOrObject !== null) {
-          // New object-based API (used by email automation iframe)
-          notification = {
-            type: typeOrObject.type || NotificationType.SYSTEM,
-            title: typeOrObject.title,
-            description: typeOrObject.description,
-            studentName: typeOrObject.student_name || typeOrObject.studentName || null,
-            groupName: typeOrObject.group_name || typeOrObject.groupName || null,
-            metadata: typeOrObject.metadata || {},
-            timestamp: new Date(),
-            read: false
-          };
-        } else {
-          // Legacy individual parameter API
-          notification = {
-            type: typeOrObject,
-            title,
-            description,
-            studentName: options.studentName || null,
-            groupName: options.groupName || null,
-            metadata: options.metadata || {},
-            timestamp: new Date(),
-            read: false
-          };
-        }
+      async function add(type, title, description, options = {}) {
+        const notification = {
+          type,
+          title,
+          description,
+          studentName: options.studentName || null,
+          groupName: options.groupName || null,
+          metadata: options.metadata || {},
+          timestamp: new Date(),
+          read: false
+        };
         
         // Save to Supabase
         const saved = await saveToSupabase(notification);
@@ -15321,7 +15182,7 @@
           unreadCount++;
           updateBellIcon();
           
-          console.log('[NotificationCenter] 🔔 New notification:', notification.title);
+          console.log('[NotificationCenter] 🔔 New notification:', title);
         }
         
         return notification;
@@ -15475,41 +15336,27 @@
         }
       }
       
-    // Public API
-    return {
-      NotificationType,
-      initialize,
-      add,
-      markAsRead,
-      markAllAsRead,
-      getAll,
-      getGroupedByDate,
-      getUnreadCount: () => unreadCount
-    };
-  })();
-  
-  // CRITICAL FIX: Expose NotificationCenter to window so other functions can access it
-  window.NotificationCenter = NotificationCenter;
-  
-  // ============================================================================
-  // END NOTIFICATION CENTER
-  // ============================================================================
-  
-  // Initialize on page load
-  document.addEventListener('DOMContentLoaded', async function() {
-    console.log('[ARNOMA] 🚀 Initializing application...');
+      // Public API
+      return {
+        NotificationType,
+        initialize,
+        add,
+        markAsRead,
+        markAllAsRead,
+        getAll,
+        getGroupedByDate,
+        getUnreadCount: () => unreadCount
+      };
+    })();
     
-    // Initialize Notification Center first
-    if (window.NotificationCenter) {
-      console.log('[ARNOMA] 🔔 Initializing Notification Center...');
-      await window.NotificationCenter.initialize();
-    }
+    // ============================================================================
+    // END NOTIFICATION CENTER
+    // ============================================================================
     
-    // Then initialize the main app
-    await initialize();
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initialize);
     
-    console.log('[ARNOMA] ✅ Application fully initialized');
-  });    debugLog('ARNOMA app loaded - Using Supabase cloud database');
+    debugLog('ARNOMA app loaded - Using Supabase cloud database');
   </script>
 </body>
 </html>
