@@ -2089,8 +2089,137 @@
     }
     /* ========== END FLOATING NAV STYLES ========== */
   </style>
+  
+  <!-- 🚨 MOBILE-ONLY STYLESHEET -->
+  <link rel="stylesheet" href="styles.mobile.css">
 </head>
 <body>
+  
+  <!-- ============================================================================
+       🔥 MOBILE-ONLY UI STRUCTURE (iOS Optimized)
+       ============================================================================ -->
+  
+  <!-- 📱 MOBILE HEADER (Sticky Top) -->
+  <header id="mobileHeader" style="position: sticky; top: 0; z-index: 9999; height: 60px; background: linear-gradient(90deg, #6f5cff, #b56dff); border-bottom: 1px solid rgba(255,255,255,0.1); padding: 0 16px; display: flex; align-items: center; justify-content: space-between; padding-top: env(safe-area-inset-top);">
+    <button id="mobileBackBtn" onclick="mobileGoBack()" style="background: none; border: none; color: white; font-size: 16px; font-weight: 600; cursor: pointer; padding: 8px; display: none;">
+      ← Back
+    </button>
+    <h1 id="mobilePageTitle" style="margin: 0; font-size: 18px; font-weight: 700; color: white; text-align: center; flex: 1;">
+      ARNOMA
+    </h1>
+    <button id="mobileSettingsBtn" onclick="openMobileSettings()" style="background: none; border: none; color: white; font-size: 22px; cursor: pointer; padding: 8px;">
+      ⚙️
+    </button>
+  </header>
+  
+  <!-- 🗂 MAIN CONTENT CONTAINER -->
+  <main id="mobileMainContent" style="padding-bottom: 100px; overflow-y: auto; -webkit-overflow-scrolling: touch;">
+    
+    <!-- 💰 PAYMENTS VIEW (Default) -->
+    <section id="mobilePaymentsView" class="mobile-view active">
+      <div class="section-header-mobile">Payments</div>
+      <div id="mobilePaymentsList">
+        <!-- Populated by renderMobilePayments() -->
+      </div>
+    </section>
+    
+    <!-- 🗓 CALENDAR VIEW -->
+    <section id="mobileCalendarView" class="mobile-view" style="display: none;">
+      <div class="section-header-mobile">Smart Calendar</div>
+      <div id="mobileCalendarGrid" class="calendar-grid-mobile">
+        <!-- Populated by renderMobileCalendar() -->
+      </div>
+    </section>
+    
+    <!-- 👥 STUDENTS VIEW -->
+    <section id="mobileStudentsView" class="mobile-view" style="display: none;">
+      <div class="section-header-mobile">Students</div>
+      <div id="mobileStudentsList">
+        <!-- Populated by renderMobileStudents() -->
+      </div>
+    </section>
+    
+    <!-- 🧩 GROUPS VIEW -->
+    <section id="mobileGroupsView" class="mobile-view" style="display: none;">
+      <div class="section-header-mobile">Groups</div>
+      <div id="mobileGroupsList">
+        <!-- Populated by renderMobileGroups() -->
+      </div>
+    </section>
+    
+    <!-- 🔔 NOTIFICATIONS VIEW -->
+    <section id="mobileNotificationsView" class="mobile-view" style="display: none;">
+      <div class="section-header-mobile">Notifications</div>
+      <div id="mobileNotificationsList" class="notification-list-mobile">
+        <!-- Populated by renderMobileNotifications() -->
+      </div>
+    </section>
+    
+  </main>
+  
+  <!-- 🔵 BOTTOM TAB BAR NAVIGATION -->
+  <nav class="mobile-nav">
+    <button class="mobile-nav-btn active" onclick="switchMobileTab('payments')" data-tab="payments">
+      <span style="font-size: 24px;">💰</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="switchMobileTab('calendar')" data-tab="calendar">
+      <span style="font-size: 24px;">🗓</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="switchMobileTab('students')" data-tab="students">
+      <span style="font-size: 24px;">👥</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="switchMobileTab('groups')" data-tab="groups">
+      <span style="font-size: 24px;">🧩</span>
+    </button>
+    <button class="mobile-nav-btn" onclick="switchMobileTab('notifications')" data-tab="notifications">
+      <span style="font-size: 24px;">🔔</span>
+      <span class="badge" id="mobileNotificationBadge" style="display: none;">0</span>
+    </button>
+  </nav>
+  
+  <!-- ⚙️ SETTINGS DRAWER (Slides from Right) -->
+  <aside id="mobileSettingsDrawer" class="settings-drawer">
+    <div class="settings-drawer-header">
+      <h2 class="settings-drawer-title">Settings</h2>
+      <button onclick="closeMobileSettings()" style="background: none; border: none; color: white; font-size: 28px; cursor: pointer;">×</button>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">App Settings</div>
+      <div class="settings-item">
+        <span>Dark Mode</span>
+        <div class="settings-toggle active">
+          <div class="settings-toggle-knob"></div>
+        </div>
+      </div>
+      <div class="settings-item" onclick="openGmailSettings()">
+        <span>Gmail Connection</span>
+        <span>→</span>
+      </div>
+      <div class="settings-item" onclick="openEmailSystem()">
+        <span>Email Templates</span>
+        <span>→</span>
+      </div>
+    </div>
+    <div class="settings-section">
+      <div class="settings-section-title">Data</div>
+      <div class="settings-item" onclick="backupData()">
+        <span>Backup Data</span>
+        <span>↓</span>
+      </div>
+      <div class="settings-item" onclick="syncData()">
+        <span>Sync with Cloud</span>
+        <span>🔄</span>
+      </div>
+    </div>
+  </aside>
+  
+  <!-- 🌑 SETTINGS OVERLAY -->
+  <div id="mobileSettingsOverlay" class="notification-sheet-overlay" onclick="closeMobileSettings()"></div>
+  
+  <!-- ============================================================================
+       DESKTOP MODALS & DIALOGS BELOW (Hidden on Mobile, Converted to Fullscreen)
+       ============================================================================ -->
+  
   <!-- ========== SKIP CLASS DIALOG ========== -->
   <div id="skipClassOverlay"></div>
   <div id="skipClassDialog">
@@ -2902,6 +3031,343 @@
   <!-- END SMART CALENDAR -->
 
   <script>
+    // ============================================================================
+    // 🚨 MOBILE-ONLY UI FUNCTIONS
+    // ============================================================================
+    
+    // Switch between mobile tabs
+    function switchMobileTab(tabName) {
+      // Hide all views
+      document.querySelectorAll('.mobile-view').forEach(view => {
+        view.style.display = 'none';
+      });
+      
+      // Remove active class from all nav buttons
+      document.querySelectorAll('.mobile-nav-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      // Show selected view
+      const viewMap = {
+        'payments': 'mobilePaymentsView',
+        'calendar': 'mobileCalendarView',
+        'students': 'mobileStudentsView',
+        'groups': 'mobileGroupsView',
+        'notifications': 'mobileNotificationsView'
+      };
+      
+      const viewId = viewMap[tabName];
+      if (viewId) {
+        document.getElementById(viewId).style.display = 'block';
+        
+        // Update page title
+        const titles = {
+          'payments': 'Payments',
+          'calendar': 'Smart Calendar',
+          'students': 'Students',
+          'groups': 'Groups',
+          'notifications': 'Notifications'
+        };
+        document.getElementById('mobilePageTitle').textContent = titles[tabName];
+        
+        // Add active class to clicked button
+        const activeBtn = document.querySelector(`[data-tab="${tabName}"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+        
+        // Load data for the tab if needed
+        switch(tabName) {
+          case 'payments':
+            renderMobilePayments();
+            break;
+          case 'calendar':
+            renderMobileCalendar();
+            break;
+          case 'students':
+            renderMobileStudents();
+            break;
+          case 'groups':
+            renderMobileGroups();
+            break;
+          case 'notifications':
+            renderMobileNotifications();
+            break;
+        }
+      }
+    }
+    
+    // Open mobile settings drawer
+    function openMobileSettings() {
+      document.getElementById('mobileSettingsDrawer').classList.add('active');
+      document.getElementById('mobileSettingsOverlay').classList.add('active');
+    }
+    
+    // Close mobile settings drawer
+    function closeMobileSettings() {
+      document.getElementById('mobileSettingsDrawer').classList.remove('active');
+      document.getElementById('mobileSettingsOverlay').classList.remove('active');
+    }
+    
+    // Mobile back button
+    function mobileGoBack() {
+      // Logic to navigate back (will implement per context)
+      console.log('Mobile back button clicked');
+    }
+    
+    // ============================================================================
+    // 💰 MOBILE PAYMENTS RENDERER
+    // ============================================================================
+    
+    function renderMobilePayments() {
+      const container = document.getElementById('mobilePaymentsList');
+      if (!container) return;
+      
+      const payments = window.paymentsCache || [];
+      
+      if (payments.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.5);">No payments found</div>';
+        return;
+      }
+      
+      // Group by date
+      const grouped = {};
+      payments.forEach(payment => {
+        const date = payment.date || payment.email_date;
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(payment);
+      });
+      
+      let html = '';
+      Object.keys(grouped).sort().reverse().forEach(date => {
+        const datePayments = grouped[date];
+        const total = datePayments.reduce((sum, p) => sum + parseFloat(p.amount_usd || 0), 0);
+        
+        html += `
+          <div class="payment-date-separator">
+            <h3>${formatDateForDisplay(date)}</h3>
+            <div class="payment-date-total">Total: $${total.toFixed(2)}</div>
+          </div>
+        `;
+        
+        datePayments.forEach(payment => {
+          html += `
+            <div class="mobile-payment-card" onclick="showPaymentActions('${payment.id}')">
+              <div class="payment-card-header">
+                <span class="payment-time">${formatTime(payment.email_date)}</span>
+                <span class="payment-group">${payment.group_name || '—'}</span>
+              </div>
+              <div class="payment-card-names">
+                <div class="payment-payer">${payment.payer_name}</div>
+                <div class="payment-student">→ ${payment.student_name}</div>
+              </div>
+              <div class="payment-card-amount">
+                <span class="amount-badge">$${payment.amount_usd}</span>
+                <span class="amount-badge">${payment.amount_amd} ֏</span>
+              </div>
+              ${payment.message ? `<div class="payment-message">${payment.message}</div>` : ''}
+            </div>
+          `;
+        });
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    // ============================================================================
+    // 🗓 MOBILE CALENDAR RENDERER
+    // ============================================================================
+    
+    function renderMobileCalendar() {
+      const container = document.getElementById('mobileCalendarGrid');
+      if (!container) return;
+      
+      // Use existing calendar data rendering logic
+      const payments = window.paymentsCache || [];
+      const students = window.studentsCache || [];
+      
+      // Generate calendar for current month
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = today.getMonth();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      
+      let html = '';
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        const dayPayments = payments.filter(p => p.date === dateStr || p.email_date?.startsWith(dateStr));
+        const isToday = day === today.getDate() && month === today.getMonth();
+        
+        html += `
+          <div class="calendar-day-mobile ${isToday ? 'today' : ''}" onclick="showDayDetails('${dateStr}')">
+            <div class="calendar-day-number">${day}</div>
+            <div class="calendar-day-info">${getDayName(new Date(dateStr))}</div>
+            <div class="calendar-dots-mobile">
+              ${dayPayments.slice(0, 4).map(p => `<div class="calendar-dot"></div>`).join('')}
+              ${dayPayments.length > 4 ? '<div class="calendar-dot grey"></div>' : ''}
+            </div>
+          </div>
+        `;
+      }
+      
+      container.innerHTML = html;
+    }
+    
+    // ============================================================================
+    // 👥 MOBILE STUDENTS RENDERER
+    // ============================================================================
+    
+    function renderMobileStudents() {
+      const container = document.getElementById('mobileStudentsList');
+      if (!container) return;
+      
+      const students = window.studentsCache || [];
+      
+      if (students.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.5);">No students found</div>';
+        return;
+      }
+      
+      let html = '';
+      students.forEach(student => {
+        const status = student.status || 'active';
+        const group = student.group_name || 'No Group';
+        
+        html += `
+          <div class="student-card-mobile" onclick="editStudent('${student.id}')">
+            <div class="student-card-header">
+              <div>
+                <div class="student-name">${student.name}</div>
+                <div class="student-info-line">${group} • ${student.class_count || 0} classes</div>
+                <div class="student-info-line">$${student.price_per_class || 0} per class</div>
+              </div>
+              <span class="student-status-badge ${status}">${status}</span>
+            </div>
+            <div class="student-card-actions">
+              <button class="student-action-btn" onclick="event.stopPropagation(); editStudent('${student.id}')">
+                ✏️ Edit
+              </button>
+              <button class="student-action-btn" onclick="event.stopPropagation(); toggleStudentStatus('${student.id}')">
+                🔄 Status
+              </button>
+            </div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    // ============================================================================
+    // 🧩 MOBILE GROUPS RENDERER
+    // ============================================================================
+    
+    function renderMobileGroups() {
+      const container = document.getElementById('mobileGroupsList');
+      if (!container) return;
+      
+      const groups = window.groupsCache || [];
+      
+      if (groups.length === 0) {
+        container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.5);">No groups found</div>';
+        return;
+      }
+      
+      let html = '';
+      groups.forEach(group => {
+        const studentCount = (window.studentsCache || []).filter(s => s.group_name === group.name).length;
+        
+        html += `
+          <div class="group-card-mobile" onclick="toggleGroupExpand('${group.id}')">
+            <div class="group-name-mobile">${group.name}</div>
+            <div class="student-info-line">${studentCount} students</div>
+            <div class="student-info-line">${group.schedule || 'No schedule'}</div>
+          </div>
+        `;
+      });
+      
+      container.innerHTML = html;
+    }
+    
+    // ============================================================================
+    // 🔔 MOBILE NOTIFICATIONS RENDERER
+    // ============================================================================
+    
+    function renderMobileNotifications() {
+      const container = document.getElementById('mobileNotificationsList');
+      if (!container) return;
+      
+      // Use NotificationCenter if available
+      if (window.NotificationCenter && window.NotificationCenter.notifications) {
+        const notifications = window.NotificationCenter.notifications;
+        
+        if (notifications.length === 0) {
+          container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.5);">No notifications</div>';
+          return;
+        }
+        
+        let html = '';
+        notifications.forEach(notif => {
+          html += `
+            <div class="notification-item-mobile ${notif.read ? '' : 'unread'}" onclick="markNotificationRead('${notif.id}')">
+              <div class="notification-title-mobile">${notif.title}</div>
+              <div class="notification-subtitle-mobile">${notif.description}</div>
+              <div class="notification-timestamp">${formatTimestamp(notif.timestamp)}</div>
+            </div>
+          `;
+        });
+        
+        container.innerHTML = html;
+      } else {
+        container.innerHTML = '<div style="text-align: center; padding: 40px 20px; color: rgba(255,255,255,0.5);">Notification system not initialized</div>';
+      }
+    }
+    
+    // ============================================================================
+    // 🛠 MOBILE UTILITY FUNCTIONS
+    // ============================================================================
+    
+    function formatDateForDisplay(dateStr) {
+      const date = new Date(dateStr);
+      const options = { weekday: 'short', month: 'short', day: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    }
+    
+    function formatTime(dateTimeStr) {
+      if (!dateTimeStr) return '—';
+      const date = new Date(dateTimeStr);
+      return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+    }
+    
+    function getDayName(date) {
+      return date.toLocaleDateString('en-US', { weekday: 'short' });
+    }
+    
+    function formatTimestamp(timestamp) {
+      const date = new Date(timestamp);
+      const now = new Date();
+      const diff = now - date;
+      
+      if (diff < 60000) return 'Just now';
+      if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
+      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+    
+    // ============================================================================
+    // 📱 MOBILE INITIALIZATION
+    // ============================================================================
+    
+    // Initialize mobile UI on DOM ready
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('🔥 ARNOMA Mobile UI Initialized');
+      
+      // Load initial payments view
+      renderMobilePayments();
+      
+      // Load caches
+      if (window.loadStudents) window.loadStudents();
+      if (window.loadGroups) window.loadGroups();
+    });
+    
     // ============================================================================
     // STORAGE & DATA MANAGEMENT
     // ============================================================================
