@@ -2933,14 +2933,14 @@ ARNOMA Team"></textarea>
       window.studentsData = [];
     }
     let sentReminders = new Set(); // Track sent reminders to avoid duplicates
-    let dataReceived = false; // Flag to track if we've received data from parent
+    window.dataReceived = false; // GLOBAL flag to track if we've received data from parent
     
     // Listen for data from parent window (index.html)
     window.addEventListener('message', function(event) {
       if (event.data.action === 'updateGroupsData') {
         window.groupsData = event.data.groups || [];
         window.studentsData = event.data.students || [];
-        dataReceived = true; // Mark that we've received data
+        window.dataReceived = true; // Mark that we've received data (GLOBAL)
         
         console.log(`📨 Received data from parent: ${window.groupsData.length} groups, ${window.studentsData.length} students`);
         if (window.studentsData.length > 0) {
@@ -3327,9 +3327,10 @@ ARNOMA Team"></textarea>
       let firstCheckAttempts = 0;
       const waitForDataAndCheck = () => {
         firstCheckAttempts++;
-        if (dataReceived || firstCheckAttempts >= 30) {
-          if (dataReceived) {
+        if (window.dataReceived || firstCheckAttempts >= 30) {
+          if (window.dataReceived) {
             console.log('[AutomationEngine] 🔄 Running FIRST automation check (data received)...');
+            console.log('[AutomationEngine] 👥 Students available:', window.studentsData?.length || 0);
           } else {
             console.log('[AutomationEngine] ⚠️ Running FIRST automation check (timeout after 30s - NO DATA!)...');
             console.warn('[AutomationEngine] 🚨 Students data never received! Emails will use template placeholders!');
