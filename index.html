@@ -8383,9 +8383,9 @@
         oldStudent = students.find(s => s.id === editingStudentId);
         if (oldStudent) {
           console.log('🔍 Checking for profile changes...');
-          console.log('Old student:', oldStudent);
+          console.log('Old student:', JSON.parse(JSON.stringify(oldStudent))); // Deep copy for logging
           
-          // Compare and track changes
+          // Compare and track changes BEFORE modifying the student object
           if (oldStudent.email !== email && email) {
             changes.push({ field: 'Email', old: oldStudent.email || 'Not set', new: email });
             console.log('✉️ Email changed:', oldStudent.email, '→', email);
@@ -8398,11 +8398,16 @@
             changes.push({ field: 'Group/Schedule', old: oldStudent.group || 'Not set', new: group });
             console.log('👥 Group changed:', oldStudent.group, '→', group);
           }
-          const oldAliases = (oldStudent.aliases || []).join(', ');
-          const newAliases = aliases.join(', ');
+          
+          // Compare aliases arrays
+          const oldAliasesArray = oldStudent.aliases || [];
+          const newAliasesArray = aliases || [];
+          const oldAliases = oldAliasesArray.join(', ');
+          const newAliases = newAliasesArray.join(', ');
+          
           if (oldAliases !== newAliases) {
             changes.push({ field: 'Aliases', old: oldAliases || 'None', new: newAliases || 'None' });
-            console.log('🏷️ Aliases changed:', oldAliases, '→', newAliases);
+            console.log('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
           }
           
           console.log('📝 Total changes detected:', changes.length, changes);
