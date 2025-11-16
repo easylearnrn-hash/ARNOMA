@@ -9887,6 +9887,13 @@
         window.globalData.students = students;
         window.globalData.payments = payments;
         
+        // Also populate the cache objects used by email system
+        window.groupsCache = groups;
+        window.studentsCache = students;
+        window.paymentsCache = payments;
+        
+        console.log(`✅ Loaded ${students.length} students into cache for email system`);
+        
       } catch (error) {
         console.error('❌ Error loading data from Supabase:', error);
       }
@@ -9945,6 +9952,12 @@
       
       // Create hidden email system iframe for postMessage communication
       initializeEmailSystemIframe();
+      
+      // Send initial data to email system after iframe loads (with delay for iframe initialization)
+      setTimeout(() => {
+        sendGroupsDataToEmailSystem();
+        console.log('✅ Sent initial data to email system iframe');
+      }, 2000);
       
       // Initialize Payment Reminder Manager (auto-send reminders for unpaid classes)
       if (window.PaymentReminderManager) {
