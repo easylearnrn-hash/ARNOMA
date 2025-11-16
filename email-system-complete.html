@@ -2832,6 +2832,11 @@ ARNOMA Team"></textarea>
         console.log('📧 Received welcome email request:', student.name);
         
         try {
+          if (!student.email) {
+            console.error('❌ Student has no email address:', student.name);
+            return;
+          }
+          
           // Find Welcome Email template
           const templates = emailSystem._templates || [];
           const welcomeTemplate = templates.find(t => 
@@ -2839,29 +2844,98 @@ ARNOMA Team"></textarea>
             t.active
           );
           
+          let subject, body;
+          
           if (!welcomeTemplate) {
-            console.error('❌ No active Welcome Email template found');
-            return;
+            console.warn('⚠️ No active Welcome Email template found, using default');
+            
+            // Use default welcome email
+            subject = `Welcome to ARNOMA NCLEX-RN - ${student.name}`;
+            body = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              </head>
+              <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+                  <tr>
+                    <td align="center">
+                      <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                        
+                        <!-- Header -->
+                        <tr>
+                          <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 32px; font-weight: 700;">
+                              Welcome to ARNOMA! 🎉
+                            </h1>
+                          </td>
+                        </tr>
+                        
+                        <!-- Body -->
+                        <tr>
+                          <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.6;">
+                              Hi <strong>${student.name}</strong>,
+                            </p>
+                            
+                            <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.6;">
+                              Welcome to ARNOMA NCLEX-RN Prep! We're excited to have you join us on your journey to becoming a registered nurse.
+                            </p>
+                            
+                            <div style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 20px; border-radius: 6px; margin: 30px 0;">
+                              <p style="margin: 0 0 10px 0; color: #1e40af; font-size: 14px; font-weight: 600;">
+                                📋 Your Information:
+                              </p>
+                              <p style="margin: 0; color: #1e40af; font-size: 14px; line-height: 1.8;">
+                                <strong>Group:</strong> ${student.group || 'Not assigned yet'}<br>
+                                <strong>Schedule:</strong> ${student.groupSchedule || 'To be determined'}
+                              </p>
+                            </div>
+                            
+                            <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                              If you have any questions, please don't hesitate to reach out.
+                            </p>
+                          </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                          <td style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
+                              ARNOMA NCLEX-RN Prep
+                            </p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                              This is an automated welcome email
+                            </p>
+                          </td>
+                        </tr>
+                        
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+              </html>
+            `;
+          } else {
+            // Replace variables in template
+            subject = welcomeTemplate.subject
+              .replace(/\{\{StudentName\}\}/g, student.name)
+              .replace(/\{\{Group\}\}/g, student.group || 'Not assigned')
+              .replace(/\{\{GroupName\}\}/g, student.group || 'Not assigned');
+            
+            body = welcomeTemplate.body
+              .replace(/\{\{StudentName\}\}/g, student.name)
+              .replace(/\{\{Group\}\}/g, student.group || 'Not assigned')
+              .replace(/\{\{GroupName\}\}/g, student.group || 'Not assigned')
+              .replace(/\{\{GroupSchedule\}\}/g, student.groupSchedule || 'To be determined')
+              .replace(/\{\{NextClass\}\}/g, student.groupSchedule || 'To be determined')
+              .replace(/\{\{ClassTime\}\}/g, student.classTime || 'TBD');
           }
           
-          if (!student.email) {
-            console.error('❌ Student has no email address:', student.name);
-            return;
-          }
-          
-          // Replace variables in template
-          let subject = welcomeTemplate.subject
-            .replace(/\{\{StudentName\}\}/g, student.name)
-            .replace(/\{\{Group\}\}/g, student.group || 'Not assigned')
-            .replace(/\{\{GroupName\}\}/g, student.group || 'Not assigned');
-          
-          let body = welcomeTemplate.body
-            .replace(/\{\{StudentName\}\}/g, student.name)
-            .replace(/\{\{Group\}\}/g, student.group || 'Not assigned')
-            .replace(/\{\{GroupName\}\}/g, student.group || 'Not assigned')
-            .replace(/\{\{GroupSchedule\}\}/g, student.groupSchedule || 'To be determined')
-            .replace(/\{\{NextClass\}\}/g, student.groupSchedule || 'To be determined')
-            .replace(/\{\{ClassTime\}\}/g, student.classTime || 'TBD');
+          console.log('📤 Sending welcome email to:', student.email);
           
           // Send email via Supabase Edge Function
           const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
@@ -2877,8 +2951,11 @@ ARNOMA Team"></textarea>
             })
           });
           
+          const responseData = await response.json();
+          console.log('📬 Supabase response:', responseData);
+          
           if (!response.ok) {
-            throw new Error(`Failed to send email: ${response.statusText}`);
+            throw new Error(`Failed to send email: ${response.statusText} - ${JSON.stringify(responseData)}`);
           }
           
           // Track sent email with full HTML content
@@ -2888,6 +2965,7 @@ ARNOMA Team"></textarea>
           
         } catch (error) {
           console.error('❌ Error sending welcome email:', error);
+          console.error('❌ Full error details:', JSON.stringify(error, null, 2));
         }
       }
       
