@@ -15081,13 +15081,19 @@
           }
           
           if (data && data.length > 0) {
+            // Truncate helper for loading (handles old data that may exceed limits)
+            const safeTruncate = (str, maxLen = 50) => {
+              if (!str) return null;
+              return str.length > maxLen ? str.substring(0, maxLen - 3) + '...' : str;
+            };
+            
             notifications = data.map(n => ({
               id: n.id,
               type: n.type,
-              title: n.title,
-              description: n.description,
-              studentName: n.student_name,
-              groupName: n.group_name,
+              title: safeTruncate(n.title, 50),
+              description: safeTruncate(n.description, 50),
+              studentName: safeTruncate(n.student_name, 50),
+              groupName: safeTruncate(n.group_name, 50),
               metadata: n.metadata || {},
               timestamp: new Date(n.timestamp),
               read: n.read || false
