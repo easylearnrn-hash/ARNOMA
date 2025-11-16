@@ -8455,6 +8455,10 @@
         return;
       }
 
+      console.log('💾 Student saved successfully:', savedRecord.name);
+      console.log('📧 Student email:', savedRecord.email);
+      console.log('🔄 Changes to notify:', changes);
+
       // Check if we should send welcome email
       const isNewStudent = !editingStudentId;
       const hadNoEmail = editingStudentId && (!students.find(s => s.id === editingStudentId)?.email);
@@ -8462,12 +8466,23 @@
       
       // Send welcome email if: new student with email OR existing student just got email added
       if (nowHasEmail && (isNewStudent || hadNoEmail)) {
+        console.log('📨 Sending welcome email...');
         sendWelcomeEmail(savedRecord);
       }
       
       // Send profile update email if there are changes and student has email
+      console.log('🔍 Checking if should send profile update email...');
+      console.log('   - Changes count:', changes.length);
+      console.log('   - Has email:', savedRecord.email ? 'Yes' : 'No');
+      console.log('   - Email not empty:', savedRecord.email && savedRecord.email.trim() !== '' ? 'Yes' : 'No');
+      
       if (changes.length > 0 && savedRecord.email && savedRecord.email.trim() !== '') {
+        console.log('✅ Sending profile update email for', changes.length, 'changes');
         sendProfileUpdateEmail(savedRecord, changes);
+      } else {
+        console.log('⏭️ Skipping profile update email');
+        if (changes.length === 0) console.log('   Reason: No changes detected');
+        if (!savedRecord.email) console.log('   Reason: No email address');
       }
       
       // No longer need to save balance to localStorage - it's in Supabase now
