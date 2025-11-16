@@ -15247,8 +15247,22 @@
       
       // Initialize
       async function initialize() {
+        console.log('[NotificationCenter] 🔄 Initializing...');
         await loadFromSupabase();
         console.log('[NotificationCenter] 🔔 Notification Center initialized');
+        console.log('[NotificationCenter] 📊 Loaded', notifications.length, 'notifications');
+        console.log('[NotificationCenter] 📬 Unread count:', unreadCount);
+        
+        // Add a test notification on first load (only if no notifications exist)
+        if (notifications.length === 0) {
+          console.log('[NotificationCenter] 🧪 Adding test notification (first load)...');
+          await add(
+            NotificationType.SYSTEM,
+            'Welcome to ARNOMA',
+            'Notification Center is now active! You\'ll see updates here for emails, payments, and important changes.',
+            { metadata: { test: true } }
+          );
+        }
       }
       
       // Public API
