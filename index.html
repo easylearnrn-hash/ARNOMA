@@ -3211,6 +3211,7 @@
         showInGrid: record.show_in_grid ?? record.showInGrid ?? true,
         isActive: record.is_active ?? (record.isActive ?? true),
         statusChangedDate: record.status_changed_date ?? record.statusChangedDate ?? null,
+        created_at: record.created_at ?? null,  // Preserve creation timestamp for calendar logic
         aliases
       };
     }
@@ -13564,6 +13565,28 @@
           balance: 0,
           message: 'Before calendar start date'
         };
+      }
+      
+      // RULE 1b: Skip dates before student was created (NO RETROACTIVE UNPAID DOTS)
+      // Students should not have red unpaid dots for classes before they existed
+      if (student.created_at) {
+        // Parse student creation date and convert to LA timezone
+        const studentCreatedAt = new Date(student.created_at);
+        const studentCreatedLA = toLADate(studentCreatedAt);
+        
+        // Compare at day level (ignore time)
+        const creationDateStr = formatDateYYYYMMDD(studentCreatedLA);
+        
+        if (dateStr < creationDateStr) {
+          // Class date is before student existed - hide it
+          return {
+            status: 'hidden',
+            paid: false,
+            amount: 0,
+            balance: 0,
+            message: 'Before student creation date'
+          };
+        }
       }
       
       // RULE 2: Historical Freeze - Use snapshot for dates older than 2 weeks
