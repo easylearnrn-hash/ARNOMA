@@ -3130,6 +3130,27 @@ ARNOMA Team"></textarea>
                   console.log(`[AutomationEngine]    ├─ ❌ Failed to send: ${failCount} emails`);
                 }
                 
+                // Notify parent window to add notification
+                if (successCount > 0 && window.parent && window.parent !== window) {
+                  console.log(`[AutomationEngine]    ├─ 🔔 Sending notification to parent window...`);
+                  window.parent.postMessage({
+                    action: 'addNotification',
+                    notification: {
+                      type: 'email',
+                      title: `Automation: ${automation.name}`,
+                      description: `Sent ${successCount} reminder email${successCount !== 1 ? 's' : ''} for ${group.name} (${session.day} ${session.time})`,
+                      groupName: group.name,
+                      metadata: {
+                        automationId: automation.id,
+                        automationName: automation.name,
+                        recipientCount: successCount,
+                        sessionDay: session.day,
+                        sessionTime: session.time
+                      }
+                    }
+                  }, '*');
+                }
+                
                 // Mark as sent
                 sentReminders.add(reminderKey);
                 console.log(`[AutomationEngine]    └─ 🔒 Marked as sent for today: ${reminderKey}`);

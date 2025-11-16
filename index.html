@@ -9986,9 +9986,29 @@
       debugLog('✅ Hidden email system iframe initialized');
       
       // Listen for data requests from automation engine
-      window.addEventListener('message', function(event) {
+      window.addEventListener('message', async function(event) {
         if (event.data.action === 'requestGroupsData') {
           sendGroupsDataToEmailSystem();
+        }
+        
+        // Handle notification requests from email automation iframe
+        if (event.data.action === 'addNotification') {
+          console.log('[NotificationCenter] 📬 Received notification request from iframe:', event.data.notification);
+          
+          if (window.NotificationCenter && event.data.notification) {
+            const notif = event.data.notification;
+            await window.NotificationCenter.add(
+              notif.type || window.NotificationCenter.NotificationType.EMAIL,
+              notif.title,
+              notif.description,
+              {
+                groupName: notif.groupName,
+                studentName: notif.studentName,
+                metadata: notif.metadata || {}
+              }
+            );
+            console.log('[NotificationCenter] ✅ Notification added from iframe');
+          }
         }
       });
       
@@ -12929,8 +12949,17 @@
       const panel = document.getElementById('notificationCenterPanel');
       if (!overlay || !panel) return;
       
-      // Render notifications
-      renderNotifications();
+      console.log('[NotificationCenter] 🔔 Opening notification center...');
+      
+      // Reload notifications from Supabase to get latest
+      if (window.NotificationCenter) {
+        window.NotificationCenter.initialize().then(() => {
+          console.log('[NotificationCenter] 🔄 Reloaded notifications from Supabase');
+          renderNotifications();
+        });
+      } else {
+        renderNotifications();
+      }
       
       // Show with fade-in
       overlay.style.display = 'block';
