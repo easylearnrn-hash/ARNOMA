@@ -9,8 +9,8 @@
 
 :root {
   /* Colors */
-  --mobile-bg: #0D111D;
-  --mobile-bg-alt: #121726;
+  --mobile-bg: #020617;
+  --mobile-bg-alt: #0f172a;
   --glass-light: rgba(255, 255, 255, 0.04);
   --glass-medium: rgba(255, 255, 255, 0.07);
   --glass-border: rgba(255, 255, 255, 0.15);
@@ -54,36 +54,72 @@ html, body {
   overflow-x: hidden;
   background: var(--mobile-bg);
   color: var(--text-white);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, "SF Pro Text", sans-serif;
   font-size: var(--text-body);
   line-height: 1.5;
 }
 
 body {
-  padding-bottom: calc(72px + env(safe-area-inset-bottom));
-  overscroll-behavior-y: contain;
+  overflow: hidden; /* Main scroll will be on #mobileMainContent */
+}
+
+/* Mobile Shell Wrapper */
+#mobileShell {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Hide Desktop Floating Nav on Mobile */
+.floating-nav,
+#floatingNav {
+  display: none !important;
 }
 
 /* ============================================================================
-   📱 BOTTOM TAB BAR NAVIGATION
+   📱 MOBILE HEADER & NAVIGATION
    ============================================================================ */
 
+/* Mobile Header */
+#mobileHeader {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  height: 56px;
+  background: linear-gradient(90deg, #6366f1, #a855f7);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+/* Main Content - Only Scrollable Area */
+#mobileMainContent {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 12px 14px 90px;
+}
+
+/* Bottom Tab Bar Navigation */
+
 .mobile-nav {
-  position: fixed;
+  position: sticky;
   bottom: 0;
-  left: 0;
-  right: 0;
+  z-index: 1000;
   height: 72px;
-  background: rgba(13, 17, 29, 0.92);
-  backdrop-filter: blur(14px) saturate(180%);
-  -webkit-backdrop-filter: blur(14px) saturate(180%);
-  border-top: 1px solid var(--glass-border);
+  background: rgba(15, 23, 42, 0.95);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
   padding: 8px 16px;
   padding-bottom: calc(8px + env(safe-area-inset-bottom));
   display: flex;
   justify-content: space-around;
   align-items: center;
-  z-index: 9999;
   transition: transform 0.3s ease;
 }
 
@@ -140,25 +176,40 @@ body {
    💰 PAYMENT RECORDS - MOBILE CARDS
    ============================================================================ */
 
+.section-header-mobile {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: #f9fafb;
+}
+
+#mobilePaymentsList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .mobile-payment-card {
-  background: var(--glass-light);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--card-radius);
-  padding: 16px;
-  margin: 0 var(--edge-padding) 12px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: radial-gradient(circle at top left, rgba(79,70,229,0.22), rgba(15,23,42,0.98));
+  border: 1px solid rgba(148,163,184,0.35);
+  box-shadow: 0 10px 25px rgba(15,23,42,0.85);
   transition: all 0.2s ease;
 }
 
 .mobile-payment-card:active {
   transform: scale(0.98);
-  background: var(--glass-medium);
+  background: radial-gradient(circle at top left, rgba(79,70,229,0.28), rgba(15,23,42,0.98));
 }
 
 .payment-card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #9ca3af;
 }
 
 .payment-time {
@@ -181,31 +232,32 @@ body {
 }
 
 .payment-payer {
-  font-size: 16px;
+  font-size: 13px;
+  color: #e5e7eb;
   font-weight: 600;
-  color: var(--text-white);
   margin-bottom: 3px;
 }
 
 .payment-student {
-  font-size: var(--text-small);
-  color: var(--text-dim);
+  font-size: 12px;
+  color: #a5b4fc;
 }
 
 .payment-card-amount {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   margin-bottom: 8px;
+  flex-wrap: wrap;
 }
 
 .amount-badge {
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.08));
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  color: var(--green-accent);
-  padding: 6px 14px;
-  border-radius: 12px;
+  font-size: 13px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(22,163,74,0.16);
+  color: #bbf7d0;
+  border: 1px solid rgba(34,197,94,0.7);
   font-weight: 700;
-  font-size: 15px;
 }
 
 .payment-message {
@@ -251,56 +303,58 @@ body {
 
 .calendar-grid-mobile {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding-bottom: 12px;
 }
 
-@media (max-width: 375px) {
+@media (min-width: 430px) {
   .calendar-grid-mobile {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
 .calendar-day-mobile {
-  background: var(--glass-light);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--card-radius);
-  padding: 18px;
+  border-radius: 12px;
+  padding: 10px;
+  background: rgba(15,23,42,0.96);
+  border: 1px solid rgba(148,163,184,0.28);
   min-height: 110px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
   transition: all 0.2s ease;
   cursor: pointer;
 }
 
 .calendar-day-mobile:active {
   transform: scale(0.97);
-  background: var(--glass-medium);
+  background: rgba(15,23,42,0.98);
 }
 
 .calendar-day-mobile.today {
-  border: 2px solid var(--blue-glow);
-  background: rgba(112, 170, 255, 0.08);
-  box-shadow: 0 0 18px rgba(112, 170, 255, 0.35);
+  border: 2px solid rgba(129,140,248,0.95);
+  box-shadow: 0 0 14px rgba(129,140,248,0.7);
+  background: rgba(79,70,229,0.08);
 }
 
 .calendar-day-number {
-  font-size: 22px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--text-white);
+  color: #e5e7eb;
 }
 
 .calendar-day-info {
-  font-size: 12px;
-  color: var(--text-grey);
+  font-size: 11px;
+  color: #9ca3af;
   margin-bottom: 6px;
 }
 
 .calendar-dots-mobile {
   display: flex;
   flex-wrap: wrap;
-  gap: 3px;
+  gap: 4px;
+  margin-top: 4px;
 }
 
 .calendar-dot {
@@ -399,90 +453,91 @@ body {
    👥 STUDENT MANAGER - MOBILE CARDS
    ============================================================================ */
 
-.student-card-mobile {
-  background: var(--glass-light);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--card-radius);
-  padding: 18px;
-  margin: 0 var(--edge-padding) 14px;
+.student-card-mobile,
+.group-card-mobile {
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(15,23,42,0.96);
+  border: 1px solid rgba(148,163,184,0.3);
+  box-shadow: 0 10px 26px rgba(15,23,42,0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
 .student-card-header {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 14px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .student-name {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--text-white);
+  color: #f9fafb;
   margin-bottom: 6px;
 }
 
 .student-info-line {
-  font-size: var(--text-small);
-  color: var(--text-dim);
+  font-size: 12px;
+  color: #9ca3af;
   margin-bottom: 4px;
 }
 
 .student-status-badge {
-  padding: 5px 12px;
-  border-radius: 10px;
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.05em;
 }
 
 .student-status-badge.active {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--green-accent);
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+  background: rgba(34,197,94,0.18);
+  color: #bbf7d0;
+  border: 1px solid rgba(34,197,94,0.8);
+  box-shadow: 0 0 12px rgba(34,197,94,0.2);
 }
 
 .student-status-badge.paused {
-  background: rgba(100, 116, 139, 0.15);
-  color: rgba(148, 163, 184, 0.9);
-  border: 1px solid rgba(100, 116, 139, 0.3);
+  background: rgba(234,179,8,0.18);
+  color: #facc15;
+  border: 1px solid rgba(234,179,8,0.7);
 }
 
 .student-status-badge.graduated {
-  background: rgba(167, 139, 250, 0.12);
-  color: rgba(167, 139, 250, 0.8);
-  border: 1px solid rgba(167, 139, 250, 0.25);
+  background: rgba(148,163,184,0.2);
+  color: #e5e7eb;
+  border: 1px solid rgba(148,163,184,0.7);
 }
 
 .student-card-actions {
   display: flex;
-  gap: 10px;
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid var(--glass-border);
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148,163,184,0.2);
 }
 
 .student-action-btn {
   flex: 1;
-  height: 48px;
-  background: var(--glass-medium);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--button-radius);
-  font-size: 15px;
+  border-radius: 999px;
+  border: none;
+  padding: 9px 0;
+  font-size: 13px;
   font-weight: 600;
-  color: var(--text-white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
+  background: rgba(79,70,229,0.9);
+  color: white;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .student-action-btn:active {
   transform: scale(0.96);
-  background: var(--glass-light);
+  background: rgba(79,70,229,1);
 }
 
 /* ============================================================================
@@ -490,35 +545,95 @@ body {
    ============================================================================ */
 
 .group-card-mobile {
-  background: var(--glass-light);
-  border: 1px solid var(--glass-border);
-  border-radius: var(--card-radius);
-  padding: 18px;
-  margin: 0 var(--edge-padding) 14px;
+  border-radius: 14px;
+  padding: 12px 14px;
+  background: rgba(15,23,42,0.96);
+  border: 1px solid rgba(148,163,184,0.3);
+  box-shadow: 0 10px 26px rgba(15,23,42,0.9);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
 
 .group-card-mobile:active {
   transform: scale(0.98);
-  background: var(--glass-medium);
 }
 
-.group-card-mobile.expanded {
-  background: var(--glass-medium);
+.group-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .group-name-mobile {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 700;
-  color: var(--text-white);
-  margin-bottom: 10px;
+  color: #f9fafb;
+  margin-bottom: 6px;
+}
+
+.group-info-line {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-bottom: 4px;
+}
+
+.group-status-badge {
+  font-size: 11px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.group-status-badge.active {
+  background: rgba(34,197,94,0.18);
+  color: #bbf7d0;
+  border: 1px solid rgba(34,197,94,0.8);
+  box-shadow: 0 0 12px rgba(34,197,94,0.2);
+}
+
+.group-status-badge.paused {
+  background: rgba(234,179,8,0.18);
+  color: #facc15;
+  border: 1px solid rgba(234,179,8,0.7);
+}
+
+.group-card-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(148,163,184,0.2);
+}
+
+.group-action-btn {
+  flex: 1;
+  border-radius: 999px;
+  border: none;
+  padding: 9px 0;
+  font-size: 13px;
+  font-weight: 600;
+  background: rgba(79,70,229,0.9);
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.group-action-btn:active {
+  transform: scale(0.96);
+  background: rgba(79,70,229,1);
 }
 
 .group-schedule-list {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid var(--glass-border);
+  border-top: 1px solid rgba(148,163,184,0.2);
 }
 
 .group-schedule-item {
@@ -769,32 +884,82 @@ body {
   position: fixed;
   top: 0;
   right: 0;
-  bottom: 0;
-  width: 85%;
+  width: 100%;
   max-width: 360px;
-  background: var(--mobile-bg-alt);
-  z-index: 10000;
+  height: 100%;
+  height: 100dvh;
+  background: rgba(15,23,42,0.98);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  z-index: 1500;
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: -6px 0 40px rgba(0,0,0,0.7);
+  border-left: 1px solid rgba(148,163,184,0.3);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-  box-shadow: -4px 0 30px rgba(0, 0, 0, 0.5);
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
-.settings-drawer.active {
+.settings-drawer.open {
   transform: translateX(0);
 }
 
 .settings-drawer-header {
-  padding: 22px;
-  padding-top: calc(22px + env(safe-area-inset-top));
-  border-bottom: 1px solid var(--glass-border);
+  position: sticky;
+  top: 0;
+  background: rgba(15,23,42,0.98);
+  border-bottom: 1px solid rgba(148,163,184,0.3);
+  padding: env(safe-area-inset-top, 22px) 22px 22px;
+  z-index: 10;
+}
+
+.settings-close-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  border: none;
+  background: rgba(148,163,184,0.2);
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  position: absolute;
+  top: env(safe-area-inset-top, 22px);
+  right: 22px;
+}
+
+.settings-close-btn:active {
+  transform: scale(0.94);
+  background: rgba(148,163,184,0.35);
 }
 
 .settings-drawer-title {
   font-size: 22px;
   font-weight: 700;
-  color: var(--text-white);
+  color: #f9fafb;
+}
+
+/* Settings backdrop overlay */
+.settings-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  z-index: 1499;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.settings-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .settings-section {

@@ -2095,6 +2095,8 @@
 </head>
 <body>
   
+  <div id="mobileShell">
+  
   <!-- ============================================================================
        🔥 MOBILE-ONLY UI STRUCTURE (iOS Optimized)
        ============================================================================ -->
@@ -2218,6 +2220,8 @@
   
   <!-- 🌑 SETTINGS OVERLAY -->
   <div id="mobileSettingsOverlay" class="notification-sheet-overlay" onclick="closeMobileSettings()"></div>
+  
+  </div><!-- End #mobileShell -->
   
   <!-- ============================================================================
        DESKTOP MODALS & DIALOGS BELOW (Hidden on Mobile, Converted to Fullscreen)
@@ -3063,13 +3067,13 @@
       if (viewId) {
         document.getElementById(viewId).style.display = 'block';
         
-        // Update page title
+        // Update page title based on tab
         const titles = {
-          'payments': 'Payments',
-          'calendar': 'Smart Calendar',
-          'students': 'Students',
-          'groups': 'Groups',
-          'notifications': 'Notifications'
+          'payments': '💰 Payment Records',
+          'calendar': '🗓 Smart Calendar',
+          'students': '👥 Students',
+          'groups': '🧩 Groups',
+          'notifications': '🔔 Notifications'
         };
         document.getElementById('mobilePageTitle').textContent = titles[tabName];
         
@@ -3100,14 +3104,18 @@
     
     // Open mobile settings drawer
     function openMobileSettings() {
-      document.getElementById('mobileSettingsDrawer').classList.add('active');
-      document.getElementById('mobileSettingsOverlay').classList.add('active');
+      const drawer = document.getElementById('mobileSettingsDrawer') || document.querySelector('.settings-drawer');
+      const backdrop = document.getElementById('settingsBackdrop') || document.querySelector('.settings-backdrop');
+      if (drawer) drawer.classList.add('open');
+      if (backdrop) backdrop.classList.add('open');
     }
     
     // Close mobile settings drawer
     function closeMobileSettings() {
-      document.getElementById('mobileSettingsDrawer').classList.remove('active');
-      document.getElementById('mobileSettingsOverlay').classList.remove('active');
+      const drawer = document.getElementById('mobileSettingsDrawer') || document.querySelector('.settings-drawer');
+      const backdrop = document.getElementById('settingsBackdrop') || document.querySelector('.settings-backdrop');
+      if (drawer) drawer.classList.remove('open');
+      if (backdrop) backdrop.classList.remove('open');
     }
     
     // Mobile back button
