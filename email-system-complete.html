@@ -3350,9 +3350,16 @@ ARNOMA Team"></textarea>
         console.log('[AutomationEngine] ========================================');
         console.log('[AutomationEngine] 🔄 Running automation check...');
         
+        console.log(`[AutomationEngine] 📋 Total automations: ${automationSystem._automations.length}`);
+        console.log('[AutomationEngine] 🔍 All automations:', automationSystem._automations.map(a => ({
+          id: a.id,
+          name: a.name,
+          frequency: a.frequency,
+          active: a.active
+        })));
+        
         const automations = automationSystem._automations.filter(a => a.active && a.frequency === 'before_class');
         
-        console.log(`[AutomationEngine] 📋 Total automations: ${automationSystem._automations.length}`);
         console.log(`[AutomationEngine] ✅ Active 'before_class' automations: ${automations.length}`);
         
         if (automations.length === 0) {
