@@ -12984,10 +12984,11 @@
         return;
       }
       
+      // CRITICAL FIX: Keep title and description under 50 characters (database limit)
       const testNotification = {
         type: 'automation',
         title: 'Test Automation',
-        description: 'Sent 5 emails for Monday Intermediate Class',
+        description: 'Sent 5 emails for Monday Class',  // Under 50 chars
         student_name: null,
         group_name: 'Monday Class',
         metadata: {
@@ -15146,17 +15147,35 @@
       }
       
       // Add a notification
-      async function add(type, title, description, options = {}) {
-        const notification = {
-          type,
-          title,
-          description,
-          studentName: options.studentName || null,
-          groupName: options.groupName || null,
-          metadata: options.metadata || {},
-          timestamp: new Date(),
-          read: false
-        };
+      async function add(typeOrObject, title, description, options = {}) {
+        // Support both object-based and individual parameter signatures
+        let notification;
+        
+        if (typeof typeOrObject === 'object' && typeOrObject !== null) {
+          // New object-based API (used by email automation iframe)
+          notification = {
+            type: typeOrObject.type || NotificationType.SYSTEM,
+            title: typeOrObject.title,
+            description: typeOrObject.description,
+            studentName: typeOrObject.student_name || typeOrObject.studentName || null,
+            groupName: typeOrObject.group_name || typeOrObject.groupName || null,
+            metadata: typeOrObject.metadata || {},
+            timestamp: new Date(),
+            read: false
+          };
+        } else {
+          // Legacy individual parameter API
+          notification = {
+            type: typeOrObject,
+            title,
+            description,
+            studentName: options.studentName || null,
+            groupName: options.groupName || null,
+            metadata: options.metadata || {},
+            timestamp: new Date(),
+            read: false
+          };
+        }
         
         // Save to Supabase
         const saved = await saveToSupabase(notification);
@@ -15172,7 +15191,7 @@
           unreadCount++;
           updateBellIcon();
           
-          console.log('[NotificationCenter] 🔔 New notification:', title);
+          console.log('[NotificationCenter] 🔔 New notification:', notification.title);
         }
         
         return notification;
@@ -15326,27 +15345,41 @@
         }
       }
       
-      // Public API
-      return {
-        NotificationType,
-        initialize,
-        add,
-        markAsRead,
-        markAllAsRead,
-        getAll,
-        getGroupedByDate,
-        getUnreadCount: () => unreadCount
-      };
-    })();
+    // Public API
+    return {
+      NotificationType,
+      initialize,
+      add,
+      markAsRead,
+      markAllAsRead,
+      getAll,
+      getGroupedByDate,
+      getUnreadCount: () => unreadCount
+    };
+  })();
+  
+  // CRITICAL FIX: Expose NotificationCenter to window so other functions can access it
+  window.NotificationCenter = NotificationCenter;
+  
+  // ============================================================================
+  // END NOTIFICATION CENTER
+  // ============================================================================
+  
+  // Initialize on page load
+  document.addEventListener('DOMContentLoaded', async function() {
+    console.log('[ARNOMA] 🚀 Initializing application...');
     
-    // ============================================================================
-    // END NOTIFICATION CENTER
-    // ============================================================================
+    // Initialize Notification Center first
+    if (window.NotificationCenter) {
+      console.log('[ARNOMA] 🔔 Initializing Notification Center...');
+      await window.NotificationCenter.initialize();
+    }
     
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initialize);
+    // Then initialize the main app
+    await initialize();
     
-    debugLog('ARNOMA app loaded - Using Supabase cloud database');
+    console.log('[ARNOMA] ✅ Application fully initialized');
+  });    debugLog('ARNOMA app loaded - Using Supabase cloud database');
   </script>
 </body>
 </html>
