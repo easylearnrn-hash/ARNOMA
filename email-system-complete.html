@@ -3323,19 +3323,20 @@ ARNOMA Team"></textarea>
       setInterval(checkAutomations, 60000);
       console.log('[AutomationEngine] ⏰ Scheduled automation checks every 60 seconds');
       
-      // Run first check after data is received (max wait: 10 seconds)
+      // Run first check after data is received (max wait: 30 seconds)
       let firstCheckAttempts = 0;
       const waitForDataAndCheck = () => {
         firstCheckAttempts++;
-        if (dataReceived || firstCheckAttempts >= 10) {
+        if (dataReceived || firstCheckAttempts >= 30) {
           if (dataReceived) {
             console.log('[AutomationEngine] 🔄 Running FIRST automation check (data received)...');
           } else {
-            console.log('[AutomationEngine] 🔄 Running FIRST automation check (timeout reached)...');
+            console.log('[AutomationEngine] ⚠️ Running FIRST automation check (timeout after 30s - NO DATA!)...');
+            console.warn('[AutomationEngine] 🚨 Students data never received! Emails will use template placeholders!');
           }
           checkAutomations();
         } else {
-          console.log(`[AutomationEngine] ⏳ Waiting for data... (attempt ${firstCheckAttempts}/10)`);
+          console.log(`[AutomationEngine] ⏳ Waiting for data... (attempt ${firstCheckAttempts}/30)`);
           setTimeout(waitForDataAndCheck, 1000);
         }
       };
