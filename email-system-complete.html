@@ -2773,7 +2773,7 @@ ARNOMA Team"></textarea>
       // Security check - only accept messages from same origin
       if (event.origin !== window.location.origin) return;
       
-      const { action, student, classDate, changes, specialMessage, emailType, groupName, oldSchedule, newSchedule, students } = event.data;
+      const { action, student, classDate, changes, specialMessage, emailType, groupName, oldSchedule, newSchedule, students, manual } = event.data;
       
       // Handle request for payment reminder template
       if (action === 'getPaymentReminderTemplate') {
@@ -2803,7 +2803,7 @@ ARNOMA Team"></textarea>
       
       if (action === 'sendAutoReminder') {
         console.log('📧 Received auto-reminder request:', student?.name, classDate);
-        const isManual = data.manual === true; // Check if this is a manual send
+        const isManual = manual === true; // Check if this is a manual send
         
         if (isManual) {
           console.log('🚀 Manual send - bypassing duplicate check');
