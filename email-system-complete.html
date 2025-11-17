@@ -766,6 +766,10 @@ ARNOMA Team"></textarea>
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
     const EMAIL_FROM = 'ARNOMA <info@mail.arnoma.us>';
     
+    // Expose Supabase config to window for diagnostic testing
+    window.SUPABASE_URL = SUPABASE_URL;
+    window.SUPABASE_ANON_KEY = SUPABASE_ANON_KEY;
+    
     // Initialize Supabase client
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     console.log('✅ Supabase client initialized');
@@ -2083,6 +2087,10 @@ ARNOMA Team"></textarea>
       }
     };
 
+    // Expose automationSystem to window for diagnostic testing and automation engine
+    window.automationSystem = automationSystem;
+    console.log('🔍 Exposed automationSystem to window for diagnostics');
+
     // Automation Modal Functions
     function openAutomations() {
       document.getElementById('automationsModal').classList.add('active');
@@ -2819,6 +2827,18 @@ ARNOMA Team"></textarea>
           
           // Track sent email with full HTML content
           await trackSentEmail(student.email, subject, 'Auto Payment Reminder', body);
+          
+          // Send success message back to parent with email content
+          window.parent.postMessage({
+            action: 'autoReminderSent',
+            success: true,
+            student: student,
+            classDate: classDate,
+            emailContent: {
+              subject: subject,
+              body: body
+            }
+          }, '*');
           
           console.log('✅ Auto-reminder sent successfully to:', student.name);
           
