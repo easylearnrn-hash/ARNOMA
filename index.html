@@ -14615,27 +14615,45 @@
         // Load skipped classes from Supabase
         async function loadSkippedClasses() {
           try {
+            // First try localStorage (faster and more reliable)
+            const localData = loadSkippedClassesFromLocalStorage();
+            
+            // Then try to sync with Supabase
             const { data, error } = await supabase.from('skipped_classes').select('*');
 
             if (error) {
-              console.error('[SkipClassManager] ❌ Error loading from Supabase:', error);
-              return loadSkippedClassesFromLocalStorage(); // Fallback
+              console.warn('[SkipClassManager] ⚠️ Supabase load error (using localStorage):', error.message);
+              return localData; // Use localStorage data
             }
 
-            // Convert array to nested object structure
-            const skipped = {};
+            // Convert Supabase array to nested object structure
+            const supabaseSkipped = {};
             (data || []).forEach(record => {
-              if (!skipped[record.group_name]) {
-                skipped[record.group_name] = {};
+              if (!supabaseSkipped[record.group_name]) {
+                supabaseSkipped[record.group_name] = {};
               }
-              skipped[record.group_name][record.class_date] = {
+              supabaseSkipped[record.group_name][record.class_date] = {
                 type: record.skip_type || 'student-skipped',
-                note: record.note || null,
+                note: null, // Note not stored in Supabase (schema issue)
               };
             });
 
-            // console.log('✅ [SkipClassManager] Loaded', Object.keys(skipped).length, 'groups from Supabase');
-            return skipped;
+            // Merge localStorage data (which has notes) with Supabase data
+            const merged = { ...localData };
+            Object.keys(supabaseSkipped).forEach(groupName => {
+              if (!merged[groupName]) {
+                merged[groupName] = {};
+              }
+              Object.keys(supabaseSkipped[groupName]).forEach(dateStr => {
+                // If not in localStorage, add from Supabase
+                if (!merged[groupName][dateStr]) {
+                  merged[groupName][dateStr] = supabaseSkipped[groupName][dateStr];
+                }
+              });
+            });
+
+            console.log('✅ [SkipClassManager] Loaded from localStorage + Supabase');
+            return merged;
           } catch (error) {
             console.error('[SkipClassManager] ❌ Exception loading skipped classes:', error);
             return loadSkippedClassesFromLocalStorage(); // Fallback
@@ -14662,11 +14680,12 @@
             Object.keys(skippedClasses).forEach(groupName => {
               Object.keys(skippedClasses[groupName]).forEach(classDate => {
                 const skipInfo = skippedClasses[groupName][classDate];
+                // Don't include 'note' field if it causes Supabase schema issues
+                // Store note in localStorage only for now
                 records.push({
                   group_name: groupName,
                   class_date: classDate,
                   skip_type: skipInfo.type || 'student-skipped',
-                  note: skipInfo.note || null,
                   skipped_at: new Date().toISOString(),
                 });
               });
@@ -14685,6 +14704,7 @@
 
               if (insertError) {
                 console.error('[SkipClassManager] ❌ Error saving to Supabase:', insertError);
+                console.log('[SkipClassManager] 📦 Using localStorage as primary storage');
                 saveSkippedClassesToLocalStorage(); // Fallback
                 return;
               }
