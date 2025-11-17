@@ -18690,9 +18690,10 @@
         }
 
         // Get payment reminder template from email system
-        const iframe = document.getElementById('emailSystemFrame');
+        const iframe = document.querySelector('iframe[src*="email-system-complete.html"]');
         if (!iframe || !iframe.contentWindow) {
           console.error('[EmailPreview] ❌ Email system iframe not found');
+          console.error('[EmailPreview] Make sure you are on the Students tab where the email system is loaded');
           return;
         }
 
