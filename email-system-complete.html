@@ -2797,15 +2797,20 @@ ARNOMA Team"></textarea>
             return;
           }
           
-          // Replace variables in template
+          // Replace variables in template (case-insensitive to match template)
           let subject = reminderTemplate.subject
-            .replace(/\{\{studentName\}\}/g, student.name)
-            .replace(/\{\{balance\}\}/g, `$${student.balance}`);
+            .replace(/\{\{StudentName\}\}/gi, student.name)
+            .replace(/\{\{studentName\}\}/gi, student.name)
+            .replace(/\{\{balance\}\}/gi, `$${student.balance}`);
           
           let body = reminderTemplate.body
-            .replace(/\{\{studentName\}\}/g, student.name)
-            .replace(/\{\{balance\}\}/g, `$${student.balance}`)
-            .replace(/\{\{classDate\}\}/g, classDate);
+            .replace(/\{\{StudentName\}\}/gi, student.name)
+            .replace(/\{\{studentName\}\}/gi, student.name)
+            .replace(/\{\{balance\}\}/gi, `$${student.balance}`)
+            .replace(/\{\{Balance\}\}/gi, `$${student.balance}`)
+            .replace(/\{\{classDate\}\}/gi, classDate)
+            .replace(/\{\{ClassDate\}\}/gi, classDate)
+            .replace(/\{\{UnpaidClasses\}\}/gi, `Class on ${classDate} - $${student.balance}`);
           
           // Send email via Supabase Edge Function
           const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
