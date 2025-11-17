@@ -16477,7 +16477,7 @@
           right: 0;
           bottom: 0;
           background: rgba(0, 0, 0, 0.8);
-          z-index: 10000;
+          z-index: 200000;
           display: flex;
           align-items: center;
           justify-content: center;
@@ -18744,6 +18744,13 @@
 
         console.log('[EmailPreview] ✅ Got email template, reconstructing emails...');
 
+        // Helper function to format date nicely
+        const formatClassDate = (dateStr) => {
+          const date = new Date(dateStr + 'T00:00:00');
+          const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+          return date.toLocaleDateString('en-US', options);
+        };
+
         // Reconstruct email for each notification
         let updated = 0;
         let failed = 0;
@@ -18751,6 +18758,9 @@
         for (const notification of paymentNotifications) {
           const { studentName, metadata, id } = notification;
           const { amount, date } = metadata;
+          
+          // Format date nicely: "Wednesday, November 16, 2025"
+          const formattedDate = formatClassDate(date);
 
           // Reconstruct email using template
           const subject = template.subject
@@ -18761,9 +18771,9 @@
             .replace(/\{\{StudentName\}\}/gi, studentName)
             .replace(/\{\{balance\}\}/gi, `$${amount}`)
             .replace(/\{\{Balance\}\}/gi, `$${amount}`)
-            .replace(/\{\{classDate\}\}/gi, date)
-            .replace(/\{\{ClassDate\}\}/gi, date)
-            .replace(/\{\{UnpaidClasses\}\}/gi, `Class on ${date} - $${amount}`);
+            .replace(/\{\{classDate\}\}/gi, formattedDate)
+            .replace(/\{\{ClassDate\}\}/gi, formattedDate)
+            .replace(/\{\{UnpaidClasses\}\}/gi, `Class on ${formattedDate} - Amount owed: $${amount}`);
 
           // Update notification metadata in memory
           notification.metadata.emailSubject = subject;

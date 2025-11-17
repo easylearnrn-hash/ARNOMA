@@ -2823,6 +2823,15 @@ ARNOMA Team"></textarea>
             return;
           }
           
+          // Format date nicely: "Wednesday, November 16, 2025"
+          const formatClassDate = (dateStr) => {
+            const date = new Date(dateStr + 'T00:00:00');
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+          };
+          
+          const formattedDate = formatClassDate(classDate);
+          
           // Replace variables in template (case-insensitive to match template)
           let subject = reminderTemplate.subject
             .replace(/\{\{StudentName\}\}/gi, student.name)
@@ -2834,9 +2843,9 @@ ARNOMA Team"></textarea>
             .replace(/\{\{studentName\}\}/gi, student.name)
             .replace(/\{\{balance\}\}/gi, `$${student.balance}`)
             .replace(/\{\{Balance\}\}/gi, `$${student.balance}`)
-            .replace(/\{\{classDate\}\}/gi, classDate)
-            .replace(/\{\{ClassDate\}\}/gi, classDate)
-            .replace(/\{\{UnpaidClasses\}\}/gi, `Class on ${classDate} - $${student.balance}`);
+            .replace(/\{\{classDate\}\}/gi, formattedDate)
+            .replace(/\{\{ClassDate\}\}/gi, formattedDate)
+            .replace(/\{\{UnpaidClasses\}\}/gi, `Class on ${formattedDate} - Amount owed: $${student.balance}`);
           
           // Send email via Supabase Edge Function
           const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
