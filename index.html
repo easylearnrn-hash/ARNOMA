@@ -16350,13 +16350,20 @@
 
         // Click handler
         div.addEventListener('click', () => {
+          console.log('[NotificationClick] Clicked notification:', notification);
+          console.log('[NotificationClick] Has metadata?', !!notification.metadata);
+          console.log('[NotificationClick] Has emailBody?', notification.metadata?.emailBody ? 'YES' : 'NO');
+          
           if (!notification.read) {
             window.NotificationCenter.markAsRead(notification.id);
           }
           
           // Show email content if available (for payment reminders)
           if (notification.metadata && notification.metadata.emailBody) {
+            console.log('[NotificationClick] Opening email preview...');
             showEmailPreview(notification);
+          } else {
+            console.log('[NotificationClick] No email body found in notification metadata');
           }
           
           renderNotifications();
@@ -18593,11 +18600,19 @@
 
           // Listen for email content messages from iframe
           window.addEventListener('message', async event => {
+            console.log('[PaymentReminderManager] Received message:', event.data);
+            
             if (event.data.action === 'autoReminderSent' && event.data.success) {
               const { student, classDate, emailContent } = event.data;
+              
+              console.log('[PaymentReminderManager] ✅ Auto-reminder sent successfully!');
+              console.log('[PaymentReminderManager] Student:', student.name);
+              console.log('[PaymentReminderManager] Email content received:', !!emailContent);
+              console.log('[PaymentReminderManager] Email subject:', emailContent?.subject);
 
               // Update the notification with email content
               if (window.NotificationCenter && emailContent) {
+                console.log('[PaymentReminderManager] Creating notification with email content...');
                 await window.NotificationCenter.add(
                   window.NotificationCenter.NotificationType.REMINDER,
                   'Payment Reminder Sent',
@@ -18613,6 +18628,7 @@
                     },
                   }
                 );
+                console.log('[PaymentReminderManager] ✅ Notification created with email content');
               }
             }
           });
