@@ -17538,41 +17538,59 @@
       window.sendReminderNow = async function (studentId, buttonElement) {
         console.log('🚀 Manual send triggered for student:', studentId);
 
-        // Find the student
-        const student = students.find((s) => s.id === studentId);
-        if (!student) {
-          showNotificationSimple('❌ Student not found', 'error');
-          return;
-        }
-
-        console.log('👤 Student found:', student.name, 'Email:', student.email);
-
-        // Check if student has email
-        if (!student.email || student.email.trim() === '') {
-          showNotificationSimple('❌ ' + student.name + ' has no email address', 'error');
-          return;
-        }
-
-        // Find unpaid classes
-        const unpaidClasses = classHistory.filter(
-          (ch) => ch.student_id === studentId && ch.payment_status !== 'paid'
-        );
-
-        console.log('💰 Unpaid classes found:', unpaidClasses.length);
-
-        if (unpaidClasses.length === 0) {
-          showNotificationSimple('✅ No unpaid classes for ' + student.name, 'info');
-          return;
-        }
-
-        // Show loading state
-        const originalHTML = buttonElement.innerHTML;
-        buttonElement.disabled = true;
-        buttonElement.innerHTML = '⏳';
-        buttonElement.style.opacity = '0.6';
-        buttonElement.style.cursor = 'not-allowed';
-
         try {
+          // Get students from cache
+          const students = getCachedStudents();
+          console.log('📋 Students in cache:', students.length);
+
+          if (!students || students.length === 0) {
+            console.error('❌ No students in cache');
+            showNotificationSimple('❌ Error: Student data not loaded', 'error');
+            return;
+          }
+
+          // Find the student
+          const student = students.find((s) => s.id === studentId || s.id === parseInt(studentId));
+          if (!student) {
+            console.error('❌ Student not found with ID:', studentId);
+            console.log('Available student IDs:', students.map(s => s.id).slice(0, 10));
+            showNotificationSimple('❌ Student not found', 'error');
+            return;
+          }
+
+          console.log('👤 Student found:', student.name, 'Email:', student.email);
+
+          // Check if student has email
+          if (!student.email || student.email.trim() === '') {
+            console.warn('⚠️ Student has no email:', student.name);
+            showNotificationSimple('❌ ' + student.name + ' has no email address', 'error');
+            return;
+          }
+
+          // Get class history from window scope
+          const history = window.classHistory || [];
+          console.log('📚 Class history records:', history.length);
+
+          // Find unpaid classes
+          const unpaidClasses = history.filter(
+            (ch) => (ch.student_id === studentId || ch.student_id === parseInt(studentId)) && ch.payment_status !== 'paid'
+          );
+
+          console.log('💰 Unpaid classes found:', unpaidClasses.length);
+
+          if (unpaidClasses.length === 0) {
+            console.log('ℹ️ No unpaid classes for:', student.name);
+            showNotificationSimple('✅ No unpaid classes for ' + student.name, 'info');
+            return;
+          }
+
+          // Show loading state
+          const originalHTML = buttonElement.innerHTML;
+          buttonElement.disabled = true;
+          buttonElement.innerHTML = '⏳';
+          buttonElement.style.opacity = '0.6';
+          buttonElement.style.cursor = 'not-allowed';
+
           // Get the most recent unpaid class
           const sortedClasses = unpaidClasses.sort((a, b) => new Date(b.class_date) - new Date(a.class_date));
           const classToRemind = sortedClasses[0];
@@ -17653,18 +17671,21 @@
           console.error('❌ Manual send error:', error);
           
           // Error state
-          buttonElement.innerHTML = '✗';
-          buttonElement.style.background = 'rgba(239, 68, 68, 0.3)';
+          if (buttonElement) {
+            buttonElement.innerHTML = '✗';
+            buttonElement.style.background = 'rgba(239, 68, 68, 0.3)';
+            
+            // Reset button after 3 seconds
+            setTimeout(() => {
+              buttonElement.innerHTML = '→';
+              buttonElement.style.background = 'rgba(34, 197, 94, 0.2)';
+              buttonElement.style.opacity = '1';
+              buttonElement.style.cursor = 'pointer';
+              buttonElement.disabled = false;
+            }, 3000);
+          }
+          
           showNotificationSimple('❌ Failed to send: ' + error.message, 'error');
-
-          // Reset button after 3 seconds
-          setTimeout(() => {
-            buttonElement.innerHTML = originalHTML;
-            buttonElement.style.background = 'rgba(34, 197, 94, 0.2)';
-            buttonElement.style.opacity = '1';
-            buttonElement.style.cursor = 'pointer';
-            buttonElement.disabled = false;
-          }, 3000);
         }
       };
 
