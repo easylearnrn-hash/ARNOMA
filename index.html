@@ -17469,10 +17469,31 @@
           // Group header
           studentsHTML += `
           <div style="margin-bottom: 16px; margin-top: ${groupIndex > 0 ? '24px' : '0'};">
-            <div style="padding: 12px 0; text-align: center; margin-bottom: 12px;">
+            <div style="padding: 12px 16px; margin-bottom: 12px; background: rgba(138,180,255,0.05); border-radius: 12px; display: flex; align-items: center; justify-content: space-between;">
               <div style="font-size: 16px; font-weight: 800; color: #8ab4ff; text-transform: uppercase; letter-spacing: 1px;">
                 ${groupName} <span style="color: rgba(255,255,255,0.4); font-weight: 500; font-size: 14px;">(${groupStudents.length})</span>
               </div>
+              <button
+                onclick="cancelGroupClassFromSidebar('${groupName}', '${dateStr}')"
+                style="
+                  padding: 6px 12px;
+                  background: rgba(239, 68, 68, 0.15);
+                  border: 1px solid rgba(239, 68, 68, 0.4);
+                  border-radius: 8px;
+                  color: #ef4444;
+                  font-size: 11px;
+                  font-weight: 700;
+                  cursor: pointer;
+                  transition: all 0.2s;
+                  text-transform: uppercase;
+                  letter-spacing: 0.5px;
+                "
+                onmouseover="this.style.background='rgba(239,68,68,0.25)'; this.style.transform='scale(1.05)';"
+                onmouseout="this.style.background='rgba(239,68,68,0.15)'; this.style.transform='scale(1)';"
+                title="Cancel entire class for ${groupName}"
+              >
+                🚫 Cancel Class
+              </button>
             </div>
         `;
 
@@ -17663,6 +17684,53 @@
         });
       }
 
+      // Cancel class for a specific group from the sidebar
+      function cancelGroupClassFromSidebar(groupName, dateStr) {
+        const dateObj = new Date(dateStr);
+        const dateDisplay = dateObj.toLocaleDateString('en-US', {
+          weekday: 'long',
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        });
+        
+        const reason = prompt(
+          `🚫 Cancel Class for ${groupName}\n\n` +
+          `Date: ${dateDisplay}\n\n` +
+          `This will cancel the entire class for all students in ${groupName}.\n` +
+          `Payments will be forwarded to the next class.\n\n` +
+          `Enter cancellation reason (optional):`
+        );
+        
+        // User clicked Cancel
+        if (reason === null) return;
+        
+        // Cancel the class
+        if (window.SkipClassManager && window.SkipClassManager.cancelClass) {
+          window.SkipClassManager.cancelClass(groupName, dateStr, reason || 'Class canceled');
+          
+          // Refresh the sidebar to show updated status
+          const dayData = window.currentCalendarData?.days.find(d => {
+            const dStr = formatDateYYYYMMDD(d.date);
+            return dStr === dateStr;
+          });
+          
+          if (dayData) {
+            openDayDetails(dateStr, dayData);
+          }
+          
+          // Refresh the calendar
+          if (typeof renderCalendar === 'function') {
+            renderCalendar();
+          }
+          
+          showNotification(`✅ Class canceled for ${groupName} on ${dateDisplay}`, 'success');
+        } else {
+          console.error('SkipClassManager not available');
+          showNotification('❌ Failed to cancel class', 'error');
+        }
+      }
+      
       function closeDayDetails() {
         console.log('🚪 closeDayDetails called');
         const overlay = document.getElementById('dayDetailsOverlay');
