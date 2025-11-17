@@ -17368,17 +17368,9 @@
               return groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
             });
 
-          // Determine cell styling based on skipped status
-          const cellBgColor = hasSkippedClass
-            ? 'rgba(100, 100, 100, 0.12)'
-            : isToday
-              ? 'rgba(138,180,255,0.08)'
-              : 'rgba(255,255,255,0.02)';
-          const cellBorderColor = hasSkippedClass
-            ? 'rgba(150, 150, 150, 0.3)'
-            : isToday
-              ? 'rgba(138,180,255,0.3)'
-              : 'rgba(255,255,255,0.05)';
+          // Determine cell styling - don't gray out entire cell, only individual dots
+          const cellBgColor = isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)';
+          const cellBorderColor = isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)';
 
           html += `
           <div onclick="openDayDetails('${dateStr}', ${JSON.stringify(dayData).replace(/"/g, '&quot;')})"
@@ -17386,11 +17378,10 @@
                       border: 1px solid ${cellBorderColor};
                       border-radius: 8px; padding: 8px; display: flex; flex-direction: column;
                       cursor: ${hasClasses ? 'pointer' : 'default'};
-                      transition: all 0.2s;
-                      ${hasSkippedClass ? 'opacity: 0.5;' : ''}"
+                      transition: all 0.2s;"
                onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
                onmouseout="this.style.background='${cellBgColor}'; this.style.borderColor='${cellBorderColor}';">
-            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : hasSkippedClass ? 'rgba(150,150,150,0.8)' : 'white'}; margin-bottom: 8px;">
+            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : 'white'}; margin-bottom: 8px;">
               ${dayData.day}
               ${isToday ? '<span style="font-size: 9px; color: #8ab4ff; margin-left: 4px;">TODAY</span>' : ''}
               ${hasSkippedClass ? '<span style="font-size: 9px; color: rgba(150,150,150,0.7); margin-left: 4px;">⚫ CANCELED</span>' : ''}
