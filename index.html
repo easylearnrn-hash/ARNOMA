@@ -2086,18 +2086,19 @@
       <span>Skip Class Session</span>
     </div>
     <div class="dialog-message">
-      Do you want to skip this class for all students in this group?
+      What would you like to do with this class?
     </div>
     <div class="dialog-class-info">
       <div class="dialog-class-name" id="skipDialogClassName"></div>
       <div class="dialog-class-time" id="skipDialogClassTime"></div>
     </div>
     <div class="dialog-warning">
-      ℹ️ Students' payments will automatically roll over to the next scheduled class. The skipped session will be grayed out in the calendar.
+      ℹ️ Payments will automatically roll over to the next scheduled class.
     </div>
-    <div class="dialog-actions">
-      <button class="dialog-btn dialog-btn-cancel" id="skipDialogCancelBtn">Cancel</button>
-      <button class="dialog-btn dialog-btn-confirm" id="skipDialogConfirmBtn">Skip Class</button>
+    <div class="dialog-actions" style="display: flex; gap: 8px; justify-content: center;">
+      <button class="dialog-btn dialog-btn-cancel" id="skipDialogCancelBtn" style="flex: 0 0 auto; min-width: 100px;">Cancel</button>
+      <button class="dialog-btn dialog-btn-confirm" id="skipDialogConfirmBtn" style="flex: 0 0 auto; min-width: 120px;">Skip Class</button>
+      <button class="dialog-btn" id="cancelClassBtn" onclick="confirmCancelClass()" style="flex: 0 0 auto; min-width: 160px; background: linear-gradient(135deg, #ef4444, #dc2626); border: 1px solid rgba(239,68,68,0.4);">🚫 Cancel Entire Class</button>
     </div>
   </div>
   <!-- ========== END SKIP CLASS DIALOG ========== -->
@@ -12205,6 +12206,23 @@
         showNotification(`✓ Class skipped: ${pendingSkip.groupName} on ${pendingSkip.dayName}`, 'success');
       }
 
+      // Confirm cancel entire class
+      function confirmCancelClass() {
+        if (!pendingSkip) return;
+        
+        const dateStr = calculateClassDate(pendingSkip.dayName, pendingSkip.laTime);
+        
+        // Prompt for cancellation reason
+        const reason = prompt('Cancellation reason (optional):');
+        
+        // Cancel class for entire group
+        cancelClass(pendingSkip.groupName, dateStr, reason);
+        hideSkipDialog();
+        
+        // Show success notification
+        showNotification(`🚫 Entire class canceled: ${pendingSkip.groupName} on ${pendingSkip.dayName}`, 'success');
+      }
+
       // Cancel skip
       function cancelSkip() {
         hideSkipDialog();
@@ -15277,45 +15295,93 @@
             hour12: true
           }));
           
-          // Only check once per day
+          // Only check once per day (but only if calendar data is available)
           if (lastCheckDate === todayStr) {
             console.log('[PaymentReminderManager] ⏭️  Already checked today - skipping');
             console.log('═══════════════════════════════════════════════════════');
             return;
           }
-          lastCheckDate = todayStr;
           
           // IMPORTANT: Wait for calendar data to be available
           if (!window.currentCalendarData) {
-            console.log('[PaymentReminderManager] ⏳ Calendar not initialized yet, will retry on next interval');
-            console.log('═══════════════════════════════════════════════════════');
-            return;
+            console.log('[PaymentReminderManager] ⏳ Calendar not initialized yet');
+            
+            // Try to render calendar now if function exists
+            if (typeof renderCalendar === 'function') {
+              console.log('[PaymentReminderManager] � Manually rendering calendar...');
+              renderCalendar();
+              console.log('[PaymentReminderManager] ✅ Calendar rendered!');
+            } else {
+              console.log('[PaymentReminderManager] ❌ renderCalendar function not available');
+              console.log('[PaymentReminderManager] 🔄 Will retry on next interval');
+              console.log('═══════════════════════════════════════════════════════');
+              return;
+            }
+            
+            // Check again after render
+            if (!window.currentCalendarData) {
+              console.log('[PaymentReminderManager] ❌ Calendar still not initialized after render attempt');
+              console.log('[PaymentReminderManager] 🔄 Will retry on next interval');
+              console.log('═══════════════════════════════════════════════════════');
+              return;
+            }
           }
           
+          // Mark as checked ONLY after confirming calendar data exists
+          lastCheckDate = todayStr;
+          
           const calendarData = window.currentCalendarData;
-          if (!calendarData || !calendarData.students) {
+          if (!calendarData || !calendarData.days) {
             console.warn('[PaymentReminderManager] ❌ No calendar data available');
             console.log('═══════════════════════════════════════════════════════');
             return;
           }
           
-          console.log('[PaymentReminderManager] 📊 Checking', calendarData.students.length, 'students for unpaid classes');
+          // Build student attendance map from calendar days structure
+          const studentAttendanceMap = {};
+          
+          calendarData.days.forEach(dayData => {
+            const dateStr = formatDateYYYYMMDD(dayData.date);
+            
+            dayData.studentsWithClass.forEach(classData => {
+              const student = classData.student;
+              const studentId = student.id;
+              
+              if (!studentAttendanceMap[studentId]) {
+                studentAttendanceMap[studentId] = {
+                  student: student,
+                  attendance: []
+                };
+              }
+              
+              studentAttendanceMap[studentId].attendance.push({
+                date: dateStr,
+                status: classData.status,
+                balance: classData.balance || classData.pricePerClass || 0
+              });
+            });
+          });
+          
+          const studentsArray = Object.values(studentAttendanceMap);
+          console.log('[PaymentReminderManager] 📊 Checking', studentsArray.length, 'students for unpaid classes');
           
           let remindersSent = 0;
           let studentsChecked = 0;
           let studentsPaused = 0;
-          let studentsNoClass = 0;
+          let studentsNoUnpaid = 0;
           let studentsClassNotEnded = 0;
           let studentsAlreadySent = 0;
           let studentsPaid = 0;
+          let classesChecked = 0;
           
+          // CRITICAL FIX: Check ALL past unpaid classes, not just today
           // Check each student
-          for (const studentData of calendarData.students) {
+          for (const studentData of studentsArray) {
             const student = studentData.student;
             const studentId = student.id;
             studentsChecked++;
             
-            console.log(`\n[Student ${studentsChecked}/${calendarData.students.length}] ${student.name}`);
+            console.log(`\n[Student ${studentsChecked}/${studentsArray.length}] ${student.name}`);
             
             // Skip if student is not active
             if (student.status && student.status !== 'active') {
@@ -15331,73 +15397,83 @@
               continue;
             }
             
-            // Skip if reminder already sent today
-            if (wasReminderSentToday(studentId, todayStr)) {
-              console.log('  ✅ Reminder already sent today - skipping');
-              studentsAlreadySent++;
-              continue;
-            }
-            
-            // Find today's class in student's attendance
-            const todayClass = studentData.attendance.find(a => a.date === todayStr);
-            if (!todayClass) {
-              console.log('  📅 No class scheduled today - skipping');
-              studentsNoClass++;
-              continue;
-            }
-            
-            console.log('  📅 Class found | Status:', todayClass.status, '| Balance:', todayClass.balance);
-            
-            // Check if class is unpaid (has red dot)
-            if (todayClass.status !== 'unpaid') {
-              console.log('  💚 Class is not unpaid (status:', todayClass.status, ') - skipping');
-              studentsPaid++;
-              continue;
-            }
-            
-            // Check if class has ended (current time > class end time)
-            const classEndTime = getClassEndTime(student.group, todayStr);
-            if (!classEndTime) {
-              console.warn('  ❌ Could not determine class end time - skipping');
-              continue;
-            }
-            
-            // CRITICAL: Use LA timezone for current time comparison
-            const nowLA = getLADate();
-            const nowLAStr = nowLA.toLocaleString('en-US', { 
-              timeZone: 'America/Los_Angeles',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
+            // CRITICAL FIX: Find ALL unpaid classes (past and today), not just today
+            const unpaidClasses = studentData.attendance.filter(a => {
+              // Only unpaid classes
+              if (a.status !== 'unpaid') return false;
+              
+              // Only classes on or before today (no future reminders)
+              if (a.date > todayStr) return false;
+              
+              return true;
             });
             
-            const classEndStr = classEndTime.toLocaleString('en-US', { 
-              timeZone: 'America/Los_Angeles',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            });
-            
-            if (nowLA < classEndTime) {
-              console.log(`  ⏰ Class NOT ended yet | Current: ${nowLAStr} | Ends: ${classEndStr} - skipping`);
-              studentsClassNotEnded++;
+            if (unpaidClasses.length === 0) {
+              console.log('  ✅ No unpaid classes (past or present) - skipping');
+              studentsNoUnpaid++;
               continue;
             }
             
-            console.log(`  ✅ Class ENDED | Current: ${nowLAStr} | Ended: ${classEndStr}`);
+            console.log(`  � Found ${unpaidClasses.length} unpaid class(es) - checking each...`);
             
-            // All checks passed - send reminder
-            const amount = todayClass.balance || 0;
-            console.log(`  📧 Sending payment reminder | Amount: $${amount}`);
-            
-            const sent = await sendPaymentReminder(student, todayStr, amount);
-            
-            if (sent) {
-              markReminderSent(studentId, todayStr);
-              remindersSent++;
-              console.log(`  ✅ Reminder SENT successfully`);
-            } else {
-              console.log(`  ❌ Failed to send reminder`);
+            // Check each unpaid class
+            for (const unpaidClass of unpaidClasses) {
+              classesChecked++;
+              const dateStr = unpaidClass.date;
+              
+              console.log(`\n  📅 Class Date: ${dateStr} | Status: ${unpaidClass.status} | Balance: $${unpaidClass.balance}`);
+              
+              // Skip if reminder already sent for this date
+              if (wasReminderSentToday(studentId, dateStr)) {
+                console.log('    ✅ Reminder already sent for this date - skipping');
+                studentsAlreadySent++;
+                continue;
+              }
+              
+              // Check if class has ended (current time > class end time)
+              const classEndTime = getClassEndTime(student.group, dateStr);
+              if (!classEndTime) {
+                console.warn('    ❌ Could not determine class end time - skipping');
+                continue;
+              }
+              
+              // CRITICAL: Use LA timezone for current time comparison
+              const nowLA = getLADate();
+              const nowLAStr = nowLA.toLocaleString('en-US', { 
+                timeZone: 'America/Los_Angeles',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              });
+              
+              const classEndStr = classEndTime.toLocaleString('en-US', { 
+                timeZone: 'America/Los_Angeles',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              });
+              
+              if (nowLA < classEndTime) {
+                console.log(`    ⏰ Class NOT ended yet | Current: ${nowLAStr} | Ends: ${classEndStr} - skipping`);
+                studentsClassNotEnded++;
+                continue;
+              }
+              
+              console.log(`    ✅ Class ENDED | Current: ${nowLAStr} | Ended: ${classEndStr}`);
+              
+              // All checks passed - send reminder
+              const amount = unpaidClass.balance || 0;
+              console.log(`    📧 Sending payment reminder | Amount: $${amount}`);
+              
+              const sent = await sendPaymentReminder(student, dateStr, amount);
+              
+              if (sent) {
+                markReminderSent(studentId, dateStr);
+                remindersSent++;
+                console.log(`    ✅ Reminder SENT successfully`);
+              } else {
+                console.log(`    ❌ Failed to send reminder`);
+              }
             }
           }
           
@@ -15405,10 +15481,10 @@
           console.log('[PaymentReminderManager] 📊 SUMMARY');
           console.log('  Total students checked:', studentsChecked);
           console.log('  Students with paused reminders:', studentsPaused);
-          console.log('  Students with no class today:', studentsNoClass);
-          console.log('  Students with class not ended:', studentsClassNotEnded);
-          console.log('  Students already sent today:', studentsAlreadySent);
-          console.log('  Students with paid/absent class:', studentsPaid);
+          console.log('  Students with no unpaid classes:', studentsNoUnpaid);
+          console.log('  Total unpaid classes found:', classesChecked);
+          console.log('  Classes not ended yet:', studentsClassNotEnded);
+          console.log('  Classes with reminder already sent:', studentsAlreadySent);
           console.log('  Reminders sent:', remindersSent);
           
           if (remindersSent > 0) {
@@ -15824,6 +15900,16 @@
     
     // Then initialize the main app
     await initialize();
+    
+    // CRITICAL: Render calendar to populate window.currentCalendarData
+    // This MUST happen after initialize() so renderCalendar function is available
+    if (typeof renderCalendar === 'function') {
+      console.log('[ARNOMA] 📅 Rendering calendar for Payment Reminder Manager...');
+      renderCalendar();
+      console.log('[ARNOMA] ✅ Calendar rendered - window.currentCalendarData initialized');
+    } else {
+      console.error('[ARNOMA] ❌ renderCalendar function not found!');
+    }
     
     console.log('[ARNOMA] ✅ Application fully initialized');
   });    debugLog('ARNOMA app loaded - Using Supabase cloud database');
