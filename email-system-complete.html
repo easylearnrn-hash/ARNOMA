@@ -2773,7 +2773,7 @@ ARNOMA Team"></textarea>
       // Security check - only accept messages from same origin
       if (event.origin !== window.location.origin) return;
       
-      const { action, student, classDate } = event.data;
+      const { action, student, classDate, changes, specialMessage, emailType, groupName, oldSchedule, newSchedule, students } = event.data;
       
       // Handle request for payment reminder template
       if (action === 'getPaymentReminderTemplate') {
@@ -2803,6 +2803,11 @@ ARNOMA Team"></textarea>
       
       if (action === 'sendAutoReminder') {
         console.log('📧 Received auto-reminder request:', student.name, classDate);
+        const isManual = data.manual === true; // Check if this is a manual send
+        
+        if (isManual) {
+          console.log('🚀 Manual send - bypassing duplicate check');
+        }
         
         try {
           // Find Payment Reminder template
@@ -2815,11 +2820,19 @@ ARNOMA Team"></textarea>
           
           if (!reminderTemplate) {
             console.error('❌ No active Payment Reminder template found');
+            window.parent.postMessage({
+              action: 'emailError',
+              error: 'No active Payment Reminder template found'
+            }, '*');
             return;
           }
           
           if (!student.email) {
             console.error('❌ Student has no email address:', student.name);
+            window.parent.postMessage({
+              action: 'emailError',
+              error: 'Student has no email address'
+            }, '*');
             return;
           }
           
@@ -2862,16 +2875,18 @@ ARNOMA Team"></textarea>
           });
           
           if (!response.ok) {
-            throw new Error(`Failed to send email: ${response.statusText}`);
+            const errorText = await response.text();
+            throw new Error(`Failed to send email: ${response.statusText} - ${errorText}`);
           }
           
           // Track sent email with full HTML content
-          await trackSentEmail(student.email, subject, 'Auto Payment Reminder', body);
+          await trackSentEmail(student.email, subject, isManual ? 'Manual Payment Reminder' : 'Auto Payment Reminder', body);
           
           // Send success message back to parent with email content
           window.parent.postMessage({
-            action: 'autoReminderSent',
+            action: 'emailSent',
             success: true,
+            manual: isManual,
             student: student,
             classDate: classDate,
             emailContent: {
@@ -2880,10 +2895,17 @@ ARNOMA Team"></textarea>
             }
           }, '*');
           
-          console.log('✅ Auto-reminder sent successfully to:', student.name);
+          console.log('✅ Payment reminder sent successfully to:', student.name);
           
         } catch (error) {
-          console.error('❌ Error sending auto-reminder:', error);
+          console.error('❌ Error sending payment reminder:', error);
+          
+          // Send error message back to parent
+          window.parent.postMessage({
+            action: 'emailError',
+            error: error.message,
+            student: student
+          }, '*');
         }
       }
       
@@ -3082,6 +3104,7 @@ ARNOMA Team"></textarea>
       if (action === 'sendProfileUpdateEmail') {
         console.log('📧 Received profile update email request:', student.name);
         console.log('📝 Changes:', changes);
+        console.log('📧 Email type:', emailType || 'current');
         
         try {
           if (!student.email) {
@@ -3106,6 +3129,19 @@ ARNOMA Team"></textarea>
               </tr>
             `;
           });
+          
+          // Add special message for old email notification
+          const specialNotice = specialMessage ? `
+            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+              <tr>
+                <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 6px;">
+                  <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                    <strong>⚠️ Important:</strong> ${specialMessage}
+                  </p>
+                </td>
+              </tr>
+            </table>
+          ` : '';
           
           const subject = `Profile Updated - ARNOMA NCLEX-RN`;
           
@@ -3140,6 +3176,8 @@ ARNOMA Team"></textarea>
                           <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.6;">
                             Hi <strong>${student.name}</strong>,
                           </p>
+                          
+                          ${specialNotice}
                           
                           <p style="margin: 0 0 30px 0; color: #374151; font-size: 16px; line-height: 1.6;">
                             We wanted to let you know that your profile information has been updated. Here are the changes:
@@ -3275,6 +3313,186 @@ ARNOMA Team"></textarea>
           
         } catch (error) {
           console.error('❌ Error sending profile update email:', error);
+        }
+      }
+      
+      // Handle schedule update email requests
+      if (action === 'sendScheduleUpdateEmail') {
+        console.log('📅 Received schedule update email request');
+        console.log('📝 Group:', groupName, 'Old:', oldSchedule, 'New:', newSchedule);
+        console.log('👥 Students to notify:', students.length);
+        
+        try {
+          // Send email to each student in the group
+          for (const student of students) {
+            if (!student.email) {
+              console.warn('⚠️ Student has no email address:', student.name);
+              continue;
+            }
+            
+            const subject = `Class Schedule Updated - ARNOMA NCLEX-RN`;
+            
+            const body = `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              </head>
+              <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6;">
+                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
+                  <tr>
+                    <td align="center">
+                      <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                        
+                        <!-- Header -->
+                        <tr>
+                          <td style="background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%); padding: 40px 30px; border-radius: 12px 12px 0 0; text-align: center;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
+                              📅 Schedule Updated
+                            </h1>
+                            <p style="margin: 10px 0 0 0; color: #e0f2fe; font-size: 16px;">
+                              Your class schedule has been changed
+                            </p>
+                          </td>
+                        </tr>
+                        
+                        <!-- Body -->
+                        <tr>
+                          <td style="padding: 40px 30px;">
+                            <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.6;">
+                              Hi <strong>${student.name}</strong>,
+                            </p>
+                            
+                            <p style="margin: 0 0 30px 0; color: #374151; font-size: 16px; line-height: 1.6;">
+                              We wanted to let you know that the schedule for <strong>${groupName}</strong> has been updated.
+                            </p>
+                            
+                            <!-- Schedule Comparison -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                              ${oldSchedule !== 'Not set' && oldSchedule !== newSchedule ? `
+                              <tr>
+                                <td style="padding: 16px; background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 6px; margin-bottom: 12px;">
+                                  <p style="margin: 0 0 8px 0; color: #991b1b; font-size: 14px; font-weight: 600;">
+                                    ❌ Previous Schedule:
+                                  </p>
+                                  <p style="margin: 0; color: #991b1b; font-size: 16px; font-weight: 500; text-decoration: line-through;">
+                                    ${oldSchedule}
+                                  </p>
+                                </td>
+                              </tr>
+                              <tr><td style="height: 12px;"></td></tr>
+                              ` : ''}
+                              <tr>
+                                <td style="padding: 16px; background-color: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 6px;">
+                                  <p style="margin: 0 0 8px 0; color: #166534; font-size: 14px; font-weight: 600;">
+                                    ✅ New Schedule:
+                                  </p>
+                                  <p style="margin: 0; color: #166534; font-size: 18px; font-weight: 600;">
+                                    ${newSchedule}
+                                  </p>
+                                </td>
+                              </tr>
+                            </table>
+                            
+                            <!-- Important Note -->
+                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
+                              <tr>
+                                <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 6px;">
+                                  <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
+                                    <strong>⚠️ Important:</strong> Please make sure to update your calendar and plan accordingly. If you have any conflicts with the new schedule, please contact us immediately.
+                                  </p>
+                                </td>
+                              </tr>
+                            </table>
+                            
+                            <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                              If you have any questions about this change, please don't hesitate to reach out.
+                            </p>
+                          </td>
+                        </tr>
+                        
+                        <!-- Footer -->
+                        <tr>
+                          <td style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 14px;">
+                              ARNOMA NCLEX-RN Prep
+                            </p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                              This is an automated notification
+                            </p>
+                          </td>
+                        </tr>
+                        
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+              </html>
+            `;
+            
+            // Send email via Supabase Edge Function
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+              },
+              body: JSON.stringify({
+                to: student.email,
+                subject: subject,
+                html: body
+              })
+            });
+            
+            if (!response.ok) {
+              const errorText = await response.text();
+              console.error(`❌ Failed to send schedule update email to ${student.name}:`, errorText);
+              continue;
+            }
+            
+            // Track sent email
+            await trackSentEmail(
+              student.email, 
+              subject, 
+              'Schedule Update', 
+              body,
+              {
+                recipientName: student.name,
+                recipientType: 'student',
+                groupName: groupName,
+                oldSchedule: oldSchedule,
+                newSchedule: newSchedule,
+                automationName: 'Schedule Update Notification'
+              }
+            );
+            
+            console.log('✅ Schedule update email sent to:', student.name);
+          }
+          
+          // Send notification to parent window
+          window.parent.postMessage({
+            action: 'addNotification',
+            notification: {
+              type: 'schedule_update',
+              title: 'Schedule Updated',
+              description: `${groupName}: Schedule changed to ${newSchedule}`,
+              groupName: groupName,
+              metadata: {
+                groupName: groupName,
+                oldSchedule: oldSchedule,
+                newSchedule: newSchedule,
+                studentsNotified: students.length,
+                emailType: 'schedule_update'
+              }
+            }
+          }, '*');
+          
+          console.log(`✅ Schedule update emails sent to ${students.length} students in ${groupName}`);
+          
+        } catch (error) {
+          console.error('❌ Error sending schedule update emails:', error);
         }
       }
     });

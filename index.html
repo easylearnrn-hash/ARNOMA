@@ -10800,6 +10800,10 @@
         console.log('Old student:', JSON.parse(JSON.stringify(student))); // Deep copy for logging
 
         // Compare and track changes BEFORE modifying the student object
+        if (student.name !== name) {
+          changes.push({ field: 'Name', old: student.name, new: name });
+          console.log('👤 Name changed:', student.name, '→', name);
+        }
         if (student.email !== email && email) {
           changes.push({ field: 'Email', old: student.email || 'Not set', new: email });
           console.log('✉️ Email changed:', student.email, '→', email);
@@ -10811,6 +10815,14 @@
         if (student.group !== group) {
           changes.push({ field: 'Group/Schedule', old: student.group || 'Not set', new: group });
           console.log('👥 Group changed:', student.group, '→', group);
+        }
+        if (student.payPerClass !== payPerClass) {
+          changes.push({ field: 'Amount per Class', old: `$${student.payPerClass || 0}`, new: `$${payPerClass}` });
+          console.log('💵 Amount per class changed:', student.payPerClass, '→', payPerClass);
+        }
+        if (student.balance !== balance) {
+          changes.push({ field: 'Balance', old: `$${student.balance || 0}`, new: `$${balance}` });
+          console.log('💰 Balance changed:', student.balance, '→', balance);
         }
 
         // Compare aliases arrays
@@ -11145,6 +11157,10 @@
             console.log('Old student:', JSON.parse(JSON.stringify(oldStudent))); // Deep copy for logging
 
             // Compare and track changes BEFORE modifying the student object
+            if (oldStudent.name !== name) {
+              changes.push({ field: 'Name', old: oldStudent.name, new: name });
+              console.log('👤 Name changed:', oldStudent.name, '→', name);
+            }
             if (oldStudent.email !== email && email) {
               changes.push({ field: 'Email', old: oldStudent.email || 'Not set', new: email });
               console.log('✉️ Email changed:', oldStudent.email, '→', email);
@@ -11156,6 +11172,14 @@
             if (oldStudent.group !== group) {
               changes.push({ field: 'Group/Schedule', old: oldStudent.group || 'Not set', new: group });
               console.log('👥 Group changed:', oldStudent.group, '→', group);
+            }
+            if (oldStudent.payPerClass !== payPerClass) {
+              changes.push({ field: 'Amount per Class', old: `$${oldStudent.payPerClass || 0}`, new: `$${payPerClass}` });
+              console.log('💵 Amount per class changed:', oldStudent.payPerClass, '→', payPerClass);
+            }
+            if (oldStudent.balance !== balance) {
+              changes.push({ field: 'Balance', old: `$${oldStudent.balance || 0}`, new: `$${balance}` });
+              console.log('💰 Balance changed:', oldStudent.balance, '→', balance);
             }
 
             // Compare aliases arrays
@@ -11313,7 +11337,7 @@
 
       // Send profile update email when student information changes
       async function sendProfileUpdateEmail(student, changes) {
-        if (!student.email || changes.length === 0) {
+        if (changes.length === 0) {
           return;
         }
 
@@ -11336,26 +11360,71 @@
             groupSchedule = groupSchedules.join(', ');
           }
 
-          // Send message to email system iframe
-          emailFrame.contentWindow.postMessage(
-            {
-              action: 'sendProfileUpdateEmail',
-              student: {
-                name: student.name,
-                email: student.email,
-                group: student.group || 'Not assigned',
-                groupSchedule: groupSchedule,
-                phone: student.phone || 'Not set',
-                aliases: (student.aliases || []).join(', ') || 'None',
-              },
-              changes: changes,
-            },
-            '*'
-          );
+          // Check if email was changed
+          const emailChange = changes.find(c => c.field === 'Email');
+          const oldEmail = emailChange ? emailChange.old : null;
+          const newEmail = student.email;
 
-          console.log('📧 Profile update email sent to:', student.name, student.email);
+          // If email changed, send to BOTH old and new email
+          const emailsToNotify = [];
+          
+          if (emailChange && oldEmail && oldEmail !== 'Not set') {
+            // Send to old email with special message
+            emailsToNotify.push({
+              email: oldEmail,
+              type: 'old',
+              message: 'Your email address has been updated. This is a confirmation to your previous email address.'
+            });
+          }
+          
+          if (newEmail && newEmail.trim() !== '') {
+            // Send to new email
+            emailsToNotify.push({
+              email: newEmail,
+              type: 'new',
+              message: null
+            });
+          }
+
+          // If no email change, just send to current email
+          if (!emailChange && newEmail && newEmail.trim() !== '') {
+            emailsToNotify.push({
+              email: newEmail,
+              type: 'current',
+              message: null
+            });
+          }
+
+          // Send emails
+          for (const recipient of emailsToNotify) {
+            emailFrame.contentWindow.postMessage(
+              {
+                action: 'sendProfileUpdateEmail',
+                student: {
+                  name: student.name,
+                  email: recipient.email,
+                  group: student.group || 'Not assigned',
+                  groupSchedule: groupSchedule,
+                  phone: student.phone || 'Not set',
+                  aliases: (student.aliases || []).join(', ') || 'None',
+                },
+                changes: changes,
+                specialMessage: recipient.message,
+                emailType: recipient.type
+              },
+              '*'
+            );
+
+            console.log(`📧 Profile update email sent to (${recipient.type}):`, student.name, recipient.email);
+          }
+
           console.log('📝 Changes notified:', changes.map(c => c.field).join(', '));
-          showNotificationSimple('📧 Profile update email sent to ' + student.name, 'success');
+          
+          const notificationMessage = emailChange 
+            ? `📧 Profile update emails sent to old and new addresses` 
+            : `📧 Profile update email sent to ${student.name}`;
+          
+          showNotificationSimple(notificationMessage, 'success');
         } catch (error) {
           console.error('❌ Error sending profile update email:', error);
         }
@@ -12536,8 +12605,20 @@
         const group = groups.find(g => g.name === groupName);
         if (!group) return;
 
+        // DETECT SCHEDULE CHANGE - Store old schedule before updating
+        const oldSchedule = group.schedule || 'Not set';
+        const newSchedule = schedule.join(', ');
+        const scheduleChanged = oldSchedule !== newSchedule;
+
+        console.log('📅 Schedule Update Check:', {
+          group: groupName,
+          oldSchedule: oldSchedule,
+          newSchedule: newSchedule,
+          changed: scheduleChanged
+        });
+
         // CRITICAL FIX: Replace old schedule entirely (no appending)
-        group.schedule = schedule.join(', ');
+        group.schedule = newSchedule;
 
         // Save only this group (not all groups)
         const savedGroup = await saveGroup(group);
@@ -12550,6 +12631,51 @@
         window.groupsCache = groups;
         window.dispatchEvent(new CustomEvent('groups:updated', { detail: groups }));
         window.dispatchEvent(new CustomEvent('schedules:updated', { detail: groups }));
+
+        // SEND SCHEDULE UPDATE EMAILS if schedule changed
+        if (scheduleChanged) {
+          console.log('📧 Schedule changed, sending update emails to all students in', groupName);
+          
+          // Get all students in this group
+          const studentsInGroup = window.studentsCache?.filter(student => {
+            if (!student.group) return false;
+            const studentGroups = student.group.split(',').map(g => g.trim());
+            return studentGroups.includes(groupName);
+          }) || [];
+
+          console.log('👥 Found', studentsInGroup.length, 'students in group:', studentsInGroup.map(s => s.name));
+
+          if (studentsInGroup.length > 0) {
+            // Send message to email system iframe
+            const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+            if (emailFrame && emailFrame.contentWindow) {
+              // Get group schedule for display
+              const groupSchedule = group.schedule || 'Not set';
+              
+              emailFrame.contentWindow.postMessage(
+                {
+                  action: 'sendScheduleUpdateEmail',
+                  groupName: groupName,
+                  oldSchedule: oldSchedule,
+                  newSchedule: newSchedule,
+                  students: studentsInGroup.map(s => ({
+                    name: s.name,
+                    email: s.email,
+                    group: s.group
+                  }))
+                },
+                '*'
+              );
+
+              console.log('✅ Schedule update email request sent to email system');
+              showNotificationSimple(`📧 Schedule update emails sent to ${studentsInGroup.length} student${studentsInGroup.length !== 1 ? 's' : ''}`, 'success');
+            } else {
+              console.warn('⚠️ Email iframe not found, cannot send schedule update emails');
+            }
+          } else {
+            console.log('ℹ️ No students in this group to notify');
+          }
+        }
 
         // Flash save confirmation
         const saveBtn = card.querySelector('button[onclick*="saveScheduleEdit"]');
@@ -17264,10 +17390,10 @@
                       ${hasSkippedClass ? 'opacity: 0.5;' : ''}"
                onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
                onmouseout="this.style.background='${cellBgColor}'; this.style.borderColor='${cellBorderColor}';">
-            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : hasSkippedClass ? 'rgba(150,150,150,0.8)' : 'white'}; margin-bottom: 8px; ${hasSkippedClass ? 'text-decoration: line-through;' : ''}">
+            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : hasSkippedClass ? 'rgba(150,150,150,0.8)' : 'white'}; margin-bottom: 8px;">
               ${dayData.day}
               ${isToday ? '<span style="font-size: 9px; color: #8ab4ff; margin-left: 4px;">TODAY</span>' : ''}
-              ${hasSkippedClass ? '<span style="font-size: 9px; color: rgba(150,150,150,0.7); margin-left: 4px;">⚫ SKIPPED</span>' : ''}
+              ${hasSkippedClass ? '<span style="font-size: 9px; color: rgba(150,150,150,0.7); margin-left: 4px;">⚫ CANCELED</span>' : ''}
             </div>
             <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;">
               ${hasClasses ? renderDayDots(dayData, dateStr) : ''}
@@ -17316,52 +17442,53 @@
               return;
             }
 
-            // Check if this class is skipped - if so, don't render the dot at all
+            // Check if this class is skipped/canceled
             const groupNameForCheck = window.groupsCache?.find(g => g.name === student.group)?.name;
             const isSkipped =
               groupNameForCheck &&
               window.SkipClassManager &&
               window.SkipClassManager.isClassSkipped(groupNameForCheck, dateStr);
             
-            // Don't render dots for canceled/skipped classes
-            if (isSkipped) {
-              return;
-            }
-            
             let dotColor;
 
-            switch (status) {
-              case 'paid':
-              case 'deducted':
-              case 'low-balance':
-                dotColor = '#22c55e'; // Green - Paid
-                break;
-              case 'pending':
-                dotColor = '#3b82f6'; // Blue - Future class with balance
-                break;
-              case 'absent':
-                dotColor = '#94a3b8'; // Gray - Absent
-                break;
-              case 'unpaid':
-                dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
-                break;
-              case 'future':
-                dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
-                break;
-              default:
-                dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
-                break;
+            if (isSkipped) {
+              dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped/canceled classes
+            } else {
+              switch (status) {
+                case 'paid':
+                case 'deducted':
+                case 'low-balance':
+                  dotColor = '#22c55e'; // Green - Paid
+                  break;
+                case 'pending':
+                  dotColor = '#3b82f6'; // Blue - Future class with balance
+                  break;
+                case 'absent':
+                  dotColor = '#94a3b8'; // Gray - Absent
+                  break;
+                case 'unpaid':
+                  dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
+                  break;
+                case 'future':
+                  dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
+                  break;
+                default:
+                  dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
+                  break;
+              }
             }
 
-            const statusText = status === 'paid' || status === 'deducted'
-              ? 'Paid'
-              : status === 'pending'
-                ? 'Future'
-                : status === 'future'
-                  ? 'Scheduled'
-                  : status === 'absent'
-                    ? 'Absent'
-                    : 'Unpaid';
+            const statusText = isSkipped
+              ? 'Canceled'
+              : status === 'paid' || status === 'deducted'
+                ? 'Paid'
+                : status === 'pending'
+                  ? 'Future'
+                  : status === 'future'
+                    ? 'Scheduled'
+                    : status === 'absent'
+                      ? 'Absent'
+                      : 'Unpaid';
 
             html += `
           <div class="calendar-dot"
@@ -17413,6 +17540,121 @@
           buttonElement.title = isPaused
             ? 'Auto-reminders paused - Click to resume'
             : 'Auto-reminders active - Click to pause';
+        }
+      };
+
+      // Send payment reminder immediately (GLOBAL SCOPE)
+      window.sendReminderNow = async function (studentId, buttonElement) {
+        console.log('🚀 Manual send triggered for student:', studentId);
+
+        // Find the student
+        const student = students.find((s) => s.id === studentId);
+        if (!student) {
+          showNotification('❌ Student not found', 'error');
+          return;
+        }
+
+        // Find unpaid classes
+        const unpaidClasses = classHistory.filter(
+          (ch) => ch.student_id === studentId && ch.payment_status !== 'paid'
+        );
+
+        if (unpaidClasses.length === 0) {
+          showNotification('✅ No unpaid classes for ' + student.name, 'info');
+          return;
+        }
+
+        // Show loading state
+        const originalHTML = buttonElement.innerHTML;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '⏳';
+        buttonElement.style.opacity = '0.6';
+        buttonElement.style.cursor = 'not-allowed';
+
+        try {
+          // Get the most recent unpaid class
+          const sortedClasses = unpaidClasses.sort((a, b) => new Date(b.class_date) - new Date(a.class_date));
+          const classToRemind = sortedClasses[0];
+
+          // Send message to email iframe
+          const emailFrame = document.getElementById('emailFrame');
+          if (!emailFrame || !emailFrame.contentWindow) {
+            throw new Error('Email system not available');
+          }
+
+          // Create a promise that resolves when we get a response
+          const sendPromise = new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Email send timeout'));
+            }, 30000); // 30 second timeout
+
+            // Listen for response
+            const handleMessage = (event) => {
+              if (event.data.action === 'emailSent' || event.data.action === 'emailError') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handleMessage);
+                
+                if (event.data.action === 'emailSent') {
+                  resolve(event.data);
+                } else {
+                  reject(new Error(event.data.error || 'Email send failed'));
+                }
+              }
+            };
+
+            window.addEventListener('message', handleMessage);
+          });
+
+          // Send the message
+          emailFrame.contentWindow.postMessage(
+            {
+              action: 'sendAutoReminder',
+              student: {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                balance: student.balance || 0,
+              },
+              classDate: classToRemind.class_date,
+              manual: true, // Flag to bypass "already sent" check
+            },
+            '*'
+          );
+
+          console.log('📧 Sent manual reminder request to email system');
+
+          // Wait for response
+          await sendPromise;
+
+          // Success
+          buttonElement.innerHTML = '✓';
+          buttonElement.style.background = 'rgba(34, 197, 94, 0.3)';
+          showNotification('✅ Payment reminder sent to ' + student.name, 'success');
+
+          // Reset button after 2 seconds
+          setTimeout(() => {
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.style.background = 'rgba(34, 197, 94, 0.2)';
+            buttonElement.style.opacity = '1';
+            buttonElement.style.cursor = 'pointer';
+            buttonElement.disabled = false;
+          }, 2000);
+        } catch (error) {
+          console.error('❌ Manual send error:', error);
+          
+          // Error state
+          buttonElement.innerHTML = '✗';
+          buttonElement.style.background = 'rgba(239, 68, 68, 0.3)';
+          showNotification('❌ Failed to send: ' + error.message, 'error');
+
+          // Reset button after 3 seconds
+          setTimeout(() => {
+            buttonElement.innerHTML = originalHTML;
+            buttonElement.style.background = 'rgba(34, 197, 94, 0.2)';
+            buttonElement.style.opacity = '1';
+            buttonElement.style.cursor = 'pointer';
+            buttonElement.disabled = false;
+          }, 3000);
         }
       };
 
@@ -17590,6 +17832,16 @@
                             onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 2px 8px rgba(251,146,60,0.4)';"
                             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                       ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? '▶' : '⏸'}
+                    </button>
+                    <button onclick="event.stopPropagation(); sendReminderNow('${student.id}', this);"
+                            title="Send payment reminder now"
+                            style="width: 24px; height: 24px; padding: 0; background: rgba(34, 197, 94, 0.2);
+                                   border: 1px solid rgba(34, 197, 94, 0.4);
+                                   border-radius: 6px; color: #22c55e;
+                                   font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
+                            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 2px 8px rgba(34,197,94,0.4)';"
+                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                      →
                     </button>
                   </div>
                   <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px;">${formatCurrency(pricePerClass, '$')}/class</div>
