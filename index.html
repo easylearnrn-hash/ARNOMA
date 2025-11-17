@@ -14409,10 +14409,28 @@
       let totalUnpaid = 0;
       let paidCount = 0;
       let unpaidCount = 0;
+      let canceledCount = 0;
+      
+      // Check for canceled classes
+      const canceledGroups = [];
       
       dayData.studentsWithClass.forEach((classInfo) => {
-        const { status, pricePerClass } = classInfo;
+        const { status, pricePerClass, student } = classInfo;
         if (status === 'hidden') return;
+        
+        const groupName = student.group || 'No Group';
+        
+        // Check if this class is canceled
+        if (window.SkipClassManager) {
+          const skipInfo = window.SkipClassManager.getSkipInfo(groupName, dateStr);
+          if (skipInfo && skipInfo.type === 'class-canceled') {
+            if (!canceledGroups.includes(groupName)) {
+              canceledGroups.push(groupName);
+              canceledCount++;
+            }
+            return; // Don't count canceled classes in paid/unpaid totals
+          }
+        }
         
         const price = parseFloat(pricePerClass) || 0;
         
@@ -14462,36 +14480,48 @@
         groupStudents.forEach((classInfo) => {
           const { student, status, message, balance, pricePerClass } = classInfo;
           
+          // Check if this class is canceled
+          const skipInfo = window.SkipClassManager ? window.SkipClassManager.getSkipInfo(groupName, dateStr) : null;
+          const isCanceled = skipInfo && skipInfo.type === 'class-canceled';
+          
           let statusColor, statusText, statusIcon;
-          switch (status) {
-            case 'paid':
-            case 'deducted':
-            case 'low-balance':
-              statusColor = '#22c55e';
-              statusText = 'Paid';
-              statusIcon = '✅';
-              break;
-            case 'pending':
-              statusColor = '#3b82f6';
-              statusText = 'Future';
-              statusIcon = '🔵';
-              break;
-            case 'absent':
-              statusColor = '#94a3b8';
-              statusText = 'Absent';
-              statusIcon = '⚪';
-              break;
-            case 'future':
-              statusColor = 'rgba(255,255,255,0.4)';
-              statusText = 'Scheduled';
-              statusIcon = '📅';
-              break;
-            case 'unpaid':
-            default:
-              statusColor = '#ef4444';
-              statusText = 'Unpaid';
-              statusIcon = '❌';
-              break;
+          
+          // Priority: Canceled status overrides everything else
+          if (isCanceled) {
+            statusColor = '#94a3b8';
+            statusText = 'Canceled';
+            statusIcon = '🚫';
+          } else {
+            switch (status) {
+              case 'paid':
+              case 'deducted':
+              case 'low-balance':
+                statusColor = '#22c55e';
+                statusText = 'Paid';
+                statusIcon = '✅';
+                break;
+              case 'pending':
+                statusColor = '#3b82f6';
+                statusText = 'Future';
+                statusIcon = '🔵';
+                break;
+              case 'absent':
+                statusColor = '#94a3b8';
+                statusText = 'Absent';
+                statusIcon = '⚪';
+                break;
+              case 'future':
+                statusColor = 'rgba(255,255,255,0.4)';
+                statusText = 'Scheduled';
+                statusIcon = '📅';
+                break;
+              case 'unpaid':
+              default:
+                statusColor = '#ef4444';
+                statusText = 'Unpaid';
+                statusIcon = '❌';
+                break;
+            }
           }
           
           studentsHTML += `
@@ -14523,6 +14553,7 @@
                 </div>
               </div>
               ${balance > 0 ? `<div style="margin-top: 8px; font-size: 10px; color: #eab308;">💰 Balance: ${formatCurrency(balance, '$')}</div>` : ''}
+              ${isCanceled && skipInfo.note ? `<div style="margin-top: 8px; padding: 8px; background: rgba(148,163,184,0.1); border-left: 3px solid #94a3b8; border-radius: 4px; font-size: 11px; color: rgba(255,255,255,0.7);">📋 Reason: ${escapeHtml(skipInfo.note)}</div>` : ''}
             </div>
           `;
         });
@@ -14559,6 +14590,11 @@
                 <div style="font-size: 18px; font-weight: 900; color: #ef4444;">${formatCurrency(totalUnpaid, '$')}</div>
                 <div style="font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 1px;">${unpaidCount} pending</div>
               </div>
+              ${canceledCount > 0 ? `<div style="flex: 1; padding: 10px; background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.3); border-radius: 8px;">
+                <div style="font-size: 10px; color: rgba(148,163,184,0.7); font-weight: 600; margin-bottom: 3px;">CANCELED</div>
+                <div style="font-size: 18px; font-weight: 900; color: #94a3b8;">🚫</div>
+                <div style="font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 1px;">${canceledCount} class${canceledCount !== 1 ? 'es' : ''}</div>
+              </div>` : ''}
             </div>
           `;
         }
@@ -14597,6 +14633,11 @@
                 <div style="font-size: 18px; font-weight: 900; color: #ef4444;">${formatCurrency(totalUnpaid, '$')}</div>
                 <div style="font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 1px;">${unpaidCount} pending</div>
               </div>
+              ${canceledCount > 0 ? `<div style="flex: 1; padding: 10px; background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.3); border-radius: 8px;">
+                <div style="font-size: 10px; color: rgba(148,163,184,0.7); font-weight: 600; margin-bottom: 3px;">CANCELED</div>
+                <div style="font-size: 18px; font-weight: 900; color: #94a3b8;">🚫</div>
+                <div style="font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 1px;">${canceledCount} class${canceledCount !== 1 ? 'es' : ''}</div>
+              </div>` : ''}
             </div>
           </div>
           <div data-panel-content style="padding: 24px;">
