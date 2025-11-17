@@ -17541,7 +17541,15 @@
         // Find the student
         const student = students.find((s) => s.id === studentId);
         if (!student) {
-          showNotification('❌ Student not found', 'error');
+          showNotificationSimple('❌ Student not found', 'error');
+          return;
+        }
+
+        console.log('👤 Student found:', student.name, 'Email:', student.email);
+
+        // Check if student has email
+        if (!student.email || student.email.trim() === '') {
+          showNotificationSimple('❌ ' + student.name + ' has no email address', 'error');
           return;
         }
 
@@ -17550,8 +17558,10 @@
           (ch) => ch.student_id === studentId && ch.payment_status !== 'paid'
         );
 
+        console.log('💰 Unpaid classes found:', unpaidClasses.length);
+
         if (unpaidClasses.length === 0) {
-          showNotification('✅ No unpaid classes for ' + student.name, 'info');
+          showNotificationSimple('✅ No unpaid classes for ' + student.name, 'info');
           return;
         }
 
@@ -17567,27 +17577,36 @@
           const sortedClasses = unpaidClasses.sort((a, b) => new Date(b.class_date) - new Date(a.class_date));
           const classToRemind = sortedClasses[0];
 
+          console.log('📅 Will remind about class on:', classToRemind.class_date);
+
           // Send message to email iframe
           const emailFrame = document.getElementById('emailFrame');
           if (!emailFrame || !emailFrame.contentWindow) {
             throw new Error('Email system not available');
           }
 
+          console.log('📧 Email iframe found, sending postMessage...');
+
           // Create a promise that resolves when we get a response
           const sendPromise = new Promise((resolve, reject) => {
             const timeout = setTimeout(() => {
+              console.error('⏱️ Email send timeout after 30 seconds');
               reject(new Error('Email send timeout'));
             }, 30000); // 30 second timeout
 
             // Listen for response
             const handleMessage = (event) => {
+              console.log('📩 Received message:', event.data.action);
+              
               if (event.data.action === 'emailSent' || event.data.action === 'emailError') {
                 clearTimeout(timeout);
                 window.removeEventListener('message', handleMessage);
                 
                 if (event.data.action === 'emailSent') {
+                  console.log('✅ Email sent successfully');
                   resolve(event.data);
                 } else {
+                  console.error('❌ Email error:', event.data.error);
                   reject(new Error(event.data.error || 'Email send failed'));
                 }
               }
@@ -17620,7 +17639,7 @@
           // Success
           buttonElement.innerHTML = '✓';
           buttonElement.style.background = 'rgba(34, 197, 94, 0.3)';
-          showNotification('✅ Payment reminder sent to ' + student.name, 'success');
+          showNotificationSimple('✅ Payment reminder sent to ' + student.name, 'success');
 
           // Reset button after 2 seconds
           setTimeout(() => {
@@ -17636,7 +17655,7 @@
           // Error state
           buttonElement.innerHTML = '✗';
           buttonElement.style.background = 'rgba(239, 68, 68, 0.3)';
-          showNotification('❌ Failed to send: ' + error.message, 'error');
+          showNotificationSimple('❌ Failed to send: ' + error.message, 'error');
 
           // Reset button after 3 seconds
           setTimeout(() => {

@@ -2802,7 +2802,7 @@ ARNOMA Team"></textarea>
       }
       
       if (action === 'sendAutoReminder') {
-        console.log('📧 Received auto-reminder request:', student.name, classDate);
+        console.log('📧 Received auto-reminder request:', student?.name, classDate);
         const isManual = data.manual === true; // Check if this is a manual send
         
         if (isManual) {
@@ -2810,6 +2810,8 @@ ARNOMA Team"></textarea>
         }
         
         try {
+          console.log('🔍 Looking for Payment Reminder template...');
+          
           // Find Payment Reminder template
           const templates = emailSystem._templates || [];
           const reminderTemplate = templates.find(t => 
@@ -2820,6 +2822,7 @@ ARNOMA Team"></textarea>
           
           if (!reminderTemplate) {
             console.error('❌ No active Payment Reminder template found');
+            console.log('Available templates:', templates.map(t => t.name));
             window.parent.postMessage({
               action: 'emailError',
               error: 'No active Payment Reminder template found'
@@ -2827,14 +2830,18 @@ ARNOMA Team"></textarea>
             return;
           }
           
+          console.log('✅ Found template:', reminderTemplate.name);
+          
           if (!student.email) {
-            console.error('❌ Student has no email address:', student.name);
+            console.error('❌ Student has no email address:', student?.name);
             window.parent.postMessage({
               action: 'emailError',
               error: 'Student has no email address'
             }, '*');
             return;
           }
+          
+          console.log('📧 Student email:', student.email);
           
           // Format date nicely: "Wednesday, November 16, 2025"
           const formatClassDate = (dateStr) => {
