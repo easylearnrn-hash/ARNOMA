@@ -18726,8 +18726,10 @@
 
         // Reconstruct email for each notification
         let updated = 0;
+        let failed = 0;
+        
         for (const notification of paymentNotifications) {
-          const { studentName, metadata } = notification;
+          const { studentName, metadata, id } = notification;
           const { amount, date } = metadata;
 
           // Reconstruct email using template
@@ -18743,21 +18745,40 @@
             .replace(/\{\{ClassDate\}\}/gi, date)
             .replace(/\{\{UnpaidClasses\}\}/gi, `Class on ${date} - $${amount}`);
 
-          // Update notification metadata
+          // Update notification metadata in memory
           notification.metadata.emailSubject = subject;
           notification.metadata.emailBody = body;
           
-          updated++;
+          // Update in Supabase
+          try {
+            const { error } = await supabase
+              .from('notifications')
+              .update({ metadata: notification.metadata })
+              .eq('id', id);
+            
+            if (error) {
+              console.error(`[EmailPreview] ❌ Failed to update notification ${id}:`, error);
+              failed++;
+            } else {
+              updated++;
+            }
+          } catch (err) {
+            console.error(`[EmailPreview] ❌ Exception updating notification ${id}:`, err);
+            failed++;
+          }
         }
-
-        // Save updated notifications
-        await window.NotificationCenter.saveToSupabase();
         
         console.log(`[EmailPreview] ✅ Updated ${updated} notifications with email previews!`);
+        if (failed > 0) {
+          console.warn(`[EmailPreview] ⚠️ Failed to update ${failed} notifications`);
+        }
         console.log('[EmailPreview] 🎉 You can now click any payment reminder notification to see the email preview');
-      };
-
-      // ============================================================================
+        
+        // Reload notifications from Supabase to get fresh data
+        if (window.NotificationCenter && window.NotificationCenter.initialize) {
+          await window.NotificationCenter.initialize();
+        }
+      };      // ============================================================================
       // END PAYMENT REMINDER EMAIL BODY RECONSTRUCTOR
       // ============================================================================
 
