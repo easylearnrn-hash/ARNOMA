@@ -3158,13 +3158,14 @@
       // CRITICAL: Save to persistent storage IMMEDIATELY before opening any modals
       savedPaymentDataForLinking = { ...currentPaymentPopupData };
       
+      console.log('💾 Saved payment data for linking:', {
         id: currentPaymentPopupData.paymentId,
         payer: currentPaymentPopupData.payerName,
         amount: currentPaymentPopupData.amount
       });
       
       // Get list of students
-  const students = getCachedStudents();
+      const students = getCachedStudents();
       
       
       if (!students || students.length === 0) {
