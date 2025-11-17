@@ -1,0 +1,18 @@
+{
+  "recommendations": [
+    "esbenp.prettier-vscode",
+    "dbaeumer.vscode-eslint",
+    "christian-kohler.path-intellisense",
+    "usernamehw.errorlens",
+    "chakrounanas.turbo-console-log",
+    "streetsidesoftware.code-spell-checker",
+    "ritwickdey.liveserver",
+    "rangav.vscode-thunder-client",
+    "humao.rest-client",
+    "naumovs.color-highlight",
+    "pranaygp.vscode-css-peek",
+    "sonarsource.sonarlint-vscode",
+    "eamodio.gitlens",
+    "ecmel.vscode-html-css"
+  ]
+}

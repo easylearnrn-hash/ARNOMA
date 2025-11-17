@@ -1,6 +1,24 @@
 {
-  "devDependencies": {
-    "eslint": "^9.39.1"
+  "name": "arnoma",
+  "version": "1.0.0",
+  "description": "ARNOMA - Professional class management system",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "npm run lint && npm run format:check && npm run test:cypress",
+    "test:cypress": "cypress run",
+    "test:cypress:open": "cypress open",
+    "lighthouse": "lighthouse https://arnoma.us --view",
+    "lighthouse:mobile": "lighthouse https://arnoma.us --preset=mobile --view",
+    "precommit": "npm run lint:fix && npm run format",
+    "validate": "npm run lint && npm run format:check && npm run test:cypress"
   },
-  "type": "module"
+  "devDependencies": {
+    "cypress": "^15.6.0",
+    "eslint": "^9.39.1",
+    "prettier": "^3.6.2"
+  }
 }

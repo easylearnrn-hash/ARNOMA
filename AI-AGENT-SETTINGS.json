@@ -1,0 +1,37 @@
+{
+  // ═══════════════════════════════════════════════════════════
+  // AI AGENT CONFIGURATION - ADD TO YOUR USER SETTINGS.JSON
+  // ═══════════════════════════════════════════════════════════
+  // Location: Code → Settings → Open User Settings (JSON)
+  // Or press: Cmd+Shift+P → "Preferences: Open User Settings (JSON)"
+  // ═══════════════════════════════════════════════════════════
+
+  // ---- AI AGENT MESSAGE SETTINGS ----
+  "chat.editor.wordWrap": "on",
+  "chat.numberOfHistoryMessagesToShow": 4,
+  "chat.defaultResponseTone": "short",
+  "chat.defaultResponseDetail": "low",
+  "chat.editor.fontSize": 12,
+  "chat.experimental.fastMode": true,
+
+  // ---- MODEL & PERFORMANCE ----
+  "chat.model.preferred": "gpt-4.1-mini",
+  "chat.model.fallback": "gpt-4.1",
+  "chat.model.useCompactMode": true,
+
+  // ---- CONTEXT REDUCTION ----
+  "chat.context.limit": 3000,
+  "chat.context.trimStrategy": "oldest",
+  "chat.context.autoClear": true,
+
+  // ---- UI COMPACTNESS ----
+  "chat.editor.minimap.enabled": false,
+  "chat.editor.lineHeight": 1.2,
+
+  // ---- LESS ANIMATION → MORE SPEED ----
+  "workbench.reduceMotion": true,
+  "editor.cursorBlinking": "solid",
+
+  // ---- OPTIONAL (markdown on/off) ----
+  "chat.renderMarkdown": true
+}

@@ -1,0 +1,203 @@
+# Test Supabase API Endpoints
+
+## Configuration
+@baseUrl = https://[your-project-id].supabase.co
+@apikey = [your-supabase-anon-key]
+@token = Bearer {{apikey}}
+
+###############################################################################
+# STUDENTS API
+###############################################################################
+
+### Get all students
+GET {{baseUrl}}/rest/v1/students?select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get student by ID
+GET {{baseUrl}}/rest/v1/students?id=eq.1
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get students with credits > 0
+GET {{baseUrl}}/rest/v1/students?credits=gt.0&select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Update student
+PATCH {{baseUrl}}/rest/v1/students?id=eq.1
+Content-Type: application/json
+apikey: {{apikey}}
+Authorization: {{token}}
+
+{
+  "name": "Updated Name",
+  "email": "newemail@example.com"
+}
+
+### Add new student
+POST {{baseUrl}}/rest/v1/students
+Content-Type: application/json
+apikey: {{apikey}}
+Authorization: {{token}}
+
+{
+  "name": "Test Student",
+  "email": "test@example.com",
+  "phone": "123-456-7890",
+  "credits": 0
+}
+
+###############################################################################
+# GROUPS API
+###############################################################################
+
+### Get all groups
+GET {{baseUrl}}/rest/v1/groups?select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get group by ID
+GET {{baseUrl}}/rest/v1/groups?id=eq.1
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get groups with members
+GET {{baseUrl}}/rest/v1/groups?select=*,student_ids
+apikey: {{apikey}}
+Authorization: {{token}}
+
+###############################################################################
+# PAYMENTS API
+###############################################################################
+
+### Get all payments
+GET {{baseUrl}}/rest/v1/payments?select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get payments by student ID
+GET {{baseUrl}}/rest/v1/payments?student_id=eq.1&select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get recent payments (last 30 days)
+GET {{baseUrl}}/rest/v1/payments?created_at=gte.2025-10-17&select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Add payment
+POST {{baseUrl}}/rest/v1/payments
+Content-Type: application/json
+apikey: {{apikey}}
+Authorization: {{token}}
+
+{
+  "student_id": 1,
+  "amount": 50.00,
+  "payment_date": "2025-11-17",
+  "notes": "Test payment"
+}
+
+###############################################################################
+# SKIPPED CLASSES API
+###############################################################################
+
+### Get all skipped classes
+GET {{baseUrl}}/rest/v1/skipped_classes?select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get skipped classes by student
+GET {{baseUrl}}/rest/v1/skipped_classes?student_id=eq.1&select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get canceled classes (is_canceled=true)
+GET {{baseUrl}}/rest/v1/skipped_classes?is_canceled=eq.true&select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Add skipped class
+POST {{baseUrl}}/rest/v1/skipped_classes
+Content-Type: application/json
+apikey: {{apikey}}
+Authorization: {{token}}
+
+{
+  "student_id": 1,
+  "group_id": 1,
+  "skip_date": "2025-11-20",
+  "reason": "Student absence",
+  "is_canceled": false
+}
+
+### Cancel a class (affects all students in group)
+POST {{baseUrl}}/rest/v1/skipped_classes
+Content-Type: application/json
+apikey: {{apikey}}
+Authorization: {{token}}
+
+{
+  "group_id": 1,
+  "skip_date": "2025-11-25",
+  "reason": "Teacher unavailable",
+  "is_canceled": true
+}
+
+###############################################################################
+# EMAIL FUNCTIONS
+###############################################################################
+
+### Send test email
+POST {{baseUrl}}/functions/v1/send-email
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "to": "test@example.com",
+  "subject": "Test Email from ARNOMA",
+  "html": "<h1>Test Email</h1><p>This is a test email from the ARNOMA system.</p>"
+}
+
+### Send profile update notification
+POST {{baseUrl}}/functions/v1/send-email
+Content-Type: application/json
+Authorization: {{token}}
+
+{
+  "to": "student@example.com",
+  "subject": "Profile Updated - ARNOMA",
+  "html": "<h2>Your profile has been updated</h2><p>Name: John Doe</p><p>Email: john@example.com</p>"
+}
+
+###############################################################################
+# AUTOMATION/REMINDERS
+###############################################################################
+
+### Get auto reminder settings
+GET {{baseUrl}}/rest/v1/auto_reminders?select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get sent emails log
+GET {{baseUrl}}/rest/v1/sent_emails?select=*&order=sent_at.desc&limit=20
+apikey: {{apikey}}
+Authorization: {{token}}
+
+### Get emails sent to specific student
+GET {{baseUrl}}/rest/v1/sent_emails?student_id=eq.1&select=*
+apikey: {{apikey}}
+Authorization: {{token}}
+
+###############################################################################
+# NOTES
+###############################################################################
+
+# Replace the following before using:
+# - [your-project-id] with your actual Supabase project ID
+# - [your-supabase-anon-key] with your actual Supabase anon key
+#
+# Example:
+# @baseUrl = https://abcdefghijklmno.supabase.co
+# @apikey = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...

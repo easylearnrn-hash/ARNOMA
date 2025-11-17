@@ -17296,53 +17296,52 @@
               return;
             }
 
-            // Check if this class is skipped
+            // Check if this class is skipped - if so, don't render the dot at all
             const groupNameForCheck = window.groupsCache?.find(g => g.name === student.group)?.name;
             const isSkipped =
               groupNameForCheck &&
               window.SkipClassManager &&
               window.SkipClassManager.isClassSkipped(groupNameForCheck, dateStr);
-
+            
+            // Don't render dots for canceled/skipped classes
+            if (isSkipped) {
+              return;
+            }
+            
             let dotColor;
 
-            if (isSkipped) {
-              dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped classes
-            } else {
-              switch (status) {
-                case 'paid':
-                case 'deducted':
-                case 'low-balance':
-                  dotColor = '#22c55e'; // Green - Paid
-                  break;
-                case 'pending':
-                  dotColor = '#3b82f6'; // Blue - Future class with balance
-                  break;
-                case 'absent':
-                  dotColor = '#94a3b8'; // Gray - Absent
-                  break;
-                case 'unpaid':
-                  dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
-                  break;
-                case 'future':
-                  dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
-                  break;
-                default:
-                  dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
-                  break;
-              }
+            switch (status) {
+              case 'paid':
+              case 'deducted':
+              case 'low-balance':
+                dotColor = '#22c55e'; // Green - Paid
+                break;
+              case 'pending':
+                dotColor = '#3b82f6'; // Blue - Future class with balance
+                break;
+              case 'absent':
+                dotColor = '#94a3b8'; // Gray - Absent
+                break;
+              case 'unpaid':
+                dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
+                break;
+              case 'future':
+                dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
+                break;
+              default:
+                dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
+                break;
             }
 
-            const statusText = isSkipped
-              ? 'Skipped'
-              : status === 'paid' || status === 'deducted'
-                ? 'Paid'
-                : status === 'pending'
-                  ? 'Future'
-                  : status === 'future'
-                    ? 'Scheduled'
-                    : status === 'absent'
-                      ? 'Absent'
-                      : 'Unpaid';
+            const statusText = status === 'paid' || status === 'deducted'
+              ? 'Paid'
+              : status === 'pending'
+                ? 'Future'
+                : status === 'future'
+                  ? 'Scheduled'
+                  : status === 'absent'
+                    ? 'Absent'
+                    : 'Unpaid';
 
             html += `
           <div class="calendar-dot"
@@ -18673,7 +18672,92 @@
       })();
 
       // ============================================================================
-      // END PAYMENT REMINDER MANAGER
+      // PAYMENT REMINDER EMAIL BODY RECONSTRUCTOR
+      // Helper to add email previews to old notifications that were created before
+      // the email preview feature was implemented
+      // ============================================================================
+      window.addEmailPreviewToOldNotifications = async function() {
+        console.log('[EmailPreview] 🔧 Reconstructing email previews for old notifications...');
+        
+        const paymentNotifications = window.NotificationCenter.getAll()
+          .filter(n => n.title === 'Payment Reminder Sent' && n.metadata && !n.metadata.emailBody);
+        
+        console.log(`[EmailPreview] Found ${paymentNotifications.length} notifications without email body`);
+        
+        if (paymentNotifications.length === 0) {
+          console.log('[EmailPreview] ✅ All notifications already have email previews!');
+          return;
+        }
+
+        // Get payment reminder template from email system
+        const iframe = document.getElementById('emailSystemFrame');
+        if (!iframe || !iframe.contentWindow) {
+          console.error('[EmailPreview] ❌ Email system iframe not found');
+          return;
+        }
+
+        // Request template from email system
+        iframe.contentWindow.postMessage({ action: 'getPaymentReminderTemplate' }, '*');
+
+        // Wait for template response
+        const template = await new Promise((resolve) => {
+          const handler = (event) => {
+            if (event.data.action === 'paymentReminderTemplate') {
+              window.removeEventListener('message', handler);
+              resolve(event.data.template);
+            }
+          };
+          window.addEventListener('message', handler);
+          
+          // Timeout after 5 seconds
+          setTimeout(() => {
+            window.removeEventListener('message', handler);
+            resolve(null);
+          }, 5000);
+        });
+
+        if (!template) {
+          console.error('[EmailPreview] ❌ Could not get email template');
+          return;
+        }
+
+        console.log('[EmailPreview] ✅ Got email template, reconstructing emails...');
+
+        // Reconstruct email for each notification
+        let updated = 0;
+        for (const notification of paymentNotifications) {
+          const { studentName, metadata } = notification;
+          const { amount, date } = metadata;
+
+          // Reconstruct email using template
+          const subject = template.subject
+            .replace(/\{\{StudentName\}\}/gi, studentName)
+            .replace(/\{\{balance\}\}/gi, `$${amount}`);
+
+          const body = template.body
+            .replace(/\{\{StudentName\}\}/gi, studentName)
+            .replace(/\{\{balance\}\}/gi, `$${amount}`)
+            .replace(/\{\{Balance\}\}/gi, `$${amount}`)
+            .replace(/\{\{classDate\}\}/gi, date)
+            .replace(/\{\{ClassDate\}\}/gi, date)
+            .replace(/\{\{UnpaidClasses\}\}/gi, `Class on ${date} - $${amount}`);
+
+          // Update notification metadata
+          notification.metadata.emailSubject = subject;
+          notification.metadata.emailBody = body;
+          
+          updated++;
+        }
+
+        // Save updated notifications
+        await window.NotificationCenter.saveToSupabase();
+        
+        console.log(`[EmailPreview] ✅ Updated ${updated} notifications with email previews!`);
+        console.log('[EmailPreview] 🎉 You can now click any payment reminder notification to see the email preview');
+      };
+
+      // ============================================================================
+      // END PAYMENT REMINDER EMAIL BODY RECONSTRUCTOR
       // ============================================================================
 
       // ============================================================================

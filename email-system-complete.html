@@ -2775,6 +2775,32 @@ ARNOMA Team"></textarea>
       
       const { action, student, classDate } = event.data;
       
+      // Handle request for payment reminder template
+      if (action === 'getPaymentReminderTemplate') {
+        console.log('📋 Request for payment reminder template received');
+        
+        const templates = emailSystem._templates || [];
+        const reminderTemplate = templates.find(t => 
+          t.name.toLowerCase().includes('payment') && 
+          t.name.toLowerCase().includes('reminder') && 
+          t.active
+        );
+        
+        if (reminderTemplate) {
+          window.parent.postMessage({
+            action: 'paymentReminderTemplate',
+            template: {
+              subject: reminderTemplate.subject,
+              body: reminderTemplate.body
+            }
+          }, '*');
+          console.log('✅ Sent payment reminder template to parent');
+        } else {
+          console.error('❌ No active Payment Reminder template found');
+        }
+        return;
+      }
+      
       if (action === 'sendAutoReminder') {
         console.log('📧 Received auto-reminder request:', student.name, classDate);
         

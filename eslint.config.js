@@ -18,7 +18,9 @@ export default [
       'function_audit.js',
       'package.json',
       'package-lock.json',
-      'eslint.config.js'  // Ignore the config file itself
+      'eslint.config.js',
+      'cypress.config.js',
+      'cypress/**'  // Ignore Cypress tests (they have their own globals)
     ]
   },
   {
