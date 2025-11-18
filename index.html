@@ -2277,7 +2277,7 @@
             onmouseover="this.style.background='rgba(34, 197, 94, 0.25)'"
             onmouseout="this.style.background='rgba(34, 197, 94, 0.15)'"
           >
-            Test Notification
+            Clear All
           </button>
           <button
             onclick="markAllNotificationsAsRead()"
@@ -16356,33 +16356,28 @@
       }
 
       async function createTestNotification() {
-        console.log('[NotificationCenter] 🧪 Creating test notification...');
+        console.log('[NotificationCenter] 🗑️ Clearing all notifications...');
 
         if (!window.NotificationCenter) {
           console.error('[NotificationCenter] ❌ NotificationCenter not initialized');
           return;
         }
 
-        // CRITICAL FIX: Keep title and description under 50 characters (database limit)
-        const testNotification = {
-          type: 'automation',
-          title: 'Test Automation',
-          description: 'Sent 5 emails for Monday Class', // Under 50 chars
-          student_name: null,
-          group_name: 'Monday Class',
-          metadata: {
-            automation_name: 'Before Class Reminder',
-            recipient_count: 5,
-            sent_at: new Date().toISOString(),
-          },
-        };
-
-        await window.NotificationCenter.add(testNotification);
-        console.log('[NotificationCenter] ✅ Test notification created');
+        // Clear all notifications
+        const allNotifications = window.NotificationCenter._notifications || [];
+        console.log(`[NotificationCenter] Deleting ${allNotifications.length} notifications...`);
+        
+        for (const notif of allNotifications) {
+          await window.NotificationCenter.delete(notif.id);
+        }
+        
+        console.log('[NotificationCenter] ✅ All notifications cleared');
 
         // Reload the notifications view
         await window.NotificationCenter.initialize();
         renderNotifications();
+        
+        showNotificationSimple('🗑️ All notifications cleared', 'success');
       }
 
       function renderNotifications() {
@@ -17578,8 +17573,8 @@
       };
 
       // Send payment reminder immediately (GLOBAL SCOPE)
-      window.sendReminderNow = async function (studentId, buttonElement) {
-        console.log('🚀 Manual send triggered for student:', studentId);
+      window.sendReminderNow = async function (studentId, buttonElement, clickedDateStr) {
+        console.log('🚀 Manual send triggered for student:', studentId, 'Clicked date:', clickedDateStr);
 
         try {
           // Get students from cache
@@ -17610,8 +17605,8 @@
             return;
           }
 
-          // Find actual unpaid classes from calendar data
-          console.log('🔍 Searching for unpaid classes in calendar...');
+          // Find ALL unpaid classes from calendar data (not just clicked date)
+          console.log('🔍 Searching for ALL unpaid classes in calendar...');
           const currentMonth = window.currentCalendarData || getMonthData(new Date().getFullYear(), new Date().getMonth());
           
           let unpaidClasses = [];
@@ -17628,18 +17623,26 @@
                   date: dayData.date,
                   dateStr: dayData.date.toISOString().split('T')[0],
                   pricePerClass: classInfo.pricePerClass,
-                  status: classInfo.status
+                  status: classInfo.status,
+                  isClickedDate: dayData.date.toISOString().split('T')[0] === clickedDateStr
                 });
               }
             });
           });
           
-          console.log('💰 Unpaid classes found:', unpaidClasses.length);
+          console.log('💰 Total unpaid classes found:', unpaidClasses.length);
+          console.log('📅 Unpaid dates:', unpaidClasses.map(c => c.dateStr).join(', '));
 
           if (unpaidClasses.length === 0) {
             console.log('ℹ️ No unpaid classes for:', student.name);
             showNotificationSimple('✅ No unpaid classes for ' + student.name, 'info');
             return;
+          }
+
+          // Check if the clicked date is actually unpaid
+          const clickedDateIsUnpaid = unpaidClasses.some(c => c.isClickedDate);
+          if (!clickedDateIsUnpaid) {
+            console.warn('⚠️ Clicked date is not unpaid, but sending reminder for all unpaid classes');
           }
 
           // Show loading state
@@ -17649,12 +17652,31 @@
           buttonElement.style.opacity = '0.6';
           buttonElement.style.cursor = 'not-allowed';
 
-          // Use the most recent unpaid class date
-          const mostRecentUnpaid = unpaidClasses.sort((a, b) => new Date(b.dateStr) - new Date(a.dateStr))[0];
-          console.log('📅 Sending reminder for class on:', mostRecentUnpaid.dateStr);
+          // Sort by date to use clicked date (or most recent if clicked isn't unpaid)
+          const primaryDate = clickedDateIsUnpaid 
+            ? unpaidClasses.find(c => c.isClickedDate) 
+            : unpaidClasses.sort((a, b) => new Date(b.dateStr) - new Date(a.dateStr))[0];
+          
+          console.log('📅 Primary reminder date:', primaryDate.dateStr);
+          console.log('📧 Including all unpaid classes in email');
 
           // Send message to email iframe
-          const emailFrame = document.getElementById('emailFrame');
+          console.log('🔍 Searching for email iframe...');
+          const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+          console.log('📍 Email iframe found?', emailFrame ? 'YES' : 'NO');
+          
+          if (emailFrame) {
+            console.log('📍 Iframe src:', emailFrame.src);
+            console.log('📍 Has contentWindow?', emailFrame.contentWindow ? 'YES' : 'NO');
+          } else {
+            // Try to find ANY iframes
+            const allIframes = document.querySelectorAll('iframe');
+            console.log('🔍 Total iframes on page:', allIframes.length);
+            allIframes.forEach((iframe, idx) => {
+              console.log(`  Iframe ${idx}:`, iframe.src || iframe.id || 'no src/id');
+            });
+          }
+          
           if (!emailFrame || !emailFrame.contentWindow) {
             throw new Error('Email system not available');
           }
@@ -17699,7 +17721,12 @@
                 email: student.email,
                 balance: student.balance || 0,
               },
-              classDate: mostRecentUnpaid.dateStr,
+              classDate: primaryDate.dateStr,
+              unpaidClasses: unpaidClasses.map(c => ({
+                date: c.dateStr,
+                pricePerClass: c.pricePerClass,
+                isClickedDate: c.isClickedDate
+              })),
               manual: true, // Flag to bypass "already sent" check
             },
             '*'
@@ -17708,12 +17735,33 @@
           console.log('📧 Sent manual reminder request to email system');
 
           // Wait for response
-          await sendPromise;
+          const response = await sendPromise;
 
           // Success
           buttonElement.innerHTML = '✓';
           buttonElement.style.background = 'rgba(34, 197, 94, 0.3)';
-          showNotificationSimple('✅ Payment reminder sent to ' + student.name, 'success');
+          
+          // Add notification with email content if available
+          if (window.NotificationCenter) {
+            await window.NotificationCenter.add(
+              window.NotificationCenter.NotificationType.EMAIL,
+              'Payment Reminder Sent',
+              `Sent to ${student.name} for ${unpaidClasses.length} unpaid class${unpaidClasses.length !== 1 ? 'es' : ''}`,
+              {
+                studentName: student.name,
+                metadata: {
+                  recipientName: student.name,
+                  recipientEmail: student.email,
+                  unpaidClassCount: unpaidClasses.length,
+                  emailType: 'payment_reminder',
+                  emailBody: response.emailContent?.body,
+                  emailSubject: response.emailContent?.subject
+                }
+              }
+            );
+          } else {
+            showNotificationSimple('✅ Payment reminder sent to ' + student.name, 'success');
+          }
 
           // Reset button after 2 seconds
           setTimeout(() => {
@@ -17920,7 +17968,7 @@
                             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                       ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? '▶' : '⏸'}
                     </button>
-                    <button onclick="event.stopPropagation(); sendReminderNow('${student.id}', this);"
+                    <button onclick="event.stopPropagation(); sendReminderNow('${student.id}', this, '${dateStr}');"
                             title="Send payment reminder now"
                             style="width: 24px; height: 24px; padding: 0; background: rgba(34, 197, 94, 0.2);
                                    border: 1px solid rgba(34, 197, 94, 0.4);
