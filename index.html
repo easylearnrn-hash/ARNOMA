@@ -5899,7 +5899,6 @@
           balance: studentData.balance ?? 0,
           status: normalizeStudentStatusValue(studentData.status),
           status_changed_date: studentData.statusChangedDate ?? null,
-          created_at: studentData.created_at || new Date().toISOString(), // Always set creation timestamp
         };
 
         // Add optional fields only if they exist in the Supabase schema
@@ -11175,7 +11174,11 @@
               console.log('👥 Group changed:', oldStudent.group, '→', group);
             }
             if (oldStudent.payPerClass !== payPerClass) {
-              changes.push({ field: 'Amount per Class', old: `$${oldStudent.payPerClass || 0}`, new: `$${payPerClass}` });
+              changes.push({
+                field: 'Amount per Class',
+                old: `$${oldStudent.payPerClass || 0}`,
+                new: `$${payPerClass}`,
+              });
               console.log('💵 Amount per class changed:', oldStudent.payPerClass, '→', payPerClass);
             }
             if (oldStudent.balance !== balance) {
@@ -11368,22 +11371,22 @@
 
           // If email changed, send to BOTH old and new email
           const emailsToNotify = [];
-          
+
           if (emailChange && oldEmail && oldEmail !== 'Not set') {
             // Send to old email with special message
             emailsToNotify.push({
               email: oldEmail,
               type: 'old',
-              message: 'Your email address has been updated. This is a confirmation to your previous email address.'
+              message: 'Your email address has been updated. This is a confirmation to your previous email address.',
             });
           }
-          
+
           if (newEmail && newEmail.trim() !== '') {
             // Send to new email
             emailsToNotify.push({
               email: newEmail,
               type: 'new',
-              message: null
+              message: null,
             });
           }
 
@@ -11392,7 +11395,7 @@
             emailsToNotify.push({
               email: newEmail,
               type: 'current',
-              message: null
+              message: null,
             });
           }
 
@@ -11411,7 +11414,7 @@
                 },
                 changes: changes,
                 specialMessage: recipient.message,
-                emailType: recipient.type
+                emailType: recipient.type,
               },
               '*'
             );
@@ -11420,11 +11423,11 @@
           }
 
           console.log('📝 Changes notified:', changes.map(c => c.field).join(', '));
-          
-          const notificationMessage = emailChange 
-            ? `📧 Profile update emails sent to old and new addresses` 
+
+          const notificationMessage = emailChange
+            ? `📧 Profile update emails sent to old and new addresses`
             : `📧 Profile update email sent to ${student.name}`;
-          
+
           showNotificationSimple(notificationMessage, 'success');
         } catch (error) {
           console.error('❌ Error sending profile update email:', error);
@@ -12615,7 +12618,7 @@
           group: groupName,
           oldSchedule: oldSchedule,
           newSchedule: newSchedule,
-          changed: scheduleChanged
+          changed: scheduleChanged,
         });
 
         // CRITICAL FIX: Replace old schedule entirely (no appending)
@@ -12636,15 +12639,21 @@
         // SEND SCHEDULE UPDATE EMAILS if schedule changed
         if (scheduleChanged) {
           console.log('📧 Schedule changed, sending update emails to all students in', groupName);
-          
-          // Get all students in this group
-          const studentsInGroup = window.studentsCache?.filter(student => {
-            if (!student.group) return false;
-            const studentGroups = student.group.split(',').map(g => g.trim());
-            return studentGroups.includes(groupName);
-          }) || [];
 
-          console.log('👥 Found', studentsInGroup.length, 'students in group:', studentsInGroup.map(s => s.name));
+          // Get all students in this group
+          const studentsInGroup =
+            window.studentsCache?.filter(student => {
+              if (!student.group) return false;
+              const studentGroups = student.group.split(',').map(g => g.trim());
+              return studentGroups.includes(groupName);
+            }) || [];
+
+          console.log(
+            '👥 Found',
+            studentsInGroup.length,
+            'students in group:',
+            studentsInGroup.map(s => s.name)
+          );
 
           if (studentsInGroup.length > 0) {
             // Send message to email system iframe
@@ -12652,7 +12661,7 @@
             if (emailFrame && emailFrame.contentWindow) {
               // Get group schedule for display
               const groupSchedule = group.schedule || 'Not set';
-              
+
               emailFrame.contentWindow.postMessage(
                 {
                   action: 'sendScheduleUpdateEmail',
@@ -12662,14 +12671,17 @@
                   students: studentsInGroup.map(s => ({
                     name: s.name,
                     email: s.email,
-                    group: s.group
-                  }))
+                    group: s.group,
+                  })),
                 },
                 '*'
               );
 
               console.log('✅ Schedule update email request sent to email system');
-              showNotificationSimple(`📧 Schedule update emails sent to ${studentsInGroup.length} student${studentsInGroup.length !== 1 ? 's' : ''}`, 'success');
+              showNotificationSimple(
+                `📧 Schedule update emails sent to ${studentsInGroup.length} student${studentsInGroup.length !== 1 ? 's' : ''}`,
+                'success'
+              );
             } else {
               console.warn('⚠️ Email iframe not found, cannot send schedule update emails');
             }
@@ -14744,7 +14756,7 @@
           try {
             // First try localStorage (faster and more reliable)
             const localData = loadSkippedClassesFromLocalStorage();
-            
+
             // Then try to sync with Supabase
             const { data, error } = await supabase.from('skipped_classes').select('*');
 
@@ -16500,11 +16512,11 @@
           console.log('[NotificationClick] Clicked notification:', notification);
           console.log('[NotificationClick] Has metadata?', !!notification.metadata);
           console.log('[NotificationClick] Has emailBody?', notification.metadata?.emailBody ? 'YES' : 'NO');
-          
+
           if (!notification.read) {
             window.NotificationCenter.markAsRead(notification.id);
           }
-          
+
           // Show email content if available (for payment reminders)
           if (notification.metadata && notification.metadata.emailBody) {
             console.log('[NotificationClick] Opening email preview...');
@@ -16512,7 +16524,7 @@
           } else {
             console.log('[NotificationClick] No email body found in notification metadata');
           }
-          
+
           renderNotifications();
         });
 
@@ -16589,12 +16601,12 @@
           showNotification('✅ All notifications marked as read', 'success');
         }
       }
-      
+
       // Show email preview modal
       function showEmailPreview(notification) {
         const { metadata } = notification;
         if (!metadata || !metadata.emailBody) return;
-        
+
         // Create modal overlay
         const overlay = document.createElement('div');
         overlay.style.cssText = `
@@ -16611,7 +16623,7 @@
           padding: 20px;
           backdrop-filter: blur(4px);
         `;
-        
+
         // Create modal content
         const modal = document.createElement('div');
         modal.style.cssText = `
@@ -16625,7 +16637,7 @@
           box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
           border: 1px solid rgba(255, 255, 255, 0.1);
         `;
-        
+
         // Header
         const header = document.createElement('div');
         header.style.cssText = `
@@ -16659,7 +16671,7 @@
             transition: all 0.2s;
           ">✕</button>
         `;
-        
+
         // Body (iframe for safe HTML rendering)
         const body = document.createElement('div');
         body.style.cssText = `
@@ -16668,7 +16680,7 @@
           background: #fff;
           margin: 0;
         `;
-        
+
         const iframe = document.createElement('iframe');
         iframe.style.cssText = `
           width: 100%;
@@ -16678,26 +16690,26 @@
         `;
         iframe.srcdoc = metadata.emailBody;
         body.appendChild(iframe);
-        
+
         // Assemble modal
         modal.appendChild(header);
         modal.appendChild(body);
         overlay.appendChild(modal);
         document.body.appendChild(overlay);
-        
+
         // Close handlers
         const closeModal = () => {
           document.body.removeChild(overlay);
         };
-        
-        overlay.addEventListener('click', (e) => {
+
+        overlay.addEventListener('click', e => {
           if (e.target === overlay) closeModal();
         });
-        
+
         header.querySelector('#closeEmailPreview').addEventListener('click', closeModal);
-        
+
         // ESC key to close
-        const handleEsc = (e) => {
+        const handleEsc = e => {
           if (e.key === 'Escape') {
             closeModal();
             document.removeEventListener('keydown', handleEsc);
@@ -17440,7 +17452,7 @@
               groupNameForCheck &&
               window.SkipClassManager &&
               window.SkipClassManager.isClassSkipped(groupNameForCheck, dateStr);
-            
+
             let dotColor;
 
             if (isSkipped) {
@@ -17551,7 +17563,7 @@
           }
 
           // Find the student
-          const student = students.find((s) => s.id === studentId || s.id === parseInt(studentId));
+          const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
           if (!student) {
             console.error('❌ Student not found with ID:', studentId);
             console.log('Available student IDs:', students.map(s => s.id).slice(0, 10));
@@ -17568,25 +17580,13 @@
             return;
           }
 
-          // Get class history from window scope
-          const history = window.classHistory || [];
-          console.log('📚 Class history records:', history.length);
+          // Check if student has balance owed
+          const balance = parseFloat(student.balance) || 0;
+          console.log('💰 Student balance:', balance);
 
-          // Find unpaid classes
-          const unpaidClasses = history.filter((ch) => {
-            // Normalize student ID comparison
-            const chId = String(ch.student_id).trim();
-            const sId = String(studentId).trim();
-            // Normalize payment status comparison
-            const status = (ch.payment_status || '').toLowerCase().trim();
-            return (chId === sId) && (status !== 'paid');
-          });
-
-          console.log('💰 Unpaid classes found:', unpaidClasses.length);
-
-          if (unpaidClasses.length === 0) {
-            console.log('ℹ️ No unpaid classes for:', student.name);
-            showNotificationSimple('✅ No unpaid classes for ' + student.name, 'info');
+          if (balance <= 0) {
+            console.log('ℹ️ No balance owed for:', student.name);
+            showNotificationSimple('✅ No balance owed by ' + student.name, 'info');
             return;
           }
 
@@ -17597,11 +17597,9 @@
           buttonElement.style.opacity = '0.6';
           buttonElement.style.cursor = 'not-allowed';
 
-          // Get the most recent unpaid class
-          const sortedClasses = unpaidClasses.sort((a, b) => new Date(b.class_date) - new Date(a.class_date));
-          const classToRemind = sortedClasses[0];
-
-          console.log('📅 Will remind about class on:', classToRemind.class_date);
+          // Use current date for reminder (since we're using balance, not specific class history)
+          const today = new Date().toISOString().split('T')[0];
+          console.log('📅 Sending reminder for balance on:', today);
 
           // Send message to email iframe
           const emailFrame = document.getElementById('emailFrame');
@@ -17619,13 +17617,13 @@
             }, 30000); // 30 second timeout
 
             // Listen for response
-            const handleMessage = (event) => {
+            const handleMessage = event => {
               console.log('📩 Received message:', event.data.action);
-              
+
               if (event.data.action === 'emailSent' || event.data.action === 'emailError') {
                 clearTimeout(timeout);
                 window.removeEventListener('message', handleMessage);
-                
+
                 if (event.data.action === 'emailSent') {
                   console.log('✅ Email sent successfully');
                   resolve(event.data);
@@ -17649,7 +17647,7 @@
                 email: student.email,
                 balance: student.balance || 0,
               },
-              classDate: classToRemind.class_date,
+              classDate: today,
               manual: true, // Flag to bypass "already sent" check
             },
             '*'
@@ -17675,12 +17673,12 @@
           }, 2000);
         } catch (error) {
           console.error('❌ Manual send error:', error);
-          
+
           // Error state
           if (buttonElement) {
             buttonElement.innerHTML = '✗';
             buttonElement.style.background = 'rgba(239, 68, 68, 0.3)';
-            
+
             // Reset button after 3 seconds
             setTimeout(() => {
               buttonElement.innerHTML = '→';
@@ -17690,7 +17688,7 @@
               buttonElement.disabled = false;
             }, 3000);
           }
-          
+
           showNotificationSimple('❌ Failed to send: ' + error.message, 'error');
         }
       };
@@ -18008,44 +18006,44 @@
           day: 'numeric',
           year: 'numeric',
         });
-        
+
         const reason = prompt(
           `🚫 Cancel Class for ${groupName}\n\n` +
-          `Date: ${dateDisplay}\n\n` +
-          `This will cancel the entire class for all students in ${groupName}.\n` +
-          `Payments will be forwarded to the next class.\n\n` +
-          `Enter cancellation reason (optional):`
+            `Date: ${dateDisplay}\n\n` +
+            `This will cancel the entire class for all students in ${groupName}.\n` +
+            `Payments will be forwarded to the next class.\n\n` +
+            `Enter cancellation reason (optional):`
         );
-        
+
         // User clicked Cancel
         if (reason === null) return;
-        
+
         // Cancel the class
         if (window.SkipClassManager && window.SkipClassManager.cancelClass) {
           window.SkipClassManager.cancelClass(groupName, dateStr, reason || 'Class canceled');
-          
+
           // Refresh the sidebar to show updated status
           const dayData = window.currentCalendarData?.days.find(d => {
             const dStr = formatDateYYYYMMDD(d.date);
             return dStr === dateStr;
           });
-          
+
           if (dayData) {
             openDayDetails(dateStr, dayData);
           }
-          
+
           // Refresh the calendar
           if (typeof renderCalendar === 'function') {
             renderCalendar();
           }
-          
+
           showNotification(`✅ Class canceled for ${groupName} on ${dateDisplay}`, 'success');
         } else {
           console.error('SkipClassManager not available');
           showNotification('❌ Failed to cancel class', 'error');
         }
       }
-      
+
       function closeDayDetails() {
         console.log('🚪 closeDayDetails called');
         const overlay = document.getElementById('dayDetailsOverlay');
@@ -18909,10 +18907,10 @@
           // Listen for email content messages from iframe
           window.addEventListener('message', async event => {
             console.log('[PaymentReminderManager] Received message:', event.data);
-            
+
             if (event.data.action === 'autoReminderSent' && event.data.success) {
               const { student, classDate, emailContent } = event.data;
-              
+
               console.log('[PaymentReminderManager] ✅ Auto-reminder sent successfully!');
               console.log('[PaymentReminderManager] Student:', student.name);
               console.log('[PaymentReminderManager] Email content received:', !!emailContent);
@@ -18985,14 +18983,15 @@
       // Helper to add email previews to old notifications that were created before
       // the email preview feature was implemented
       // ============================================================================
-      window.addEmailPreviewToOldNotifications = async function() {
+      window.addEmailPreviewToOldNotifications = async function () {
         console.log('[EmailPreview] 🔧 Reconstructing email previews for old notifications...');
-        
-        const paymentNotifications = window.NotificationCenter.getAll()
-          .filter(n => n.title === 'Payment Reminder Sent' && n.metadata && !n.metadata.emailBody);
-        
+
+        const paymentNotifications = window.NotificationCenter.getAll().filter(
+          n => n.title === 'Payment Reminder Sent' && n.metadata && !n.metadata.emailBody
+        );
+
         console.log(`[EmailPreview] Found ${paymentNotifications.length} notifications without email body`);
-        
+
         if (paymentNotifications.length === 0) {
           console.log('[EmailPreview] ✅ All notifications already have email previews!');
           return;
@@ -19010,15 +19009,15 @@
         iframe.contentWindow.postMessage({ action: 'getPaymentReminderTemplate' }, '*');
 
         // Wait for template response
-        const template = await new Promise((resolve) => {
-          const handler = (event) => {
+        const template = await new Promise(resolve => {
+          const handler = event => {
             if (event.data.action === 'paymentReminderTemplate') {
               window.removeEventListener('message', handler);
               resolve(event.data.template);
             }
           };
           window.addEventListener('message', handler);
-          
+
           // Timeout after 5 seconds
           setTimeout(() => {
             window.removeEventListener('message', handler);
@@ -19034,7 +19033,7 @@
         console.log('[EmailPreview] ✅ Got email template, reconstructing emails...');
 
         // Helper function to format date nicely
-        const formatClassDate = (dateStr) => {
+        const formatClassDate = dateStr => {
           const date = new Date(dateStr + 'T00:00:00');
           const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
           return date.toLocaleDateString('en-US', options);
@@ -19043,11 +19042,11 @@
         // Reconstruct email for each notification
         let updated = 0;
         let failed = 0;
-        
+
         for (const notification of paymentNotifications) {
           const { studentName, metadata, id } = notification;
           const { amount, date } = metadata;
-          
+
           // Format date nicely: "Wednesday, November 16, 2025"
           const formattedDate = formatClassDate(date);
 
@@ -19067,14 +19066,14 @@
           // Update notification metadata in memory
           notification.metadata.emailSubject = subject;
           notification.metadata.emailBody = body;
-          
+
           // Update in Supabase
           try {
             const { error } = await supabase
               .from('notifications')
               .update({ metadata: notification.metadata })
               .eq('id', id);
-            
+
             if (error) {
               console.error(`[EmailPreview] ❌ Failed to update notification ${id}:`, error);
               failed++;
@@ -19086,18 +19085,18 @@
             failed++;
           }
         }
-        
+
         console.log(`[EmailPreview] ✅ Updated ${updated} notifications with email previews!`);
         if (failed > 0) {
           console.warn(`[EmailPreview] ⚠️ Failed to update ${failed} notifications`);
         }
         console.log('[EmailPreview] 🎉 You can now click any payment reminder notification to see the email preview');
-        
+
         // Reload notifications from Supabase to get fresh data
         if (window.NotificationCenter && window.NotificationCenter.initialize) {
           await window.NotificationCenter.initialize();
         }
-      };      // ============================================================================
+      }; // ============================================================================
       // END PAYMENT REMINDER EMAIL BODY RECONSTRUCTOR
       // ============================================================================
 
