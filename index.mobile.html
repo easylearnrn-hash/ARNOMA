@@ -50,6 +50,207 @@
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
+    // ============================================================================
+    // AUTHENTICATION SYSTEM
+    // ============================================================================
+    let isAuthenticated = false;
+    let currentUser = null;
+
+    async function checkAuthentication() {
+      try {
+        console.log('🔐 Checking authentication...');
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('❌ Auth error:', error);
+          showLoginForm();
+          return false;
+        }
+
+        if (session && session.user) {
+          console.log('✅ User authenticated:', session.user.email);
+          isAuthenticated = true;
+          currentUser = session.user;
+          hideLoginForm();
+          return true;
+        } else {
+          console.log('⚠️ No active session, showing login');
+          showLoginForm();
+          return false;
+        }
+      } catch (error) {
+        console.error('❌ Authentication check failed:', error);
+        showLoginForm();
+        return false;
+      }
+    }
+
+    async function handleLogin(email, password) {
+      try {
+        console.log('🔐 Attempting login...');
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: email,
+          password: password,
+        });
+
+        if (error) {
+          console.error('❌ Login error:', error);
+          return { success: false, error: error.message };
+        }
+
+        if (data.session) {
+          console.log('✅ Login successful:', data.user.email);
+          isAuthenticated = true;
+          currentUser = data.user;
+          hideLoginForm();
+          
+          // Reload data after successful login
+          await initializeApp();
+          
+          return { success: true };
+        }
+      } catch (error) {
+        console.error('❌ Login failed:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    async function handleLogout() {
+      try {
+        console.log('🚪 Logging out...');
+        const { error } = await supabase.auth.signOut();
+        
+        if (error) {
+          console.error('❌ Logout error:', error);
+          return;
+        }
+
+        console.log('✅ Logged out successfully');
+        isAuthenticated = false;
+        currentUser = null;
+        
+        // Clear all caches
+        window.paymentsCache = [];
+        window.studentsCache = [];
+        window.groupsCache = [];
+        
+        showLoginForm();
+      } catch (error) {
+        console.error('❌ Logout failed:', error);
+      }
+    }
+
+    function showLoginForm() {
+      // Create login overlay if it doesn't exist
+      let loginOverlay = document.getElementById('authLoginOverlay');
+      
+      if (!loginOverlay) {
+        loginOverlay = document.createElement('div');
+        loginOverlay.id = 'authLoginOverlay';
+        loginOverlay.innerHTML = `
+          <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); display: flex; align-items: center; justify-content: center; z-index: 999999;">
+            <div style="background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 20px; padding: 40px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: white; font-size: 28px; margin: 0 0 8px 0; font-weight: 700;">ARNOMA</h1>
+                <p style="color: rgba(255, 255, 255, 0.6); font-size: 14px; margin: 0;">Student Management System</p>
+              </div>
+
+              <div id="authErrorMessage" style="display: none; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 10px; padding: 12px; margin-bottom: 20px; color: #ef4444; font-size: 13px; text-align: center;"></div>
+
+              <form id="authLoginForm" onsubmit="event.preventDefault(); performLogin();" style="display: flex; flex-direction: column; gap: 16px;">
+                <div>
+                  <label style="display: block; color: rgba(255, 255, 255, 0.7); font-size: 12px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Email</label>
+                  <input type="email" id="authEmailInput" required autocomplete="email" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; color: white; font-size: 14px; outline: none; transition: all 0.2s;" onfocus="this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.5)'" onblur="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.15)'">
+                </div>
+                <div>
+                  <label style="display: block; color: rgba(255, 255, 255, 0.7); font-size: 12px; font-weight: 600; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Password</label>
+                  <input type="password" id="authPasswordInput" required autocomplete="current-password" style="width: 100%; padding: 12px 16px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 10px; color: white; font-size: 14px; outline: none; transition: all 0.2s;" onfocus="this.style.background='rgba(255,255,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.5)'" onblur="this.style.background='rgba(255,255,255,0.08)'; this.style.borderColor='rgba(255,255,255,0.15)'">
+                </div>
+                <button type="submit" id="authLoginButton" style="width: 100%; padding: 14px; background: linear-gradient(135deg, #8ab4ff, #a78bfa); border: none; border-radius: 10px; color: white; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 8px; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 15px rgba(138, 180, 255, 0.3);" ontouchstart="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(138,180,255,0.4)'" ontouchend="this.style.transform=''; this.style.boxShadow='0 4px 15px rgba(138,180,255,0.3)'">
+                  <span id="authLoginButtonText">Sign In</span>
+                </button>
+              </form>
+
+              <div style="text-align: center; margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+                <p style="color: rgba(255, 255, 255, 0.4); font-size: 12px; margin: 0;">
+                  🔒 Secure authentication required
+                </p>
+              </div>
+            </div>
+          </div>
+        `;
+        document.body.appendChild(loginOverlay);
+      }
+      
+      loginOverlay.style.display = 'block';
+      
+      // Hide main content
+      const mainContent = document.getElementById('mainApp');
+      if (mainContent) mainContent.style.display = 'none';
+      
+      // Focus email input
+      setTimeout(() => {
+        const emailInput = document.getElementById('authEmailInput');
+        if (emailInput) emailInput.focus();
+      }, 100);
+    }
+
+    function hideLoginForm() {
+      const loginOverlay = document.getElementById('authLoginOverlay');
+      if (loginOverlay) {
+        loginOverlay.style.display = 'none';
+      }
+      
+      // Show main content
+      const mainContent = document.getElementById('mainApp');
+      if (mainContent) mainContent.style.display = 'block';
+    }
+
+    async function performLogin() {
+      const emailInput = document.getElementById('authEmailInput');
+      const passwordInput = document.getElementById('authPasswordInput');
+      const loginButton = document.getElementById('authLoginButton');
+      const loginButtonText = document.getElementById('authLoginButtonText');
+      const errorMessage = document.getElementById('authErrorMessage');
+      
+      if (!emailInput || !passwordInput) return;
+      
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+      
+      // Show loading state
+      loginButton.disabled = true;
+      loginButtonText.textContent = 'Signing in...';
+      errorMessage.style.display = 'none';
+      
+      const result = await handleLogin(email, password);
+      
+      if (result.success) {
+        // Login successful - form will be hidden by handleLogin
+        emailInput.value = '';
+        passwordInput.value = '';
+      } else {
+        // Show error
+        errorMessage.textContent = result.error || 'Login failed. Please check your credentials.';
+        errorMessage.style.display = 'block';
+        
+        // Reset button
+        loginButton.disabled = false;
+        loginButtonText.textContent = 'Sign In';
+        
+        // Focus email input
+        emailInput.focus();
+        emailInput.select();
+      }
+    }
+
+    // Make functions globally available
+    window.performLogin = performLogin;
+    window.handleLogout = handleLogout;
+
+    // ============================================================================
+    // END AUTHENTICATION SYSTEM
+    // ============================================================================
     
     // Global data caches for performance
     window.paymentsCache = [];
@@ -2094,6 +2295,9 @@
   <link rel="stylesheet" href="styles.mobile.css">
 </head>
 <body>
+  
+  <!-- Main App Container (hidden until authenticated) -->
+  <div id="mainApp" style="display: none;">
   
   <div id="mobileShell">
   
@@ -16137,9 +16341,32 @@
     // ============================================================================
     
     // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initialize);
+    document.addEventListener('DOMContentLoaded', async function() {
+      console.log('[ARNOMA Mobile] 🚀 Initializing application...');
+
+      // Check authentication FIRST
+      const authenticated = await checkAuthentication();
+      
+      if (!authenticated) {
+        console.log('[ARNOMA Mobile] ⏸️  Waiting for login...');
+        return; // Stop initialization until user logs in
+      }
+
+      // Initialize the app
+      await initializeApp();
+
+      console.log('[ARNOMA Mobile] ✅ Application fully initialized');
+    });
+
+    // Separate initialization function that can be called after login
+    async function initializeApp() {
+      console.log('[ARNOMA Mobile] 📦 Loading application data...');
+      await initialize();
+    }
     
     debugLog('ARNOMA app loaded - Using Supabase cloud database');
   </script>
+  
+  </div><!-- End mainApp -->
 </body>
 </html>
