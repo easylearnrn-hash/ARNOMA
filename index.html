@@ -884,6 +884,11 @@
         transform: scale(1.05) !important;
       }
 
+      .group-btn.active:hover {
+        transform: translateY(-1px) scale(1.05) !important;
+        box-shadow: 0 6px 24px rgba(96, 165, 250, 0.8) !important;
+      }
+
       /* Group Manager Styles */
       .group-day-btn:hover {
         transform: translateY(-2px);
@@ -996,7 +1001,6 @@
         cursor: pointer;
         font-size: 13px;
         transition: all 0.2s;
-        border: none;
         background: rgba(138, 180, 255, 0.15);
         color: #8ab4ff;
         border: 1px solid rgba(138, 180, 255, 0.3);
@@ -1161,27 +1165,6 @@
         flex-shrink: 0;
       }
 
-      .group-btn:hover {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
-        color: rgba(255, 255, 255, 0.9);
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(138, 180, 255, 0.2);
-      }
-
-      .group-btn.active {
-        background: linear-gradient(135deg, #60a5fa, #a78bfa);
-        border-color: rgba(96, 165, 250, 0.8);
-        color: white;
-        box-shadow: 0 4px 20px rgba(96, 165, 250, 0.6);
-        font-weight: 700;
-        transform: scale(1.05);
-      }
-
-      .group-btn.active:hover {
-        transform: translateY(-1px) scale(1.05);
-        box-shadow: 0 6px 24px rgba(96, 165, 250, 0.8);
-      }
       /* END FEATURE 2 */
 
       .student-status {
@@ -1788,6 +1771,9 @@
         padding: 14px 16px;
         margin-bottom: 10px;
         transition: transform 0.2s ease;
+        cursor: pointer;
+        user-select: none;
+        position: relative;
       }
 
       #enhancedCountdownTimer .timer-class-item:last-child {
@@ -1796,6 +1782,10 @@
 
       #enhancedCountdownTimer .timer-class-item:hover {
         transform: translateX(-2px);
+      }
+
+      #enhancedCountdownTimer .timer-class-item:not(.skipped):active {
+        transform: scale(0.98);
       }
 
       #enhancedCountdownTimer .timer-class-item:not(.class-critical):hover {
@@ -1977,16 +1967,6 @@
       #enhancedCountdownTimer .timer-class-item.skipped .timer-class-group::before {
         content: '⚫ ';
         color: rgba(150, 150, 150, 0.7);
-      }
-
-      #enhancedCountdownTimer .timer-class-item {
-        cursor: pointer;
-        user-select: none;
-        position: relative;
-      }
-
-      #enhancedCountdownTimer .timer-class-item:not(.skipped):active {
-        transform: scale(0.98);
       }
 
       /* Skip Class Confirmation Dialog */
@@ -7264,35 +7244,6 @@
         // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
       }
 
-      // Legacy function for compatibility
-      function markAllPaymentsAsViewed() {
-        const newPaymentRows = document.querySelectorAll('.payment-row-new');
-        if (newPaymentRows.length === 0) return;
-
-        const payments = PaymentStore.getAll();
-        let hasChanges = false;
-
-        payments.forEach(payment => {
-          if (
-            !payment.viewed &&
-            payment.createdAt &&
-            Date.now() - new Date(payment.createdAt).getTime() < TIMING.NEW_PAYMENT_INDICATOR
-          ) {
-            payment.viewed = true;
-            hasChanges = true;
-          }
-        });
-
-        if (hasChanges) {
-          PaymentStore.save(payments);
-          newPaymentRows.forEach(row => {
-            row.classList.remove('payment-row-new');
-            row.style.animation = 'none';
-            row.style.boxShadow = 'none';
-          });
-        }
-      }
-
       // ============================================================================
       // GMAIL INTEGRATION - Enhanced for robust message retrieval
       // ============================================================================
@@ -9595,32 +9546,6 @@
        * Create Auto Backup
        * Stores automatic backups in localStorage (keeps last 5)
        */
-      function createAutoBackup(backupData) {
-        try {
-          // Get existing auto backups
-          const autoBackupsRaw = localStorage.getItem('autoBackups:v2');
-          let autoBackups = autoBackupsRaw ? JSON.parse(autoBackupsRaw) : [];
-
-          // Add new backup
-          autoBackups.push({
-            timestamp: backupData.timestamp,
-            data: backupData,
-          });
-
-          // Keep only last 5 backups
-          if (autoBackups.length > 5) {
-            autoBackups = autoBackups.slice(-5);
-          }
-
-          // Save back to localStorage
-          localStorage.setItem('autoBackups:v2', JSON.stringify(autoBackups));
-
-          // Also save as lastAutoBackup for quick access
-          localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
-        } catch (error) {
-          console.error('Error creating auto backup:', error);
-        }
-      }
       /**
        * Create Auto Backup
        * All data is already in Supabase, so this just logs the backup event
@@ -14542,6 +14467,8 @@
           if (!allClasses || allClasses.length === 0) {
             titleEl.textContent = 'Upcoming Classes';
             listContainer.innerHTML = '<div class="timer-no-classes">No upcoming classes in the next 7 days</div>';
+            // Remove all pulse classes when no classes
+            timerElement.classList.remove('time-critical', 'pulse-slow', 'pulse-medium', 'pulse-fast');
             return;
           }
 
@@ -14553,6 +14480,25 @@
             titleEl.textContent = `${allClasses.length} Upcoming Classes`;
           }
           // END CLASS COUNTDOWN TIMER FIX
+
+          // Apply timer container pulse animation based on soonest class
+          const soonestClass = allClasses[0]; // First class is the soonest
+          const hoursUntilSoonest = soonestClass.secondsRemaining / 3600;
+
+          // Remove all pulse classes first
+          timerElement.classList.remove('time-critical', 'pulse-slow', 'pulse-medium', 'pulse-fast');
+
+          // Apply appropriate pulse class based on time remaining
+          if (hoursUntilSoonest <= 6) {
+            timerElement.classList.add('time-critical'); // Red background
+            if (hoursUntilSoonest <= 2) {
+              timerElement.classList.add('pulse-fast'); // Fast pulse when <2h
+            } else if (hoursUntilSoonest <= 4) {
+              timerElement.classList.add('pulse-medium'); // Medium pulse when <4h
+            } else {
+              timerElement.classList.add('pulse-slow'); // Slow pulse when <6h
+            }
+          }
 
           let html = '';
           allClasses.forEach((classData, index) => {
@@ -18927,12 +18873,15 @@
                   continue;
                 }
 
-                // Check if class has ended (current time > class end time)
+                // Check if we're within 30 minutes before class end (payment reminder window)
                 const classEndTime = getClassEndTime(student.group, dateStr);
                 if (!classEndTime) {
                   console.warn('    ❌ Could not determine class end time - skipping');
                   continue;
                 }
+
+                // CRITICAL: Send reminder when there's 30 minutes left in class
+                const thirtyMinutesBeforeEnd = new Date(classEndTime.getTime() - 30 * 60 * 1000);
 
                 // CRITICAL: Use LA timezone for current time comparison
                 const nowLA = getLADate();
@@ -18950,13 +18899,21 @@
                   hour12: true,
                 });
 
-                if (nowLA < classEndTime) {
-                  console.log(`    ⏰ Class NOT ended yet | Current: ${nowLAStr} | Ends: ${classEndStr} - skipping`);
+                const reminderWindowStr = thirtyMinutesBeforeEnd.toLocaleString('en-US', {
+                  timeZone: 'America/Los_Angeles',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  hour12: true,
+                });
+
+                // Only send if current time is past the 30-minute reminder window
+                if (nowLA < thirtyMinutesBeforeEnd) {
+                  console.log(`    ⏰ Too early for reminder | Current: ${nowLAStr} | Reminder at: ${reminderWindowStr} (30 min before ${classEndStr}) - skipping`);
                   studentsClassNotEnded++;
                   continue;
                 }
 
-                console.log(`    ✅ Class ENDED | Current: ${nowLAStr} | Ended: ${classEndStr}`);
+                console.log(`    ✅ REMINDER WINDOW ACTIVE | Current: ${nowLAStr} | Window started: ${reminderWindowStr} | Class ends: ${classEndStr}`);
 
                 // All checks passed - send reminder
                 const amount = unpaidClass.balance || 0;
