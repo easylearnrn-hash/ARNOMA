@@ -3183,10 +3183,13 @@ ARNOMA Team"
             // Calculate total unpaid amount from unpaid classes list
             let totalUnpaidAmount = 0;
             if (hasUnpaidList && unpaidClasses.length > 0) {
+              // Calculate from unpaid classes array (each class has its own pricePerClass)
               totalUnpaidAmount = unpaidClasses.reduce((sum, c) => sum + parseFloat(c.pricePerClass || 0), 0);
             } else {
-              // Fallback: use student balance if no unpaid list provided
-              totalUnpaidAmount = parseFloat(student.balance || 0);
+              // Fallback: If no unpaid list, use student.payPerClass (or balance as last resort)
+              // This assumes single unpaid class
+              const pricePerClass = parseFloat(student.payPerClass || student.balance || 0);
+              totalUnpaidAmount = pricePerClass;
             }
 
             // Build unpaid classes list if available

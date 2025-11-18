@@ -18688,7 +18688,7 @@
         }
 
         // Send payment reminder via email system
-        async function sendPaymentReminder(student, dateStr, amount) {
+        async function sendPaymentReminder(student, dateStr, amount, unpaidClassesList = []) {
           try {
             // Call the email system iframe to send payment reminder
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
@@ -18697,16 +18697,22 @@
               return false;
             }
 
-            // Send message to email system
+            // Send message to email system with full unpaid classes list
             emailFrame.contentWindow.postMessage(
               {
                 action: 'sendAutoReminder',
                 student: {
                   name: student.name,
                   email: student.email,
-                  balance: amount,
+                  balance: amount, // Keep for backwards compatibility, but email will use unpaidClasses
+                  payPerClass: student.payPerClass || amount, // Include student's rate per class
                 },
                 classDate: dateStr,
+                unpaidClasses: unpaidClassesList.map(c => ({
+                  date: c.date,
+                  pricePerClass: parseFloat(c.balance || student.payPerClass || amount || 0),
+                  isClickedDate: c.date === dateStr
+                })),
               },
               '*'
             );
@@ -18944,11 +18950,11 @@
 
                 console.log(`    ✅ REMINDER WINDOW ACTIVE | Current: ${nowLAStr} | Window started: ${reminderWindowStr} | Class ends: ${classEndStr}`);
 
-                // All checks passed - send reminder
+                // All checks passed - send reminder with full unpaid classes list
                 const amount = unpaidClass.balance || 0;
-                console.log(`    📧 Sending payment reminder | Amount: $${amount}`);
+                console.log(`    📧 Sending payment reminder for ${unpaidClasses.length} unpaid class(es)`);
 
-                const sent = await sendPaymentReminder(student, dateStr, amount);
+                const sent = await sendPaymentReminder(student, dateStr, amount, unpaidClasses);
 
                 if (sent) {
                   markReminderSent(studentId, dateStr);
