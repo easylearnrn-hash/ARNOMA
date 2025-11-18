@@ -7951,8 +7951,8 @@
             // Recompute resolutions to populate group information
             await recomputePaymentResolutions();
 
-            // CRITICAL: Process overpayments and convert to credit
-            await processOverpayments();
+            // DISABLED: Auto-processing caused unintended credits - must be manually triggered
+            // await processOverpayments();
 
             // Log success per developer command
 
@@ -8077,8 +8077,8 @@
             await PaymentStore.save(allPayments);
             await recomputePaymentResolutions();
 
-            // CRITICAL: Process overpayments and convert to credit
-            await processOverpayments();
+            // DISABLED: Auto-processing caused unintended credits - must be manually triggered
+            // await processOverpayments();
 
             showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`, 'success');
             renderPaymentEmailsView();
