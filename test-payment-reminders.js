@@ -25,18 +25,18 @@ if (!window.PaymentReminderManager) {
   console.log('   Make sure index.html has finished loading');
 } else {
   console.log('✅ PaymentReminderManager found');
-  
+
   // Check if checkAndSendReminders function exists
   if (typeof window.PaymentReminderManager.checkAndSendReminders !== 'function') {
     console.error('❌ checkAndSendReminders function NOT FOUND');
   } else {
     console.log('✅ checkAndSendReminders function found');
-    
+
     console.log('\n🔄 FORCING REMINDER CHECK...');
     console.log('   This will check ALL students for unpaid classes');
     console.log('   (past and present, as long as class has ended)');
     console.log('   Watch the console for detailed logs...\n');
-    
+
     // Force check by calling the function directly
     // This bypasses the "already checked today" limit
     window.PaymentReminderManager.checkAndSendReminders()

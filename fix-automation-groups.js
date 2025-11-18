@@ -11,16 +11,16 @@ if (automations.length === 0) {
   console.log('   Action: Create automations via Email System UI first');
 } else {
   console.log(`Found ${automations.length} automations\n`);
-  
+
   let fixed = 0;
-  
+
   automations.forEach(auto => {
     console.log(`Checking: ${auto.name}`);
-    
+
     // Check if selectedGroups is missing or empty
     if (!auto.selectedGroups || auto.selectedGroups.length === 0) {
       console.warn(`   ⚠️  No groups selected!`);
-      
+
       // Extract group name from automation name
       // e.g., "Group A Starts in 30" → "A"
       const match = auto.name.match(/Group\s+([A-Z])/i);
@@ -37,7 +37,7 @@ if (automations.length === 0) {
       console.log(`   ✅ Groups: ${auto.selectedGroups.join(', ')}`);
     }
   });
-  
+
   if (fixed > 0) {
     // Save back to localStorage
     localStorage.setItem('arnoma-automations-v3', JSON.stringify(automations));

@@ -3071,7 +3071,7 @@ ARNOMA Team"
       // Listen for auto-reminder requests from parent window
       // Track recent sends to prevent duplicates
       const recentSends = new Map(); // key: student_email+action+timestamp, value: timestamp
-      
+
       window.addEventListener('message', async function (event) {
         // Security check - only accept messages from same origin
         if (event.origin !== window.location.origin) return;
@@ -3206,15 +3206,16 @@ ARNOMA Team"
             if (hasUnpaidList && unpaidClasses.length > 1) {
               // Multiple unpaid classes - build detailed list with beautiful formatting
               const totalUnpaid = totalUnpaidAmount;
-              
-              const classItems = unpaidClasses.map((c, index) => {
-                const formattedClassDate = formatClassDate(c.date);
-                const isHighlighted = c.isClickedDate;
-                const bgColor = isHighlighted ? 'rgba(138, 180, 255, 0.15)' : 'rgba(138, 180, 255, 0.05)';
-                const borderColor = isHighlighted ? '#8ab4ff' : '#e0e7ff';
-                const icon = isHighlighted ? '👉' : '📅';
-                
-                return `
+
+              const classItems = unpaidClasses
+                .map((c, index) => {
+                  const formattedClassDate = formatClassDate(c.date);
+                  const isHighlighted = c.isClickedDate;
+                  const bgColor = isHighlighted ? 'rgba(138, 180, 255, 0.15)' : 'rgba(138, 180, 255, 0.05)';
+                  const borderColor = isHighlighted ? '#8ab4ff' : '#e0e7ff';
+                  const icon = isHighlighted ? '👉' : '📅';
+
+                  return `
                   <div style="background: ${bgColor}; border-left: 3px solid ${borderColor}; padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
                     <div style="flex: 1;">
                       <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Class ${index + 1}</div>
@@ -3227,7 +3228,8 @@ ARNOMA Team"
                     </div>
                   </div>
                 `;
-              }).join('');
+                })
+                .join('');
 
               unpaidClassesList = `
                 <div style="background: linear-gradient(135deg, rgba(138, 180, 255, 0.08), rgba(167, 139, 250, 0.08)); border: 2px solid #8ab4ff; padding: 20px; border-radius: 12px; margin: 20px 0;">
@@ -3467,14 +3469,14 @@ ARNOMA Team"
           const dedupeKey = `${student.email}_profileUpdate_${emailType || 'current'}`;
           const lastSend = recentSends.get(dedupeKey);
           const now = Date.now();
-          
-          if (lastSend && (now - lastSend) < 2000) {
-            console.warn('⚠️ Duplicate profile update email blocked (sent', (now - lastSend), 'ms ago)');
+
+          if (lastSend && now - lastSend < 2000) {
+            console.warn('⚠️ Duplicate profile update email blocked (sent', now - lastSend, 'ms ago)');
             return;
           }
-          
+
           recentSends.set(dedupeKey, now);
-          
+
           // Clean up old entries (older than 5 seconds)
           for (const [key, timestamp] of recentSends.entries()) {
             if (now - timestamp > 5000) {
@@ -3492,24 +3494,31 @@ ARNOMA Team"
             let changesHTML = '';
             changes.forEach(change => {
               let explanation = '';
-              
+
               // Add contextual explanation based on field type
               if (change.field === 'Name') {
-                explanation = '<br><small style="color: #6b7280; font-style: italic;">Your name has been updated in our system.</small>';
+                explanation =
+                  '<br><small style="color: #6b7280; font-style: italic;">Your name has been updated in our system.</small>';
               } else if (change.field === 'Email') {
-                explanation = '<br><small style="color: #6b7280; font-style: italic;">Your email address for all future communications has been changed.</small>';
+                explanation =
+                  '<br><small style="color: #6b7280; font-style: italic;">Your email address for all future communications has been changed.</small>';
               } else if (change.field === 'Phone') {
-                explanation = '<br><small style="color: #6b7280; font-style: italic;">Your contact phone number has been updated.</small>';
+                explanation =
+                  '<br><small style="color: #6b7280; font-style: italic;">Your contact phone number has been updated.</small>';
               } else if (change.field === 'Group') {
-                explanation = '<br><small style="color: #6b7280; font-style: italic;">You have been moved to a different class group.</small>';
+                explanation =
+                  '<br><small style="color: #6b7280; font-style: italic;">You have been moved to a different class group.</small>';
               } else if (change.field === 'Amount per Class') {
-                explanation = '<br><small style="color: #6b7280; font-style: italic;">Your payment amount per class has been adjusted.</small>';
+                explanation =
+                  '<br><small style="color: #6b7280; font-style: italic;">Your payment amount per class has been adjusted.</small>';
               } else if (change.field === 'Balance') {
-                explanation = '<br><small style="color: #6b7280; font-style: italic;">Your account balance has been updated.</small>';
+                explanation =
+                  '<br><small style="color: #6b7280; font-style: italic;">Your account balance has been updated.</small>';
               } else if (change.field === 'Aliases') {
-                explanation = '<br><small style="color: #6b7280; font-style: italic;">Your alternative names/nicknames have been updated.</small>';
+                explanation =
+                  '<br><small style="color: #6b7280; font-style: italic;">Your alternative names/nicknames have been updated.</small>';
               }
-              
+
               changesHTML += `
               <p style="margin: 8px 0; padding: 10px; background-color: #f6f8fe; border-left: 3px solid #3b82f6; border-radius: 6px;">
                 <strong style="color: #4f46e5;">${change.field}:</strong>
@@ -3730,7 +3739,12 @@ ARNOMA Team"
         // Handle alias added email requests
         // ============================================================
         if (action === 'sendAliasAddedEmail') {
-          console.log('[AliasEmail] 📧 Received alias added email request:', student?.name, 'Alias:', event.data.aliasAdded);
+          console.log(
+            '[AliasEmail] 📧 Received alias added email request:',
+            student?.name,
+            'Alias:',
+            event.data.aliasAdded
+          );
 
           try {
             if (!student || !student.email) {
@@ -3873,7 +3887,12 @@ ARNOMA Team"
         // CREDIT ADDED EMAIL HANDLER
         // ============================================================
         if (action === 'sendCreditAddedEmail') {
-          console.log('[CreditEmail] 📧 Received credit added email request:', student?.name, 'Amount:', event.data.creditAmount);
+          console.log(
+            '[CreditEmail] 📧 Received credit added email request:',
+            student?.name,
+            'Amount:',
+            event.data.creditAmount
+          );
 
           try {
             if (!student || !student.email) {
@@ -4020,7 +4039,12 @@ ARNOMA Team"
         // CREDIT APPLIED EMAIL HANDLER
         // ============================================================
         if (action === 'sendCreditAppliedEmail') {
-          console.log('[CreditEmail] 📧 Received credit applied email request:', student?.name, 'Class:', event.data.classDate);
+          console.log(
+            '[CreditEmail] 📧 Received credit applied email request:',
+            student?.name,
+            'Class:',
+            event.data.classDate
+          );
 
           try {
             if (!student || !student.email) {
@@ -4537,7 +4561,9 @@ ARNOMA Team"
                     continue;
                   }
 
-                  console.log(`[AutomationEngine] 🚀 SENDING: "${automation.name}" for Group ${group.name} (${minutesUntilClass} min until class)`);
+                  console.log(
+                    `[AutomationEngine] 🚀 SENDING: "${automation.name}" for Group ${group.name} (${minutesUntilClass} min until class)`
+                  );
 
                   // Collect all recipients from multiple sources
                   let recipients = [];
@@ -4620,7 +4646,6 @@ ARNOMA Team"
 
                   // Notify parent window to add notification
                   if (successCount > 0 && window.parent && window.parent !== window) {
-
                     // Ensure fields don't exceed Supabase constraints (50 chars each)
                     const titleText =
                       automation.name.length > 50 ? automation.name.substring(0, 47) + '...' : automation.name;

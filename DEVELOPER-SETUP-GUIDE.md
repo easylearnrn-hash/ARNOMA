@@ -1,7 +1,7 @@
 # 🚀 ARNOMA Developer Setup Guide
 
-**Complete Professional Development Environment**  
-Last Updated: November 17, 2025
+**Complete Professional Development Environment** Last Updated: November 17,
+2025
 
 ---
 
@@ -21,6 +21,7 @@ Last Updated: November 17, 2025
 ## ⚡ Quick Start
 
 ### Prerequisites Installed
+
 - ✅ Node.js & npm
 - ✅ ESLint (configured)
 - ✅ Prettier (configured)
@@ -28,6 +29,7 @@ Last Updated: November 17, 2025
 - ✅ Lighthouse (installed globally)
 
 ### First Time Setup
+
 ```bash
 # 1. Install dependencies
 npm install
@@ -49,44 +51,50 @@ lighthouse https://arnoma.us --view
 ## 🔧 Installed Extensions
 
 ### ✅ Code Quality & Formatting
-| Extension | Purpose | Keyboard Shortcut |
-|-----------|---------|-------------------|
-| **ESLint** | Detects errors, undefined variables, duplicates | Auto-runs on save |
-| **Prettier** | Auto-formats code (indentation, spacing, quotes) | ⌘+S (format on save) |
-| **Error Lens** | Shows errors inline in code (red/yellow highlights) | Always visible |
-| **SonarLint** | Deep bug detection, security issues, performance | Auto-analyzes on save |
+
+| Extension      | Purpose                                             | Keyboard Shortcut     |
+| -------------- | --------------------------------------------------- | --------------------- |
+| **ESLint**     | Detects errors, undefined variables, duplicates     | Auto-runs on save     |
+| **Prettier**   | Auto-formats code (indentation, spacing, quotes)    | ⌘+S (format on save)  |
+| **Error Lens** | Shows errors inline in code (red/yellow highlights) | Always visible        |
+| **SonarLint**  | Deep bug detection, security issues, performance    | Auto-analyzes on save |
 
 ### 🎨 UI & Design Tools
-| Extension | Purpose | Usage |
-|-----------|---------|-------|
-| **Color Highlight** | Shows color previews inline | Automatic |
-| **CSS Peek** | Jump to CSS definition | Right-click class → "Go to Definition" |
-| **HTML CSS Support** | Better autocomplete for CSS classes | Type in HTML |
+
+| Extension            | Purpose                             | Usage                                  |
+| -------------------- | ----------------------------------- | -------------------------------------- |
+| **Color Highlight**  | Shows color previews inline         | Automatic                              |
+| **CSS Peek**         | Jump to CSS definition              | Right-click class → "Go to Definition" |
+| **HTML CSS Support** | Better autocomplete for CSS classes | Type in HTML                           |
 
 ### 🧪 Testing & Debugging
-| Extension | Purpose | Command |
-|-----------|---------|---------|
-| **Cypress Helper** | Cypress test autocomplete | Open `.cy.js` files |
-| **Live Server** | Auto-reload on code changes | Right-click HTML → "Open with Live Server" |
-| **Thunder Client** | API testing (Postman inside VS Code) | Click ⚡ icon in sidebar |
-| **REST Client** | Test APIs with `.http` files | Create `.http` file |
+
+| Extension          | Purpose                              | Command                                    |
+| ------------------ | ------------------------------------ | ------------------------------------------ |
+| **Cypress Helper** | Cypress test autocomplete            | Open `.cy.js` files                        |
+| **Live Server**    | Auto-reload on code changes          | Right-click HTML → "Open with Live Server" |
+| **Thunder Client** | API testing (Postman inside VS Code) | Click ⚡ icon in sidebar                   |
+| **REST Client**    | Test APIs with `.http` files         | Create `.http` file                        |
 
 ### 🔍 Development Helpers
-| Extension | Purpose | Keyboard Shortcut |
-|-----------|---------|-------------------|
-| **Path Intellisense** | Autocomplete file paths | Type `./` or `../` |
-| **Turbo Console Log** | Auto-generate console.logs | Select variable → Ctrl+Alt+L |
-| **Code Spell Checker** | Catches typos in variable names | Underlines misspelled words |
-| **GitLens** | See who changed each line of code | Hover over line |
+
+| Extension              | Purpose                           | Keyboard Shortcut            |
+| ---------------------- | --------------------------------- | ---------------------------- |
+| **Path Intellisense**  | Autocomplete file paths           | Type `./` or `../`           |
+| **Turbo Console Log**  | Auto-generate console.logs        | Select variable → Ctrl+Alt+L |
+| **Code Spell Checker** | Catches typos in variable names   | Underlines misspelled words  |
+| **GitLens**            | See who changed each line of code | Hover over line              |
 
 ---
 
 ## 📚 Tool Usage Guide
 
 ### 1️⃣ ESLint - Catch Errors Before They Break
+
 **What it does:** Finds undefined variables, duplicates, broken logic
 
 **How to use:**
+
 ```bash
 # Check all JavaScript files
 npx eslint .
@@ -96,6 +104,7 @@ npx eslint . --fix
 ```
 
 **Common errors it catches:**
+
 - `'supabase' is not defined` → Add to globals in `eslint.config.js`
 - `'students' is assigned but never used` → Remove or use the variable
 - `Duplicate key 'id' in object` → Fix duplicate keys
@@ -103,9 +112,11 @@ npx eslint . --fix
 ---
 
 ### 2️⃣ Prettier - Auto-Format Code
+
 **What it does:** Fixes indentation, spacing, quotes automatically
 
 **How to use:**
+
 ```bash
 # Format all files
 npx prettier --write .
@@ -115,10 +126,12 @@ npx prettier --check .
 ```
 
 **Auto-formatting triggers:**
+
 - Press `⌘+S` (Mac) or `Ctrl+S` (Windows) → Prettier runs automatically
 - Paste code → Auto-formats on paste (enabled in settings)
 
 **Configuration:** `.prettierrc.json`
+
 - Single quotes for strings
 - 2-space indentation
 - Max line length: 100 characters (120 for HTML)
@@ -126,9 +139,12 @@ npx prettier --check .
 ---
 
 ### 3️⃣ Cypress - End-to-End Testing
-**What it does:** Tests your app like a real user (click buttons, fill forms, verify results)
+
+**What it does:** Tests your app like a real user (click buttons, fill forms,
+verify results)
 
 **How to use:**
+
 ```bash
 # Open interactive test runner (recommended for development)
 npx cypress open
@@ -141,7 +157,9 @@ npx cypress run --spec "cypress/e2e/01-app-loads.cy.js"
 ```
 
 **Test Files Created:**
-1. `01-app-loads.cy.js` → Tests app initialization, Supabase connection, data loading
+
+1. `01-app-loads.cy.js` → Tests app initialization, Supabase connection, data
+   loading
 2. `02-student-management.cy.js` → Tests student CRUD operations, modals
 3. `03-calendar.cy.js` → Tests calendar display, navigation, dots
 4. `04-payment-system.cy.js` → Tests credit payments, balance tracking
@@ -149,19 +167,23 @@ npx cypress run --spec "cypress/e2e/01-app-loads.cy.js"
 6. `06-class-management.cy.js` → Tests skip/cancel classes, payment forwarding
 
 **Custom Commands:** `cypress/support/commands.js`
+
 ```javascript
-cy.waitForApp()               // Wait for Supabase + data to load
-cy.navigateTo('Students')     // Navigate to any view
-cy.openStudentModal('John')   // Open student edit modal
-cy.clickCalendarDate(15)      // Click on calendar date
+cy.waitForApp(); // Wait for Supabase + data to load
+cy.navigateTo('Students'); // Navigate to any view
+cy.openStudentModal('John'); // Open student edit modal
+cy.clickCalendarDate(15); // Click on calendar date
 ```
 
 ---
 
 ### 4️⃣ Lighthouse - Performance & Accessibility
-**What it does:** Audits layout stability, load times, mobile responsiveness, accessibility
+
+**What it does:** Audits layout stability, load times, mobile responsiveness,
+accessibility
 
 **How to use:**
+
 ```bash
 # Audit production site with report
 lighthouse https://arnoma.us --view
@@ -174,17 +196,21 @@ lighthouse https://arnoma.us --output html --output-path ./lighthouse-report.htm
 ```
 
 **What to check:**
+
 - **Performance Score** → Target: 90+ (green)
 - **Cumulative Layout Shift (CLS)** → Should be < 0.1
 - **First Contentful Paint (FCP)** → Should be < 2 seconds
-- **Accessibility Score** → Target: 95+ (check for missing alt tags, color contrast)
+- **Accessibility Score** → Target: 95+ (check for missing alt tags, color
+  contrast)
 
 ---
 
 ### 5️⃣ Thunder Client - API Testing
+
 **What it does:** Test Supabase APIs, email endpoints, cloud functions
 
 **How to use:**
+
 1. Click ⚡ icon in VS Code sidebar
 2. Click "New Request"
 3. Enter URL: `https://[your-supabase-url].supabase.co/rest/v1/students`
@@ -194,6 +220,7 @@ lighthouse https://arnoma.us --output html --output-path ./lighthouse-report.htm
 5. Click "Send"
 
 **Common ARNOMA API tests:**
+
 ```http
 # Get all students
 GET https://[project].supabase.co/rest/v1/students?select=*
@@ -224,15 +251,18 @@ Content-Type: application/json
 ---
 
 ### 6️⃣ Live Server - Auto-Reload Development
+
 **What it does:** Opens your app in browser and auto-reloads when you save files
 
 **How to use:**
+
 1. Right-click `index.html`
 2. Select "Open with Live Server"
 3. Browser opens at `http://127.0.0.1:5500`
 4. Edit code → Save → Page auto-reloads
 
 **Benefits:**
+
 - No manual refresh needed
 - Instant feedback on changes
 - Mobile view testing with responsive design mode
@@ -240,14 +270,17 @@ Content-Type: application/json
 ---
 
 ### 7️⃣ Turbo Console Log - Fast Debugging
+
 **What it does:** Auto-generates console.log statements for selected variables
 
 **How to use:**
+
 1. Select a variable (e.g., `students`)
 2. Press `Ctrl+Alt+L` (Windows) or `Ctrl+Option+L` (Mac)
 3. Auto-generates: `console.log('students:', students)`
 
 **Remove all logs:**
+
 ```javascript
 // Press Ctrl+Alt+D to delete all Turbo Console Logs
 ```
@@ -255,27 +288,32 @@ Content-Type: application/json
 ---
 
 ### 8️⃣ Error Lens - Inline Error Display
+
 **What it does:** Shows ESLint errors directly in your code (red/yellow text)
 
 **Configuration:**
+
 - **Red text** = Errors (will break your code)
 - **Yellow text** = Warnings (should fix but won't break)
 - **Delay:** 500ms (shows errors 0.5 seconds after you stop typing)
 
-**How to disable temporarily:**
-Press `⌘+Shift+P` → Type "Error Lens: Toggle" → Enter
+**How to disable temporarily:** Press `⌘+Shift+P` → Type "Error Lens: Toggle" →
+Enter
 
 ---
 
 ### 9️⃣ GitLens - Git History Explorer
+
 **What it does:** Shows who changed each line, when, and why
 
 **How to use:**
+
 - **Hover over any line** → See last commit that changed it
 - **Click "GitLens" in sidebar** → Browse full commit history
 - **Right-click file** → "Open File History" → See all changes over time
 
 **Use cases:**
+
 - "Who added this bug?" → GitLens shows the commit
 - "Why was this changed?" → See commit message
 - "When did payment forwarding logic change?" → File history
@@ -283,9 +321,11 @@ Press `⌘+Shift+P` → Type "Error Lens: Toggle" → Enter
 ---
 
 ### 🔟 Code Spell Checker - Typo Prevention
+
 **What it does:** Underlines misspelled words (variables, comments, strings)
 
 **Custom dictionary:** `.vscode/settings.json`
+
 ```json
 "cSpell.words": [
   "Supabase", "ARNOMA", "richyfesta", "arnoma",
@@ -294,6 +334,7 @@ Press `⌘+Shift+P` → Type "Error Lens: Toggle" → Enter
 ```
 
 **Ignore HTML attributes:**
+
 ```json
 "cSpell.ignoreWords": ["onclick", "onerror", "onload"]
 ```
@@ -303,6 +344,7 @@ Press `⌘+Shift+P` → Type "Error Lens: Toggle" → Enter
 ## 🧪 Testing Workflows
 
 ### Daily Development Testing
+
 ```bash
 # 1. Check for ESLint errors
 npx eslint .
@@ -321,6 +363,7 @@ lighthouse https://arnoma.us --view
 ```
 
 ### Before Committing Code
+
 ```bash
 # 1. Lint and format
 npx eslint . --fix && npx prettier --write .
@@ -333,6 +376,7 @@ npx eslint .
 ```
 
 ### Before Deploying to Production
+
 ```bash
 # 1. Full lint check
 npx eslint .
@@ -352,16 +396,18 @@ lighthouse https://arnoma.us --view
 ## ✅ Code Quality Checks
 
 ### ESLint Rules (Configured)
-| Rule | Level | Description |
-|------|-------|-------------|
-| `no-unused-vars` | Warning | Unused variables detected |
-| `no-undef` | Warning | Undefined variables detected |
-| `no-console` | Off | Console.log allowed |
-| `no-duplicate-case` | Error | Duplicate switch cases blocked |
-| `no-dupe-keys` | Error | Duplicate object keys blocked |
-| `no-empty` | Warning | Empty blocks warned |
+
+| Rule                | Level   | Description                    |
+| ------------------- | ------- | ------------------------------ |
+| `no-unused-vars`    | Warning | Unused variables detected      |
+| `no-undef`          | Warning | Undefined variables detected   |
+| `no-console`        | Off     | Console.log allowed            |
+| `no-duplicate-case` | Error   | Duplicate switch cases blocked |
+| `no-dupe-keys`      | Error   | Duplicate object keys blocked  |
+| `no-empty`          | Warning | Empty blocks warned            |
 
 ### SonarLint Checks (Auto-enabled)
+
 - Security vulnerabilities (SQL injection, XSS)
 - Code smells (complex functions, duplicate code)
 - Bugs (null pointer errors, type mismatches)
@@ -372,7 +418,9 @@ lighthouse https://arnoma.us --view
 ## 🔌 API Testing Examples
 
 ### Test Supabase Connection
+
 Create `tests/supabase-test.http`:
+
 ```http
 ### Get all students
 GET https://[your-project].supabase.co/rest/v1/students?select=*
@@ -414,6 +462,7 @@ Authorization: Bearer [your-anon-key]
 ## 🐛 Debugging Techniques
 
 ### 1. Use Turbo Console Log
+
 ```javascript
 // Select variable → Ctrl+Alt+L
 const result = calculateTotal(students);
@@ -421,6 +470,7 @@ console.log('result:', result); // Auto-generated
 ```
 
 ### 2. Use Browser DevTools
+
 ```javascript
 // Add debugger statement
 function processPayment(student) {
@@ -431,6 +481,7 @@ function processPayment(student) {
 ```
 
 ### 3. Use Cypress for Reproducible Bugs
+
 ```javascript
 // Reproduce bug with automated test
 it('should reproduce payment forwarding bug', () => {
@@ -442,6 +493,7 @@ it('should reproduce payment forwarding bug', () => {
 ```
 
 ### 4. Use Thunder Client for API Errors
+
 Test each Supabase endpoint independently to isolate issues.
 
 ---
@@ -449,6 +501,7 @@ Test each Supabase endpoint independently to isolate issues.
 ## 🎯 Best Practices
 
 ### ✅ DO
+
 - ✅ Format on save (Prettier auto-runs)
 - ✅ Fix ESLint errors before committing
 - ✅ Write Cypress tests for new features
@@ -458,6 +511,7 @@ Test each Supabase endpoint independently to isolate issues.
 - ✅ Run Lighthouse before deploying
 
 ### ❌ DON'T
+
 - ❌ Commit code with ESLint errors
 - ❌ Push without running tests
 - ❌ Use `var` (use `const` or `let`)
@@ -494,12 +548,14 @@ lighthouse https://arnoma.us --preset=mobile --view
 ## 📞 Support
 
 **Issues with tools?**
+
 1. Check VS Code Output panel → Select extension from dropdown
 2. Check Terminal for error messages
 3. Restart VS Code: `⌘+Shift+P` → "Reload Window"
 4. Check extension logs: View → Output → Select extension
 
 **Need to update tools?**
+
 ```bash
 npm update                      # Update npm packages
 npm install -g lighthouse@latest  # Update Lighthouse

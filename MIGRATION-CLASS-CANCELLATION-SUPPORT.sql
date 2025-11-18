@@ -9,12 +9,12 @@
 -- ============================================================================
 
 -- Add skip_type column to differentiate between student skips and class cancellations
-ALTER TABLE skipped_classes 
-ADD COLUMN IF NOT EXISTS skip_type TEXT DEFAULT 'student-skipped' 
+ALTER TABLE skipped_classes
+ADD COLUMN IF NOT EXISTS skip_type TEXT DEFAULT 'student-skipped'
 CHECK (skip_type IN ('student-skipped', 'class-canceled'));
 
 -- Add note column for optional cancellation reason
-ALTER TABLE skipped_classes 
+ALTER TABLE skipped_classes
 ADD COLUMN IF NOT EXISTS note TEXT;
 
 -- Add index for skip_type for faster filtering
@@ -24,8 +24,8 @@ CREATE INDEX IF NOT EXISTS idx_skipped_classes_skip_type ON skipped_classes(skip
 CREATE INDEX IF NOT EXISTS idx_skipped_classes_group_date_type ON skipped_classes(group_name, class_date, skip_type);
 
 -- Update existing records to have default skip_type
-UPDATE skipped_classes 
-SET skip_type = 'student-skipped' 
+UPDATE skipped_classes
+SET skip_type = 'student-skipped'
 WHERE skip_type IS NULL;
 
 -- Add comments
@@ -38,25 +38,25 @@ COMMENT ON COLUMN skipped_classes.note IS 'Optional note explaining the cancella
 
 -- Add applied_class_date column (the class date where this payment is actually applied)
 -- This allows payments made on canceled dates to be forwarded to next active class
-ALTER TABLE credit_payments 
+ALTER TABLE credit_payments
 ADD COLUMN IF NOT EXISTS applied_class_date DATE;
 
 -- Add payment_date column (the actual date payment was made, different from class_date)
-ALTER TABLE credit_payments 
+ALTER TABLE credit_payments
 ADD COLUMN IF NOT EXISTS payment_date DATE;
 
 -- Add note column for payment forwarding tracking
-ALTER TABLE credit_payments 
+ALTER TABLE credit_payments
 ADD COLUMN IF NOT EXISTS note TEXT;
 
 -- Set applied_class_date to class_date for existing records (backward compatibility)
-UPDATE credit_payments 
-SET applied_class_date = class_date 
+UPDATE credit_payments
+SET applied_class_date = class_date
 WHERE applied_class_date IS NULL;
 
 -- Set payment_date to applied_at date for existing records
-UPDATE credit_payments 
-SET payment_date = applied_at::DATE 
+UPDATE credit_payments
+SET payment_date = applied_at::DATE
 WHERE payment_date IS NULL;
 
 -- Add index for applied_class_date for faster lookups
@@ -82,7 +82,7 @@ COMMENT ON COLUMN credit_payments.note IS 'Notes about payment forwarding or oth
 -- ============================================================================
 
 -- Summary of changes:
--- 
+--
 -- skipped_classes table:
 -- • skip_type: Differentiates between individual skips and full cancellations
 -- • note: Optional field for cancellation reasons

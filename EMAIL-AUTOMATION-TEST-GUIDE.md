@@ -27,32 +27,42 @@ The diagnostic script tests **7 categories** with **17+ individual checks**:
 ## Test Results Interpretation
 
 ### ✅ All Tests Pass
+
 **System is healthy.** If emails still not sending:
+
 - Wait 60 seconds for next automation check
 - Monitor console for `[AutomationEngine] 🔄 Running automation check...`
 - Verify automations match current class times
 
 ### ❌ Iframe Not Found
+
 **CRITICAL:** Email system not initialized
+
 ```javascript
 // Fix: Run in console
 initializeEmailSystemIframe();
 ```
 
 ### ❌ Data Not Received (dataReceived = false)
+
 **CRITICAL:** PostMessage blocked or not sent
+
 ```javascript
 // Fix: Send data manually
 sendGroupsDataToEmailSystem();
 ```
 
 ### ⚠️ No Students/Groups in Iframe
+
 **WARNING:** Data empty in iframe but present in parent
+
 - Reload page to trigger data send
 - Check for CORS or iframe security errors
 
 ### ⚠️ No Automations Configured
+
 **WARNING:** No active automations exist
+
 - Go to Email System UI
 - Create a "Before Class" automation
 - Set trigger time (e.g., 30 minutes before)
@@ -64,39 +74,55 @@ sendGroupsDataToEmailSystem();
 ## Manual Testing Commands
 
 ### Force Trigger Automation Check
+
 ```javascript
-window.testAutomationManually()
+window.testAutomationManually();
 ```
+
 **When to use:** Test automation logic without waiting 60 seconds
 
 ### Send Data to Iframe
+
 ```javascript
-sendGroupsDataToEmailSystem()
+sendGroupsDataToEmailSystem();
 ```
+
 **When to use:** Iframe not receiving data
 
 ### Check Iframe Data Status
+
 ```javascript
-const iframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+const iframe = document.querySelector(
+  'iframe[src*="email-system-complete.html"]'
+);
 console.log('Data received:', iframe.contentWindow.dataReceived);
 console.log('Groups:', iframe.contentWindow.groupsData?.length);
 console.log('Students:', iframe.contentWindow.studentsData?.length);
 ```
+
 **When to use:** Verify data in iframe after send
 
 ### View Active Automations
+
 ```javascript
-const iframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+const iframe = document.querySelector(
+  'iframe[src*="email-system-complete.html"]'
+);
 const automations = iframe.contentWindow.automationSystem?._automations || [];
 console.table(automations.filter(a => a.active));
 ```
+
 **When to use:** Check automation configuration
 
 ### View Sent Reminders (Duplicate Prevention)
+
 ```javascript
-const iframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+const iframe = document.querySelector(
+  'iframe[src*="email-system-complete.html"]'
+);
 console.log('Sent reminders today:', iframe.contentWindow.sentReminders);
 ```
+
 **When to use:** Check if emails already sent today
 
 ---
@@ -106,6 +132,7 @@ console.log('Sent reminders today:', iframe.contentWindow.sentReminders);
 ### Watch Console for These Logs
 
 **Every 60 seconds (automation check):**
+
 ```
 [AutomationEngine] 🔄 Running automation check...
 [AutomationEngine] 📊 Groups available: 12
@@ -113,6 +140,7 @@ console.log('Sent reminders today:', iframe.contentWindow.sentReminders);
 ```
 
 **Every 30 seconds (data refresh):**
+
 ```
 [AutomationEngine] 📡 Requested groups/students data from parent window
 📤 Sending automation data: 12 groups, 34 students
@@ -120,6 +148,7 @@ console.log('Sent reminders today:', iframe.contentWindow.sentReminders);
 ```
 
 **When automation triggers:**
+
 ```
 [AutomationEngine] ⏰ [Automation Name] triggered for [Group Name]
 [AutomationEngine] 📧 Sending reminder to: student@example.com
@@ -127,6 +156,7 @@ console.log('Sent reminders today:', iframe.contentWindow.sentReminders);
 ```
 
 **When email fails:**
+
 ```
 [AutomationEngine] ❌ Failed to send reminder: [error message]
 ```
@@ -158,6 +188,7 @@ console.log('Sent reminders today:', iframe.contentWindow.sentReminders);
 4. Expect: `200 OK` response
 
 ### Using curl (Terminal)
+
 ```bash
 curl -X POST \
   'https://[YOUR_PROJECT].supabase.co/functions/v1/send-email' \
@@ -175,48 +206,67 @@ curl -X POST \
 ## Common Failure Scenarios
 
 ### Scenario 1: Automations Not Triggering
+
 **Symptoms:**
+
 - No console logs every 60 seconds
 - `dataReceived` is false
 
 **Fix:**
+
 1. Run `sendGroupsDataToEmailSystem()`
-2. Verify iframe exists: `document.querySelector('iframe[src*="email-system-complete.html"]')`
-3. Check if initAutomationEngine() ran (look for "⚡ Initializing Automation Engine..." in console)
+2. Verify iframe exists:
+   `document.querySelector('iframe[src*="email-system-complete.html"]')`
+3. Check if initAutomationEngine() ran (look for "⚡ Initializing Automation
+   Engine..." in console)
 
 ### Scenario 2: Emails Not Sending (But Automation Triggers)
+
 **Symptoms:**
+
 - Console shows "⏰ [Automation] triggered"
 - Console shows "📧 Sending reminder to..."
 - No "✅ Reminder sent successfully"
 
 **Fix:**
+
 1. Test Supabase Edge Function directly (see above)
 2. Check Supabase logs: Dashboard → Edge Functions → send-email → Logs
 3. Verify Resend API key in Supabase secrets
 4. Check if student email is valid
 
 ### Scenario 3: Duplicate Emails Sent
+
 **Symptoms:**
+
 - Same student receives multiple emails within 2 minutes
 
 **Fix:**
-1. Check `sentReminders` Set: 
+
+1. Check `sentReminders` Set:
    ```javascript
-   const iframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+   const iframe = document.querySelector(
+     'iframe[src*="email-system-complete.html"]'
+   );
    console.log(iframe.contentWindow.sentReminders);
    ```
-2. Verify reminderKey format: `${automation.id}-${groupId}-${sessionTime}-${student.email}`
+2. Verify reminderKey format:
+   `${automation.id}-${groupId}-${sessionTime}-${student.email}`
 3. Check if multiple automations target same group/time
 
 ### Scenario 4: Wrong Timezone (Emails Too Early/Late)
+
 **Symptoms:**
+
 - Emails sent at wrong time (30 min before becomes 2 hours before, etc.)
 
 **Fix:**
+
 1. Check LA time in iframe:
    ```javascript
-   const iframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+   const iframe = document.querySelector(
+     'iframe[src*="email-system-complete.html"]'
+   );
    console.log('LA Time:', iframe.contentWindow.getCurrentLATime());
    ```
 2. Verify server timezone matches Los Angeles
@@ -244,6 +294,7 @@ After running diagnostic and fixes:
 ## Support Information
 
 **Email Automation Architecture:**
+
 - Parent window: `index.html` (main app)
 - Iframe: `email-system-complete.html` (automation engine)
 - Communication: postMessage API
@@ -252,11 +303,13 @@ After running diagnostic and fixes:
 - Database: Supabase (PostgreSQL)
 
 **Key Files:**
+
 - `index.html` → Lines 10140-10240: Iframe initialization
 - `email-system-complete.html` → Lines 3260-3690: Automation engine
 - `supabase/functions/send-email/index.ts` → Edge Function
 
 **Console Log Prefixes:**
+
 - `[AutomationEngine]` → Automation engine logs
 - `📤 Sending automation data` → Parent sending data
 - `📨 Received` → Iframe received data

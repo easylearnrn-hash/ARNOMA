@@ -5,23 +5,27 @@
 ### 1. Email Notifications Now Show Complete Details
 
 **What Changed:**
+
 - Notifications now show **email subject** in the title
 - Notifications now show **recipient email address** in description
 - Applies to both manual and automated payment reminders
 
 **Before:**
+
 ```
 Title: Payment Reminder Sent
 Description: Sent to John Doe for 2 unpaid classes
 ```
 
 **After:**
+
 ```
 Title: Email Sent: Payment Reminder - ARNOMA NCLEX-RN
 Description: Sent to John Doe (johndoe@email.com) - 2 unpaid classes
 ```
 
 **Benefits:**
+
 - ✅ See exactly which email was sent
 - ✅ Verify recipient email address is correct
 - ✅ Easier to track sent emails in Notification Center
@@ -40,6 +44,7 @@ To find out exactly why Mariam received an unpaid payment reminder:
 **Step 2:** Open browser console (F12 → Console tab)
 
 **Step 3:** Load the diagnostic script:
+
 ```javascript
 let script = document.createElement('script');
 script.src = 'check-mariam-payments.js';
@@ -47,6 +52,7 @@ document.head.appendChild(script);
 ```
 
 **What It Shows:**
+
 - ✅ All of Mariam's class dates
 - ✅ Payment status for each date (paid/unpaid/absent/etc)
 - ✅ All payments linked to her name
@@ -92,6 +98,7 @@ The system checks for payments in this order:
 4. **Not Ignored:** Payment must not have `ignored` flag
 
 **Example:**
+
 ```
 Class Date: Nov 11, 2025
 Payment Date: Nov 11, 2025 ✅ MATCH (exact)
@@ -116,12 +123,14 @@ Payment Date: Nov 10, 2025 ❌ NO MATCH (before class)
 ### If Email Was Sent By Mistake
 
 **Possible causes:**
+
 - Payment was recorded AFTER email was sent
 - Calendar data wasn't refreshed before check
 - Payment was just linked to student
 - Mariam paid late (more than 7 days after class)
 
 **What to do:**
+
 - Verify payments are correctly linked to Mariam's name
 - Check payment dates match class dates
 - If needed, manually pause auto-reminders for Mariam:
@@ -132,6 +141,7 @@ Payment Date: Nov 10, 2025 ❌ NO MATCH (before class)
 ### If Email Was Correct
 
 If Mariam truly has unpaid classes:
+
 - Diagnostic script will show which dates are unpaid
 - Email was justified
 - Mariam needs to make payment or payment needs to be recorded
@@ -143,6 +153,7 @@ If Mariam truly has unpaid classes:
 ### Console Logs Now Include:
 
 When checking Mariam Gevorgyan specifically, the system logs:
+
 ```
 🔍 DEBUG: Mariam Gevorgyan Details:
   Student ID: 123

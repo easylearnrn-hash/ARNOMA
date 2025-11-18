@@ -17,22 +17,22 @@
   --text-white: rgba(255, 255, 255, 0.95);
   --text-dim: rgba(255, 255, 255, 0.6);
   --text-grey: rgba(255, 255, 255, 0.45);
-  
+
   /* Accent Colors */
   --blue-glow: #70aaff;
   --green-accent: #22c55e;
   --purple-accent: #a78bfa;
   --red-accent: #ef4444;
-  
+
   /* Spacing */
   --edge-padding: 20px;
   --card-radius: 18px;
   --button-radius: 14px;
-  
+
   /* Touch Targets */
   --touch-min: 44px;
   --touch-large: 52px;
-  
+
   /* Typography */
   --text-body: 15px;
   --text-title: 19px;
@@ -46,7 +46,8 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
@@ -54,7 +55,7 @@ html, body {
   overflow-x: hidden;
   background: var(--mobile-bg);
   color: var(--text-white);
-  font-family: -apple-system, system-ui, BlinkMacSystemFont, "SF Pro Text", sans-serif;
+  font-family: -apple-system, system-ui, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
   font-size: var(--text-body);
   line-height: 1.5;
 }
@@ -93,7 +94,7 @@ body {
   align-items: center;
   justify-content: space-between;
   padding: 0 14px;
-  border-bottom: 1px solid rgba(255,255,255,0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Main Content - Only Scrollable Area */
@@ -192,15 +193,15 @@ body {
 .mobile-payment-card {
   border-radius: 14px;
   padding: 12px 14px;
-  background: radial-gradient(circle at top left, rgba(79,70,229,0.22), rgba(15,23,42,0.98));
-  border: 1px solid rgba(148,163,184,0.35);
-  box-shadow: 0 10px 25px rgba(15,23,42,0.85);
+  background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.22), rgba(15, 23, 42, 0.98));
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.85);
   transition: all 0.2s ease;
 }
 
 .mobile-payment-card:active {
   transform: scale(0.98);
-  background: radial-gradient(circle at top left, rgba(79,70,229,0.28), rgba(15,23,42,0.98));
+  background: radial-gradient(circle at top left, rgba(79, 70, 229, 0.28), rgba(15, 23, 42, 0.98));
 }
 
 .payment-card-header {
@@ -254,9 +255,9 @@ body {
   font-size: 13px;
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(22,163,74,0.16);
+  background: rgba(22, 163, 74, 0.16);
   color: #bbf7d0;
-  border: 1px solid rgba(34,197,94,0.7);
+  border: 1px solid rgba(34, 197, 94, 0.7);
   font-weight: 700;
 }
 
@@ -317,8 +318,8 @@ body {
 .calendar-day-mobile {
   border-radius: 12px;
   padding: 10px;
-  background: rgba(15,23,42,0.96);
-  border: 1px solid rgba(148,163,184,0.28);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.28);
   min-height: 110px;
   display: flex;
   flex-direction: column;
@@ -329,13 +330,13 @@ body {
 
 .calendar-day-mobile:active {
   transform: scale(0.97);
-  background: rgba(15,23,42,0.98);
+  background: rgba(15, 23, 42, 0.98);
 }
 
 .calendar-day-mobile.today {
-  border: 2px solid rgba(129,140,248,0.95);
-  box-shadow: 0 0 14px rgba(129,140,248,0.7);
-  background: rgba(79,70,229,0.08);
+  border: 2px solid rgba(129, 140, 248, 0.95);
+  box-shadow: 0 0 14px rgba(129, 140, 248, 0.7);
+  background: rgba(79, 70, 229, 0.08);
 }
 
 .calendar-day-number {
@@ -457,9 +458,9 @@ body {
 .group-card-mobile {
   border-radius: 14px;
   padding: 12px 14px;
-  background: rgba(15,23,42,0.96);
-  border: 1px solid rgba(148,163,184,0.3);
-  box-shadow: 0 10px 26px rgba(15,23,42,0.9);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -496,22 +497,22 @@ body {
 }
 
 .student-status-badge.active {
-  background: rgba(34,197,94,0.18);
+  background: rgba(34, 197, 94, 0.18);
   color: #bbf7d0;
-  border: 1px solid rgba(34,197,94,0.8);
-  box-shadow: 0 0 12px rgba(34,197,94,0.2);
+  border: 1px solid rgba(34, 197, 94, 0.8);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
 }
 
 .student-status-badge.paused {
-  background: rgba(234,179,8,0.18);
+  background: rgba(234, 179, 8, 0.18);
   color: #facc15;
-  border: 1px solid rgba(234,179,8,0.7);
+  border: 1px solid rgba(234, 179, 8, 0.7);
 }
 
 .student-status-badge.graduated {
-  background: rgba(148,163,184,0.2);
+  background: rgba(148, 163, 184, 0.2);
   color: #e5e7eb;
-  border: 1px solid rgba(148,163,184,0.7);
+  border: 1px solid rgba(148, 163, 184, 0.7);
 }
 
 .student-card-actions {
@@ -519,7 +520,7 @@ body {
   gap: 8px;
   margin-top: 8px;
   padding-top: 10px;
-  border-top: 1px solid rgba(148,163,184,0.2);
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .student-action-btn {
@@ -529,7 +530,7 @@ body {
   padding: 9px 0;
   font-size: 13px;
   font-weight: 600;
-  background: rgba(79,70,229,0.9);
+  background: rgba(79, 70, 229, 0.9);
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -537,7 +538,7 @@ body {
 
 .student-action-btn:active {
   transform: scale(0.96);
-  background: rgba(79,70,229,1);
+  background: rgba(79, 70, 229, 1);
 }
 
 /* ============================================================================
@@ -547,9 +548,9 @@ body {
 .group-card-mobile {
   border-radius: 14px;
   padding: 12px 14px;
-  background: rgba(15,23,42,0.96);
-  border: 1px solid rgba(148,163,184,0.3);
-  box-shadow: 0 10px 26px rgba(15,23,42,0.9);
+  background: rgba(15, 23, 42, 0.96);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.9);
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -592,16 +593,16 @@ body {
 }
 
 .group-status-badge.active {
-  background: rgba(34,197,94,0.18);
+  background: rgba(34, 197, 94, 0.18);
   color: #bbf7d0;
-  border: 1px solid rgba(34,197,94,0.8);
-  box-shadow: 0 0 12px rgba(34,197,94,0.2);
+  border: 1px solid rgba(34, 197, 94, 0.8);
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
 }
 
 .group-status-badge.paused {
-  background: rgba(234,179,8,0.18);
+  background: rgba(234, 179, 8, 0.18);
   color: #facc15;
-  border: 1px solid rgba(234,179,8,0.7);
+  border: 1px solid rgba(234, 179, 8, 0.7);
 }
 
 .group-card-actions {
@@ -609,7 +610,7 @@ body {
   gap: 8px;
   margin-top: 8px;
   padding-top: 10px;
-  border-top: 1px solid rgba(148,163,184,0.2);
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .group-action-btn {
@@ -619,7 +620,7 @@ body {
   padding: 9px 0;
   font-size: 13px;
   font-weight: 600;
-  background: rgba(79,70,229,0.9);
+  background: rgba(79, 70, 229, 0.9);
   color: white;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -627,13 +628,13 @@ body {
 
 .group-action-btn:active {
   transform: scale(0.96);
-  background: rgba(79,70,229,1);
+  background: rgba(79, 70, 229, 1);
 }
 
 .group-schedule-list {
   margin-top: 14px;
   padding-top: 14px;
-  border-top: 1px solid rgba(148,163,184,0.2);
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
 }
 
 .group-schedule-item {
@@ -888,14 +889,14 @@ body {
   max-width: 360px;
   height: 100%;
   height: 100dvh;
-  background: rgba(15,23,42,0.98);
+  background: rgba(15, 23, 42, 0.98);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   z-index: 1500;
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: -6px 0 40px rgba(0,0,0,0.7);
-  border-left: 1px solid rgba(148,163,184,0.3);
+  box-shadow: -6px 0 40px rgba(0, 0, 0, 0.7);
+  border-left: 1px solid rgba(148, 163, 184, 0.3);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   padding-bottom: env(safe-area-inset-bottom);
@@ -908,8 +909,8 @@ body {
 .settings-drawer-header {
   position: sticky;
   top: 0;
-  background: rgba(15,23,42,0.98);
-  border-bottom: 1px solid rgba(148,163,184,0.3);
+  background: rgba(15, 23, 42, 0.98);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.3);
   padding: env(safe-area-inset-top, 22px) 22px 22px;
   z-index: 10;
 }
@@ -919,7 +920,7 @@ body {
   height: 44px;
   border-radius: 999px;
   border: none;
-  background: rgba(148,163,184,0.2);
+  background: rgba(148, 163, 184, 0.2);
   color: white;
   font-size: 20px;
   cursor: pointer;
@@ -934,7 +935,7 @@ body {
 
 .settings-close-btn:active {
   transform: scale(0.94);
-  background: rgba(148,163,184,0.35);
+  background: rgba(148, 163, 184, 0.35);
 }
 
 .settings-drawer-title {
@@ -950,7 +951,7 @@ body {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0,0,0,0.6);
+  background: rgba(0, 0, 0, 0.6);
   z-index: 1499;
   opacity: 0;
   pointer-events: none;
@@ -1181,7 +1182,9 @@ body {
 }
 
 @keyframes spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* ============================================================================
@@ -1193,8 +1196,14 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .slide-up {
@@ -1202,8 +1211,12 @@ body {
 }
 
 @keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* ============================================================================
@@ -1217,15 +1230,15 @@ body {
     --text-body: 14px;
     --text-title: 17px;
   }
-  
+
   .calendar-grid-mobile {
     grid-template-columns: 1fr !important;
   }
-  
+
   .mobile-nav {
     padding: 6px 12px;
   }
-  
+
   .mobile-nav-btn {
     width: 44px;
     height: 44px;
@@ -1245,7 +1258,7 @@ body {
   .notification-sheet {
     height: 85vh;
   }
-  
+
   .mobile-nav {
     height: 60px;
     padding: 4px 12px;

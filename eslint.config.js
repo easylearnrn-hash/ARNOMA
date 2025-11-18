@@ -20,8 +20,8 @@ export default [
       'package-lock.json',
       'eslint.config.js',
       'cypress.config.js',
-      'cypress/**'  // Ignore Cypress tests (they have their own globals)
-    ]
+      'cypress/**', // Ignore Cypress tests (they have their own globals)
+    ],
   },
   {
     languageOptions: {
@@ -70,8 +70,8 @@ export default [
         PaymentReminderManager: 'writable',
         ClassCountdownTimer: 'writable',
         getCachedStudents: 'readonly',
-        currentPaymentPopupData: 'writable'
-      }
+        currentPaymentPopupData: 'writable',
+      },
     },
     rules: {
       'no-unused-vars': 'warn',
@@ -79,7 +79,7 @@ export default [
       'no-console': 'off',
       'no-duplicate-case': 'error',
       'no-dupe-keys': 'error',
-      'no-empty': 'warn'
-    }
-  }
+      'no-empty': 'warn',
+    },
+  },
 ];

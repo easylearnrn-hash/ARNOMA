@@ -25,6 +25,7 @@
 ## Usage
 
 ### Development
+
 ```bash
 npm run lint              # Check for ESLint errors
 npm run lint:fix          # Auto-fix ESLint errors
@@ -33,6 +34,7 @@ npm run format:check      # Check if files are formatted
 ```
 
 ### Testing
+
 ```bash
 npm run test              # Run all tests (lint + format + cypress)
 npm run test:cypress      # Run Cypress tests in headless mode
@@ -40,12 +42,14 @@ npm run test:cypress:open # Open Cypress interactive test runner
 ```
 
 ### Performance
+
 ```bash
 npm run lighthouse        # Run Lighthouse audit on desktop
 npm run lighthouse:mobile # Run Lighthouse audit on mobile
 ```
 
 ### Pre-commit
+
 ```bash
 npm run precommit         # Fix code before committing (lint + format)
 npm run validate          # Full validation (lint + format + tests)

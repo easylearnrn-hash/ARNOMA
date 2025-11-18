@@ -1,99 +1,95 @@
+// VERSION CHECK - This should appear FIRST in console
+console.log('🔥 CACHE BUSTER: Version 2.1.0 - Build 20251112-0240');
 
+// Supabase Client Initialization
+const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
+const SUPABASE_ANON_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// Global data caches for performance
+window.paymentsCache = [];
+window.studentsCache = [];
+window.groupsCache = [];
 
-    // VERSION CHECK - This should appear FIRST in console
-    console.log('🔥 CACHE BUSTER: Version 2.1.0 - Build 20251112-0240');
-    
-    // Supabase Client Initialization
-    const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    
-    
-    // Global data caches for performance
-    window.paymentsCache = [];
-    window.studentsCache = [];
-    window.groupsCache = [];
-    
-    // ============================================================================
-    // LOS ANGELES TIMEZONE UTILITIES
-    // ============================================================================
-    const LA_TIMEZONE = 'America/Los_Angeles';
-    
-    // Get current date/time in LA timezone
-    function getNowLA() {
-      return new Date(new Date().toLocaleString('en-US', { timeZone: LA_TIMEZONE }));
+// ============================================================================
+// LOS ANGELES TIMEZONE UTILITIES
+// ============================================================================
+const LA_TIMEZONE = 'America/Los_Angeles';
+
+// Get current date/time in LA timezone
+function getNowLA() {
+  return new Date(new Date().toLocaleString('en-US', { timeZone: LA_TIMEZONE }));
+}
+
+// Get today's date string in LA timezone (YYYY-MM-DD)
+function getTodayLA() {
+  const now = getNowLA();
+  return now.toISOString().slice(0, 10);
+}
+
+// Convert any date to LA timezone
+function toLA(date) {
+  return new Date(date.toLocaleString('en-US', { timeZone: LA_TIMEZONE }));
+}
+
+// Format date in LA timezone
+function formatDateLA(date, options = {}) {
+  return new Date(date).toLocaleString('en-US', {
+    timeZone: LA_TIMEZONE,
+    ...options,
+  });
+}
+
+// Global Popup Management System
+// Ensures all popups have Back button, click-outside-to-close, and instant responsiveness
+window.PopupManager = {
+  activePopups: new Set(),
+  listenerRegistry: new WeakMap(),
+
+  // Register a popup for management
+  register(popupId, options = {}) {
+    const popup = document.getElementById(popupId);
+    if (!popup || popup.dataset.popupInitialized === 'true') return;
+
+    popup.dataset.popupInitialized = 'true';
+    const config = {
+      hasBackButton: options.hasBackButton !== false,
+      hasCloseButton: options.hasCloseButton !== false,
+      closeOnOutsideClick: options.closeOnOutsideClick !== false,
+      onClose: options.onClose || null,
+      onBack: options.onBack || null,
+      parent: options.parent || null,
+    };
+
+    // Store config
+    popup._popupConfig = config;
+
+    // Add back button if enabled
+    if (config.hasBackButton) {
+      this.addBackButton(popup, config.onBack);
     }
-    
-    // Get today's date string in LA timezone (YYYY-MM-DD)
-    function getTodayLA() {
-      const now = getNowLA();
-      return now.toISOString().slice(0, 10);
-    }
-    
-    // Convert any date to LA timezone
-    function toLA(date) {
-      return new Date(date.toLocaleString('en-US', { timeZone: LA_TIMEZONE }));
-    }
-    
-    // Format date in LA timezone
-    function formatDateLA(date, options = {}) {
-      return new Date(date).toLocaleString('en-US', { 
-        timeZone: LA_TIMEZONE,
-        ...options 
-      });
-    }
-  
 
+    // Setup click-outside-to-close
+    if (config.closeOnOutsideClick) {
+      this.setupOutsideClick(popup);
+    }
 
-    // Global Popup Management System
-    // Ensures all popups have Back button, click-outside-to-close, and instant responsiveness
-    window.PopupManager = {
-      activePopups: new Set(),
-      listenerRegistry: new WeakMap(),
-      
-      // Register a popup for management
-      register(popupId, options = {}) {
-        const popup = document.getElementById(popupId);
-        if (!popup || popup.dataset.popupInitialized === 'true') return;
-        
-        popup.dataset.popupInitialized = 'true';
-        const config = {
-          hasBackButton: options.hasBackButton !== false,
-          hasCloseButton: options.hasCloseButton !== false,
-          closeOnOutsideClick: options.closeOnOutsideClick !== false,
-          onClose: options.onClose || null,
-          onBack: options.onBack || null,
-          parent: options.parent || null
-        };
-        
-        // Store config
-        popup._popupConfig = config;
-        
-        // Add back button if enabled
-        if (config.hasBackButton) {
-          this.addBackButton(popup, config.onBack);
-        }
-        
-        // Setup click-outside-to-close
-        if (config.closeOnOutsideClick) {
-          this.setupOutsideClick(popup);
-        }
-        
-        // Ensure all buttons are immediately responsive
-        this.optimizeButtons(popup);
-      },
-      
-      // Add back button to popup header
-      addBackButton(popup, onBackCallback) {
-        const header = popup.querySelector('[style*="justify-content: space-between"]') || 
-                       popup.querySelector('h3')?.parentElement;
-        if (!header || header.querySelector('.popup-back-btn')) return;
-        
-        const backBtn = document.createElement('button');
-        backBtn.className = 'popup-back-btn';
-        backBtn.innerHTML = '← Back';
-        backBtn.style.cssText = `
+    // Ensure all buttons are immediately responsive
+    this.optimizeButtons(popup);
+  },
+
+  // Add back button to popup header
+  addBackButton(popup, onBackCallback) {
+    const header =
+      popup.querySelector('[style*="justify-content: space-between"]') ||
+      popup.querySelector('h3')?.parentElement;
+    if (!header || header.querySelector('.popup-back-btn')) return;
+
+    const backBtn = document.createElement('button');
+    backBtn.className = 'popup-back-btn';
+    backBtn.innerHTML = '← Back';
+    backBtn.style.cssText = `
           background: none;
           border: none;
           color: var(--secondary, #94a3b8);
@@ -110,869 +106,845 @@
           top: 20px;
           z-index: 1;
         `;
-        
-        backBtn.onmouseover = () => {
-          backBtn.style.opacity = '1';
-          backBtn.style.textShadow = '0 0 8px rgba(148,163,184,0.6)';
-        };
-        backBtn.onmouseout = () => {
-          backBtn.style.opacity = '0.8';
-          backBtn.style.textShadow = 'none';
-        };
-        
-        backBtn.onclick = (e) => {
-          e.stopPropagation();
-          if (onBackCallback) {
-            onBackCallback();
-          } else {
-            this.close(popup.id);
-          }
-        };
-        
-        header.style.position = 'relative';
-        header.insertBefore(backBtn, header.firstChild);
-      },
-      
-      // Setup click-outside-to-close
-      setupOutsideClick(popup) {
-        // Find backdrop by ID (reliable method)
-        let backdrop = document.getElementById(popup.id + 'Backdrop');
-        
-        if (backdrop) {
-          // Remove old listener if exists
-          const oldListener = this.listenerRegistry.get(backdrop);
-          if (oldListener) {
-            backdrop.removeEventListener('click', oldListener);
-          }
-          
-          // Add new debounced listener
-          const closeHandler = this.debounce((e) => {
-            e.stopPropagation();
-            this.close(popup.id);
-          }, 150);
-          
-          backdrop.addEventListener('click', closeHandler, { once: false });
-          this.listenerRegistry.set(backdrop, closeHandler);
-          
-          // Ensure backdrop is clickable
-          backdrop.style.cursor = 'pointer';
-          backdrop.style.pointerEvents = 'auto';
-        }
-      },
-      
-      // Optimize all buttons in popup for instant response
-      optimizeButtons(popup) {
-        const buttons = popup.querySelectorAll('button, [onclick]');
-        buttons.forEach(btn => {
-          // Ensure immediate pointer events
-          btn.style.pointerEvents = 'auto';
-          btn.style.transition = btn.style.transition || 'all 0.2s ease';
-          
-          // Remove any existing duplicate listeners
-          const clone = btn.cloneNode(true);
-          btn.parentNode?.replaceChild(clone, btn);
-        });
-      },
-      
-      // Debounce helper (prevents double-clicks)
-      debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-          const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-          };
-          clearTimeout(timeout);
-          timeout = setTimeout(later, wait);
-        };
-      },
-      
-      // Open popup with fade-in
-      open(popupId) {
-        const popup = document.getElementById(popupId);
-        if (!popup) return;
-        
-        this.activePopups.add(popupId);
-        popup.style.display = 'block';
-        popup.style.opacity = '0';
-        popup.style.transition = 'opacity 0.25s ease';
-        
-        // Trigger fade-in
-        requestAnimationFrame(() => {
-          popup.style.opacity = '1';
-        });
-        
-        // Show backdrop if exists
-        const backdrop = document.getElementById(popupId + 'Backdrop');
-        if (backdrop) {
-          backdrop.style.display = 'block';
-          backdrop.style.opacity = '0';
-          backdrop.style.transition = 'opacity 0.25s ease';
-          requestAnimationFrame(() => {
-            backdrop.style.opacity = '1';
-          });
-        }
-      },
-      
-      // Close popup with fade-out
-      close(popupId) {
-        const popup = document.getElementById(popupId);
-        if (!popup) return;
-        
-        const config = popup._popupConfig;
-        
-        // Fade out
-        popup.style.opacity = '0';
-        const backdrop = document.getElementById(popupId + 'Backdrop');
-        if (backdrop) {
-          backdrop.style.opacity = '0';
-        }
-        
-        // Hide after transition
-        setTimeout(() => {
-          popup.style.display = 'none';
-          if (backdrop) backdrop.style.display = 'none';
-          this.activePopups.delete(popupId);
-          
-          // Call onClose callback
-          if (config?.onClose) {
-            config.onClose();
-          }
-        }, 250);
-      },
-      
-      // Close all popups
-      closeAll() {
-        this.activePopups.forEach(id => this.close(id));
-      }
+
+    backBtn.onmouseover = () => {
+      backBtn.style.opacity = '1';
+      backBtn.style.textShadow = '0 0 8px rgba(148,163,184,0.6)';
     };
-  
-
-
-    // ============================================================================
-    // STORAGE & DATA MANAGEMENT
-    // ============================================================================
-    
-    const STORAGE_KEYS = {
-      PAYMENTS: 'firestone:payments:v3',
-      GMAIL_TOKEN: 'firestone:gmail:token',
-      GMAIL_EXPIRY: 'firestone:gmail:expiry',
-      GMAIL_LAST_CHECK: 'firestone:gmail:last-check'
+    backBtn.onmouseout = () => {
+      backBtn.style.opacity = '0.8';
+      backBtn.style.textShadow = 'none';
     };
-    
-    const UI_STATE_KEYS = {
-      MONTH_TOTALS_COLLAPSED: 'firestone:payments:monthTotalsCollapsed'
-    };
-    
-    let monthTotalsCollapsed = localStorage.getItem(UI_STATE_KEYS.MONTH_TOTALS_COLLAPSED) === 'true';
-    
-    // Timing constants
-    const TIMING = {
-      NEW_PAYMENT_INDICATOR: 60000,  // 60 seconds
-      AUTO_REFRESH_INTERVAL: 30000,  // 30 seconds
-      API_DELAY: 100,                // 100ms between API calls
-      FULL_SYNC_API_DELAY: 150       // 150ms to respect Gmail rate limits during full sync
-    };
-    
-    let gmailAccessToken = localStorage.getItem(STORAGE_KEYS.GMAIL_TOKEN);
-    let gmailTokenExpiry = localStorage.getItem(STORAGE_KEYS.GMAIL_EXPIRY);
-    
-    // ============================================================================
-    // SUPABASE DATA OPERATIONS - Replace localStorage with cloud database
-    // ============================================================================
-    
-    const PaymentStore = {
-      getAll: function() {
-        return window.paymentsCache || [];
-      },
-      fetchAll: async function() {
-        try {
-          const { data, error } = await supabase
-            .from('payments')
-            .select('*')
-            .order('date', { ascending: false });
-          
-          if (error) {
-            console.error('❌ Error loading payments from Supabase:', error);
-            return window.paymentsCache || [];
-          }
-          
-          // CRITICAL FIX: Convert snake_case from Supabase back to camelCase for JavaScript
-          const paymentsFromSupabase = (data || []).map(p => ({
-            // Core payment data
-            id: p.id,
-            gmailId: p.gmail_id,
-            amount: p.amount,
-            date: p.date,
-            
-            // Raw immutable data from email
-            payerNameRaw: p.payer_name_raw,
-            payerEmailRaw: p.payer_email_raw,
-            memo: p.memo,
-            message: p.message,
-            
-            // Display fields (computed/resolved)
-            payerName: p.payer_name,
-            senderName: p.sender_name,
-            studentName: p.student_name,
-            studentEmail: p.student_email,
-            groupId: p.group_id,
-            
-            // Manual linking (highest priority - user override)
-            linkedStudentId: p.linked_student_id,
-            manuallyLinked: p.manually_linked,
-            
-            // Automatic resolution metadata
-            derivedStudentId: p.derived_student_id,
-            resolvedStudentName: p.resolved_student_name,
-            derivedStudentGroup: p.derived_student_group,
-            resolutionSource: p.resolution_source,
-            
-            // Legacy/compatibility field
-            studentId: p.student_id,
-            
-            // Status tracking
-            status: p.status,
-            viewed: p.viewed,
-            ignoredOnce: p.ignored_once,
-            ignorePermanently: p.ignore_permanently,
-            
-            // Timestamps
-            emailDate: p.email_date,
-            createdAt: p.created_at,
-            linkedAt: p.linked_at,
-            dateModifiedAt: p.date_modified_at
-          }));
-          
-          window.paymentsCache = paymentsFromSupabase;
-          return window.paymentsCache;
-        } catch (err) {
-          console.error('❌ Exception loading payments:', err);
-          return window.paymentsCache || [];
-        }
-      },
-      save: async function(payments) {
-        try {
-          // CRITICAL FIX: Map JavaScript camelCase to Supabase snake_case
-          const paymentsForSupabase = payments.map(p => ({
-            // Core payment data
-            id: p.id,
-            gmail_id: p.gmailId || null,              // FIX: gmailId -> gmail_id
-            amount: p.amount,
-            date: p.date,
-            
-            // Raw immutable data from email
-            payer_name_raw: p.payerNameRaw || p.payerName,  // FIX: snake_case
-            payer_email_raw: p.payerEmailRaw || null,       // FIX: snake_case
-            memo: p.memo || null,
-            message: p.message || null,
-            
-            // Display fields (computed/resolved)
-            payer_name: p.payerName,                   // FIX: snake_case
-            sender_name: p.senderName,                 // FIX: snake_case
-            student_name: p.studentName,               // FIX: snake_case
-            student_email: p.studentEmail || null,     // FIX: snake_case
-            group_id: p.groupId || null,               // FIX: snake_case
-            
-            // Manual linking (highest priority - user override)
-            linked_student_id: p.linkedStudentId || null,     // Already snake_case
-            manually_linked: p.manuallyLinked || false,       // Already snake_case
-            
-            // Automatic resolution metadata
-            derived_student_id: p.derivedStudentId || null,              // Already snake_case
-            resolved_student_name: p.resolvedStudentName || null,        // Already snake_case
-            derived_student_group: p.derivedStudentGroup || null,        // Already snake_case
-            resolution_source: p.resolutionSource || 'none',             // Already snake_case
-            
-            // Legacy/compatibility field
-            student_id: p.studentId || p.linkedStudentId || p.derivedStudentId || null,  // FIX: snake_case
-            
-            // Status tracking
-            status: p.status || 'unmatched',
-            viewed: p.viewed || false,
-            ignored_once: p.ignoredOnce || false,              // FIX: snake_case
-            ignore_permanently: p.ignorePermanently || false,  // FIX: snake_case
-            
-            // Timestamps
-            email_date: p.emailDate || p.date,                 // FIX: snake_case
-            created_at: p.createdAt || new Date().toISOString(),  // FIX: snake_case
-            linked_at: p.linkedAt || null,                     // FIX: snake_case
-            date_modified_at: p.dateModifiedAt || null         // FIX: snake_case
-          }));
-          
-          if (paymentsForSupabase.length > 0) {
-          }
-          
-          // For bulk save, we'll upsert all payments
-          const { data, error } = await supabase
-            .from('payments')
-            .upsert(paymentsForSupabase, { onConflict: 'id' })
-            .select();
-          
-          if (error) {
-            console.error('❌ Error saving payments to Supabase:', error);
-            console.error('📋 Error details:', {
-              code: error.code,
-              message: error.message,
-              details: error.details,
-              hint: error.hint
-            });
-            console.error('📋 Failed payload sample:', paymentsForSupabase[0]);
-            
-            // Try to save to cache anyway so data isn't lost
-            window.paymentsCache = payments;
-            showNotification('⚠️ Failed to save to database, but cached locally', 'warning');
-            return;
-          }
-          
-          
-          // Convert snake_case response back to camelCase for cache
-          const paymentsFromSupabase = (data || []).map(p => ({
-            id: p.id,
-            gmailId: p.gmail_id,
-            amount: p.amount,
-            date: p.date,
-            payerNameRaw: p.payer_name_raw,
-            payerEmailRaw: p.payer_email_raw,
-            memo: p.memo,
-            message: p.message,
-            payerName: p.payer_name,
-            senderName: p.sender_name,
-            studentName: p.student_name,
-            studentEmail: p.student_email,
-            groupId: p.group_id,
-            linkedStudentId: p.linked_student_id,
-            manuallyLinked: p.manually_linked,
-            derivedStudentId: p.derived_student_id,
-            resolvedStudentName: p.resolved_student_name,
-            derivedStudentGroup: p.derived_student_group,
-            resolutionSource: p.resolution_source,
-            studentId: p.student_id,
-            status: p.status,
-            viewed: p.viewed,
-            ignoredOnce: p.ignored_once,
-            ignorePermanently: p.ignore_permanently,
-            emailDate: p.email_date,
-            createdAt: p.created_at,
-            linkedAt: p.linked_at,
-            dateModifiedAt: p.date_modified_at
-          }));
-          
-          window.paymentsCache = paymentsFromSupabase;
-          dispatchPaymentsUpdated(paymentsFromSupabase);
-          
-          // Auto-backup on every save
-          try {
-            const backupData = {
-              timestamp: new Date().toISOString(),
-              payments: payments,
-              payment_count: payments.length,
-              source: 'auto-save'
-            };
-            await createAutoBackup(backupData);
-          } catch (error) {
-            console.error('Auto-backup failed:', error);
-          }
-        } catch (err) {
-          console.error('❌ Exception saving payments:', err);
-        }
-      }
-    };
-    
-    // Supabase helper functions for individual operations
-    async function addPayment(paymentData) {
-      const { data, error } = await supabase
-        .from('payments')
-        .insert([paymentData])
-        .select();
-      
-      if (error) {
-        console.error('❌ Error adding payment:', error);
-        return null;
-      }
-      
-      return data[0];
-    }
-    
-    async function updatePayment(id, updates) {
-      const { data, error } = await supabase
-        .from('payments')
-        .update(updates)
-        .eq('id', id)
-        .select();
-      
-      if (error) {
-        console.error('❌ Error updating payment:', error);
-        return null;
-      }
-      
-      return data[0];
-    }
-    
-    async function deletePayment(id) {
-      const { error } = await supabase
-        .from('payments')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error('❌ Error deleting payment:', error);
-        return false;
-      }
-      
-      return true;
-    }
-    
-    window.studentsCache = Array.isArray(window.studentsCache) ? window.studentsCache : [];
 
-    function getCachedStudents() {
-      return Array.isArray(window.studentsCache) ? window.studentsCache : [];
-    }
-
-    function normalizeStudentStatusValue(status) {
-      if (!status) return 'active';
-      const lower = String(status).toLowerCase();
-      if (lower === 'pause' || lower === 'paused') return 'paused';
-      if (lower === 'graduate' || lower === 'graduated') return 'graduated';
-      return 'active';
-    }
-
-    function mapSupabaseStudent(record) {
-      if (!record) return null;
-
-      // CRITICAL FIX: Use delimiter that won't appear in names (|||)
-      // This prevents "Company, Inc." from being split into ["Company", "Inc."]
-      let aliases = [];
-      if (typeof record.aliases === 'string') {
-        if (record.aliases.includes('|||')) {
-          // New format: delimited by |||
-          aliases = record.aliases.split('|||').map(alias => alias.trim()).filter(Boolean);
-        } else {
-          // Legacy format: comma-separated (but this breaks company names with commas)
-          // For backward compatibility, keep as single alias if it looks like a company name
-          aliases = record.aliases ? [record.aliases.trim()] : [];
-        }
-      } else if (Array.isArray(record.aliases)) {
-        aliases = record.aliases;
-      }
-
-      return {
-        ...record,
-        group: record.group_name ?? record.group ?? null,
-        payPerClass: record.price_per_class ?? record.payPerClass ?? null,
-        balance: record.balance ?? 0,
-        status: normalizeStudentStatusValue(record.status),
-        showInGrid: record.show_in_grid ?? record.showInGrid ?? true,
-        isActive: record.is_active ?? (record.isActive ?? true),
-        statusChangedDate: record.status_changed_date ?? record.statusChangedDate ?? null,
-        aliases
-      };
-    }
-
-    async function loadStudents() {
-      const { data, error } = await supabase
-        .from('students')
-        .select('*')
-        .order('name', { ascending: true });
-      
-      if (error) {
-        console.error('❌ Error loading students:', error);
-        return window.studentsCache || [];
-      }
-      
-      // Map Supabase column names to local property names
-      const mappedData = (data || []).map(mapSupabaseStudent).filter(Boolean);
-      
-      
-      window.studentsCache = mappedData;
-      return mappedData;
-    }
-    
-    async function saveStudent(studentData) {
-      // Check if this is an update (has a numeric Supabase ID) or insert
-      const isUpdate = studentData.id && typeof studentData.id === 'number';
-      
-      // Prepare payload - map local field names to Supabase columns
-      const payload = {
-        name: studentData.name,
-        group_name: studentData.group || studentData.group_name || null,
-        price_per_class: studentData.price_per_class ?? studentData.payPerClass ?? null,
-        balance: studentData.balance ?? 0,
-        status: normalizeStudentStatusValue(studentData.status),
-        status_changed_date: studentData.statusChangedDate ?? null
-      };
-      
-      // Add optional fields only if they exist in the Supabase schema
-      if (studentData.email) payload.email = studentData.email;
-      if (studentData.phone) payload.phone = studentData.phone;
-      if (studentData.notes) payload.notes = studentData.notes;
-      
-      // NOTE: show_in_grid and is_active are NOT in Supabase schema
-      // They are only used locally in the frontend
-      // if (typeof studentData.showInGrid === 'boolean') payload.show_in_grid = studentData.showInGrid;
-      // if (typeof studentData.isActive === 'boolean') payload.is_active = studentData.isActive;
-      
-      // Handle aliases - convert array to delimited string using ||| separator
-      // This prevents aliases with commas (like "Company, Inc.") from being split incorrectly
-      if (studentData.aliases) {
-        payload.aliases = Array.isArray(studentData.aliases) 
-          ? studentData.aliases.join('|||') 
-          : studentData.aliases;
-      }
-      
-      // CRITICAL: Never include 'id' in payload for INSERT
-      // Only use it in UPDATE .eq() clause
-      if (payload.id) {
-        delete payload.id;
-      }
-      
-      try {
-        let result;
-        
-        if (isUpdate) {
-          // Update existing record by numeric ID
-          result = await supabase
-            .from('students')
-            .update(payload)
-            .eq('id', studentData.id)
-            .select();
-        } else {
-          // Insert new record - let Supabase generate ID
-          result = await supabase
-            .from('students')
-            .insert([payload])
-            .select();
-        }
-        
-        const { data, error } = result;
-        
-        if (error) {
-          console.error('❌ Error saving student:', error);
-          console.error('Error details:', error.message, error.details, error.hint);
-          console.error('Payload sent:', payload);
-          return null;
-        }
-        
-        const mappedRecord = mapSupabaseStudent(data?.[0]);
-        return mappedRecord;
-      } catch (err) {
-        console.error('❌ Exception saving student:', err);
-        return null;
-      }
-    }
-    
-    async function deleteStudentRecord(id) {
-      try {
-        const { error } = await supabase
-          .from('students')
-          .delete()
-          .eq('id', id);
-        
-        if (error) {
-          throw error;
-        }
-        
-        return true;
-      } catch (error) {
-        console.error('❌ Error deleting student:', error);
-        return false;
-      }
-    }
-    
-    async function loadGroupsFromSupabase() {
-      const { data, error } = await supabase
-        .from('groups')
-        .select('*')
-        .order('updated_at', { ascending: false });
-      
-      
-      if (error) {
-        console.error('❌ Error loading groups:', error);
-        return window.groupsCache || [];
-      }
-      
-      
-      // Map group_name back to name for app compatibility
-      const mappedData = (data || []).map(group => ({
-        id: group.id,
-        name: group.group_name,
-        schedule: group.schedule,
-        color: group.color,
-        created_at: group.created_at,
-        updated_at: group.updated_at
-      }));
-      
-      // De-duplicate by name, keeping the most recently updated/created row
-      const deduped = [];
-      const seen = new Set();
-      const sorted = [...mappedData].sort((a, b) => {
-        const aTime = new Date(a.updated_at || a.created_at || 0).getTime();
-        const bTime = new Date(b.updated_at || b.created_at || 0).getTime();
-        return bTime - aTime; // newest first
-      });
-      for (const g of sorted) {
-        if (!g.name) continue;
-        const key = String(g.name).trim().toUpperCase();
-        if (!seen.has(key)) {
-          deduped.push(g);
-          seen.add(key);
-        }
-      }
-      
-      
-      window.groupsCache = deduped;
-      return window.groupsCache;
-    }
-    
-  async function saveGroup(groupData) {
-      // Map 'name' to 'group_name' for Supabase
-      const payload = {
-        group_name: groupData.name || groupData.group_name,
-        schedule: groupData.schedule,
-        color: groupData.color
-      };
-      
-      let data, error;
-      
-      if (groupData.id) {
-        // UPDATE existing group - use eq() to match by id
-        ({ data, error } = await supabase
-          .from('groups')
-          .update(payload)
-          .eq('id', groupData.id)
-          .select());
+    backBtn.onclick = e => {
+      e.stopPropagation();
+      if (onBackCallback) {
+        onBackCallback();
       } else {
-        // INSERT new group - check if name exists first
-        const { data: existing, error: checkError } = await supabase
-          .from('groups')
-          .select('id')
-          .eq('group_name', payload.group_name)
-          .maybeSingle();
-        
-        if (checkError) {
-          console.error('Error checking for existing group:', checkError);
-        }
-        
-        if (existing) {
-          // Group with this name already exists, update it
-          ({ data, error } = await supabase
-            .from('groups')
-            .update(payload)
-            .eq('id', existing.id)
-            .select());
-        } else {
-          // Insert new group
-          ({ data, error } = await supabase
-            .from('groups')
-            .insert([payload])
-            .select());
-        }
+        this.close(popup.id);
       }
-      
-      if (error) {
-        console.error('❌ Error saving group:', error);
-        return null;
+    };
+
+    header.style.position = 'relative';
+    header.insertBefore(backBtn, header.firstChild);
+  },
+
+  // Setup click-outside-to-close
+  setupOutsideClick(popup) {
+    // Find backdrop by ID (reliable method)
+    let backdrop = document.getElementById(popup.id + 'Backdrop');
+
+    if (backdrop) {
+      // Remove old listener if exists
+      const oldListener = this.listenerRegistry.get(backdrop);
+      if (oldListener) {
+        backdrop.removeEventListener('click', oldListener);
       }
-      
-      return data[0];
+
+      // Add new debounced listener
+      const closeHandler = this.debounce(e => {
+        e.stopPropagation();
+        this.close(popup.id);
+      }, 150);
+
+      backdrop.addEventListener('click', closeHandler, { once: false });
+      this.listenerRegistry.set(backdrop, closeHandler);
+
+      // Ensure backdrop is clickable
+      backdrop.style.cursor = 'pointer';
+      backdrop.style.pointerEvents = 'auto';
     }
-    
-    async function deleteGroupById(id) {
-      const { error } = await supabase
-        .from('groups')
-        .delete()
-        .eq('id', id);
-      
-      if (error) {
-        console.error('❌ Error deleting group:', error);
-        return false;
-      }
-      
-      return true;
-    }
-    
-    // ============================================================================
-    // PAYMENT-STUDENT LINKING & ALIAS RESOLUTION SYSTEM
-    // ============================================================================
-    
-    // Dispatch events for cross-module communication
-    function dispatchPaymentsUpdated(payments) {
-      window.dispatchEvent(new CustomEvent('payments:updated', {
-        detail: { changed: payments.map(p => p.id) }
-      }));
-    }
-    
-    function dispatchStudentsUpdatedFromPayments() {
-      window.dispatchEvent(new CustomEvent('students:updated', {
-        detail: { source: 'payment-linking' }
-      }));
-    }
-    
-  // Server sync hook (placeholder for external integrations)
-    async function syncWithServer({ paymentsChanged = [], studentsChanged = [] }) {
-  // Future: Trigger GitHub automation or other webhooks
-    }
-    
-    // Normalize string for alias matching
-    function normalizeForMatching(str) {
-      if (!str) return '';
-      return String(str).toLowerCase().trim().replace(/\s+/g, ' ');
-    }
-    
-    // Resolve payment to student using alias system
-    function resolvePaymentToStudent(payment, studentCache) {
-  const students = Array.isArray(studentCache) ? studentCache : getCachedStudents();
-      
-      // Priority 1: Manual link (check both linkedStudentId and studentId)
-      const manualStudentId = payment.linkedStudentId || payment.studentId;
-      if (manualStudentId && payment.manuallyLinked) {
-        const student = students.find(s => s.id === manualStudentId);
-        if (student) {
-          return {
-            studentId: student.id,
-            studentName: student.name,
-            studentEmail: student.email,
-            studentGroup: student.group || student.groups || '',
-            source: 'manual'
-          };
-        }
-      }
-      
-      // Priority 2: Direct name match (NEW - AUTOMATIC MATCHING)
-      const payerNorm = normalizeForMatching(payment.payerNameRaw || payment.payerName);
-      const emailNorm = normalizeForMatching(payment.payerEmailRaw || payment.studentEmail);
-      
-      const directNameMatches = students.filter(student => 
-        normalizeForMatching(student.name) === payerNorm
-      );
-      
-      if (directNameMatches.length === 1) {
-        return {
-          studentId: directNameMatches[0].id,
-          studentName: directNameMatches[0].name,
-          studentEmail: directNameMatches[0].email,
-          studentGroup: directNameMatches[0].group || directNameMatches[0].groups || '',
-          source: 'direct'
-        };
-      } else if (directNameMatches.length > 1) {
-        return {
-          studentId: null,
-          studentName: payment.payerNameRaw || payment.payerName || 'Unmatched',
-          studentEmail: null,
-          studentGroup: '',
-          source: 'conflict',
-          conflicts: directNameMatches
-        };
-      }
-      
-      // Priority 3: Alias or Email resolution
-      const matches = [];
-      
-      students.forEach(student => {
-        // Check aliases
-        if (student.aliases && Array.isArray(student.aliases)) {
-          const aliasMatch = student.aliases.some(alias => 
-            normalizeForMatching(alias) === payerNorm
-          );
-          if (aliasMatch) {
-            matches.push(student);
-            return;
-          }
-        }
-        
-        // Check email match
-        if (emailNorm && normalizeForMatching(student.email) === emailNorm) {
-          matches.push(student);
-          return;
-        }
+  },
+
+  // Optimize all buttons in popup for instant response
+  optimizeButtons(popup) {
+    const buttons = popup.querySelectorAll('button, [onclick]');
+    buttons.forEach(btn => {
+      // Ensure immediate pointer events
+      btn.style.pointerEvents = 'auto';
+      btn.style.transition = btn.style.transition || 'all 0.2s ease';
+
+      // Remove any existing duplicate listeners
+      const clone = btn.cloneNode(true);
+      btn.parentNode?.replaceChild(clone, btn);
+    });
+  },
+
+  // Debounce helper (prevents double-clicks)
+  debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+      const later = () => {
+        clearTimeout(timeout);
+        func(...args);
+      };
+      clearTimeout(timeout);
+      timeout = setTimeout(later, wait);
+    };
+  },
+
+  // Open popup with fade-in
+  open(popupId) {
+    const popup = document.getElementById(popupId);
+    if (!popup) return;
+
+    this.activePopups.add(popupId);
+    popup.style.display = 'block';
+    popup.style.opacity = '0';
+    popup.style.transition = 'opacity 0.25s ease';
+
+    // Trigger fade-in
+    requestAnimationFrame(() => {
+      popup.style.opacity = '1';
+    });
+
+    // Show backdrop if exists
+    const backdrop = document.getElementById(popupId + 'Backdrop');
+    if (backdrop) {
+      backdrop.style.display = 'block';
+      backdrop.style.opacity = '0';
+      backdrop.style.transition = 'opacity 0.25s ease';
+      requestAnimationFrame(() => {
+        backdrop.style.opacity = '1';
       });
-      
-      if (matches.length === 1) {
-        return {
-          studentId: matches[0].id,
-          studentName: matches[0].name,
-          studentEmail: matches[0].email,
-          studentGroup: matches[0].group || matches[0].groups || '',
-          source: 'alias'
-        };
-      } else if (matches.length > 1) {
-        return {
-          studentId: null,
-          studentName: payment.payerNameRaw || payment.payerName || 'Unmatched',
-          studentEmail: null,
-          studentGroup: '',
-          source: 'conflict',
-          conflicts: matches
-        };
+    }
+  },
+
+  // Close popup with fade-out
+  close(popupId) {
+    const popup = document.getElementById(popupId);
+    if (!popup) return;
+
+    const config = popup._popupConfig;
+
+    // Fade out
+    popup.style.opacity = '0';
+    const backdrop = document.getElementById(popupId + 'Backdrop');
+    if (backdrop) {
+      backdrop.style.opacity = '0';
+    }
+
+    // Hide after transition
+    setTimeout(() => {
+      popup.style.display = 'none';
+      if (backdrop) backdrop.style.display = 'none';
+      this.activePopups.delete(popupId);
+
+      // Call onClose callback
+      if (config?.onClose) {
+        config.onClose();
       }
-      
-      // Priority 4: No match - unmatched
+    }, 250);
+  },
+
+  // Close all popups
+  closeAll() {
+    this.activePopups.forEach(id => this.close(id));
+  },
+};
+
+// ============================================================================
+// STORAGE & DATA MANAGEMENT
+// ============================================================================
+
+const STORAGE_KEYS = {
+  PAYMENTS: 'firestone:payments:v3',
+  GMAIL_TOKEN: 'firestone:gmail:token',
+  GMAIL_EXPIRY: 'firestone:gmail:expiry',
+  GMAIL_LAST_CHECK: 'firestone:gmail:last-check',
+};
+
+const UI_STATE_KEYS = {
+  MONTH_TOTALS_COLLAPSED: 'firestone:payments:monthTotalsCollapsed',
+};
+
+let monthTotalsCollapsed = localStorage.getItem(UI_STATE_KEYS.MONTH_TOTALS_COLLAPSED) === 'true';
+
+// Timing constants
+const TIMING = {
+  NEW_PAYMENT_INDICATOR: 60000, // 60 seconds
+  AUTO_REFRESH_INTERVAL: 30000, // 30 seconds
+  API_DELAY: 100, // 100ms between API calls
+  FULL_SYNC_API_DELAY: 150, // 150ms to respect Gmail rate limits during full sync
+};
+
+let gmailAccessToken = localStorage.getItem(STORAGE_KEYS.GMAIL_TOKEN);
+let gmailTokenExpiry = localStorage.getItem(STORAGE_KEYS.GMAIL_EXPIRY);
+
+// ============================================================================
+// SUPABASE DATA OPERATIONS - Replace localStorage with cloud database
+// ============================================================================
+
+const PaymentStore = {
+  getAll: function () {
+    return window.paymentsCache || [];
+  },
+  fetchAll: async function () {
+    try {
+      const { data, error } = await supabase
+        .from('payments')
+        .select('*')
+        .order('date', { ascending: false });
+
+      if (error) {
+        console.error('❌ Error loading payments from Supabase:', error);
+        return window.paymentsCache || [];
+      }
+
+      // CRITICAL FIX: Convert snake_case from Supabase back to camelCase for JavaScript
+      const paymentsFromSupabase = (data || []).map(p => ({
+        // Core payment data
+        id: p.id,
+        gmailId: p.gmail_id,
+        amount: p.amount,
+        date: p.date,
+
+        // Raw immutable data from email
+        payerNameRaw: p.payer_name_raw,
+        payerEmailRaw: p.payer_email_raw,
+        memo: p.memo,
+        message: p.message,
+
+        // Display fields (computed/resolved)
+        payerName: p.payer_name,
+        senderName: p.sender_name,
+        studentName: p.student_name,
+        studentEmail: p.student_email,
+        groupId: p.group_id,
+
+        // Manual linking (highest priority - user override)
+        linkedStudentId: p.linked_student_id,
+        manuallyLinked: p.manually_linked,
+
+        // Automatic resolution metadata
+        derivedStudentId: p.derived_student_id,
+        resolvedStudentName: p.resolved_student_name,
+        derivedStudentGroup: p.derived_student_group,
+        resolutionSource: p.resolution_source,
+
+        // Legacy/compatibility field
+        studentId: p.student_id,
+
+        // Status tracking
+        status: p.status,
+        viewed: p.viewed,
+        ignoredOnce: p.ignored_once,
+        ignorePermanently: p.ignore_permanently,
+
+        // Timestamps
+        emailDate: p.email_date,
+        createdAt: p.created_at,
+        linkedAt: p.linked_at,
+        dateModifiedAt: p.date_modified_at,
+      }));
+
+      window.paymentsCache = paymentsFromSupabase;
+      return window.paymentsCache;
+    } catch (err) {
+      console.error('❌ Exception loading payments:', err);
+      return window.paymentsCache || [];
+    }
+  },
+  save: async function (payments) {
+    try {
+      // CRITICAL FIX: Map JavaScript camelCase to Supabase snake_case
+      const paymentsForSupabase = payments.map(p => ({
+        // Core payment data
+        id: p.id,
+        gmail_id: p.gmailId || null, // FIX: gmailId -> gmail_id
+        amount: p.amount,
+        date: p.date,
+
+        // Raw immutable data from email
+        payer_name_raw: p.payerNameRaw || p.payerName, // FIX: snake_case
+        payer_email_raw: p.payerEmailRaw || null, // FIX: snake_case
+        memo: p.memo || null,
+        message: p.message || null,
+
+        // Display fields (computed/resolved)
+        payer_name: p.payerName, // FIX: snake_case
+        sender_name: p.senderName, // FIX: snake_case
+        student_name: p.studentName, // FIX: snake_case
+        student_email: p.studentEmail || null, // FIX: snake_case
+        group_id: p.groupId || null, // FIX: snake_case
+
+        // Manual linking (highest priority - user override)
+        linked_student_id: p.linkedStudentId || null, // Already snake_case
+        manually_linked: p.manuallyLinked || false, // Already snake_case
+
+        // Automatic resolution metadata
+        derived_student_id: p.derivedStudentId || null, // Already snake_case
+        resolved_student_name: p.resolvedStudentName || null, // Already snake_case
+        derived_student_group: p.derivedStudentGroup || null, // Already snake_case
+        resolution_source: p.resolutionSource || 'none', // Already snake_case
+
+        // Legacy/compatibility field
+        student_id: p.studentId || p.linkedStudentId || p.derivedStudentId || null, // FIX: snake_case
+
+        // Status tracking
+        status: p.status || 'unmatched',
+        viewed: p.viewed || false,
+        ignored_once: p.ignoredOnce || false, // FIX: snake_case
+        ignore_permanently: p.ignorePermanently || false, // FIX: snake_case
+
+        // Timestamps
+        email_date: p.emailDate || p.date, // FIX: snake_case
+        created_at: p.createdAt || new Date().toISOString(), // FIX: snake_case
+        linked_at: p.linkedAt || null, // FIX: snake_case
+        date_modified_at: p.dateModifiedAt || null, // FIX: snake_case
+      }));
+
+      if (paymentsForSupabase.length > 0) {
+      }
+
+      // For bulk save, we'll upsert all payments
+      const { data, error } = await supabase
+        .from('payments')
+        .upsert(paymentsForSupabase, { onConflict: 'id' })
+        .select();
+
+      if (error) {
+        console.error('❌ Error saving payments to Supabase:', error);
+        console.error('📋 Error details:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
+        console.error('📋 Failed payload sample:', paymentsForSupabase[0]);
+
+        // Try to save to cache anyway so data isn't lost
+        window.paymentsCache = payments;
+        showNotification('⚠️ Failed to save to database, but cached locally', 'warning');
+        return;
+      }
+
+      // Convert snake_case response back to camelCase for cache
+      const paymentsFromSupabase = (data || []).map(p => ({
+        id: p.id,
+        gmailId: p.gmail_id,
+        amount: p.amount,
+        date: p.date,
+        payerNameRaw: p.payer_name_raw,
+        payerEmailRaw: p.payer_email_raw,
+        memo: p.memo,
+        message: p.message,
+        payerName: p.payer_name,
+        senderName: p.sender_name,
+        studentName: p.student_name,
+        studentEmail: p.student_email,
+        groupId: p.group_id,
+        linkedStudentId: p.linked_student_id,
+        manuallyLinked: p.manually_linked,
+        derivedStudentId: p.derived_student_id,
+        resolvedStudentName: p.resolved_student_name,
+        derivedStudentGroup: p.derived_student_group,
+        resolutionSource: p.resolution_source,
+        studentId: p.student_id,
+        status: p.status,
+        viewed: p.viewed,
+        ignoredOnce: p.ignored_once,
+        ignorePermanently: p.ignore_permanently,
+        emailDate: p.email_date,
+        createdAt: p.created_at,
+        linkedAt: p.linked_at,
+        dateModifiedAt: p.date_modified_at,
+      }));
+
+      window.paymentsCache = paymentsFromSupabase;
+      dispatchPaymentsUpdated(paymentsFromSupabase);
+
+      // Auto-backup on every save
+      try {
+        const backupData = {
+          timestamp: new Date().toISOString(),
+          payments: payments,
+          payment_count: payments.length,
+          source: 'auto-save',
+        };
+        await createAutoBackup(backupData);
+      } catch (error) {
+        console.error('Auto-backup failed:', error);
+      }
+    } catch (err) {
+      console.error('❌ Exception saving payments:', err);
+    }
+  },
+};
+
+// Supabase helper functions for individual operations
+async function addPayment(paymentData) {
+  const { data, error } = await supabase.from('payments').insert([paymentData]).select();
+
+  if (error) {
+    console.error('❌ Error adding payment:', error);
+    return null;
+  }
+
+  return data[0];
+}
+
+async function updatePayment(id, updates) {
+  const { data, error } = await supabase.from('payments').update(updates).eq('id', id).select();
+
+  if (error) {
+    console.error('❌ Error updating payment:', error);
+    return null;
+  }
+
+  return data[0];
+}
+
+async function deletePayment(id) {
+  const { error } = await supabase.from('payments').delete().eq('id', id);
+
+  if (error) {
+    console.error('❌ Error deleting payment:', error);
+    return false;
+  }
+
+  return true;
+}
+
+window.studentsCache = Array.isArray(window.studentsCache) ? window.studentsCache : [];
+
+function getCachedStudents() {
+  return Array.isArray(window.studentsCache) ? window.studentsCache : [];
+}
+
+function normalizeStudentStatusValue(status) {
+  if (!status) return 'active';
+  const lower = String(status).toLowerCase();
+  if (lower === 'pause' || lower === 'paused') return 'paused';
+  if (lower === 'graduate' || lower === 'graduated') return 'graduated';
+  return 'active';
+}
+
+function mapSupabaseStudent(record) {
+  if (!record) return null;
+
+  // CRITICAL FIX: Use delimiter that won't appear in names (|||)
+  // This prevents "Company, Inc." from being split into ["Company", "Inc."]
+  let aliases = [];
+  if (typeof record.aliases === 'string') {
+    if (record.aliases.includes('|||')) {
+      // New format: delimited by |||
+      aliases = record.aliases
+        .split('|||')
+        .map(alias => alias.trim())
+        .filter(Boolean);
+    } else {
+      // Legacy format: comma-separated (but this breaks company names with commas)
+      // For backward compatibility, keep as single alias if it looks like a company name
+      aliases = record.aliases ? [record.aliases.trim()] : [];
+    }
+  } else if (Array.isArray(record.aliases)) {
+    aliases = record.aliases;
+  }
+
+  return {
+    ...record,
+    group: record.group_name ?? record.group ?? null,
+    payPerClass: record.price_per_class ?? record.payPerClass ?? null,
+    balance: record.balance ?? 0,
+    status: normalizeStudentStatusValue(record.status),
+    showInGrid: record.show_in_grid ?? record.showInGrid ?? true,
+    isActive: record.is_active ?? record.isActive ?? true,
+    statusChangedDate: record.status_changed_date ?? record.statusChangedDate ?? null,
+    aliases,
+  };
+}
+
+async function loadStudents() {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .order('name', { ascending: true });
+
+  if (error) {
+    console.error('❌ Error loading students:', error);
+    return window.studentsCache || [];
+  }
+
+  // Map Supabase column names to local property names
+  const mappedData = (data || []).map(mapSupabaseStudent).filter(Boolean);
+
+  window.studentsCache = mappedData;
+  return mappedData;
+}
+
+async function saveStudent(studentData) {
+  // Check if this is an update (has a numeric Supabase ID) or insert
+  const isUpdate = studentData.id && typeof studentData.id === 'number';
+
+  // Prepare payload - map local field names to Supabase columns
+  const payload = {
+    name: studentData.name,
+    group_name: studentData.group || studentData.group_name || null,
+    price_per_class: studentData.price_per_class ?? studentData.payPerClass ?? null,
+    balance: studentData.balance ?? 0,
+    status: normalizeStudentStatusValue(studentData.status),
+    status_changed_date: studentData.statusChangedDate ?? null,
+  };
+
+  // Add optional fields only if they exist in the Supabase schema
+  if (studentData.email) payload.email = studentData.email;
+  if (studentData.phone) payload.phone = studentData.phone;
+  if (studentData.notes) payload.notes = studentData.notes;
+
+  // NOTE: show_in_grid and is_active are NOT in Supabase schema
+  // They are only used locally in the frontend
+  // if (typeof studentData.showInGrid === 'boolean') payload.show_in_grid = studentData.showInGrid;
+  // if (typeof studentData.isActive === 'boolean') payload.is_active = studentData.isActive;
+
+  // Handle aliases - convert array to delimited string using ||| separator
+  // This prevents aliases with commas (like "Company, Inc.") from being split incorrectly
+  if (studentData.aliases) {
+    payload.aliases = Array.isArray(studentData.aliases)
+      ? studentData.aliases.join('|||')
+      : studentData.aliases;
+  }
+
+  // CRITICAL: Never include 'id' in payload for INSERT
+  // Only use it in UPDATE .eq() clause
+  if (payload.id) {
+    delete payload.id;
+  }
+
+  try {
+    let result;
+
+    if (isUpdate) {
+      // Update existing record by numeric ID
+      result = await supabase.from('students').update(payload).eq('id', studentData.id).select();
+    } else {
+      // Insert new record - let Supabase generate ID
+      result = await supabase.from('students').insert([payload]).select();
+    }
+
+    const { data, error } = result;
+
+    if (error) {
+      console.error('❌ Error saving student:', error);
+      console.error('Error details:', error.message, error.details, error.hint);
+      console.error('Payload sent:', payload);
+      return null;
+    }
+
+    const mappedRecord = mapSupabaseStudent(data?.[0]);
+    return mappedRecord;
+  } catch (err) {
+    console.error('❌ Exception saving student:', err);
+    return null;
+  }
+}
+
+async function deleteStudentRecord(id) {
+  try {
+    const { error } = await supabase.from('students').delete().eq('id', id);
+
+    if (error) {
+      throw error;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('❌ Error deleting student:', error);
+    return false;
+  }
+}
+
+async function loadGroupsFromSupabase() {
+  const { data, error } = await supabase
+    .from('groups')
+    .select('*')
+    .order('updated_at', { ascending: false });
+
+  if (error) {
+    console.error('❌ Error loading groups:', error);
+    return window.groupsCache || [];
+  }
+
+  // Map group_name back to name for app compatibility
+  const mappedData = (data || []).map(group => ({
+    id: group.id,
+    name: group.group_name,
+    schedule: group.schedule,
+    color: group.color,
+    created_at: group.created_at,
+    updated_at: group.updated_at,
+  }));
+
+  // De-duplicate by name, keeping the most recently updated/created row
+  const deduped = [];
+  const seen = new Set();
+  const sorted = [...mappedData].sort((a, b) => {
+    const aTime = new Date(a.updated_at || a.created_at || 0).getTime();
+    const bTime = new Date(b.updated_at || b.created_at || 0).getTime();
+    return bTime - aTime; // newest first
+  });
+  for (const g of sorted) {
+    if (!g.name) continue;
+    const key = String(g.name).trim().toUpperCase();
+    if (!seen.has(key)) {
+      deduped.push(g);
+      seen.add(key);
+    }
+  }
+
+  window.groupsCache = deduped;
+  return window.groupsCache;
+}
+
+async function saveGroup(groupData) {
+  // Map 'name' to 'group_name' for Supabase
+  const payload = {
+    group_name: groupData.name || groupData.group_name,
+    schedule: groupData.schedule,
+    color: groupData.color,
+  };
+
+  let data, error;
+
+  if (groupData.id) {
+    // UPDATE existing group - use eq() to match by id
+    ({ data, error } = await supabase
+      .from('groups')
+      .update(payload)
+      .eq('id', groupData.id)
+      .select());
+  } else {
+    // INSERT new group - check if name exists first
+    const { data: existing, error: checkError } = await supabase
+      .from('groups')
+      .select('id')
+      .eq('group_name', payload.group_name)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error('Error checking for existing group:', checkError);
+    }
+
+    if (existing) {
+      // Group with this name already exists, update it
+      ({ data, error } = await supabase
+        .from('groups')
+        .update(payload)
+        .eq('id', existing.id)
+        .select());
+    } else {
+      // Insert new group
+      ({ data, error } = await supabase.from('groups').insert([payload]).select());
+    }
+  }
+
+  if (error) {
+    console.error('❌ Error saving group:', error);
+    return null;
+  }
+
+  return data[0];
+}
+
+async function deleteGroupById(id) {
+  const { error } = await supabase.from('groups').delete().eq('id', id);
+
+  if (error) {
+    console.error('❌ Error deleting group:', error);
+    return false;
+  }
+
+  return true;
+}
+
+// ============================================================================
+// PAYMENT-STUDENT LINKING & ALIAS RESOLUTION SYSTEM
+// ============================================================================
+
+// Dispatch events for cross-module communication
+function dispatchPaymentsUpdated(payments) {
+  window.dispatchEvent(
+    new CustomEvent('payments:updated', {
+      detail: { changed: payments.map(p => p.id) },
+    })
+  );
+}
+
+function dispatchStudentsUpdatedFromPayments() {
+  window.dispatchEvent(
+    new CustomEvent('students:updated', {
+      detail: { source: 'payment-linking' },
+    })
+  );
+}
+
+// Server sync hook (placeholder for external integrations)
+async function syncWithServer({ paymentsChanged = [], studentsChanged = [] }) {
+  // Future: Trigger GitHub automation or other webhooks
+}
+
+// Normalize string for alias matching
+function normalizeForMatching(str) {
+  if (!str) return '';
+  return String(str).toLowerCase().trim().replace(/\s+/g, ' ');
+}
+
+// Resolve payment to student using alias system
+function resolvePaymentToStudent(payment, studentCache) {
+  const students = Array.isArray(studentCache) ? studentCache : getCachedStudents();
+
+  // Priority 1: Manual link (check both linkedStudentId and studentId)
+  const manualStudentId = payment.linkedStudentId || payment.studentId;
+  if (manualStudentId && payment.manuallyLinked) {
+    const student = students.find(s => s.id === manualStudentId);
+    if (student) {
       return {
-        studentId: null,
-        studentName: payment.payerNameRaw || payment.payerName || 'Unmatched',
-        studentEmail: payment.payerEmailRaw || null,
-        studentGroup: '',
-        source: 'none'
+        studentId: student.id,
+        studentName: student.name,
+        studentEmail: student.email,
+        studentGroup: student.group || student.groups || '',
+        source: 'manual',
       };
     }
-    
-    // Recompute resolution for all payments
-    async function recomputePaymentResolutions() {
-      const payments = PaymentStore.getAll();
-    const students = getCachedStudents();
-      let updated = false;
-      
-      payments.forEach(payment => {
-        const resolution = resolvePaymentToStudent(payment, students);
-        
-        // Update derived fields
-        const oldDerivedId = payment.derivedStudentId;
-        const oldResolved = payment.resolvedStudentName;
-        const oldGroup = payment.derivedStudentGroup;
-        
-        payment.derivedStudentId = resolution.studentId;
-        payment.resolvedStudentName = resolution.studentName;
-        payment.derivedStudentGroup = resolution.studentGroup;
-        payment.resolutionSource = resolution.source;
-        
-        if (resolution.source === 'conflict') {
-          payment.conflictCandidates = resolution.conflicts.map(s => s.id);
-        } else {
-          delete payment.conflictCandidates;
-        }
-        
-        if (oldDerivedId !== payment.derivedStudentId || oldResolved !== payment.resolvedStudentName || oldGroup !== payment.derivedStudentGroup) {
-          updated = true;
-        }
-      });
-      
-      if (updated) {
-        await PaymentStore.save(payments);
+  }
+
+  // Priority 2: Direct name match (NEW - AUTOMATIC MATCHING)
+  const payerNorm = normalizeForMatching(payment.payerNameRaw || payment.payerName);
+  const emailNorm = normalizeForMatching(payment.payerEmailRaw || payment.studentEmail);
+
+  const directNameMatches = students.filter(
+    student => normalizeForMatching(student.name) === payerNorm
+  );
+
+  if (directNameMatches.length === 1) {
+    return {
+      studentId: directNameMatches[0].id,
+      studentName: directNameMatches[0].name,
+      studentEmail: directNameMatches[0].email,
+      studentGroup: directNameMatches[0].group || directNameMatches[0].groups || '',
+      source: 'direct',
+    };
+  } else if (directNameMatches.length > 1) {
+    return {
+      studentId: null,
+      studentName: payment.payerNameRaw || payment.payerName || 'Unmatched',
+      studentEmail: null,
+      studentGroup: '',
+      source: 'conflict',
+      conflicts: directNameMatches,
+    };
+  }
+
+  // Priority 3: Alias or Email resolution
+  const matches = [];
+
+  students.forEach(student => {
+    // Check aliases
+    if (student.aliases && Array.isArray(student.aliases)) {
+      const aliasMatch = student.aliases.some(alias => normalizeForMatching(alias) === payerNorm);
+      if (aliasMatch) {
+        matches.push(student);
+        return;
       }
     }
-    
-    // Show payment context menu
-    function showPaymentContextMenu(event, paymentId) {
-      try {
-        event.preventDefault();
-        event.stopPropagation();
-        
-        // Close any existing menus
-        const existingMenu = document.getElementById('paymentContextMenu');
-        if (existingMenu) existingMenu.remove();
-        
-        const payments = PaymentStore.getAll();
-        const payment = payments.find(p => p.id === paymentId);
-        if (!payment) {
-          console.error('Payment not found:', paymentId);
-          return;
-        }
-        
-  const resolution = resolvePaymentToStudent(payment, getCachedStudents());
-        
-        const menu = document.createElement('div');
-        menu.id = 'paymentContextMenu';
-        menu.style.cssText = `
+
+    // Check email match
+    if (emailNorm && normalizeForMatching(student.email) === emailNorm) {
+      matches.push(student);
+      return;
+    }
+  });
+
+  if (matches.length === 1) {
+    return {
+      studentId: matches[0].id,
+      studentName: matches[0].name,
+      studentEmail: matches[0].email,
+      studentGroup: matches[0].group || matches[0].groups || '',
+      source: 'alias',
+    };
+  } else if (matches.length > 1) {
+    return {
+      studentId: null,
+      studentName: payment.payerNameRaw || payment.payerName || 'Unmatched',
+      studentEmail: null,
+      studentGroup: '',
+      source: 'conflict',
+      conflicts: matches,
+    };
+  }
+
+  // Priority 4: No match - unmatched
+  return {
+    studentId: null,
+    studentName: payment.payerNameRaw || payment.payerName || 'Unmatched',
+    studentEmail: payment.payerEmailRaw || null,
+    studentGroup: '',
+    source: 'none',
+  };
+}
+
+// Recompute resolution for all payments
+async function recomputePaymentResolutions() {
+  const payments = PaymentStore.getAll();
+  const students = getCachedStudents();
+  let updated = false;
+
+  payments.forEach(payment => {
+    const resolution = resolvePaymentToStudent(payment, students);
+
+    // Update derived fields
+    const oldDerivedId = payment.derivedStudentId;
+    const oldResolved = payment.resolvedStudentName;
+    const oldGroup = payment.derivedStudentGroup;
+
+    payment.derivedStudentId = resolution.studentId;
+    payment.resolvedStudentName = resolution.studentName;
+    payment.derivedStudentGroup = resolution.studentGroup;
+    payment.resolutionSource = resolution.source;
+
+    if (resolution.source === 'conflict') {
+      payment.conflictCandidates = resolution.conflicts.map(s => s.id);
+    } else {
+      delete payment.conflictCandidates;
+    }
+
+    if (
+      oldDerivedId !== payment.derivedStudentId ||
+      oldResolved !== payment.resolvedStudentName ||
+      oldGroup !== payment.derivedStudentGroup
+    ) {
+      updated = true;
+    }
+  });
+
+  if (updated) {
+    await PaymentStore.save(payments);
+  }
+}
+
+// Show payment context menu
+function showPaymentContextMenu(event, paymentId) {
+  try {
+    event.preventDefault();
+    event.stopPropagation();
+
+    // Close any existing menus
+    const existingMenu = document.getElementById('paymentContextMenu');
+    if (existingMenu) existingMenu.remove();
+
+    const payments = PaymentStore.getAll();
+    const payment = payments.find(p => p.id === paymentId);
+    if (!payment) {
+      console.error('Payment not found:', paymentId);
+      return;
+    }
+
+    const resolution = resolvePaymentToStudent(payment, getCachedStudents());
+
+    const menu = document.createElement('div');
+    menu.id = 'paymentContextMenu';
+    menu.style.cssText = `
           position: fixed;
           left: ${event.clientX}px;
           top: ${event.clientY}px;
@@ -986,54 +958,56 @@
           padding: 6px;
           animation: slideDownFade 0.2s ease;
         `;
-        
-        const menuItems = [];
-        
-        // Link to Existing Student
-        menuItems.push({
-          icon: '🔗',
-          label: 'Link to Existing Student',
-          action: () => showLinkToStudentModal(paymentId)
-        });
-        
-        // Add Alias (only if resolved to a student)
-        if (resolution.studentId) {
-          menuItems.push({
-            icon: '📝',
-            label: 'Add Alias to This Student',
-            action: () => showAddAliasModal(paymentId, resolution.studentId)
-          });
-        }
-        
-        // Add New Student
-        menuItems.push({
-          icon: '➕',
-          label: 'Add New Student',
-          action: () => showAddNewStudentFromPayment(paymentId)
-        });
-        
-        // Unlink Student (only if manually linked)
-        if (payment.linkedStudentId) {
-          menuItems.push({
-            icon: '🔓',
-            label: 'Unlink Student',
-            action: () => unlinkPaymentFromStudent(paymentId)
-          });
-        }
-        
-        // Resolve Conflict (if multiple matches)
-        if (resolution.source === 'conflict' && resolution.conflicts) {
-          menuItems.push({
-            icon: '⚠️',
-            label: `Resolve Conflict (${resolution.conflicts.length} matches)`,
-            action: () => showResolveConflictModal(paymentId, resolution.conflicts)
-          });
-        }
-        
-        // Store actions in window for onclick access
-        window.paymentMenuActions = menuItems.map(item => item.action);
-        
-        menu.innerHTML = menuItems.map((item, idx) => `
+
+    const menuItems = [];
+
+    // Link to Existing Student
+    menuItems.push({
+      icon: '🔗',
+      label: 'Link to Existing Student',
+      action: () => showLinkToStudentModal(paymentId),
+    });
+
+    // Add Alias (only if resolved to a student)
+    if (resolution.studentId) {
+      menuItems.push({
+        icon: '📝',
+        label: 'Add Alias to This Student',
+        action: () => showAddAliasModal(paymentId, resolution.studentId),
+      });
+    }
+
+    // Add New Student
+    menuItems.push({
+      icon: '➕',
+      label: 'Add New Student',
+      action: () => showAddNewStudentFromPayment(paymentId),
+    });
+
+    // Unlink Student (only if manually linked)
+    if (payment.linkedStudentId) {
+      menuItems.push({
+        icon: '🔓',
+        label: 'Unlink Student',
+        action: () => unlinkPaymentFromStudent(paymentId),
+      });
+    }
+
+    // Resolve Conflict (if multiple matches)
+    if (resolution.source === 'conflict' && resolution.conflicts) {
+      menuItems.push({
+        icon: '⚠️',
+        label: `Resolve Conflict (${resolution.conflicts.length} matches)`,
+        action: () => showResolveConflictModal(paymentId, resolution.conflicts),
+      });
+    }
+
+    // Store actions in window for onclick access
+    window.paymentMenuActions = menuItems.map(item => item.action);
+
+    menu.innerHTML = menuItems
+      .map(
+        (item, idx) => `
           <div onclick="event.stopPropagation(); window.paymentMenuActions[${idx}](); document.getElementById('paymentContextMenu')?.remove();" style="
             padding: 10px 14px;
             cursor: pointer;
@@ -1049,39 +1023,41 @@
             <span style="font-size: 16px;">${item.icon}</span>
             <span>${item.label}</span>
           </div>
-        `).join('');
-        
-        document.body.appendChild(menu);
-        
-        // Close menu on outside click
-        setTimeout(() => {
-          document.addEventListener('click', function closeMenu(e) {
-            if (!menu.contains(e.target)) {
-              menu.remove();
-              document.removeEventListener('click', closeMenu);
-            }
-          });
-        }, 100);
-        
-        // Adjust position if menu goes off screen
-        const rect = menu.getBoundingClientRect();
-        if (rect.right > window.innerWidth) {
-          menu.style.left = (window.innerWidth - rect.width - 10) + 'px';
+        `
+      )
+      .join('');
+
+    document.body.appendChild(menu);
+
+    // Close menu on outside click
+    setTimeout(() => {
+      document.addEventListener('click', function closeMenu(e) {
+        if (!menu.contains(e.target)) {
+          menu.remove();
+          document.removeEventListener('click', closeMenu);
         }
-        if (rect.bottom > window.innerHeight) {
-          menu.style.top = (window.innerHeight - rect.height - 10) + 'px';
-        }
-      } catch (error) {
-        console.error('Error showing payment context menu:', error);
-        showNotification('❌ Error opening menu', 'error');
-      }
+      });
+    }, 100);
+
+    // Adjust position if menu goes off screen
+    const rect = menu.getBoundingClientRect();
+    if (rect.right > window.innerWidth) {
+      menu.style.left = window.innerWidth - rect.width - 10 + 'px';
     }
-    
-    // Link payment to existing student
-    function showLinkToStudentModal(paymentId) {
-      const modal = document.createElement('div');
-      modal.id = 'linkStudentModal';
-      modal.style.cssText = `
+    if (rect.bottom > window.innerHeight) {
+      menu.style.top = window.innerHeight - rect.height - 10 + 'px';
+    }
+  } catch (error) {
+    console.error('Error showing payment context menu:', error);
+    showNotification('❌ Error opening menu', 'error');
+  }
+}
+
+// Link payment to existing student
+function showLinkToStudentModal(paymentId) {
+  const modal = document.createElement('div');
+  modal.id = 'linkStudentModal';
+  modal.style.cssText = `
         position: fixed;
         top: 0;
         left: 0;
@@ -1095,11 +1071,11 @@
         justify-content: center;
         animation: fadeIn 0.2s ease;
       `;
-      
+
   const students = getCachedStudents();
-      
-      const modalContent = document.createElement('div');
-      modalContent.style.cssText = `
+
+  const modalContent = document.createElement('div');
+  modalContent.style.cssText = `
         background: rgba(15,20,35,0.98);
         border: 2px solid rgba(59,130,246,0.4);
         border-radius: 16px;
@@ -1110,743 +1086,781 @@
         overflow-y: auto;
         box-shadow: 0 20px 60px rgba(0,0,0,0.8);
       `;
-      
-      modalContent.innerHTML = `
+
+  modalContent.innerHTML = `
         <h3 style="margin: 0 0 20px 0; color: white; font-size: 20px; font-weight: 700;">
           🔗 Link to Existing Student
         </h3>
-        
+
         <input type="text" id="studentSearchInput" placeholder="Search by name or email..." style="width: 100%; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 14px; margin-bottom: 16px;">
-        
+
         <div id="studentListContainer" style="max-height: 300px; overflow-y: auto; margin-bottom: 20px;">
-          ${students.map(student => `
+          ${students
+            .map(
+              student => `
             <div class="student-select-item" data-student-id="${escapeHtml(student.id)}" data-payment-id="${escapeHtml(paymentId)}" style="padding: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s;">
               <div style="color: white; font-weight: 600; margin-bottom: 4px;">${escapeHtml(student.name)}</div>
               <div style="color: #94a3b8; font-size: 12px;">${escapeHtml(student.email || '—')}</div>
               ${student.groups && student.groups.length > 0 ? `<div style="color: #3b82f6; font-size: 11px; margin-top: 4px;">Group: ${escapeHtml(student.groups.join(', '))}</div>` : ''}
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         </div>
-        
+
         <button id="closeLinkModalBtn" style="width: 100%; padding: 12px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: white; font-size: 14px; font-weight: 600; cursor: pointer;">
           Cancel
         </button>
       `;
-      
-      modal.appendChild(modalContent);
-      document.body.appendChild(modal);
-      
-      // Add event listeners
-      const searchInput = document.getElementById('studentSearchInput');
-      if (searchInput) {
-        searchInput.addEventListener('input', filterStudentList);
-      }
-      
-      const studentItems = document.querySelectorAll('.student-select-item');
-      studentItems.forEach(item => {
-        item.addEventListener('click', function() {
-          const studentId = this.getAttribute('data-student-id');
-          const paymentId = this.getAttribute('data-payment-id');
-          selectStudentForLink(paymentId, studentId);
-        });
-        
-        item.addEventListener('mouseover', function() {
-          this.style.background = 'rgba(59,130,246,0.15)';
-          this.style.borderColor = 'rgba(59,130,246,0.4)';
-        });
-        
-        item.addEventListener('mouseout', function() {
-          this.style.background = 'rgba(255,255,255,0.05)';
-          this.style.borderColor = 'rgba(255,255,255,0.1)';
-        });
-      });
-      
-      const closeBtn = document.getElementById('closeLinkModalBtn');
-      if (closeBtn) {
-        closeBtn.addEventListener('click', closeLinkStudentModal);
-      }
-      
-      // Close on background click
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          closeLinkStudentModal();
-        }
-      });
-    }
-    
-    // BEGIN LINKING & SEARCH FIX
-    function closeLinkStudentModal() {
-      const modal = document.getElementById('linkStudentModal');
-      if (modal) {
-        modal.style.opacity = '0';
-        setTimeout(() => {
-          modal.remove();
-        }, 200);
-      }
-    }
-    
-    function filterStudentList() {
-      const searchInput = document.getElementById('studentSearchInput');
-      if (!searchInput) return;
-      
-      const searchTerm = searchInput.value.toLowerCase().trim();
-      const studentItems = document.querySelectorAll('.student-select-item');
-      
-      let visibleCount = 0;
-      
-      studentItems.forEach(item => {
-        // Get student name and email from the text content
-        const textContent = item.textContent.toLowerCase();
-        const matches = !searchTerm || textContent.includes(searchTerm);
-        
-        if (matches) {
-          item.style.display = 'block';
-          visibleCount++;
-        } else {
-          item.style.display = 'none';
-        }
-      });
-      
-      // Show "no results" message if nothing matches
-      const container = document.getElementById('studentListContainer');
-      if (container) {
-        let noResultsMsg = container.querySelector('.no-results-message');
-        
-        if (visibleCount === 0 && searchTerm) {
-          if (!noResultsMsg) {
-            noResultsMsg = document.createElement('div');
-            noResultsMsg.className = 'no-results-message';
-            noResultsMsg.style.cssText = 'padding: 20px; text-align: center; color: #94a3b8; font-size: 14px;';
-            noResultsMsg.textContent = 'No students match your search';
-            container.appendChild(noResultsMsg);
-          }
-        } else if (noResultsMsg) {
-          noResultsMsg.remove();
-        }
-      }
-    }
-    // END LINKING & SEARCH FIX
-    
-    // BEGIN LINKING & SEARCH FIX
-    function selectStudentForLink(paymentId, studentId) {
-      try {
-        const payments = PaymentStore.getAll();
-        const payment = payments.find(p => p.id === paymentId);
-        
-        if (!payment) {
-          showNotification('❌ Payment not found', 'error');
-          closeLinkStudentModal();
-          return;
-        }
-        
-    const students = getCachedStudents();
-    const student = students.find(s => s.id === studentId);
-        
-        if (!student) {
-          showNotification('❌ Student not found', 'error');
-          closeLinkStudentModal();
-          return;
-        }
-        
-        // BEGIN CRITICAL BUG FIX - Payment ↔ Student Linking Logic
-        // Update payment with manual link fields (resolver will compute derived fields)
-        // - linkedStudentId: primary field for manual linking
-        // - manuallyLinked: flag to activate manual resolution path
-        // - resolutionSource: tracks how this link was created
-        // - linkedAt: audit timestamp
-        payment.linkedStudentId = studentId; // ✅ Primary manual link field
-        payment.manuallyLinked = true;
-        payment.linkedAt = new Date().toISOString();
-        payment.resolutionSource = 'manual';
-        
-        // Recompute resolution to update derived fields
-        const resolution = resolvePaymentToStudent(payment, students);
-        payment.derivedStudentId = resolution.studentId;
-        payment.resolvedStudentName = resolution.studentName;
-        payment.derivedStudentGroup = resolution.studentGroup;
-        // END CRITICAL BUG FIX
-        
-        // Remove any conflict markers
-        delete payment.conflictCandidates;
-        
-        // Save to localStorage
-        PaymentStore.save(payments);
-        
-        // Trigger update event
-        window.dispatchEvent(new CustomEvent('payments:updated', {
-          detail: { payments: [payment] }
-        }));
-        
-        // Sync to server
-        syncWithServer({ paymentsChanged: [payment] });
-        
-        showNotification('✅ Payment linked to student', 'success');
-        renderPaymentEmailsView();
-      } catch (error) {
-        console.error('Error linking payment to student:', error);
-        showNotification('❌ Failed to link payment', 'error');
-      }
-      
+
+  modal.appendChild(modalContent);
+  document.body.appendChild(modal);
+
+  // Add event listeners
+  const searchInput = document.getElementById('studentSearchInput');
+  if (searchInput) {
+    searchInput.addEventListener('input', filterStudentList);
+  }
+
+  const studentItems = document.querySelectorAll('.student-select-item');
+  studentItems.forEach(item => {
+    item.addEventListener('click', function () {
+      const studentId = this.getAttribute('data-student-id');
+      const paymentId = this.getAttribute('data-payment-id');
+      selectStudentForLink(paymentId, studentId);
+    });
+
+    item.addEventListener('mouseover', function () {
+      this.style.background = 'rgba(59,130,246,0.15)';
+      this.style.borderColor = 'rgba(59,130,246,0.4)';
+    });
+
+    item.addEventListener('mouseout', function () {
+      this.style.background = 'rgba(255,255,255,0.05)';
+      this.style.borderColor = 'rgba(255,255,255,0.1)';
+    });
+  });
+
+  const closeBtn = document.getElementById('closeLinkModalBtn');
+  if (closeBtn) {
+    closeBtn.addEventListener('click', closeLinkStudentModal);
+  }
+
+  // Close on background click
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) {
       closeLinkStudentModal();
     }
-    // END LINKING & SEARCH FIX
-    
-    
-    // Add alias to student
-    async function showAddAliasModal(paymentId, studentId) {
-      const payments = PaymentStore.getAll();
-      const payment = payments.find(p => p.id === paymentId);
+  });
+}
+
+// BEGIN LINKING & SEARCH FIX
+function closeLinkStudentModal() {
+  const modal = document.getElementById('linkStudentModal');
+  if (modal) {
+    modal.style.opacity = '0';
+    setTimeout(() => {
+      modal.remove();
+    }, 200);
+  }
+}
+
+function filterStudentList() {
+  const searchInput = document.getElementById('studentSearchInput');
+  if (!searchInput) return;
+
+  const searchTerm = searchInput.value.toLowerCase().trim();
+  const studentItems = document.querySelectorAll('.student-select-item');
+
+  let visibleCount = 0;
+
+  studentItems.forEach(item => {
+    // Get student name and email from the text content
+    const textContent = item.textContent.toLowerCase();
+    const matches = !searchTerm || textContent.includes(searchTerm);
+
+    if (matches) {
+      item.style.display = 'block';
+      visibleCount++;
+    } else {
+      item.style.display = 'none';
+    }
+  });
+
+  // Show "no results" message if nothing matches
+  const container = document.getElementById('studentListContainer');
+  if (container) {
+    let noResultsMsg = container.querySelector('.no-results-message');
+
+    if (visibleCount === 0 && searchTerm) {
+      if (!noResultsMsg) {
+        noResultsMsg = document.createElement('div');
+        noResultsMsg.className = 'no-results-message';
+        noResultsMsg.style.cssText =
+          'padding: 20px; text-align: center; color: #94a3b8; font-size: 14px;';
+        noResultsMsg.textContent = 'No students match your search';
+        container.appendChild(noResultsMsg);
+      }
+    } else if (noResultsMsg) {
+      noResultsMsg.remove();
+    }
+  }
+}
+// END LINKING & SEARCH FIX
+
+// BEGIN LINKING & SEARCH FIX
+function selectStudentForLink(paymentId, studentId) {
+  try {
+    const payments = PaymentStore.getAll();
+    const payment = payments.find(p => p.id === paymentId);
+
+    if (!payment) {
+      showNotification('❌ Payment not found', 'error');
+      closeLinkStudentModal();
+      return;
+    }
+
+    const students = getCachedStudents();
+    const student = students.find(s => s.id === studentId);
+
+    if (!student) {
+      showNotification('❌ Student not found', 'error');
+      closeLinkStudentModal();
+      return;
+    }
+
+    // BEGIN CRITICAL BUG FIX - Payment ↔ Student Linking Logic
+    // Update payment with manual link fields (resolver will compute derived fields)
+    // - linkedStudentId: primary field for manual linking
+    // - manuallyLinked: flag to activate manual resolution path
+    // - resolutionSource: tracks how this link was created
+    // - linkedAt: audit timestamp
+    payment.linkedStudentId = studentId; // ✅ Primary manual link field
+    payment.manuallyLinked = true;
+    payment.linkedAt = new Date().toISOString();
+    payment.resolutionSource = 'manual';
+
+    // Recompute resolution to update derived fields
+    const resolution = resolvePaymentToStudent(payment, students);
+    payment.derivedStudentId = resolution.studentId;
+    payment.resolvedStudentName = resolution.studentName;
+    payment.derivedStudentGroup = resolution.studentGroup;
+    // END CRITICAL BUG FIX
+
+    // Remove any conflict markers
+    delete payment.conflictCandidates;
+
+    // Save to localStorage
+    PaymentStore.save(payments);
+
+    // Trigger update event
+    window.dispatchEvent(
+      new CustomEvent('payments:updated', {
+        detail: { payments: [payment] },
+      })
+    );
+
+    // Sync to server
+    syncWithServer({ paymentsChanged: [payment] });
+
+    showNotification('✅ Payment linked to student', 'success');
+    renderPaymentEmailsView();
+  } catch (error) {
+    console.error('Error linking payment to student:', error);
+    showNotification('❌ Failed to link payment', 'error');
+  }
+
+  closeLinkStudentModal();
+}
+// END LINKING & SEARCH FIX
+
+// Add alias to student
+async function showAddAliasModal(paymentId, studentId) {
+  const payments = PaymentStore.getAll();
+  const payment = payments.find(p => p.id === paymentId);
   const students = getCachedStudents();
-      const student = students.find(s => s.id === studentId);
-      
-      if (!payment || !student) return;
-      
-      const payerName = payment.payerNameRaw || payment.payerName;
-      
-      const confirmed = await customConfirm(
-        `Add alias "${payerName}" to ${student.name}?`,
-        {
-          title: 'Add Alias',
-          icon: '🏷️',
-          okText: 'Add Alias'
-        }
-      );
-      
-      if (confirmed) {
-        if (!student.aliases) student.aliases = [];
-        
-        // Check if alias already exists (case-insensitive)
-        const exists = student.aliases.some(a => normalizeForMatching(a) === normalizeForMatching(payerName));
-        
-        if (!exists) {
-          const originalAliases = Array.isArray(student.aliases) ? [...student.aliases] : [];
-          student.aliases.push(payerName);
-          const saved = await saveStudent(student);
-          if (!saved) {
-            student.aliases = originalAliases;
-            showNotification('❌ Failed to save alias to Supabase', 'error');
-            return;
-          }
-          Object.assign(student, saved);
-          window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
-          syncWithServer({ studentsChanged: [student] });
-          
-          // Recompute all payment resolutions
-          recomputePaymentResolutions();
-          renderPaymentEmailsView();
-          
-          showNotification(`✅ Added alias "${payerName}" to ${student.name}`, 'success');
-        } else {
-          showNotification('⚠️ Alias already exists', 'warning');
-        }
+  const student = students.find(s => s.id === studentId);
+
+  if (!payment || !student) return;
+
+  const payerName = payment.payerNameRaw || payment.payerName;
+
+  const confirmed = await customConfirm(`Add alias "${payerName}" to ${student.name}?`, {
+    title: 'Add Alias',
+    icon: '🏷️',
+    okText: 'Add Alias',
+  });
+
+  if (confirmed) {
+    if (!student.aliases) student.aliases = [];
+
+    // Check if alias already exists (case-insensitive)
+    const exists = student.aliases.some(
+      a => normalizeForMatching(a) === normalizeForMatching(payerName)
+    );
+
+    if (!exists) {
+      const originalAliases = Array.isArray(student.aliases) ? [...student.aliases] : [];
+      student.aliases.push(payerName);
+      const saved = await saveStudent(student);
+      if (!saved) {
+        student.aliases = originalAliases;
+        showNotification('❌ Failed to save alias to Supabase', 'error');
+        return;
       }
-    }
-    
-    // Add new student from payment
-    function showAddNewStudentFromPayment(paymentId) {
-      const payments = PaymentStore.getAll();
-      const payment = payments.find(p => p.id === paymentId);
-      if (!payment) return;
-      
-      const payerName = payment.payerNameRaw || payment.payerName || '';
-      const payerEmail = payment.payerEmailRaw || payment.studentEmail || '';
-      
-      // Pre-fill add student form
-      openStudentManager();
-      
-      setTimeout(() => {
-        const nameInput = document.getElementById('studentName');
-        const emailInput = document.getElementById('studentEmail');
-        const notesInput = document.getElementById('studentNotes');
-        
-        if (nameInput) nameInput.value = payerName;
-        if (emailInput) emailInput.value = payerEmail;
-        if (notesInput) notesInput.value = `Created from payment ${payment.id} on ${new Date().toLocaleDateString()}`;
-        
-        // Store payment ID for linking after save
-        window._linkPaymentAfterCreate = paymentId;
-      }, 500);
-    }
-    
-    // Unlink payment from student
-    function unlinkPaymentFromStudent(paymentId) {
-      const payments = PaymentStore.getAll();
-      const payment = payments.find(p => p.id === paymentId);
-      
-      if (payment) {
-        delete payment.linkedStudentId;
-        
-        // Re-resolve using aliases
-        const resolution = resolvePaymentToStudent(payment);
-        payment.resolvedStudentName = resolution.studentName;
-        payment.resolutionSource = resolution.source;
-        
-        PaymentStore.save(payments);
-        syncWithServer({ paymentsChanged: [payment] });
-        
-        showNotification('🔓 Student unlinked', 'success');
-        renderPaymentEmailsView();
-      }
-    }
-    
-    // Resolve alias conflict
-    function showResolveConflictModal(paymentId, conflicts) {
-      showLinkToStudentModal(paymentId); // Reuse the link modal
-    }
-    
-    // Listen for student updates to recompute aliases
-    window.addEventListener('students:updated', function() {
+      Object.assign(student, saved);
+      window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
+      syncWithServer({ studentsChanged: [student] });
+
+      // Recompute all payment resolutions
       recomputePaymentResolutions();
-      const modal = document.getElementById('groupManagerModal');
-      if (!modal || modal.style.display !== 'block') {
-        // Only re-render if not in group manager
-        renderPaymentEmailsView();
-      }
-    });
-    
-    // ============================================================================
-    
-    // Utility functions
-    function escapeHtml(text) {
-      if (!text) return '';
-      const map = {
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#039;'
-      };
-      return String(text).replace(/[&<>"']/g, m => map[m]);
+      renderPaymentEmailsView();
+
+      showNotification(`✅ Added alias "${payerName}" to ${student.name}`, 'success');
+    } else {
+      showNotification('⚠️ Alias already exists', 'warning');
     }
-    
-    function cleanPaymentMemoText(text) {
-      if (!text) return '';
-      
-      let cleaned = String(text)
-        .replace(/[^\x20-\x7E\n\r\t]/g, '')
-        .replace(/\s+/g, ' ')
-        .trim();
-      
-      // Remove footer text that might have been included in the message
-      cleaned = cleaned
-        .replace(/\*?\s*If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
-        .replace(/\*?\s*The\s+money\s+is\s+ready\s+for\s+use.*/gi, '')
-        .replace(/\*?\s*Pay\s+it\s+forward.*/gi, '')
-        .replace(/\*?\s*Thanks\s+for\s+using\s+Zelle.*/gi, '')
-        .replace(/\*?\s*You\s+can\s+add\s+a\s+note.*/gi, '')
-        .replace(/\*?\s*View\s+transaction\s+details.*/gi, '')
-        .trim();
-      
-      // If the message is ONLY footer text, asterisks, or generic content, return empty string
-      if (!cleaned || 
-          cleaned.length < 3 || 
-          /^[\*\s\-—.]+$/.test(cleaned) ||
-          /^(The money|Pay it|If you|Thanks|You can|View)+$/i.test(cleaned)) {
-        return '';
-      }
-      
-      return cleaned;
-    }
-    
-    // Enhanced duplicate detection per developer command
-    function buildPaymentDuplicateKey(payment) {
-      if (!payment) return null;
-      
-      const amount = parseFloat(payment.amount);
-      const payer = (payment.payerName || payment.senderName || '').toLowerCase().trim();
-      
-      // Use the actual transaction date from email, not the fetch date
-      const dateSource = payment.emailDate || payment.date || payment.createdAt;
-      const date = dateSource ? new Date(dateSource) : null;
-      
-      if (!payer || Number.isNaN(amount) || !date || Number.isNaN(date.getTime())) {
-        console.warn('⚠️ Cannot build duplicate key - missing data:', { payer, amount, date });
-        return null;
-      }
-      
-      // Use date only (ignore time) for duplicate detection
-      const dateKey = date.toISOString().split('T')[0];
-      const key = `${dateKey}|${amount.toFixed(2)}|${payer}`;
-      
-      return key;
-    }
-    
-    // Per developer command: Check if payment is duplicate by Gmail ID or composite key
-    function isDuplicatePayment(gmailId, payment, existingPayments) {
-      // Check 1: Gmail ID already exists
-      const gmailIdExists = existingPayments.some(p => p.gmailId === gmailId || p.emailId === gmailId);
-      if (gmailIdExists) {
-        console.log(`⚠️ Skipped duplicate email payment (Gmail ID exists): ${gmailId}`);
-        return true;
-      }
-      
-      // Check 2: Composite key (payer + amount + date)
-      const compositeKey = buildPaymentDuplicateKey(payment);
-      if (!compositeKey) return false;
-      
-      const compositeExists = existingPayments.some(p => {
-        const existingKey = buildPaymentDuplicateKey(p);
-        return existingKey === compositeKey;
-      });
-      
-      if (compositeExists) {
-        console.log(`⚠️ Skipped duplicate email payment from ${payment.payerName} ($${payment.amount})`);
-        return true;
-      }
-      
-      return false;
+  }
+}
+
+// Add new student from payment
+function showAddNewStudentFromPayment(paymentId) {
+  const payments = PaymentStore.getAll();
+  const payment = payments.find(p => p.id === paymentId);
+  if (!payment) return;
+
+  const payerName = payment.payerNameRaw || payment.payerName || '';
+  const payerEmail = payment.payerEmailRaw || payment.studentEmail || '';
+
+  // Pre-fill add student form
+  openStudentManager();
+
+  setTimeout(() => {
+    const nameInput = document.getElementById('studentName');
+    const emailInput = document.getElementById('studentEmail');
+    const notesInput = document.getElementById('studentNotes');
+
+    if (nameInput) nameInput.value = payerName;
+    if (emailInput) emailInput.value = payerEmail;
+    if (notesInput)
+      notesInput.value = `Created from payment ${payment.id} on ${new Date().toLocaleDateString()}`;
+
+    // Store payment ID for linking after save
+    window._linkPaymentAfterCreate = paymentId;
+  }, 500);
+}
+
+// Unlink payment from student
+function unlinkPaymentFromStudent(paymentId) {
+  const payments = PaymentStore.getAll();
+  const payment = payments.find(p => p.id === paymentId);
+
+  if (payment) {
+    delete payment.linkedStudentId;
+
+    // Re-resolve using aliases
+    const resolution = resolvePaymentToStudent(payment);
+    payment.resolvedStudentName = resolution.studentName;
+    payment.resolutionSource = resolution.source;
+
+    PaymentStore.save(payments);
+    syncWithServer({ paymentsChanged: [payment] });
+
+    showNotification('🔓 Student unlinked', 'success');
+    renderPaymentEmailsView();
+  }
+}
+
+// Resolve alias conflict
+function showResolveConflictModal(paymentId, conflicts) {
+  showLinkToStudentModal(paymentId); // Reuse the link modal
+}
+
+// Listen for student updates to recompute aliases
+window.addEventListener('students:updated', function () {
+  recomputePaymentResolutions();
+  const modal = document.getElementById('groupManagerModal');
+  if (!modal || modal.style.display !== 'block') {
+    // Only re-render if not in group manager
+    renderPaymentEmailsView();
+  }
+});
+
+// ============================================================================
+
+// Utility functions
+function escapeHtml(text) {
+  if (!text) return '';
+  const map = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return String(text).replace(/[&<>"']/g, m => map[m]);
+}
+
+function cleanPaymentMemoText(text) {
+  if (!text) return '';
+
+  let cleaned = String(text)
+    .replace(/[^\x20-\x7E\n\r\t]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Remove footer text that might have been included in the message
+  cleaned = cleaned
+    .replace(/\*?\s*If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
+    .replace(/\*?\s*The\s+money\s+is\s+ready\s+for\s+use.*/gi, '')
+    .replace(/\*?\s*Pay\s+it\s+forward.*/gi, '')
+    .replace(/\*?\s*Thanks\s+for\s+using\s+Zelle.*/gi, '')
+    .replace(/\*?\s*You\s+can\s+add\s+a\s+note.*/gi, '')
+    .replace(/\*?\s*View\s+transaction\s+details.*/gi, '')
+    .trim();
+
+  // If the message is ONLY footer text, asterisks, or generic content, return empty string
+  if (
+    !cleaned ||
+    cleaned.length < 3 ||
+    /^[\*\s\-—.]+$/.test(cleaned) ||
+    /^(The money|Pay it|If you|Thanks|You can|View)+$/i.test(cleaned)
+  ) {
+    return '';
+  }
+
+  return cleaned;
+}
+
+// Enhanced duplicate detection per developer command
+function buildPaymentDuplicateKey(payment) {
+  if (!payment) return null;
+
+  const amount = parseFloat(payment.amount);
+  const payer = (payment.payerName || payment.senderName || '').toLowerCase().trim();
+
+  // Use the actual transaction date from email, not the fetch date
+  const dateSource = payment.emailDate || payment.date || payment.createdAt;
+  const date = dateSource ? new Date(dateSource) : null;
+
+  if (!payer || Number.isNaN(amount) || !date || Number.isNaN(date.getTime())) {
+    console.warn('⚠️ Cannot build duplicate key - missing data:', { payer, amount, date });
+    return null;
+  }
+
+  // Use date only (ignore time) for duplicate detection
+  const dateKey = date.toISOString().split('T')[0];
+  const key = `${dateKey}|${amount.toFixed(2)}|${payer}`;
+
+  return key;
+}
+
+// Per developer command: Check if payment is duplicate by Gmail ID or composite key
+function isDuplicatePayment(gmailId, payment, existingPayments) {
+  // Check 1: Gmail ID already exists
+  const gmailIdExists = existingPayments.some(p => p.gmailId === gmailId || p.emailId === gmailId);
+  if (gmailIdExists) {
+    console.log(`⚠️ Skipped duplicate email payment (Gmail ID exists): ${gmailId}`);
+    return true;
+  }
+
+  // Check 2: Composite key (payer + amount + date)
+  const compositeKey = buildPaymentDuplicateKey(payment);
+  if (!compositeKey) return false;
+
+  const compositeExists = existingPayments.some(p => {
+    const existingKey = buildPaymentDuplicateKey(p);
+    return existingKey === compositeKey;
+  });
+
+  if (compositeExists) {
+    console.log(
+      `⚠️ Skipped duplicate email payment from ${payment.payerName} ($${payment.amount})`
+    );
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Global Currency Formatter
+ * Formats any numeric amount with comma thousand separators and currency symbol
+ * @param {number|string} amount - The amount to format
+ * @param {string} symbol - Currency symbol (default: '$')
+ * @returns {string} Formatted currency string in "x,xxx $" format
+ * @example
+ *   formatCurrency(1000) → "1,000 $"
+ *   formatCurrency(25000, '֏') → "25,000 ֏"
+ *   formatCurrency(-1200) → "-1,200 $"
+ */
+function formatCurrency(amount, symbol = '$') {
+  const num = parseFloat(amount) || 0;
+  const formatted = Math.abs(num).toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  });
+  const sign = num < 0 ? '-' : '';
+  return `${sign}${formatted} ${symbol}`;
+}
+
+function formatDualCurrencyHTML(amountUSD, colorUSD = '#22c55e', colorAMD = '#94a3b8') {
+  const usd = parseFloat(amountUSD) || 0;
+  const amd = Math.round(usd * 387.5);
+  return `<span class="amount-usd" style="color: ${colorUSD};">${formatCurrency(usd, '$')}</span> <span class="amount-amd" style="color: ${colorAMD};">— ${formatCurrency(amd, '֏')}</span>`;
+}
+
+function updateMonthTotalsVisibility() {
+  const totalsContainer = document.getElementById('monthTotalsData');
+  const toggleIcon = document.getElementById('monthTotalsToggleIcon');
+  const toggleBtn = document.getElementById('monthTotalsToggle');
+
+  if (!totalsContainer || !toggleIcon || !toggleBtn) return;
+
+  if (monthTotalsCollapsed) {
+    totalsContainer.classList.add('collapsed');
+    toggleIcon.textContent = '▸';
+    toggleBtn.title = 'Expand totals';
+  } else {
+    totalsContainer.classList.remove('collapsed');
+    toggleIcon.textContent = '▾';
+    toggleBtn.title = 'Collapse totals';
+  }
+}
+
+function toggleMonthTotals() {
+  monthTotalsCollapsed = !monthTotalsCollapsed;
+  localStorage.setItem(UI_STATE_KEYS.MONTH_TOTALS_COLLAPSED, monthTotalsCollapsed.toString());
+  updateMonthTotalsVisibility();
+}
+
+function updatePaymentProjectionStats(count, amount) {
+  const countEl = document.getElementById('totalPaymentsCount');
+  const amountEl = document.getElementById('totalPaymentsAmount');
+
+  if (countEl) countEl.textContent = count;
+  if (amountEl) amountEl.innerHTML = formatDualCurrencyHTML(amount);
+}
+
+function populateMonthSelector() {
+  const paymentLog = PaymentStore.getAll();
+  const selector = document.getElementById('monthSelector');
+  if (!selector) return;
+
+  // Get all unique months from payments
+  const monthsSet = new Set();
+  paymentLog.forEach(payment => {
+    const emailDate =
+      payment.emailDate || payment.transactionDate || payment.createdAt || payment.date;
+    if (!emailDate) return;
+
+    const paymentDate = new Date(emailDate);
+    if (isNaN(paymentDate.getTime())) return;
+
+    const monthKey = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
+    monthsSet.add(monthKey);
+  });
+
+  // Convert to array and sort (newest first)
+  const months = Array.from(monthsSet).sort().reverse();
+
+  // Build options
+  const now = new Date();
+  const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+
+  let html = '<option value="current">This Month</option>';
+
+  months.forEach(monthKey => {
+    if (monthKey === currentMonthKey) return; // Skip current month (already added)
+
+    const [year, month] = monthKey.split('-');
+    const date = new Date(parseInt(year), parseInt(month), 1);
+    const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    html += `<option value="${monthKey}">${monthName}</option>`;
+  });
+
+  html += '<option value="ytd">Year to Date</option>';
+  html += '<option value="all" selected>All Time</option>';
+
+  selector.innerHTML = html;
+}
+
+function updateMonthTotals() {
+  const paymentLog = PaymentStore.getAll();
+  const selector = document.getElementById('monthSelector');
+  const selectedPeriod = selector ? selector.value : 'current';
+
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  let periodCount = 0;
+  let periodTotal = 0;
+
+  paymentLog.forEach(payment => {
+    const isIgnored = payment.ignoredOnce || payment.ignorePermanently;
+    if (isIgnored) return;
+
+    const emailDate =
+      payment.emailDate || payment.transactionDate || payment.createdAt || payment.date;
+    if (!emailDate) return;
+
+    const paymentDate = new Date(emailDate);
+    if (isNaN(paymentDate.getTime())) return;
+
+    let includePayment = false;
+
+    if (selectedPeriod === 'current') {
+      // This month only
+      includePayment =
+        paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
+    } else if (selectedPeriod === 'ytd') {
+      // Year to date
+      includePayment = paymentDate.getFullYear() === currentYear;
+    } else if (selectedPeriod === 'all') {
+      // All time
+      includePayment = true;
+    } else if (selectedPeriod.includes('-')) {
+      // Specific month (format: YYYY-MM)
+      const [targetYear, targetMonth] = selectedPeriod.split('-').map(Number);
+      includePayment =
+        paymentDate.getMonth() === targetMonth && paymentDate.getFullYear() === targetYear;
     }
 
-    /**
-     * Global Currency Formatter
-     * Formats any numeric amount with comma thousand separators and currency symbol
-     * @param {number|string} amount - The amount to format
-     * @param {string} symbol - Currency symbol (default: '$')
-     * @returns {string} Formatted currency string in "x,xxx $" format
-     * @example
-     *   formatCurrency(1000) → "1,000 $"
-     *   formatCurrency(25000, '֏') → "25,000 ֏"
-     *   formatCurrency(-1200) → "-1,200 $"
-     */
-    function formatCurrency(amount, symbol = '$') {
-      const num = parseFloat(amount) || 0;
-      const formatted = Math.abs(num).toLocaleString('en-US', { 
-        minimumFractionDigits: 0, 
-        maximumFractionDigits: 0 
-      });
-      const sign = num < 0 ? '-' : '';
-      return `${sign}${formatted} ${symbol}`;
+    if (includePayment) {
+      periodCount++;
+      periodTotal += parseFloat(payment.amount) || 0;
     }
+  });
 
-    function formatDualCurrencyHTML(amountUSD, colorUSD = '#22c55e', colorAMD = '#94a3b8') {
-      const usd = parseFloat(amountUSD) || 0;
-      const amd = Math.round(usd * 387.5);
-      return `<span class="amount-usd" style="color: ${colorUSD};">${formatCurrency(usd, '$')}</span> <span class="amount-amd" style="color: ${colorAMD};">— ${formatCurrency(amd, '֏')}</span>`;
-    }
+  // Update display with null checks
+  const countEl = document.getElementById('monthTotalCount');
+  const usdEl = document.getElementById('monthTotalUSD');
+  const amdEl = document.getElementById('monthTotalAMD');
 
-    function updateMonthTotalsVisibility() {
-      const totalsContainer = document.getElementById('monthTotalsData');
-      const toggleIcon = document.getElementById('monthTotalsToggleIcon');
-      const toggleBtn = document.getElementById('monthTotalsToggle');
-      
-      if (!totalsContainer || !toggleIcon || !toggleBtn) return;
-      
-      if (monthTotalsCollapsed) {
-        totalsContainer.classList.add('collapsed');
-        toggleIcon.textContent = '▸';
-        toggleBtn.title = 'Expand totals';
-      } else {
-        totalsContainer.classList.remove('collapsed');
-        toggleIcon.textContent = '▾';
-        toggleBtn.title = 'Collapse totals';
-      }
-    }
+  if (countEl) countEl.textContent = periodCount.toLocaleString('en-US');
+  if (usdEl) usdEl.textContent = formatCurrency(periodTotal, '$');
+  if (amdEl) amdEl.textContent = formatCurrency(Math.round(periodTotal * 387.5), '֏');
 
-    function toggleMonthTotals() {
-      monthTotalsCollapsed = !monthTotalsCollapsed;
-      localStorage.setItem(UI_STATE_KEYS.MONTH_TOTALS_COLLAPSED, monthTotalsCollapsed.toString());
-      updateMonthTotalsVisibility();
-    }
-    
-    function updatePaymentProjectionStats(count, amount) {
-      const countEl = document.getElementById('totalPaymentsCount');
-      const amountEl = document.getElementById('totalPaymentsAmount');
-      
-      if (countEl) countEl.textContent = count;
-      if (amountEl) amountEl.innerHTML = formatDualCurrencyHTML(amount);
-    }
-    
-    function populateMonthSelector() {
-      const paymentLog = PaymentStore.getAll();
-      const selector = document.getElementById('monthSelector');
-      if (!selector) return;
-      
-      // Get all unique months from payments
-      const monthsSet = new Set();
-      paymentLog.forEach(payment => {
-        const emailDate = payment.emailDate || payment.transactionDate || payment.createdAt || payment.date;
-        if (!emailDate) return;
-        
-        const paymentDate = new Date(emailDate);
-        if (isNaN(paymentDate.getTime())) return;
-        
-        const monthKey = `${paymentDate.getFullYear()}-${String(paymentDate.getMonth() + 1).padStart(2, '0')}`;
-        monthsSet.add(monthKey);
-      });
-      
-      // Convert to array and sort (newest first)
-      const months = Array.from(monthsSet).sort().reverse();
-      
-      // Build options
-      const now = new Date();
-      const currentMonthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      
-      let html = '<option value="current">This Month</option>';
-      
-      months.forEach(monthKey => {
-        if (monthKey === currentMonthKey) return; // Skip current month (already added)
-        
-        const [year, month] = monthKey.split('-');
-        const date = new Date(parseInt(year), parseInt(month), 1);
-        const monthName = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
-        
-        html += `<option value="${monthKey}">${monthName}</option>`;
-      });
-      
-      html += '<option value="ytd">Year to Date</option>';
-      html += '<option value="all" selected>All Time</option>';
-      
-      selector.innerHTML = html;
-    }
-    
-    function updateMonthTotals() {
-      const paymentLog = PaymentStore.getAll();
-      const selector = document.getElementById('monthSelector');
-      const selectedPeriod = selector ? selector.value : 'current';
-      
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-      
-      let periodCount = 0;
-      let periodTotal = 0;
-      
-      paymentLog.forEach(payment => {
-        const isIgnored = payment.ignoredOnce || payment.ignorePermanently;
-        if (isIgnored) return;
-        
-        const emailDate = payment.emailDate || payment.transactionDate || payment.createdAt || payment.date;
-        if (!emailDate) return;
-        
-        const paymentDate = new Date(emailDate);
-        if (isNaN(paymentDate.getTime())) return;
-        
-        let includePayment = false;
-        
-        if (selectedPeriod === 'current') {
-          // This month only
-          includePayment = paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear;
-        } else if (selectedPeriod === 'ytd') {
-          // Year to date
-          includePayment = paymentDate.getFullYear() === currentYear;
-        } else if (selectedPeriod === 'all') {
-          // All time
-          includePayment = true;
-        } else if (selectedPeriod.includes('-')) {
-          // Specific month (format: YYYY-MM)
-          const [targetYear, targetMonth] = selectedPeriod.split('-').map(Number);
-          includePayment = paymentDate.getMonth() === targetMonth && paymentDate.getFullYear() === targetYear;
-        }
-        
-        if (includePayment) {
-          periodCount++;
-          periodTotal += parseFloat(payment.amount) || 0;
-        }
-      });
-      
-      // Update display with null checks
-      const countEl = document.getElementById('monthTotalCount');
-      const usdEl = document.getElementById('monthTotalUSD');
-      const amdEl = document.getElementById('monthTotalAMD');
-      
-      if (countEl) countEl.textContent = periodCount.toLocaleString('en-US');
-      if (usdEl) usdEl.textContent = formatCurrency(periodTotal, '$');
-      if (amdEl) amdEl.textContent = formatCurrency(Math.round(periodTotal * 387.5), '֏');
+  updateMonthTotalsVisibility();
+}
 
-      updateMonthTotalsVisibility();
-    }
-    
-    // Main render function
-    function renderPaymentEmailsView() {
-      if (paymentRenderRAF !== null) {
-        cancelAnimationFrame(paymentRenderRAF);
-      }
-      paymentRenderRAF = requestAnimationFrame(() => {
-        paymentRenderRAF = null;
-        renderPaymentEmailsViewImmediate();
-      });
-    }
+// Main render function
+function renderPaymentEmailsView() {
+  if (paymentRenderRAF !== null) {
+    cancelAnimationFrame(paymentRenderRAF);
+  }
+  paymentRenderRAF = requestAnimationFrame(() => {
+    paymentRenderRAF = null;
+    renderPaymentEmailsViewImmediate();
+  });
+}
 
-    function renderPaymentEmailsViewImmediate() {
-      const renderToken = ++paymentRenderToken;
-      const container = document.getElementById('paymentEmailsContent');
-      if (!container) return;
+function renderPaymentEmailsViewImmediate() {
+  const renderToken = ++paymentRenderToken;
+  const container = document.getElementById('paymentEmailsContent');
+  if (!container) return;
 
-      updateMonthTotalsVisibility();
+  updateMonthTotalsVisibility();
 
-      const paymentLog = PaymentStore.getAll();
+  const paymentLog = PaymentStore.getAll();
 
-      const filterDropdown = document.getElementById('paymentFilterDropdown');
-      const filterValue = filterDropdown ? filterDropdown.value : 'all';
+  const filterDropdown = document.getElementById('paymentFilterDropdown');
+  const filterValue = filterDropdown ? filterDropdown.value : 'all';
 
-      let filteredPayments = paymentLog;
-      if (filterValue === 'matched') {
-        filteredPayments = paymentLog.filter(p => p.studentId && !p.ignoredOnce && !p.ignorePermanently);
-      } else if (filterValue === 'unmatched') {
-        filteredPayments = paymentLog.filter(p => !p.studentId && !p.ignoredOnce && !p.ignorePermanently);
-      } else if (filterValue === 'ignored') {
-        filteredPayments = paymentLog.filter(p => p.ignoredOnce || p.ignorePermanently);
-      }
+  let filteredPayments = paymentLog;
+  if (filterValue === 'matched') {
+    filteredPayments = paymentLog.filter(
+      p => p.studentId && !p.ignoredOnce && !p.ignorePermanently
+    );
+  } else if (filterValue === 'unmatched') {
+    filteredPayments = paymentLog.filter(
+      p => !p.studentId && !p.ignoredOnce && !p.ignorePermanently
+    );
+  } else if (filterValue === 'ignored') {
+    filteredPayments = paymentLog.filter(p => p.ignoredOnce || p.ignorePermanently);
+  }
 
-      if (filteredPayments.length === 0) {
-        container.innerHTML = `
+  if (filteredPayments.length === 0) {
+    container.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">📧</div>
             <p>No ${filterValue === 'all' ? '' : filterValue + ' '}payment records found</p>
           </div>
         `;
-        updatePaymentProjectionStats(0, 0);
-        updateMonthTotals();
-        return;
-      }
+    updatePaymentProjectionStats(0, 0);
+    updateMonthTotals();
+    return;
+  }
 
-      let totalCount = 0;
-      let totalAmount = 0;
-      filteredPayments.forEach(payment => {
-        if (!payment.ignoredOnce && !payment.ignorePermanently) {
-          totalCount += 1;
-          totalAmount += parseFloat(payment.amount) || 0;
-        }
-      });
+  let totalCount = 0;
+  let totalAmount = 0;
+  filteredPayments.forEach(payment => {
+    if (!payment.ignoredOnce && !payment.ignorePermanently) {
+      totalCount += 1;
+      totalAmount += parseFloat(payment.amount) || 0;
+    }
+  });
 
-      updatePaymentProjectionStats(totalCount, totalAmount);
-      updateMonthTotals();
+  updatePaymentProjectionStats(totalCount, totalAmount);
+  updateMonthTotals();
 
-      const paymentsByDate = {};
-      filteredPayments.forEach(payment => {
-        const emailDate = payment.emailDate || payment.transactionDate || payment.createdAt || payment.date;
-        if (!emailDate) {
-          return;
-        }
+  const paymentsByDate = {};
+  filteredPayments.forEach(payment => {
+    const emailDate =
+      payment.emailDate || payment.transactionDate || payment.createdAt || payment.date;
+    if (!emailDate) {
+      return;
+    }
 
-        const date = new Date(emailDate);
-        if (Number.isNaN(date.getTime())) {
-          return;
-        }
+    const date = new Date(emailDate);
+    if (Number.isNaN(date.getTime())) {
+      return;
+    }
 
-        const dateKey = date.toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        });
+    const dateKey = date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
 
-        if (!paymentsByDate[dateKey]) {
-          paymentsByDate[dateKey] = {
-            date,
-            payments: [],
-            total: 0
-          };
-        }
+    if (!paymentsByDate[dateKey]) {
+      paymentsByDate[dateKey] = {
+        date,
+        payments: [],
+        total: 0,
+      };
+    }
 
-        paymentsByDate[dateKey].payments.push(payment);
+    paymentsByDate[dateKey].payments.push(payment);
 
-        if (!payment.ignoredOnce && !payment.ignorePermanently) {
-          paymentsByDate[dateKey].total += parseFloat(payment.amount) || 0;
-        }
-      });
+    if (!payment.ignoredOnce && !payment.ignorePermanently) {
+      paymentsByDate[dateKey].total += parseFloat(payment.amount) || 0;
+    }
+  });
 
-      const sortedDates = Object.keys(paymentsByDate).sort((a, b) => {
-        return paymentsByDate[b].date - paymentsByDate[a].date;
-      });
+  const sortedDates = Object.keys(paymentsByDate).sort((a, b) => {
+    return paymentsByDate[b].date - paymentsByDate[a].date;
+  });
 
-      if (sortedDates.length === 0) {
-        container.innerHTML = `
+  if (sortedDates.length === 0) {
+    container.innerHTML = `
           <div class="empty-state">
             <div class="empty-icon">📧</div>
             <p>No payments with valid timestamps found</p>
           </div>
         `;
-        addClickToMarkPaymentsViewed();
-        return;
-      }
+    addClickToMarkPaymentsViewed();
+    return;
+  }
 
-      // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-      // Sort payments within each date group - NEWEST FIRST
-      Object.values(paymentsByDate).forEach(dateGroup => {
-        dateGroup.payments.sort((a, b) => {
-          // Primary: Use emailDate/transactionDate (actual payment timestamp)
-          const dateA = new Date(a.emailDate || a.transactionDate || a.createdAt || 0);
-          const dateB = new Date(b.emailDate || b.transactionDate || b.createdAt || 0);
-          
-          const timeDiff = dateB - dateA;
-          if (timeDiff !== 0) return timeDiff;
-          
-          // Secondary: If timestamps identical, use createdAt
-          const createdA = new Date(a.createdAt || 0);
-          const createdB = new Date(b.createdAt || 0);
-          return createdB - createdA;
-        });
-      });
-      // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+  // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+  // Sort payments within each date group - NEWEST FIRST
+  Object.values(paymentsByDate).forEach(dateGroup => {
+    dateGroup.payments.sort((a, b) => {
+      // Primary: Use emailDate/transactionDate (actual payment timestamp)
+      const dateA = new Date(a.emailDate || a.transactionDate || a.createdAt || 0);
+      const dateB = new Date(b.emailDate || b.transactionDate || b.createdAt || 0);
 
-      container.innerHTML = `
+      const timeDiff = dateB - dateA;
+      if (timeDiff !== 0) return timeDiff;
+
+      // Secondary: If timestamps identical, use createdAt
+      const createdA = new Date(a.createdAt || 0);
+      const createdB = new Date(b.createdAt || 0);
+      return createdB - createdA;
+    });
+  });
+  // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+
+  container.innerHTML = `
         <div class="loading-state" style="padding: 32px; text-align: center; color: #94a3b8;">
           Rendering payments…
         </div>
       `;
 
   const studentsCache = getCachedStudents();
-      const resolutionCache = new Map();
+  const resolutionCache = new Map();
 
-      const getResolutionForPayment = (payment) => {
-        const cacheKey = payment.id || `${payment.payerNameRaw || payment.payerName || ''}_${payment.amount || ''}_${payment.emailDate || payment.transactionDate || payment.createdAt || ''}`;
-        if (resolutionCache.has(cacheKey)) {
-          return resolutionCache.get(cacheKey);
+  const getResolutionForPayment = payment => {
+    const cacheKey =
+      payment.id ||
+      `${payment.payerNameRaw || payment.payerName || ''}_${payment.amount || ''}_${payment.emailDate || payment.transactionDate || payment.createdAt || ''}`;
+    if (resolutionCache.has(cacheKey)) {
+      return resolutionCache.get(cacheKey);
+    }
+    const resolution = resolvePaymentToStudent(payment, studentsCache);
+    resolutionCache.set(cacheKey, resolution);
+    return resolution;
+  };
+
+  const DATE_CHUNK_SIZE = 2;
+  let dateIndex = 0;
+
+  const renderNextChunk = () => {
+    if (renderToken !== paymentRenderToken) {
+      return;
+    }
+
+    if (dateIndex === 0) {
+      container.innerHTML = '';
+    }
+
+    const chunkDates = sortedDates.slice(dateIndex, dateIndex + DATE_CHUNK_SIZE);
+    let chunkHtml = '';
+
+    chunkDates.forEach(dateKey => {
+      const dateData = paymentsByDate[dateKey];
+      let rowsHtml = '';
+
+      dateData.payments.forEach(payment => {
+        const rawTimestamp =
+          payment.emailDate || payment.transactionDate || payment.createdAt || '';
+        let displayTime = '—';
+        if (rawTimestamp) {
+          const timestampDate = new Date(rawTimestamp);
+          if (!Number.isNaN(timestampDate.getTime())) {
+            displayTime = timestampDate.toLocaleTimeString('en-US', {
+              hour: 'numeric',
+              minute: '2-digit',
+              hour12: true,
+            });
+          }
         }
-        const resolution = resolvePaymentToStudent(payment, studentsCache);
-        resolutionCache.set(cacheKey, resolution);
-        return resolution;
-      };
 
-      const DATE_CHUNK_SIZE = 2;
-      let dateIndex = 0;
+        const amountUSD = parseFloat(payment.amount) || 0;
+        const resolution = getResolutionForPayment(payment);
+        const groupDisplay =
+          resolution.studentGroup ||
+          payment.derivedStudentGroup ||
+          payment.group ||
+          payment.studentGroup ||
+          '—';
+        const payerNameRaw = payment.payerNameRaw || payment.payerName || '—';
+        const studentNameResolved = resolution.studentName;
+        const resolutionBadge =
+          resolution.source === 'conflict'
+            ? '<span style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); padding: 2px 5px; border-radius: 4px; color: #ef4444; font-size: 9px; font-weight: 700; margin-left: 4px; cursor: pointer;" onclick="event.stopPropagation(); showPaymentContextMenu(event, \'${payment.id}\')">CONFLICT</span>'
+            : '';
 
-      const renderNextChunk = () => {
-        if (renderToken !== paymentRenderToken) {
-          return;
-        }
+        const messageText = cleanPaymentMemoText(
+          payment.message || payment.note || payment.memo || ''
+        );
+        const messageDisplay = messageText ? messageText : '—';
+        const isIgnored = payment.ignoredOnce || payment.ignorePermanently;
+        const rowOpacity = isIgnored ? 'opacity: 0.4;' : '';
+        const isNew =
+          payment.createdAt &&
+          Date.now() - new Date(payment.createdAt).getTime() < TIMING.NEW_PAYMENT_INDICATOR;
+        const newIndicatorClass = isNew && !payment.viewed ? 'payment-row-new' : '';
 
-        if (dateIndex === 0) {
-          container.innerHTML = '';
-        }
+        const amountAMD = Math.round(amountUSD * 387.5);
 
-        const chunkDates = sortedDates.slice(dateIndex, dateIndex + DATE_CHUNK_SIZE);
-        let chunkHtml = '';
-
-        chunkDates.forEach(dateKey => {
-          const dateData = paymentsByDate[dateKey];
-          let rowsHtml = '';
-
-          dateData.payments.forEach(payment => {
-            const rawTimestamp = payment.emailDate || payment.transactionDate || payment.createdAt || '';
-            let displayTime = '—';
-            if (rawTimestamp) {
-              const timestampDate = new Date(rawTimestamp);
-              if (!Number.isNaN(timestampDate.getTime())) {
-                displayTime = timestampDate.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-              }
-            }
-
-            const amountUSD = parseFloat(payment.amount) || 0;
-            const resolution = getResolutionForPayment(payment);
-            const groupDisplay = resolution.studentGroup || payment.derivedStudentGroup || payment.group || payment.studentGroup || '—';
-            const payerNameRaw = payment.payerNameRaw || payment.payerName || '—';
-            const studentNameResolved = resolution.studentName;
-            const resolutionBadge = resolution.source === 'conflict' ? '<span style="background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); padding: 2px 5px; border-radius: 4px; color: #ef4444; font-size: 9px; font-weight: 700; margin-left: 4px; cursor: pointer;" onclick="event.stopPropagation(); showPaymentContextMenu(event, \'${payment.id}\')">CONFLICT</span>' : '';
-
-            const messageText = cleanPaymentMemoText(payment.message || payment.note || payment.memo || '');
-            const messageDisplay = messageText ? messageText : '—';
-            const isIgnored = payment.ignoredOnce || payment.ignorePermanently;
-            const rowOpacity = isIgnored ? 'opacity: 0.4;' : '';
-            const isNew = payment.createdAt && (Date.now() - new Date(payment.createdAt).getTime()) < TIMING.NEW_PAYMENT_INDICATOR;
-            const newIndicatorClass = isNew && !payment.viewed ? 'payment-row-new' : '';
-
-            const amountAMD = Math.round(amountUSD * 387.5);
-            
-            rowsHtml += `
+        rowsHtml += `
               <div class="${newIndicatorClass}" style="display: grid; grid-template-columns: 110px 200px 200px 80px 180px 1fr 40px; gap: 12px; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; color: #e5e7eb; transition: background 0.2s; ${rowOpacity}" onmouseover="this.style.background='rgba(255,255,255,.03)'" onmouseout="this.style.background='transparent'">
                 <div style="color: #94a3b8;">${displayTime}</div>
-                <div 
+                <div
                   ondblclick="showPaymentActionsPopup(event, '${payment.id}', '${escapeHtml(payerNameRaw).replace(/'/g, "\\'")}', ${amountUSD.toFixed(2)}, '${escapeHtml(messageText || '').replace(/'/g, "\\'")}', '${escapeHtml(studentNameResolved).replace(/'/g, "\\'")}', '${escapeHtml(resolution.studentId || '').replace(/'/g, "\\'")}');"
                   style="cursor: pointer; transition: 0.2s; color: white; font-weight: 400;"
                   onmouseover="this.style.color='var(--primary)'; this.style.fontWeight='700';"
@@ -1854,22 +1868,25 @@
                   title="Double-click for actions"
                 >${escapeHtml(payerNameRaw)}</div>
                 <div style="font-weight: 600; color: white;">
-                  ${!resolution.studentId && resolution.source === 'none' ? 'Unmatched' : 
-                    resolution.studentId ? 
-                    `<span 
-                      onclick="event.stopPropagation(); openStudentEditFromPayment('${resolution.studentId}');" 
+                  ${
+                    !resolution.studentId && resolution.source === 'none'
+                      ? 'Unmatched'
+                      : resolution.studentId
+                        ? `<span
+                      onclick="event.stopPropagation(); openStudentEditFromPayment('${resolution.studentId}');"
                       style="cursor: pointer; transition: 0.2s;"
                       onmouseover="this.style.color='var(--primary)'; this.style.textDecoration='underline';"
                       onmouseout="this.style.color='white'; this.style.textDecoration='none';"
                       title="Click to edit student"
-                    >${escapeHtml(studentNameResolved)}${resolutionBadge}</span>` : 
-                    escapeHtml(studentNameResolved)}
+                    >${escapeHtml(studentNameResolved)}${resolutionBadge}</span>`
+                        : escapeHtml(studentNameResolved)
+                  }
                   ${!resolution.studentId && resolution.source === 'none' ? '<div style="margin-top: 4px;"><span style="padding: 3px 8px; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; color: #ef4444; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Unmatched</span></div>' : ''}
                 </div>
                 <div style="font-weight: 600; color: #3b82f6; text-align: center;">${escapeHtml(groupDisplay)}</div>
                 <div><span style="color: #22c55e; font-weight: 700;">${formatCurrency(amountUSD, '$')}</span> <span style="color: #94a3b8; font-size: 12.7px;">— ${formatCurrency(amountAMD, '֏')}</span></div>
                 <div style="color: var(--secondary); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${escapeHtml(messageDisplay)}">${escapeHtml(messageDisplay)}</div>
-                <div 
+                <div
                   onclick="event.stopPropagation(); showPaymentContextMenu(event, '${payment.id}')"
                   style="display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0.5; font-size: 18px; font-weight: bold; transition: opacity 0.2s;"
                   onmouseover="this.style.opacity='1'"
@@ -1878,9 +1895,9 @@
                 >⋮</div>
               </div>
             `;
-          });
+      });
 
-          chunkHtml += `
+      chunkHtml += `
             <div style="margin-bottom: 32px;">
               <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)); border-left: 4px solid #3b82f6; border-radius: 8px; margin-bottom: 12px;">
                 <span style="font-size: 16px; font-weight: 700; color: white;">${dateKey}</span>
@@ -1902,1292 +1919,1333 @@
               </div>
             </div>
           `;
-        });
+    });
 
-        if (chunkHtml) {
-          container.insertAdjacentHTML('beforeend', chunkHtml);
-        }
+    if (chunkHtml) {
+      container.insertAdjacentHTML('beforeend', chunkHtml);
+    }
 
-        dateIndex += DATE_CHUNK_SIZE;
+    dateIndex += DATE_CHUNK_SIZE;
 
-        if (dateIndex < sortedDates.length) {
-          requestAnimationFrame(renderNextChunk);
-        } else {
-          addClickToMarkPaymentsViewed();
-        }
-      };
-
+    if (dateIndex < sortedDates.length) {
       requestAnimationFrame(renderNextChunk);
+    } else {
+      addClickToMarkPaymentsViewed();
     }
-    
-    function addClickToMarkPaymentsViewed() {
-      // One click clears ALL green blinking indicators
-      const container = document.getElementById('paymentEmailsContent');
-      const oldListener = container?._clickListener;
-      if (oldListener) {
-        container.removeEventListener('click', oldListener);
+  };
+
+  requestAnimationFrame(renderNextChunk);
+}
+
+function addClickToMarkPaymentsViewed() {
+  // One click clears ALL green blinking indicators
+  const container = document.getElementById('paymentEmailsContent');
+  const oldListener = container?._clickListener;
+  if (oldListener) {
+    container.removeEventListener('click', oldListener);
+  }
+
+  // Add new listener - click ANYWHERE in the payment records container
+  const markAllPaymentsAsViewed = function () {
+    const newPaymentRows = document.querySelectorAll('.payment-row-new');
+    if (newPaymentRows.length === 0) return;
+
+    // Mark all payments as viewed
+    const payments = PaymentStore.getAll();
+    let hasChanges = false;
+
+    payments.forEach(payment => {
+      if (
+        !payment.viewed &&
+        payment.createdAt &&
+        Date.now() - new Date(payment.createdAt).getTime() < TIMING.NEW_PAYMENT_INDICATOR
+      ) {
+        payment.viewed = true;
+        hasChanges = true;
       }
-      
-      // Add new listener - click ANYWHERE in the payment records container
-      const markAllPaymentsAsViewed = function() {
-        const newPaymentRows = document.querySelectorAll('.payment-row-new');
-        if (newPaymentRows.length === 0) return;
-        
-        // Mark all payments as viewed
-        const payments = PaymentStore.getAll();
-        let hasChanges = false;
-        
-        payments.forEach(payment => {
-          if (!payment.viewed && payment.createdAt && (Date.now() - new Date(payment.createdAt).getTime()) < TIMING.NEW_PAYMENT_INDICATOR) {
-            payment.viewed = true;
-            hasChanges = true;
-          }
-        });
-        
-        if (hasChanges) {
-          PaymentStore.save(payments);
-          
-          // Remove animation class immediately from ALL green blinking rows
-          newPaymentRows.forEach(row => {
-            row.classList.remove('payment-row-new');
-            row.style.animation = 'none';
-            row.style.boxShadow = 'none';
-          });
-          
-          
-          // Remove this listener after first acknowledgment
-          if (container) {
-            container.removeEventListener('click', markAllPaymentsAsViewed);
-            container._clickListener = null;
-          }
-        }
-      };
-      
-      // Store reference and attach to container
-      if (container) {
-        container._clickListener = markAllPaymentsAsViewed;
-        container.addEventListener('click', markAllPaymentsAsViewed, { once: false });
-      }
-      // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-    }
-    
-    // Legacy function for compatibility
-    function markAllPaymentsAsViewed() {
-      const newPaymentRows = document.querySelectorAll('.payment-row-new');
-      if (newPaymentRows.length === 0) return;
-      
-      const payments = PaymentStore.getAll();
-      let hasChanges = false;
-      
-      payments.forEach(payment => {
-        if (!payment.viewed && payment.createdAt && (Date.now() - new Date(payment.createdAt).getTime()) < TIMING.NEW_PAYMENT_INDICATOR) {
-          payment.viewed = true;
-          hasChanges = true;
-        }
+    });
+
+    if (hasChanges) {
+      PaymentStore.save(payments);
+
+      // Remove animation class immediately from ALL green blinking rows
+      newPaymentRows.forEach(row => {
+        row.classList.remove('payment-row-new');
+        row.style.animation = 'none';
+        row.style.boxShadow = 'none';
       });
-      
-      if (hasChanges) {
-        PaymentStore.save(payments);
-        newPaymentRows.forEach(row => {
-          row.classList.remove('payment-row-new');
-          row.style.animation = 'none';
-          row.style.boxShadow = 'none';
-        });
+
+      // Remove this listener after first acknowledgment
+      if (container) {
+        container.removeEventListener('click', markAllPaymentsAsViewed);
+        container._clickListener = null;
       }
     }
-    
-    // ============================================================================
-    // GMAIL INTEGRATION - Enhanced for robust message retrieval
-    // ============================================================================
-    
-    const GMAIL_CLIENT_ID = '67231383915-4kpdv0k6u517admvhl7jlejku7qtbsjj.apps.googleusercontent.com';
-    const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
-    const GMAIL_CONNECTION_KEY = 'gmail-connection'; // Per developer command spec
-    
-    // Enhanced Gmail connection with persistent token management
-    function getGmailConnection() {
-      const stored = localStorage.getItem(GMAIL_CONNECTION_KEY);
-      if (!stored) return null;
-      
-      try {
-        const connection = JSON.parse(stored);
-        // Check if token is expired
-        if (connection.expiry_date && Date.now() >= connection.expiry_date) {
-          console.log('Gmail token expired');
-          localStorage.removeItem(GMAIL_CONNECTION_KEY);
-          return null;
-        }
-        return connection;
-      } catch (e) {
-        console.error('Error parsing Gmail connection:', e);
-        return null;
-      }
+  };
+
+  // Store reference and attach to container
+  if (container) {
+    container._clickListener = markAllPaymentsAsViewed;
+    container.addEventListener('click', markAllPaymentsAsViewed, { once: false });
+  }
+  // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+}
+
+// Legacy function for compatibility
+function markAllPaymentsAsViewed() {
+  const newPaymentRows = document.querySelectorAll('.payment-row-new');
+  if (newPaymentRows.length === 0) return;
+
+  const payments = PaymentStore.getAll();
+  let hasChanges = false;
+
+  payments.forEach(payment => {
+    if (
+      !payment.viewed &&
+      payment.createdAt &&
+      Date.now() - new Date(payment.createdAt).getTime() < TIMING.NEW_PAYMENT_INDICATOR
+    ) {
+      payment.viewed = true;
+      hasChanges = true;
     }
-    
-    function saveGmailConnection(token, expiresIn, userEmail = null) {
-      const connection = {
-        access_token: token,
-        expiry_date: Date.now() + (expiresIn * 1000),
-        user_email: userEmail,
-        connected_at: new Date().toISOString()
-      };
-      
-      localStorage.setItem(GMAIL_CONNECTION_KEY, JSON.stringify(connection));
-      localStorage.setItem(STORAGE_KEYS.GMAIL_TOKEN, token);
-      localStorage.setItem(STORAGE_KEYS.GMAIL_EXPIRY, connection.expiry_date.toString());
-      
-      gmailAccessToken = token;
-      gmailTokenExpiry = connection.expiry_date.toString();
-      
-    }
-    
-    function clearGmailConnection() {
+  });
+
+  if (hasChanges) {
+    PaymentStore.save(payments);
+    newPaymentRows.forEach(row => {
+      row.classList.remove('payment-row-new');
+      row.style.animation = 'none';
+      row.style.boxShadow = 'none';
+    });
+  }
+}
+
+// ============================================================================
+// GMAIL INTEGRATION - Enhanced for robust message retrieval
+// ============================================================================
+
+const GMAIL_CLIENT_ID = '67231383915-4kpdv0k6u517admvhl7jlejku7qtbsjj.apps.googleusercontent.com';
+const GMAIL_SCOPES = 'https://www.googleapis.com/auth/gmail.readonly';
+const GMAIL_CONNECTION_KEY = 'gmail-connection'; // Per developer command spec
+
+// Enhanced Gmail connection with persistent token management
+function getGmailConnection() {
+  const stored = localStorage.getItem(GMAIL_CONNECTION_KEY);
+  if (!stored) return null;
+
+  try {
+    const connection = JSON.parse(stored);
+    // Check if token is expired
+    if (connection.expiry_date && Date.now() >= connection.expiry_date) {
+      console.log('Gmail token expired');
       localStorage.removeItem(GMAIL_CONNECTION_KEY);
+      return null;
+    }
+    return connection;
+  } catch (e) {
+    console.error('Error parsing Gmail connection:', e);
+    return null;
+  }
+}
+
+function saveGmailConnection(token, expiresIn, userEmail = null) {
+  const connection = {
+    access_token: token,
+    expiry_date: Date.now() + expiresIn * 1000,
+    user_email: userEmail,
+    connected_at: new Date().toISOString(),
+  };
+
+  localStorage.setItem(GMAIL_CONNECTION_KEY, JSON.stringify(connection));
+  localStorage.setItem(STORAGE_KEYS.GMAIL_TOKEN, token);
+  localStorage.setItem(STORAGE_KEYS.GMAIL_EXPIRY, connection.expiry_date.toString());
+
+  gmailAccessToken = token;
+  gmailTokenExpiry = connection.expiry_date.toString();
+}
+
+function clearGmailConnection() {
+  localStorage.removeItem(GMAIL_CONNECTION_KEY);
+  localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
+  localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
+  gmailAccessToken = null;
+  gmailTokenExpiry = null;
+}
+
+// BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+// Gmail connection stability - check and refresh token automatically
+async function ensureGmailTokenValid() {
+  if (!gmailAccessToken) return false;
+
+  // Check if token is about to expire (within 5 minutes)
+  const expiry = parseInt(gmailTokenExpiry || '0');
+  const now = Date.now();
+  const fiveMinutes = 5 * 60 * 1000;
+
+  if (expiry && expiry - now < fiveMinutes) {
+    console.log('Gmail token expiring soon, attempting silent refresh...');
+
+    // Token expired or expiring - need to re-authenticate
+    // Note: Google OAuth2 implicit flow doesn't support refresh tokens
+    // User must re-authenticate when token expires
+    gmailAccessToken = null;
+    localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
+    updateGmailButtonState(false);
+
+    showNotification('⚠️ Gmail connection expired. Please reconnect.', 'warning');
+    return false;
+  }
+
+  return true;
+}
+
+// Auto-check token validity every 2 minutes
+setInterval(
+  async () => {
+    if (gmailAccessToken) {
+      await ensureGmailTokenValid();
+    }
+  },
+  2 * 60 * 1000
+);
+// END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+
+async function toggleGmailConnection() {
+  if (gmailAccessToken) {
+    // Disconnect
+    const confirmed = await customConfirm(
+      'Disconnect Gmail? This will stop automatic payment email checking.',
+      {
+        title: 'Disconnect Gmail',
+        icon: '🔌',
+        okText: 'Disconnect',
+        type: 'danger',
+      }
+    );
+
+    if (confirmed) {
       localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
       localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
       gmailAccessToken = null;
-      gmailTokenExpiry = null;
+      updateGmailButtonState(false);
+      showNotification('Gmail disconnected', 'info');
     }
-    
-    // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-    // Gmail connection stability - check and refresh token automatically
-    async function ensureGmailTokenValid() {
-      if (!gmailAccessToken) return false;
-      
-      // Check if token is about to expire (within 5 minutes)
-      const expiry = parseInt(gmailTokenExpiry || '0');
-      const now = Date.now();
-      const fiveMinutes = 5 * 60 * 1000;
-      
-      if (expiry && (expiry - now) < fiveMinutes) {
-        console.log('Gmail token expiring soon, attempting silent refresh...');
-        
-        // Token expired or expiring - need to re-authenticate
-        // Note: Google OAuth2 implicit flow doesn't support refresh tokens
-        // User must re-authenticate when token expires
-        gmailAccessToken = null;
+  } else {
+    // Connect
+    initiateGmailAuth();
+  }
+}
+
+function initiateGmailAuth() {
+  // Use the exact current origin to match what's in Google Cloud Console
+  const redirectUri = window.location.origin;
+
+  // Implicit OAuth flow for browser-based apps
+  const authUrl =
+    `https://accounts.google.com/o/oauth2/v2/auth?` +
+    `client_id=${GMAIL_CLIENT_ID}&` +
+    `redirect_uri=${encodeURIComponent(redirectUri)}&` +
+    `response_type=token&` +
+    `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
+    `prompt=select_account`; // Allow account selection
+
+  console.log('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
+  window.location.href = authUrl;
+}
+
+function handleOAuthCallback() {
+  const hash = window.location.hash;
+  console.log('🔍 Checking for OAuth callback - hash:', hash ? 'Found' : 'None');
+
+  if (hash && hash.includes('access_token')) {
+    const params = new URLSearchParams(hash.substring(1));
+    const token = params.get('access_token');
+    const expiresIn = parseInt(params.get('expires_in') || '3600');
+
+    if (token) {
+      // Save using enhanced connection storage
+      saveGmailConnection(token, expiresIn);
+
+      updateGmailButtonState(true);
+      showNotification('✅ Gmail connected successfully! Token valid for 1 hour.', 'success');
+
+      // Clear hash from URL
+      window.history.replaceState(null, '', window.location.pathname);
+
+      // Auto-fetch payments after connection
+      console.log('📥 Auto-fetching payments after connection...');
+      setTimeout(() => refreshPayments(), 1000);
+    }
+  } else if (hash && hash.includes('error')) {
+    // Handle OAuth errors
+    const params = new URLSearchParams(hash.substring(1));
+    const error = params.get('error');
+    const errorDesc = params.get('error_description');
+    console.error('❌ OAuth error:', error, errorDesc);
+    showNotification(`Gmail connection failed: ${errorDesc || error}`, 'error');
+
+    // Clear hash from URL
+    window.history.replaceState(null, '', window.location.pathname);
+  }
+}
+
+function updateGmailButtonState(connected) {
+  const btn = document.getElementById('gmailBtn');
+  const text = document.getElementById('gmailBtnText');
+  if (!btn || !text) {
+    console.error('Gmail button elements not found');
+    return;
+  }
+
+  if (connected) {
+    btn.classList.add('connected');
+    text.textContent = 'Gmail';
+  } else {
+    btn.classList.remove('connected');
+    text.textContent = 'Gmail';
+  }
+}
+
+async function refreshPayments() {
+  // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+  // Check token validity before attempting sync
+  const isValid = await ensureGmailTokenValid();
+  if (!isValid || !gmailAccessToken) {
+    showNotification('⚠️ Please connect Gmail first', 'warning');
+    return;
+  }
+  // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
+
+  const btn = document.getElementById('navRefreshBtn');
+  if (!btn) {
+    console.error('navRefreshBtn element not found');
+    return;
+  }
+  btn.classList.add('spinning');
+  btn.disabled = true;
+
+  try {
+    showNotification('🔍 Checking for new payment emails...', 'info');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const afterDate = Math.floor(today.getTime() / 1000);
+
+    const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
+    const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
+
+    const searchResponse = await fetch(searchUrl, {
+      headers: { Authorization: `Bearer ${gmailAccessToken}` },
+    });
+
+    if (!searchResponse.ok) {
+      if (searchResponse.status === 401) {
         localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
         localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
+        gmailAccessToken = null;
         updateGmailButtonState(false);
-        
-        showNotification('⚠️ Gmail connection expired. Please reconnect.', 'warning');
-        return false;
-      }
-      
-      return true;
-    }
-    
-    // Auto-check token validity every 2 minutes
-    setInterval(async () => {
-      if (gmailAccessToken) {
-        await ensureGmailTokenValid();
-      }
-    }, 2 * 60 * 1000);
-    // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-    
-    async function toggleGmailConnection() {
-      if (gmailAccessToken) {
-        // Disconnect
-        const confirmed = await customConfirm(
-          'Disconnect Gmail? This will stop automatic payment email checking.',
-          {
-            title: 'Disconnect Gmail',
-            icon: '🔌',
-            okText: 'Disconnect',
-            type: 'danger'
-          }
-        );
-        
-        if (confirmed) {
-          localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
-          localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
-          gmailAccessToken = null;
-          updateGmailButtonState(false);
-          showNotification('Gmail disconnected', 'info');
-        }
-      } else {
-        // Connect
-        initiateGmailAuth();
-      }
-    }
-    
-    function initiateGmailAuth() {
-      // Use the exact current origin to match what's in Google Cloud Console
-      const redirectUri = window.location.origin;
-      
-      
-      // Implicit OAuth flow for browser-based apps
-      const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?` +
-        `client_id=${GMAIL_CLIENT_ID}&` +
-        `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-        `response_type=token&` +
-        `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
-        `prompt=select_account`;           // Allow account selection
-      
-      console.log('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
-      window.location.href = authUrl;
-    }
-    
-    function handleOAuthCallback() {
-      const hash = window.location.hash;
-      console.log('🔍 Checking for OAuth callback - hash:', hash ? 'Found' : 'None');
-      
-      if (hash && hash.includes('access_token')) {
-        const params = new URLSearchParams(hash.substring(1));
-        const token = params.get('access_token');
-        const expiresIn = parseInt(params.get('expires_in') || '3600');
-        
-        
-        if (token) {
-          // Save using enhanced connection storage
-          saveGmailConnection(token, expiresIn);
-          
-          updateGmailButtonState(true);
-          showNotification('✅ Gmail connected successfully! Token valid for 1 hour.', 'success');
-          
-          // Clear hash from URL
-          window.history.replaceState(null, '', window.location.pathname);
-          
-          // Auto-fetch payments after connection
-          console.log('📥 Auto-fetching payments after connection...');
-          setTimeout(() => refreshPayments(), 1000);
-        }
-      } else if (hash && hash.includes('error')) {
-        // Handle OAuth errors
-        const params = new URLSearchParams(hash.substring(1));
-        const error = params.get('error');
-        const errorDesc = params.get('error_description');
-        console.error('❌ OAuth error:', error, errorDesc);
-        showNotification(`Gmail connection failed: ${errorDesc || error}`, 'error');
-        
-        // Clear hash from URL
-        window.history.replaceState(null, '', window.location.pathname);
-      }
-    }
-    
-    function updateGmailButtonState(connected) {
-      const btn = document.getElementById('gmailBtn');
-      const text = document.getElementById('gmailBtnText');
-      if (!btn || !text) {
-        console.error('Gmail button elements not found');
+        showNotification('🔒 Gmail session expired. Please reconnect.', 'error');
         return;
       }
-      
-      if (connected) {
-        btn.classList.add('connected');
-        text.textContent = 'Gmail';
-      } else {
-        btn.classList.remove('connected');
-        text.textContent = 'Gmail';
-      }
+      throw new Error(`Gmail API error: ${searchResponse.status}`);
     }
-    
-    async function refreshPayments() {
-      // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-      // Check token validity before attempting sync
-      const isValid = await ensureGmailTokenValid();
-      if (!isValid || !gmailAccessToken) {
-        showNotification('⚠️ Please connect Gmail first', 'warning');
-        return;
-      }
-      // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
-      
-      const btn = document.getElementById('navRefreshBtn');
-      if (!btn) {
-        console.error('navRefreshBtn element not found');
-        return;
-      }
-      btn.classList.add('spinning');
-      btn.disabled = true;
-      
-      try {
-        showNotification('🔍 Checking for new payment emails...', 'info');
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const afterDate = Math.floor(today.getTime() / 1000);
-        
-        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
-        const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
-        
-        const searchResponse = await fetch(searchUrl, {
-          headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-        });
-        
-        if (!searchResponse.ok) {
-          if (searchResponse.status === 401) {
-            localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
-            gmailAccessToken = null;
-            updateGmailButtonState(false);
-            showNotification('🔒 Gmail session expired. Please reconnect.', 'error');
-            return;
-          }
-          throw new Error(`Gmail API error: ${searchResponse.status}`);
-        }
-        
-        const searchData = await searchResponse.json();
-        
-        if (!searchData.messages || searchData.messages.length === 0) {
-          showNotification('📭 No new payment emails found', 'info');
-          return;
-        }
-        
-        
-        const existingPayments = PaymentStore.getAll();
-        const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
-        
-        const payments = [];
-        const processedGmailIds = new Set();
-        
-        for (const message of searchData.messages) {
-          const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
-          const messageResponse = await fetch(messageUrl, {
-            headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-          });
-          
-          if (messageResponse.ok) {
-            const messageData = await messageResponse.json();
-            const payment = parseZelleEmail(messageData);
-            if (payment) {
-              // Check if already processed in this batch
-              if (processedGmailIds.has(payment.gmailId)) {
-                console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
-                continue;
-              }
-              
-              // Use enhanced duplicate detection against existing payments
-              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPaymentsForCheck)) {
-                continue; // Skip duplicate (already logged in isDuplicatePayment)
-              }
-              
-              payments.push(payment);
-              processedGmailIds.add(payment.gmailId);
-            }
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, TIMING.API_DELAY));
-        }
-        
-        if (payments.length > 0) {
-          // Save new payments combined with existing ones
-          const allPayments = [...payments, ...existingPayments];
-          await PaymentStore.save(allPayments);
-          
-          // Recompute resolutions to populate group information
-          await recomputePaymentResolutions();
-          
-          // Log success per developer command
-          
-          // Dispatch update event per developer command
-          window.dispatchEvent(new CustomEvent('payments:updated', {
-            detail: { count: payments.length, source: 'gmail-sync' }
-          }));
-          
-          showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`, 'success');
-          renderPaymentEmailsView();
-        } else {
-          showNotification('✅ All payments already synced', 'success');
-        }
-        
-      } catch (error) {
-        console.error('Error refreshing payments:', error);
-        
-        // Check if it's a network error
-        if (error.message === 'Load failed' || error.message.includes('Failed to fetch')) {
-          console.error('Network error details:', {
-            message: error.message,
-            tokenExists: !!gmailAccessToken,
-            tokenExpiry: localStorage.getItem(STORAGE_KEYS.GMAIL_EXPIRY)
-          });
-          showNotification('❌ Network error. Check your internet connection and Gmail token.', 'error');
-        } else {
-          showNotification('❌ Error: ' + error.message, 'error');
-        }
-      } finally {
-        btn.classList.remove('spinning');
-        btn.disabled = false;
-      }
-    }
-    
-    async function fetchTodaysEmails() {
-      // Check token validity before attempting sync
-      const isValid = await ensureGmailTokenValid();
-      if (!isValid || !gmailAccessToken) {
-        showNotification('⚠️ Please connect Gmail first', 'warning');
-        return;
-      }
-      
-      const btn = document.getElementById('syncBtn');
-      if (!btn) {
-        console.error('syncBtn element not found');
-        return;
-      }
-      btn.disabled = true;
-      const originalText = btn.innerHTML;
-      btn.innerHTML = '⏳';
-      
-      try {
-        showNotification('🔍 Fetching today\'s payment emails...', 'info');
-        
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const afterDate = Math.floor(today.getTime() / 1000);
-        
-        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
-        const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
-        
-        const searchResponse = await fetch(searchUrl, {
-          headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-        });
-        
-        if (!searchResponse.ok) {
-          if (searchResponse.status === 401) {
-            localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
-            gmailAccessToken = null;
-            updateGmailButtonState(false);
-            throw new Error('Gmail session expired. Please reconnect.');
-          }
-          throw new Error(`Gmail API error: ${searchResponse.status}`);
-        }
-        
-        const searchData = await searchResponse.json();
-        
-        if (!searchData.messages || searchData.messages.length === 0) {
-          showNotification('📭 No payment emails found today', 'info');
-          btn.disabled = false;
-          btn.innerHTML = originalText;
-          return;
-        }
-        
-        
-        const existingPayments = PaymentStore.getAll();
-        const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
-        
-        const payments = [];
-        const processedGmailIds = new Set();
-        
-        for (const message of searchData.messages) {
-          const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
-          const messageResponse = await fetch(messageUrl, {
-            headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-          });
-          
-          if (messageResponse.ok) {
-            const messageData = await messageResponse.json();
-            const payment = parseZelleEmail(messageData);
-            if (payment) {
-              // Check if already processed in this batch
-              if (processedGmailIds.has(payment.gmailId)) {
-                console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
-                continue;
-              }
-              
-              // Use enhanced duplicate detection against existing payments
-              if (isDuplicatePayment(payment.gmailId || payment.emailId, payment, existingPaymentsForCheck)) {
-                continue; // Skip duplicate (already logged in isDuplicatePayment)
-              }
-              
-              payments.push(payment);
-              processedGmailIds.add(payment.gmailId);
-            }
-          }
-          
-          await new Promise(resolve => setTimeout(resolve, TIMING.API_DELAY));
-        }
-        
-        if (payments.length > 0) {
-          const allPayments = [...payments, ...existingPayments];
-          await PaymentStore.save(allPayments);
-          await recomputePaymentResolutions();
-          
-          showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`, 'success');
-          renderPaymentEmailsView();
-        } else {
-          showNotification('✅ All today\'s payments already synced', 'success');
-        }
-        
-      } catch (error) {
-        console.error('Error fetching today\'s emails:', error);
-        showNotification('❌ Error: ' + error.message, 'error');
-      } finally {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-      }
-    }
-    
-    function parseZelleEmail(messageData) {
-      try {
-        const headers = messageData.payload.headers;
-        const dateHeader = headers.find(h => h.name === 'Date');
-        let emailDate = dateHeader ? new Date(dateHeader.value) : new Date();
-        
-        // Apply LA timezone offset correction if enabled
-        emailDate = applyLAOffset(emailDate);
-        
-        // Extract email body (multiple sources)
-        let bodyText = '';
-        if (messageData.payload.body && messageData.payload.body.data) {
-          bodyText = atob(messageData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
-        } else if (messageData.payload.parts) {
-          const textPart = messageData.payload.parts.find(p => p.mimeType === 'text/plain');
-          if (textPart && textPart.body && textPart.body.data) {
-            bodyText = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'));
-          }
-        }
-        
-        // Fallback to snippet if body is empty (per developer command)
-        if (!bodyText && messageData.snippet) {
-          bodyText = messageData.snippet;
-        }
-        
-        if (!bodyText) {
-          console.warn('⚠️ No body text or snippet available for email:', messageData.id);
-          return null;
-        }
-        
-        // DEVELOPER COMMAND: Only fetch Zelle emails credited to account 7073
-        const bodyTextLower = bodyText.toLowerCase();
-        
-        // ✅ Only fetch messages credited to your account (ending in 7073)
-        const isCreditedTo7073 = bodyTextLower.includes('credited to account ending in: 7073');
-        
-        // ❌ Skip all others
-        const isSentFrom7073 = bodyTextLower.includes('sent from account ending in: 7073');
-        const isGenericDeposit = bodyTextLower.includes('your deposit of');
-        const isGenericTransaction = bodyTextLower.includes('your transaction of');
-        
-        if (!isCreditedTo7073 || isSentFrom7073 || isGenericDeposit || isGenericTransaction) {
-          return null;
-        }
-        
-        
-        // Parse amount - universal pattern
-        const amountMatch = bodyText.match(/\$[\d,]+\.\d{2}/);
-        const amount = amountMatch ? parseFloat(amountMatch[0].replace(/[$,]/g, '')) : 0;
-        
-        // Parse sender name - try multiple patterns
-        let senderName = 'Unknown';
-        
-        // Pattern 1: "From: Name" (text/plain format with colon)
-        let fromMatch = bodyText.match(/From:\s*([^\n]+)/i);
-        if (fromMatch) {
-          senderName = fromMatch[1].trim();
-        } else {
-          // Pattern 2: "from Name was deposited" (HTML format)
-          fromMatch = bodyText.match(/from\s+([^\s].*?)(?:\s+was\s+deposited|\n|$)/i);
-          if (fromMatch) {
-            senderName = fromMatch[1].trim();
-          }
-        }
-        
-        // Parse memo/message - try multiple patterns
-        let memo = '';
-        let studentNameFromMessage = '';
-        
-        // Pattern 1: "Message from [Payer]: [Student Name]" (US Bank specific - extract student name)
-        // STOP BEFORE footer text like "The money is ready", "Pay it forward", etc.
-        let messageFromMatch = bodyText.match(
-          /Message\s+from\s+[^:]+:\s*([A-Za-z\s,'"\-]+?)(?=\s*(?:The money|Pay it forward|If you'd|Thanks|You can add|View transaction|\n\n|$))/i
-        );
-        if (messageFromMatch) {
-          studentNameFromMessage = messageFromMatch[1].trim();
-          
-          // Extra safety filter to remove any footer fragments
-          studentNameFromMessage = studentNameFromMessage
-            .replace(/(The money.*|Pay it forward.*|If you'd.*|Thanks.*|You can add.*|View transaction.*)/i, '')
-            .trim();
-          
-          memo = studentNameFromMessage; // Use as memo too
-          console.log('🧩 Stopped before footer text (clean extraction)');
-        } else {
-          // Pattern 2: "Memo:" or "Message:" or "Note:" (text/plain format)
-          let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
-          if (memoMatch) {
-            memo = memoMatch[1].trim();
-            // Clean footer from memo as well
-            memo = memo.replace(/(The money.*|Pay it forward.*|If you'd.*|Thanks.*|You can add.*|View transaction.*)/i, '').trim();
-          }
-        }
-        
-        
-        if (!amount || !senderName) return null;
-        
-        // Enhanced student matching per developer command
-        const students = getCachedStudents();
-        let matchedStudent = null;
-        let studentEmail = '';
-        let groupId = '';
-        
-        // Priority 1: Use extracted student name from "Message from [payer]: [student]"
-        if (studentNameFromMessage) {
-          const searchName = studentNameFromMessage.toLowerCase().trim();
-          
-          // Try exact name match
-          matchedStudent = students.find(s => s.name.toLowerCase() === searchName);
-          
-          // Try alias match if no exact match
-          if (!matchedStudent) {
-            matchedStudent = students.find(s => {
-              if (!s.aliases || s.aliases.length === 0) return false;
-              return s.aliases.some(alias => alias.toLowerCase().trim() === searchName);
-            });
-          }
-          
-          // Try partial match if still no match
-          if (!matchedStudent) {
-            matchedStudent = students.find(s => {
-              const nameLower = s.name.toLowerCase();
-              return nameLower.includes(searchName) || searchName.includes(nameLower);
-            });
-          }
-          
-          if (matchedStudent) {
-          }
-        }
-        
-        // Priority 2: If no student name extracted, try memo field
-        if (!matchedStudent && memo) {
-          const searchText = memo.toLowerCase().trim();
-          
-          // Exact name match
-          matchedStudent = students.find(s => s.name.toLowerCase() === searchText);
-          
-          // Alias match
-          if (!matchedStudent) {
-            matchedStudent = students.find(s => {
-              if (!s.aliases || s.aliases.length === 0) return false;
-              return s.aliases.some(alias => alias.toLowerCase().trim() === searchText);
-            });
-          }
-          
-          // Partial name match
-          if (!matchedStudent) {
-            matchedStudent = students.find(s => {
-              const nameLower = s.name.toLowerCase();
-              return nameLower.includes(searchText) || searchText.includes(nameLower);
-            });
-          }
-          
-          if (matchedStudent) {
-          }
-        }
-        
-        // Priority 3: Try matching sender name as last resort
-        if (!matchedStudent) {
-          const senderLower = senderName.toLowerCase().trim();
-          
-          // Exact match
-          matchedStudent = students.find(s => s.name.toLowerCase() === senderLower);
-          
-          // Alias match
-          if (!matchedStudent) {
-            matchedStudent = students.find(s => {
-              if (!s.aliases || s.aliases.length === 0) return false;
-              return s.aliases.some(alias => alias.toLowerCase().trim() === senderLower);
-            });
-          }
-          
-          // Partial match
-          if (!matchedStudent) {
-            matchedStudent = students.find(s => {
-              const nameLower = s.name.toLowerCase();
-              return nameLower.includes(senderLower) || senderLower.includes(nameLower);
-            });
-          }
-          
-          if (matchedStudent) {
-          }
-        }
-        
-        // Extract student email and group if matched
-        if (matchedStudent) {
-          studentEmail = matchedStudent.email || '';
-          groupId = matchedStudent.groupId || '';
-        } else {
-        }
-        
-        // Determine final display names
-        const finalStudentName = matchedStudent ? matchedStudent.name : 'Unmatched';
-        const finalPayerName = senderName;
-        
 
-        // Final cleanup: If memo contains ONLY footer/generic text, set it to empty string
-        let cleanMemo = memo || '';
-        if (cleanMemo) {
-          // Remove all known footer patterns
-          cleanMemo = cleanMemo
-            .replace(/\*\s*If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
-            .replace(/If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
-            .replace(/The\s+money\s+is\s+ready\s+for\s+use.*/gi, '')
-            .replace(/Pay\s+it\s+forward.*/gi, '')
-            .replace(/Thanks\s+for\s+using\s+Zelle.*/gi, '')
-            .replace(/You\s+can\s+add\s+a\s+note.*/gi, '')
-            .replace(/View\s+transaction\s+details.*/gi, '')
-            .trim();
-          
-          // If nothing meaningful remains, set to empty
-          if (cleanMemo.length < 3 || /^[*\s\-—.]+$/.test(cleanMemo)) {
-            cleanMemo = '';
-          }
-        }
-        
-        // Create payment object with full resolution metadata
-        const payment = {
-          id: `payment-${messageData.id}`, // Use Gmail ID to prevent duplicates
-          gmailId: messageData.id,
-          amount,
-          
-          // Raw immutable data from email
-          payerNameRaw: senderName,
-          payerEmailRaw: null,
-          memo: cleanMemo,
-          message: cleanMemo,
-          
-          // Display fields (computed)
-          payerName: finalPayerName,
-          senderName: finalPayerName,
-          studentName: finalStudentName,
-          studentEmail: studentEmail,
-          groupId: groupId,
-          
-          // Manual linking (not set during parsing - only via UI)
-          linkedStudentId: null,
-          manuallyLinked: false,
-          
-          // Automatic resolution metadata
-          derivedStudentId: matchedStudent ? matchedStudent.id : null,
-          resolvedStudentName: finalStudentName,
-          derivedStudentGroup: matchedStudent ? (matchedStudent.group || matchedStudent.groups || '') : '',
-          resolutionSource: matchedStudent ? 'memo-match' : 'none',
-          
-          // Legacy/compatibility field
-          studentId: matchedStudent ? matchedStudent.id : null,
-          
-          // Status tracking
-          status: matchedStudent ? 'matched' : 'unmatched',
-          viewed: false,
-          ignoredOnce: false,
-          ignorePermanently: false,
-          
-          // Timestamps
-          emailDate: emailDate.toISOString(),
-          date: emailDate.toISOString(),
-          createdAt: new Date().toISOString(),
-          linkedAt: null,
-          dateModifiedAt: null
-        };
-        
-        return payment;
-      } catch (error) {
-        console.error('Error parsing Zelle email:', error);
-        return null;
-      }
+    const searchData = await searchResponse.json();
+
+    if (!searchData.messages || searchData.messages.length === 0) {
+      showNotification('📭 No new payment emails found', 'info');
+      return;
     }
-    
-    // ============================================================================
-    // ============================================================================
-    // CLOUD SYNC (AUTOMATIC VIA SUPABASE)
-    // ============================================================================
-    
-    // Supabase automatically syncs all data changes - no manual sync needed!
-    // PaymentStore.save() now directly writes to Supabase cloud database
-    
-    async function syncToCloud() {
-      // This function is kept for UI compatibility but sync is automatic
-      showNotification('✅ All data auto-syncs to Supabase cloud!', 'success');
-    }
-    
-    async function loadFromCloud() {
-      try {
-  const payments = await PaymentStore.fetchAll();
-        renderPaymentEmailsView();
-      } catch (error) {
-        console.error('Error loading from cloud:', error);
-        showNotification('❌ Failed to load data from cloud', 'error');
-      }
-    }
-    
-    // ============================================================================
-    // PAYMENT ACTIONS POPUP
-    // ============================================================================
-    
-  let currentPaymentPopupData = null;
-  let savedPaymentDataForLinking = null; // PERSISTENT storage for linking operations
-  let paymentRenderRAF = null;
-  let paymentRenderToken = 0;
-  let lastPopupOpenTime = 0; // Debounce double-click
-    
-    // BEGIN POPUP BACK & EXIT FIX
-    function showPaymentActionsPopup(event, paymentId, payerName, amount, message, studentName, studentId) {
-      if (event) event.stopPropagation();
-      
-      // Debounce: prevent multiple rapid opens
-      const now = Date.now();
-      if (now - lastPopupOpenTime < 300) return;
-      lastPopupOpenTime = now;
-      
-      // Store payment data
-      currentPaymentPopupData = {
-        paymentId: paymentId,
-        payerName: payerName,
-        amount: amount,
-        message: message,
-        studentName: studentName,
-        studentId: studentId
-      };
-      
-      // Update display with null checks
-      const payerNameEl = document.getElementById('popupPayerName');
-      const amountEl = document.getElementById('popupPaymentAmount');
-      const messageEl = document.getElementById('popupPaymentMessage');
-      const popup = document.getElementById('paymentActionsPopup');
-      
-      if (!payerNameEl || !amountEl || !messageEl || !popup) {
-        console.error('Payment popup elements not found');
-        showNotification('❌ UI error: Popup elements missing', 'error');
-        return;
-      }
-      
-      payerNameEl.textContent = payerName || '—';
-      amountEl.innerHTML = formatDualCurrencyHTML(amount);
-      messageEl.textContent = message || 'No message';
-      
-      // Register with PopupManager for Back button and click-outside
-      if (window.PopupManager) {
-        window.PopupManager.register('paymentActionsPopup', {
-          hasBackButton: false, // No back button needed (top-level popup)
-          closeOnOutsideClick: true,
-          onClose: () => {
-            currentPaymentPopupData = null;
-            const aliasForm = document.getElementById('createAliasForm');
-            const dateForm = document.getElementById('changeDateForm');
-            if (aliasForm) aliasForm.style.display = 'none';
-            if (dateForm) dateForm.style.display = 'none';
-          }
-        });
-      }
-      
-      // Show backdrop and modal with fade-in
-      const backdrop = document.getElementById('paymentActionsBackdrop');
-      if (backdrop) {
-        backdrop.style.display = 'block';
-        backdrop.style.opacity = '0';
-        backdrop.style.transition = 'opacity 0.25s ease';
-        requestAnimationFrame(() => {
-          backdrop.style.opacity = '1';
-        });
-      }
-      
-      popup.classList.add('active');
-      popup.style.display = 'block';
-      popup.style.opacity = '0';
-      popup.style.transition = 'opacity 0.25s ease';
-      requestAnimationFrame(() => {
-        popup.style.opacity = '1';
+
+    const existingPayments = PaymentStore.getAll();
+    const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
+
+    const payments = [];
+    const processedGmailIds = new Set();
+
+    for (const message of searchData.messages) {
+      const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
+      const messageResponse = await fetch(messageUrl, {
+        headers: { Authorization: `Bearer ${gmailAccessToken}` },
       });
+
+      if (messageResponse.ok) {
+        const messageData = await messageResponse.json();
+        const payment = parseZelleEmail(messageData);
+        if (payment) {
+          // Check if already processed in this batch
+          if (processedGmailIds.has(payment.gmailId)) {
+            console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
+            continue;
+          }
+
+          // Use enhanced duplicate detection against existing payments
+          if (
+            isDuplicatePayment(
+              payment.gmailId || payment.emailId,
+              payment,
+              existingPaymentsForCheck
+            )
+          ) {
+            continue; // Skip duplicate (already logged in isDuplicatePayment)
+          }
+
+          payments.push(payment);
+          processedGmailIds.add(payment.gmailId);
+        }
+      }
+
+      await new Promise(resolve => setTimeout(resolve, TIMING.API_DELAY));
     }
-    // END POPUP BACK & EXIT FIX
-    
-    function closePaymentActionsPopup() {
-      const popup = document.getElementById('paymentActionsPopup');
-      const backdrop = document.getElementById('paymentActionsBackdrop');
-      
-      // Fade out
-      if (popup) {
-        popup.style.opacity = '0';
+
+    if (payments.length > 0) {
+      // Save new payments combined with existing ones
+      const allPayments = [...payments, ...existingPayments];
+      await PaymentStore.save(allPayments);
+
+      // Recompute resolutions to populate group information
+      await recomputePaymentResolutions();
+
+      // Log success per developer command
+
+      // Dispatch update event per developer command
+      window.dispatchEvent(
+        new CustomEvent('payments:updated', {
+          detail: { count: payments.length, source: 'gmail-sync' },
+        })
+      );
+
+      showNotification(
+        `✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`,
+        'success'
+      );
+      renderPaymentEmailsView();
+    } else {
+      showNotification('✅ All payments already synced', 'success');
+    }
+  } catch (error) {
+    console.error('Error refreshing payments:', error);
+
+    // Check if it's a network error
+    if (error.message === 'Load failed' || error.message.includes('Failed to fetch')) {
+      console.error('Network error details:', {
+        message: error.message,
+        tokenExists: !!gmailAccessToken,
+        tokenExpiry: localStorage.getItem(STORAGE_KEYS.GMAIL_EXPIRY),
+      });
+      showNotification(
+        '❌ Network error. Check your internet connection and Gmail token.',
+        'error'
+      );
+    } else {
+      showNotification('❌ Error: ' + error.message, 'error');
+    }
+  } finally {
+    btn.classList.remove('spinning');
+    btn.disabled = false;
+  }
+}
+
+async function fetchTodaysEmails() {
+  // Check token validity before attempting sync
+  const isValid = await ensureGmailTokenValid();
+  if (!isValid || !gmailAccessToken) {
+    showNotification('⚠️ Please connect Gmail first', 'warning');
+    return;
+  }
+
+  const btn = document.getElementById('syncBtn');
+  if (!btn) {
+    console.error('syncBtn element not found');
+    return;
+  }
+  btn.disabled = true;
+  const originalText = btn.innerHTML;
+  btn.innerHTML = '⏳';
+
+  try {
+    showNotification("🔍 Fetching today's payment emails...", 'info');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const afterDate = Math.floor(today.getTime() / 1000);
+
+    const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
+    const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
+
+    const searchResponse = await fetch(searchUrl, {
+      headers: { Authorization: `Bearer ${gmailAccessToken}` },
+    });
+
+    if (!searchResponse.ok) {
+      if (searchResponse.status === 401) {
+        localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
+        localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
+        gmailAccessToken = null;
+        updateGmailButtonState(false);
+        throw new Error('Gmail session expired. Please reconnect.');
       }
-      if (backdrop) {
-        backdrop.style.opacity = '0';
+      throw new Error(`Gmail API error: ${searchResponse.status}`);
+    }
+
+    const searchData = await searchResponse.json();
+
+    if (!searchData.messages || searchData.messages.length === 0) {
+      showNotification('📭 No payment emails found today', 'info');
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+      return;
+    }
+
+    const existingPayments = PaymentStore.getAll();
+    const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
+
+    const payments = [];
+    const processedGmailIds = new Set();
+
+    for (const message of searchData.messages) {
+      const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
+      const messageResponse = await fetch(messageUrl, {
+        headers: { Authorization: `Bearer ${gmailAccessToken}` },
+      });
+
+      if (messageResponse.ok) {
+        const messageData = await messageResponse.json();
+        const payment = parseZelleEmail(messageData);
+        if (payment) {
+          // Check if already processed in this batch
+          if (processedGmailIds.has(payment.gmailId)) {
+            console.log(`⚠️ Skipped duplicate in current batch: ${payment.gmailId}`);
+            continue;
+          }
+
+          // Use enhanced duplicate detection against existing payments
+          if (
+            isDuplicatePayment(
+              payment.gmailId || payment.emailId,
+              payment,
+              existingPaymentsForCheck
+            )
+          ) {
+            continue; // Skip duplicate (already logged in isDuplicatePayment)
+          }
+
+          payments.push(payment);
+          processedGmailIds.add(payment.gmailId);
+        }
       }
-      
-      // Hide after transition
-      setTimeout(() => {
-        if (popup) {
-          popup.classList.remove('active');
-          popup.style.display = 'none';
-        }
-        if (backdrop) {
-          backdrop.style.display = 'none';
-        }
-        
+
+      await new Promise(resolve => setTimeout(resolve, TIMING.API_DELAY));
+    }
+
+    if (payments.length > 0) {
+      const allPayments = [...payments, ...existingPayments];
+      await PaymentStore.save(allPayments);
+      await recomputePaymentResolutions();
+
+      showNotification(
+        `✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`,
+        'success'
+      );
+      renderPaymentEmailsView();
+    } else {
+      showNotification("✅ All today's payments already synced", 'success');
+    }
+  } catch (error) {
+    console.error("Error fetching today's emails:", error);
+    showNotification('❌ Error: ' + error.message, 'error');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = originalText;
+  }
+}
+
+function parseZelleEmail(messageData) {
+  try {
+    const headers = messageData.payload.headers;
+    const dateHeader = headers.find(h => h.name === 'Date');
+    let emailDate = dateHeader ? new Date(dateHeader.value) : new Date();
+
+    // Apply LA timezone offset correction if enabled
+    emailDate = applyLAOffset(emailDate);
+
+    // Extract email body (multiple sources)
+    let bodyText = '';
+    if (messageData.payload.body && messageData.payload.body.data) {
+      bodyText = atob(messageData.payload.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+    } else if (messageData.payload.parts) {
+      const textPart = messageData.payload.parts.find(p => p.mimeType === 'text/plain');
+      if (textPart && textPart.body && textPart.body.data) {
+        bodyText = atob(textPart.body.data.replace(/-/g, '+').replace(/_/g, '/'));
+      }
+    }
+
+    // Fallback to snippet if body is empty (per developer command)
+    if (!bodyText && messageData.snippet) {
+      bodyText = messageData.snippet;
+    }
+
+    if (!bodyText) {
+      console.warn('⚠️ No body text or snippet available for email:', messageData.id);
+      return null;
+    }
+
+    // DEVELOPER COMMAND: Only fetch Zelle emails credited to account 7073
+    const bodyTextLower = bodyText.toLowerCase();
+
+    // ✅ Only fetch messages credited to your account (ending in 7073)
+    const isCreditedTo7073 = bodyTextLower.includes('credited to account ending in: 7073');
+
+    // ❌ Skip all others
+    const isSentFrom7073 = bodyTextLower.includes('sent from account ending in: 7073');
+    const isGenericDeposit = bodyTextLower.includes('your deposit of');
+    const isGenericTransaction = bodyTextLower.includes('your transaction of');
+
+    if (!isCreditedTo7073 || isSentFrom7073 || isGenericDeposit || isGenericTransaction) {
+      return null;
+    }
+
+    // Parse amount - universal pattern
+    const amountMatch = bodyText.match(/\$[\d,]+\.\d{2}/);
+    const amount = amountMatch ? parseFloat(amountMatch[0].replace(/[$,]/g, '')) : 0;
+
+    // Parse sender name - try multiple patterns
+    let senderName = 'Unknown';
+
+    // Pattern 1: "From: Name" (text/plain format with colon)
+    let fromMatch = bodyText.match(/From:\s*([^\n]+)/i);
+    if (fromMatch) {
+      senderName = fromMatch[1].trim();
+    } else {
+      // Pattern 2: "from Name was deposited" (HTML format)
+      fromMatch = bodyText.match(/from\s+([^\s].*?)(?:\s+was\s+deposited|\n|$)/i);
+      if (fromMatch) {
+        senderName = fromMatch[1].trim();
+      }
+    }
+
+    // Parse memo/message - try multiple patterns
+    let memo = '';
+    let studentNameFromMessage = '';
+
+    // Pattern 1: "Message from [Payer]: [Student Name]" (US Bank specific - extract student name)
+    // STOP BEFORE footer text like "The money is ready", "Pay it forward", etc.
+    let messageFromMatch = bodyText.match(
+      /Message\s+from\s+[^:]+:\s*([A-Za-z\s,'"\-]+?)(?=\s*(?:The money|Pay it forward|If you'd|Thanks|You can add|View transaction|\n\n|$))/i
+    );
+    if (messageFromMatch) {
+      studentNameFromMessage = messageFromMatch[1].trim();
+
+      // Extra safety filter to remove any footer fragments
+      studentNameFromMessage = studentNameFromMessage
+        .replace(
+          /(The money.*|Pay it forward.*|If you'd.*|Thanks.*|You can add.*|View transaction.*)/i,
+          ''
+        )
+        .trim();
+
+      memo = studentNameFromMessage; // Use as memo too
+      console.log('🧩 Stopped before footer text (clean extraction)');
+    } else {
+      // Pattern 2: "Memo:" or "Message:" or "Note:" (text/plain format)
+      let memoMatch = bodyText.match(/(?:Memo|Message|Note):\s*([^\n]+)/i);
+      if (memoMatch) {
+        memo = memoMatch[1].trim();
+        // Clean footer from memo as well
+        memo = memo
+          .replace(
+            /(The money.*|Pay it forward.*|If you'd.*|Thanks.*|You can add.*|View transaction.*)/i,
+            ''
+          )
+          .trim();
+      }
+    }
+
+    if (!amount || !senderName) return null;
+
+    // Enhanced student matching per developer command
+    const students = getCachedStudents();
+    let matchedStudent = null;
+    let studentEmail = '';
+    let groupId = '';
+
+    // Priority 1: Use extracted student name from "Message from [payer]: [student]"
+    if (studentNameFromMessage) {
+      const searchName = studentNameFromMessage.toLowerCase().trim();
+
+      // Try exact name match
+      matchedStudent = students.find(s => s.name.toLowerCase() === searchName);
+
+      // Try alias match if no exact match
+      if (!matchedStudent) {
+        matchedStudent = students.find(s => {
+          if (!s.aliases || s.aliases.length === 0) return false;
+          return s.aliases.some(alias => alias.toLowerCase().trim() === searchName);
+        });
+      }
+
+      // Try partial match if still no match
+      if (!matchedStudent) {
+        matchedStudent = students.find(s => {
+          const nameLower = s.name.toLowerCase();
+          return nameLower.includes(searchName) || searchName.includes(nameLower);
+        });
+      }
+
+      if (matchedStudent) {
+      }
+    }
+
+    // Priority 2: If no student name extracted, try memo field
+    if (!matchedStudent && memo) {
+      const searchText = memo.toLowerCase().trim();
+
+      // Exact name match
+      matchedStudent = students.find(s => s.name.toLowerCase() === searchText);
+
+      // Alias match
+      if (!matchedStudent) {
+        matchedStudent = students.find(s => {
+          if (!s.aliases || s.aliases.length === 0) return false;
+          return s.aliases.some(alias => alias.toLowerCase().trim() === searchText);
+        });
+      }
+
+      // Partial name match
+      if (!matchedStudent) {
+        matchedStudent = students.find(s => {
+          const nameLower = s.name.toLowerCase();
+          return nameLower.includes(searchText) || searchText.includes(nameLower);
+        });
+      }
+
+      if (matchedStudent) {
+      }
+    }
+
+    // Priority 3: Try matching sender name as last resort
+    if (!matchedStudent) {
+      const senderLower = senderName.toLowerCase().trim();
+
+      // Exact match
+      matchedStudent = students.find(s => s.name.toLowerCase() === senderLower);
+
+      // Alias match
+      if (!matchedStudent) {
+        matchedStudent = students.find(s => {
+          if (!s.aliases || s.aliases.length === 0) return false;
+          return s.aliases.some(alias => alias.toLowerCase().trim() === senderLower);
+        });
+      }
+
+      // Partial match
+      if (!matchedStudent) {
+        matchedStudent = students.find(s => {
+          const nameLower = s.name.toLowerCase();
+          return nameLower.includes(senderLower) || senderLower.includes(nameLower);
+        });
+      }
+
+      if (matchedStudent) {
+      }
+    }
+
+    // Extract student email and group if matched
+    if (matchedStudent) {
+      studentEmail = matchedStudent.email || '';
+      groupId = matchedStudent.groupId || '';
+    } else {
+    }
+
+    // Determine final display names
+    const finalStudentName = matchedStudent ? matchedStudent.name : 'Unmatched';
+    const finalPayerName = senderName;
+
+    // Final cleanup: If memo contains ONLY footer/generic text, set it to empty string
+    let cleanMemo = memo || '';
+    if (cleanMemo) {
+      // Remove all known footer patterns
+      cleanMemo = cleanMemo
+        .replace(/\*\s*If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
+        .replace(/If\s+you'?d?\s+rather\s+not\s+follow\s+links.*/gi, '')
+        .replace(/The\s+money\s+is\s+ready\s+for\s+use.*/gi, '')
+        .replace(/Pay\s+it\s+forward.*/gi, '')
+        .replace(/Thanks\s+for\s+using\s+Zelle.*/gi, '')
+        .replace(/You\s+can\s+add\s+a\s+note.*/gi, '')
+        .replace(/View\s+transaction\s+details.*/gi, '')
+        .trim();
+
+      // If nothing meaningful remains, set to empty
+      if (cleanMemo.length < 3 || /^[*\s\-—.]+$/.test(cleanMemo)) {
+        cleanMemo = '';
+      }
+    }
+
+    // Create payment object with full resolution metadata
+    const payment = {
+      id: `payment-${messageData.id}`, // Use Gmail ID to prevent duplicates
+      gmailId: messageData.id,
+      amount,
+
+      // Raw immutable data from email
+      payerNameRaw: senderName,
+      payerEmailRaw: null,
+      memo: cleanMemo,
+      message: cleanMemo,
+
+      // Display fields (computed)
+      payerName: finalPayerName,
+      senderName: finalPayerName,
+      studentName: finalStudentName,
+      studentEmail: studentEmail,
+      groupId: groupId,
+
+      // Manual linking (not set during parsing - only via UI)
+      linkedStudentId: null,
+      manuallyLinked: false,
+
+      // Automatic resolution metadata
+      derivedStudentId: matchedStudent ? matchedStudent.id : null,
+      resolvedStudentName: finalStudentName,
+      derivedStudentGroup: matchedStudent
+        ? matchedStudent.group || matchedStudent.groups || ''
+        : '',
+      resolutionSource: matchedStudent ? 'memo-match' : 'none',
+
+      // Legacy/compatibility field
+      studentId: matchedStudent ? matchedStudent.id : null,
+
+      // Status tracking
+      status: matchedStudent ? 'matched' : 'unmatched',
+      viewed: false,
+      ignoredOnce: false,
+      ignorePermanently: false,
+
+      // Timestamps
+      emailDate: emailDate.toISOString(),
+      date: emailDate.toISOString(),
+      createdAt: new Date().toISOString(),
+      linkedAt: null,
+      dateModifiedAt: null,
+    };
+
+    return payment;
+  } catch (error) {
+    console.error('Error parsing Zelle email:', error);
+    return null;
+  }
+}
+
+// ============================================================================
+// ============================================================================
+// CLOUD SYNC (AUTOMATIC VIA SUPABASE)
+// ============================================================================
+
+// Supabase automatically syncs all data changes - no manual sync needed!
+// PaymentStore.save() now directly writes to Supabase cloud database
+
+async function syncToCloud() {
+  // This function is kept for UI compatibility but sync is automatic
+  showNotification('✅ All data auto-syncs to Supabase cloud!', 'success');
+}
+
+async function loadFromCloud() {
+  try {
+    const payments = await PaymentStore.fetchAll();
+    renderPaymentEmailsView();
+  } catch (error) {
+    console.error('Error loading from cloud:', error);
+    showNotification('❌ Failed to load data from cloud', 'error');
+  }
+}
+
+// ============================================================================
+// PAYMENT ACTIONS POPUP
+// ============================================================================
+
+let currentPaymentPopupData = null;
+let savedPaymentDataForLinking = null; // PERSISTENT storage for linking operations
+let paymentRenderRAF = null;
+let paymentRenderToken = 0;
+let lastPopupOpenTime = 0; // Debounce double-click
+
+// BEGIN POPUP BACK & EXIT FIX
+function showPaymentActionsPopup(
+  event,
+  paymentId,
+  payerName,
+  amount,
+  message,
+  studentName,
+  studentId
+) {
+  if (event) event.stopPropagation();
+
+  // Debounce: prevent multiple rapid opens
+  const now = Date.now();
+  if (now - lastPopupOpenTime < 300) return;
+  lastPopupOpenTime = now;
+
+  // Store payment data
+  currentPaymentPopupData = {
+    paymentId: paymentId,
+    payerName: payerName,
+    amount: amount,
+    message: message,
+    studentName: studentName,
+    studentId: studentId,
+  };
+
+  // Update display with null checks
+  const payerNameEl = document.getElementById('popupPayerName');
+  const amountEl = document.getElementById('popupPaymentAmount');
+  const messageEl = document.getElementById('popupPaymentMessage');
+  const popup = document.getElementById('paymentActionsPopup');
+
+  if (!payerNameEl || !amountEl || !messageEl || !popup) {
+    console.error('Payment popup elements not found');
+    showNotification('❌ UI error: Popup elements missing', 'error');
+    return;
+  }
+
+  payerNameEl.textContent = payerName || '—';
+  amountEl.innerHTML = formatDualCurrencyHTML(amount);
+  messageEl.textContent = message || 'No message';
+
+  // Register with PopupManager for Back button and click-outside
+  if (window.PopupManager) {
+    window.PopupManager.register('paymentActionsPopup', {
+      hasBackButton: false, // No back button needed (top-level popup)
+      closeOnOutsideClick: true,
+      onClose: () => {
         currentPaymentPopupData = null;
-        
-        // Hide any open forms
         const aliasForm = document.getElementById('createAliasForm');
         const dateForm = document.getElementById('changeDateForm');
         if (aliasForm) aliasForm.style.display = 'none';
         if (dateForm) dateForm.style.display = 'none';
-      }, 250);
+      },
+    });
+  }
+
+  // Show backdrop and modal with fade-in
+  const backdrop = document.getElementById('paymentActionsBackdrop');
+  if (backdrop) {
+    backdrop.style.display = 'block';
+    backdrop.style.opacity = '0';
+    backdrop.style.transition = 'opacity 0.25s ease';
+    requestAnimationFrame(() => {
+      backdrop.style.opacity = '1';
+    });
+  }
+
+  popup.classList.add('active');
+  popup.style.display = 'block';
+  popup.style.opacity = '0';
+  popup.style.transition = 'opacity 0.25s ease';
+  requestAnimationFrame(() => {
+    popup.style.opacity = '1';
+  });
+}
+// END POPUP BACK & EXIT FIX
+
+function closePaymentActionsPopup() {
+  const popup = document.getElementById('paymentActionsPopup');
+  const backdrop = document.getElementById('paymentActionsBackdrop');
+
+  // Fade out
+  if (popup) {
+    popup.style.opacity = '0';
+  }
+  if (backdrop) {
+    backdrop.style.opacity = '0';
+  }
+
+  // Hide after transition
+  setTimeout(() => {
+    if (popup) {
+      popup.classList.remove('active');
+      popup.style.display = 'none';
     }
-    
-    async function ignoreThisPayment() {
-      if (!currentPaymentPopupData) {
-        showNotification('❌ No payment selected', 'error');
+    if (backdrop) {
+      backdrop.style.display = 'none';
+    }
+
+    currentPaymentPopupData = null;
+
+    // Hide any open forms
+    const aliasForm = document.getElementById('createAliasForm');
+    const dateForm = document.getElementById('changeDateForm');
+    if (aliasForm) aliasForm.style.display = 'none';
+    if (dateForm) dateForm.style.display = 'none';
+  }, 250);
+}
+
+async function ignoreThisPayment() {
+  if (!currentPaymentPopupData) {
+    showNotification('❌ No payment selected', 'error');
+    return;
+  }
+
+  const confirmed = await customConfirm(
+    `Ignore this payment from "${currentPaymentPopupData.payerName}"?\n\nIt will be excluded from totals.`,
+    {
+      title: 'Ignore Payment',
+      icon: '⚠️',
+      okText: 'Ignore',
+      type: 'danger',
+    }
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const payments = PaymentStore.getAll();
+    const payment = payments.find(p => p.id === currentPaymentPopupData.paymentId);
+
+    if (!payment) {
+      showNotification('❌ Payment not found', 'error');
+      return;
+    }
+
+    // Mark as ignored
+    payment.ignoredOnce = true;
+    payment.ignoredAt = new Date().toISOString();
+
+    await PaymentStore.save(payments);
+
+    // Auto-synced to Supabase cloud
+
+    showNotification('🚫 Payment ignored', 'success');
+    closePaymentActionsPopup();
+    renderPaymentEmailsView();
+  } catch (error) {
+    console.error('Error ignoring payment:', error);
+    showNotification('❌ Failed to ignore payment', 'error');
+  }
+}
+
+async function deleteThisPayment() {
+  if (!currentPaymentPopupData) {
+    showNotification('❌ No payment selected', 'error');
+    return;
+  }
+
+  const confirmed = await customConfirm(
+    `Delete this payment from "${currentPaymentPopupData.payerName}"?\n\nAmount: ${formatCurrency(currentPaymentPopupData.amount, '$')}\n\nThis action cannot be undone!`,
+    {
+      title: 'Delete Payment',
+      icon: '🗑️',
+      okText: 'Delete',
+      type: 'danger',
+    }
+  );
+
+  if (!confirmed) return;
+
+  try {
+    let payments = PaymentStore.getAll();
+    const paymentIndex = payments.findIndex(p => p.id === currentPaymentPopupData.paymentId);
+
+    if (paymentIndex === -1) {
+      showNotification('❌ Payment not found', 'error');
+      return;
+    }
+
+    // Remove the payment
+    payments.splice(paymentIndex, 1);
+    await PaymentStore.save(payments);
+
+    // Auto-synced to Supabase cloud
+
+    showNotification('🗑️ Payment deleted', 'success');
+    closePaymentActionsPopup();
+    renderPaymentEmailsView();
+  } catch (error) {
+    console.error('Error deleting payment:', error);
+    showNotification('❌ Failed to delete payment', 'error');
+  }
+}
+
+function showCreateAliasForm() {
+  const form = document.getElementById('createAliasForm');
+  const input = document.getElementById('aliasStudentName');
+  if (form) form.style.display = 'block';
+  if (input) {
+    input.value = '';
+    input.focus();
+  }
+}
+
+function hideCreateAliasForm() {
+  const form = document.getElementById('createAliasForm');
+  if (form) form.style.display = 'none';
+}
+
+async function saveAlias() {
+  const studentName = document.getElementById('aliasStudentName').value.trim();
+  if (!studentName) {
+    showNotification('⚠️ Please enter a student name', 'warning');
+    return;
+  }
+
+  if (!currentPaymentPopupData) {
+    showNotification('❌ No payment selected', 'error');
+    return;
+  }
+
+  try {
+    const payerName = currentPaymentPopupData.payerName;
+
+    // Find the student in Student Manager
+    const students = getCachedStudents();
+    const student = students.find(
+      s => s.name.toLowerCase().trim() === studentName.toLowerCase().trim()
+    );
+
+    // BEGIN CRITICAL BUG FIX - saveAlias() Logic Flow
+    if (student) {
+      // Initialize aliases array if needed
+      if (!student.aliases) {
+        student.aliases = [];
+      }
+
+      // Check if alias already exists
+      const aliasExists = student.aliases.some(
+        a => a.toLowerCase().trim() === payerName.toLowerCase().trim()
+      );
+
+      if (aliasExists) {
+        showNotification('⚠️ Alias already exists for this student', 'warning');
         return;
       }
-      
-      const confirmed = await customConfirm(
-        `Ignore this payment from "${currentPaymentPopupData.payerName}"?\n\nIt will be excluded from totals.`,
-        {
-          title: 'Ignore Payment',
-          icon: '⚠️',
-          okText: 'Ignore',
-          type: 'danger'
-        }
-      );
-      
-      if (!confirmed) return;
-      
-      try {
-        const payments = PaymentStore.getAll();
-        const payment = payments.find(p => p.id === currentPaymentPopupData.paymentId);
-        
-        if (!payment) {
-          showNotification('❌ Payment not found', 'error');
-          return;
-        }
-        
-        // Mark as ignored
-        payment.ignoredOnce = true;
+
+      // Add new alias
+      const originalAliases = Array.isArray(student.aliases) ? [...student.aliases] : [];
+      student.aliases.push(payerName);
+
+      // Persist alias change for this student only
+      const saved = await saveStudent(student);
+      if (!saved) {
+        student.aliases = originalAliases;
+        showNotification('❌ Failed to save alias to Supabase', 'error');
+        return;
+      }
+      Object.assign(student, saved);
+      window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
+    } else {
+      showNotification('❌ Student not found', 'error');
+      return;
+    }
+    // END CRITICAL BUG FIX
+
+    // Create alias mapping (for backward compatibility)
+    const aliases = JSON.parse(localStorage.getItem('payment-aliases') || '{}');
+    const normalizedPayer = payerName.toLowerCase().trim();
+    aliases[normalizedPayer] = studentName;
+    localStorage.setItem('payment-aliases', JSON.stringify(aliases));
+
+    // Update all payments from this payer
+    const payments = PaymentStore.getAll();
+    let updatedCount = 0;
+
+    payments.forEach(payment => {
+      if (payment.payerName && payment.payerName.toLowerCase().trim() === normalizedPayer) {
+        payment.studentName = studentName;
+        payment.aliasMatched = true;
+        updatedCount++;
+      }
+    });
+
+    PaymentStore.save(payments);
+
+    // Recompute to update group information
+    recomputePaymentResolutions();
+
+    showNotification(
+      `✅ Alias created! Updated ${updatedCount} payment${updatedCount > 1 ? 's' : ''}`,
+      'success'
+    );
+    closePaymentActionsPopup();
+    renderPaymentEmailsView();
+  } catch (error) {
+    console.error('Error saving alias:', error);
+    showNotification('❌ Failed to save alias', 'error');
+  }
+}
+
+function showChangeDateForm() {
+  const form = document.getElementById('changeDateForm');
+  if (!form) {
+    console.error('changeDateForm element not found');
+    return;
+  }
+  form.style.display = 'block';
+
+  if (currentPaymentPopupData) {
+    const payments = PaymentStore.getAll();
+    const payment = payments.find(p => p.id === currentPaymentPopupData.paymentId);
+    if (payment && payment.emailDate) {
+      const date = new Date(payment.emailDate);
+      const dateInput = document.getElementById('newEmailDate');
+      if (dateInput) {
+        dateInput.value = date.toISOString().split('T')[0];
+      }
+    }
+  }
+}
+
+function hideChangeDateForm() {
+  const form = document.getElementById('changeDateForm');
+  if (form) form.style.display = 'none';
+}
+
+async function saveNewDate() {
+  const newDateStr = document.getElementById('newEmailDate').value;
+  if (!newDateStr) {
+    showNotification('⚠️ Please select a date', 'warning');
+    return;
+  }
+
+  if (!currentPaymentPopupData) {
+    showNotification('❌ No payment selected', 'error');
+    return;
+  }
+
+  // Validate date is reasonable (not too far in future, not before 2020)
+  const newDate = new Date(newDateStr + 'T12:00:00');
+  const minDate = new Date('2020-01-01');
+  const maxDate = new Date();
+  maxDate.setDate(maxDate.getDate() + 365); // Allow up to 1 year in future
+
+  if (newDate < minDate) {
+    showNotification('⚠️ Date cannot be before 2020', 'warning');
+    return;
+  }
+
+  if (newDate > maxDate) {
+    showNotification('⚠️ Date cannot be more than 1 year in the future', 'warning');
+    return;
+  }
+
+  try {
+    const payments = PaymentStore.getAll();
+    const payment = payments.find(p => p.id === currentPaymentPopupData.paymentId);
+
+    if (!payment) {
+      showNotification('❌ Payment not found', 'error');
+      return;
+    }
+
+    // Store original date if not already stored
+    if (!payment.originalEmailDate) {
+      payment.originalEmailDate = payment.emailDate;
+    }
+
+    // Update the email date
+    payment.emailDate = newDate.toISOString();
+    payment.dateModified = true;
+    payment.dateModifiedAt = new Date().toISOString();
+
+    PaymentStore.save(payments);
+
+    showNotification(`✅ Date changed to ${newDate.toLocaleDateString()}`, 'success');
+    closePaymentActionsPopup();
+    renderPaymentEmailsView();
+  } catch (error) {
+    console.error('Error changing date:', error);
+    showNotification('❌ Failed to change date', 'error');
+  }
+}
+
+async function ignoreAllFromPayer() {
+  if (!currentPaymentPopupData) {
+    showNotification('❌ No payment selected', 'error');
+    return;
+  }
+
+  const payerName = currentPaymentPopupData.payerName;
+
+  const confirmed = await customConfirm(
+    `Ignore ALL payments from "${payerName}"?\n\nThis will affect all payments from this payer.`,
+    {
+      title: 'Ignore All Payments',
+      icon: '🚫',
+      okText: 'Ignore All',
+      type: 'danger',
+    }
+  );
+
+  if (!confirmed) return;
+
+  try {
+    const payments = PaymentStore.getAll();
+    const normalizedPayer = payerName.toLowerCase().trim();
+    let ignoredCount = 0;
+
+    payments.forEach(payment => {
+      if (payment.payerName && payment.payerName.toLowerCase().trim() === normalizedPayer) {
+        payment.ignorePermanently = true;
         payment.ignoredAt = new Date().toISOString();
-        
-        await PaymentStore.save(payments);
-        
-        // Auto-synced to Supabase cloud
-        
-        showNotification('🚫 Payment ignored', 'success');
-        closePaymentActionsPopup();
-        renderPaymentEmailsView();
-        
-      } catch (error) {
-        console.error('Error ignoring payment:', error);
-        showNotification('❌ Failed to ignore payment', 'error');
+        ignoredCount++;
       }
-    }
-    
-    async function deleteThisPayment() {
-      if (!currentPaymentPopupData) {
-        showNotification('❌ No payment selected', 'error');
-        return;
-      }
-      
-      const confirmed = await customConfirm(
-        `Delete this payment from "${currentPaymentPopupData.payerName}"?\n\nAmount: ${formatCurrency(currentPaymentPopupData.amount, '$')}\n\nThis action cannot be undone!`,
-        {
-          title: 'Delete Payment',
-          icon: '🗑️',
-          okText: 'Delete',
-          type: 'danger'
-        }
-      );
-      
-      if (!confirmed) return;
-      
-      try {
-        let payments = PaymentStore.getAll();
-        const paymentIndex = payments.findIndex(p => p.id === currentPaymentPopupData.paymentId);
-        
-        if (paymentIndex === -1) {
-          showNotification('❌ Payment not found', 'error');
-          return;
-        }
-        
-        // Remove the payment
-        payments.splice(paymentIndex, 1);
-        await PaymentStore.save(payments);
-        
-        // Auto-synced to Supabase cloud
-        
-        showNotification('🗑️ Payment deleted', 'success');
-        closePaymentActionsPopup();
-        renderPaymentEmailsView();
-        
-      } catch (error) {
-        console.error('Error deleting payment:', error);
-        showNotification('❌ Failed to delete payment', 'error');
-      }
-    }
-    
-    function showCreateAliasForm() {
-      const form = document.getElementById('createAliasForm');
-      const input = document.getElementById('aliasStudentName');
-      if (form) form.style.display = 'block';
-      if (input) {
-        input.value = '';
-        input.focus();
-      }
-    }
-    
-    function hideCreateAliasForm() {
-      const form = document.getElementById('createAliasForm');
-      if (form) form.style.display = 'none';
-    }
-    
-    async function saveAlias() {
-      const studentName = document.getElementById('aliasStudentName').value.trim();
-      if (!studentName) {
-        showNotification('⚠️ Please enter a student name', 'warning');
-        return;
-      }
-      
-      if (!currentPaymentPopupData) {
-        showNotification('❌ No payment selected', 'error');
-        return;
-      }
-      
-      try {
-        const payerName = currentPaymentPopupData.payerName;
-        
-        // Find the student in Student Manager
-        const students = getCachedStudents();
-        const student = students.find(s => 
-          s.name.toLowerCase().trim() === studentName.toLowerCase().trim()
-        );
-        
-        // BEGIN CRITICAL BUG FIX - saveAlias() Logic Flow
-        if (student) {
-          // Initialize aliases array if needed
-          if (!student.aliases) {
-            student.aliases = [];
-          }
-          
-          // Check if alias already exists
-          const aliasExists = student.aliases.some(a => 
-            a.toLowerCase().trim() === payerName.toLowerCase().trim()
-          );
-          
-          if (aliasExists) {
-            showNotification('⚠️ Alias already exists for this student', 'warning');
-            return;
-          }
-          
-          // Add new alias
-          const originalAliases = Array.isArray(student.aliases) ? [...student.aliases] : [];
-          student.aliases.push(payerName);
-          
-          // Persist alias change for this student only
-          const saved = await saveStudent(student);
-          if (!saved) {
-            student.aliases = originalAliases;
-            showNotification('❌ Failed to save alias to Supabase', 'error');
-            return;
-          }
-          Object.assign(student, saved);
-          window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
-        } else {
-          showNotification('❌ Student not found', 'error');
-          return;
-        }
-        // END CRITICAL BUG FIX
-        
-        // Create alias mapping (for backward compatibility)
-        const aliases = JSON.parse(localStorage.getItem('payment-aliases') || '{}');
-        const normalizedPayer = payerName.toLowerCase().trim();
-        aliases[normalizedPayer] = studentName;
-        localStorage.setItem('payment-aliases', JSON.stringify(aliases));
-        
-        // Update all payments from this payer
-        const payments = PaymentStore.getAll();
-        let updatedCount = 0;
-        
-        payments.forEach(payment => {
-          if (payment.payerName && payment.payerName.toLowerCase().trim() === normalizedPayer) {
-            payment.studentName = studentName;
-            payment.aliasMatched = true;
-            updatedCount++;
-          }
-        });
-        
-        PaymentStore.save(payments);
-        
-        // Recompute to update group information
-        recomputePaymentResolutions();
-        
-        showNotification(`✅ Alias created! Updated ${updatedCount} payment${updatedCount > 1 ? 's' : ''}`, 'success');
-        closePaymentActionsPopup();
-        renderPaymentEmailsView();
-        
-      } catch (error) {
-        console.error('Error saving alias:', error);
-        showNotification('❌ Failed to save alias', 'error');
-      }
-    }
-    
-    function showChangeDateForm() {
-      const form = document.getElementById('changeDateForm');
-      if (!form) {
-        console.error('changeDateForm element not found');
-        return;
-      }
-      form.style.display = 'block';
-      
-      if (currentPaymentPopupData) {
-        const payments = PaymentStore.getAll();
-        const payment = payments.find(p => p.id === currentPaymentPopupData.paymentId);
-        if (payment && payment.emailDate) {
-          const date = new Date(payment.emailDate);
-          const dateInput = document.getElementById('newEmailDate');
-          if (dateInput) {
-            dateInput.value = date.toISOString().split('T')[0];
-          }
-        }
-      }
-    }
-    
-    function hideChangeDateForm() {
-      const form = document.getElementById('changeDateForm');
-      if (form) form.style.display = 'none';
-    }
-    
-    async function saveNewDate() {
-      const newDateStr = document.getElementById('newEmailDate').value;
-      if (!newDateStr) {
-        showNotification('⚠️ Please select a date', 'warning');
-        return;
-      }
-      
-      if (!currentPaymentPopupData) {
-        showNotification('❌ No payment selected', 'error');
-        return;
-      }
-      
-      // Validate date is reasonable (not too far in future, not before 2020)
-      const newDate = new Date(newDateStr + 'T12:00:00');
-      const minDate = new Date('2020-01-01');
-      const maxDate = new Date();
-      maxDate.setDate(maxDate.getDate() + 365); // Allow up to 1 year in future
-      
-      if (newDate < minDate) {
-        showNotification('⚠️ Date cannot be before 2020', 'warning');
-        return;
-      }
-      
-      if (newDate > maxDate) {
-        showNotification('⚠️ Date cannot be more than 1 year in the future', 'warning');
-        return;
-      }
-      
-      try {
-        const payments = PaymentStore.getAll();
-        const payment = payments.find(p => p.id === currentPaymentPopupData.paymentId);
-        
-        if (!payment) {
-          showNotification('❌ Payment not found', 'error');
-          return;
-        }
-        
-        // Store original date if not already stored
-        if (!payment.originalEmailDate) {
-          payment.originalEmailDate = payment.emailDate;
-        }
-        
-        // Update the email date
-        payment.emailDate = newDate.toISOString();
-        payment.dateModified = true;
-        payment.dateModifiedAt = new Date().toISOString();
-        
-        PaymentStore.save(payments);
-        
-        showNotification(`✅ Date changed to ${newDate.toLocaleDateString()}`, 'success');
-        closePaymentActionsPopup();
-        renderPaymentEmailsView();
-        
-      } catch (error) {
-        console.error('Error changing date:', error);
-        showNotification('❌ Failed to change date', 'error');
-      }
-    }
-    
-    async function ignoreAllFromPayer() {
-      if (!currentPaymentPopupData) {
-        showNotification('❌ No payment selected', 'error');
-        return;
-      }
-      
-      const payerName = currentPaymentPopupData.payerName;
-      
-      const confirmed = await customConfirm(
-        `Ignore ALL payments from "${payerName}"?\n\nThis will affect all payments from this payer.`,
-        {
-          title: 'Ignore All Payments',
-          icon: '🚫',
-          okText: 'Ignore All',
-          type: 'danger'
-        }
-      );
-      
-      if (!confirmed) return;
-      
-      try {
-        const payments = PaymentStore.getAll();
-        const normalizedPayer = payerName.toLowerCase().trim();
-        let ignoredCount = 0;
-        
-        payments.forEach(payment => {
-          if (payment.payerName && payment.payerName.toLowerCase().trim() === normalizedPayer) {
-            payment.ignorePermanently = true;
-            payment.ignoredAt = new Date().toISOString();
-            ignoredCount++;
-          }
-        });
-        
-        PaymentStore.save(payments);
-        
-        showNotification(`🚫 Ignored ${ignoredCount} payment${ignoredCount !== 1 ? 's' : ''} from "${payerName}"`, 'success');
-        closePaymentActionsPopup();
-        renderPaymentEmailsView();
-        
-      } catch (error) {
-        console.error('Error ignoring payer:', error);
-        showNotification('❌ Failed to ignore payments', 'error');
-      }
-    }
-    
-    // BEGIN POPUP BACK & EXIT FIX
-    async function linkPaymentToStudent() {
-      
-      if (!currentPaymentPopupData) {
-        console.error('❌ No payment selected in currentPaymentPopupData');
-        console.error('❌ This means the popup was closed or data was cleared');
-        showNotification('❌ No payment selected. Please double-click a payment row first.', 'error');
-        return;
-      }
-      
-      // CRITICAL: Save to persistent storage IMMEDIATELY before opening any modals
-      savedPaymentDataForLinking = { ...currentPaymentPopupData };
-      
-      console.log('💾 Saved payment data for linking:', {
-        id: currentPaymentPopupData.paymentId,
-        payer: currentPaymentPopupData.payerName,
-        amount: currentPaymentPopupData.amount
-      });
-      
-      // Get list of students
-      const students = getCachedStudents();
-      
-      
-      if (!students || students.length === 0) {
-        showNotification('⚠️ No students found. Create students first.', 'warning');
-        return;
-      }
-      
-      // Create student list items for search
-      const studentListHTML = students
-        .map(s => {
-          const escapedId = String(s.id).replace(/'/g, "\\'").replace(/"/g, '&quot;');
-          const escapedName = String(s.name).replace(/'/g, "\\'");
-          const escapedEmail = String(s.email || '').replace(/'/g, "\\'");
-          
-          return `<div class="student-search-item" data-student-id="${escapedId}" data-student-name="${s.name.toLowerCase()}" data-student-email="${(s.email || '').toLowerCase()}" onclick="event.stopPropagation(); selectStudentFromSearch('${escapedId}')" style="padding: 12px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; border-radius: 6px; margin-bottom: 4px; pointer-events: auto;" onmouseover="this.style.background='rgba(138,180,255,0.15)'" onmouseout="this.style.background='transparent'">
+    });
+
+    PaymentStore.save(payments);
+
+    showNotification(
+      `🚫 Ignored ${ignoredCount} payment${ignoredCount !== 1 ? 's' : ''} from "${payerName}"`,
+      'success'
+    );
+    closePaymentActionsPopup();
+    renderPaymentEmailsView();
+  } catch (error) {
+    console.error('Error ignoring payer:', error);
+    showNotification('❌ Failed to ignore payments', 'error');
+  }
+}
+
+// BEGIN POPUP BACK & EXIT FIX
+async function linkPaymentToStudent() {
+  if (!currentPaymentPopupData) {
+    console.error('❌ No payment selected in currentPaymentPopupData');
+    console.error('❌ This means the popup was closed or data was cleared');
+    showNotification('❌ No payment selected. Please double-click a payment row first.', 'error');
+    return;
+  }
+
+  // CRITICAL: Save to persistent storage IMMEDIATELY before opening any modals
+  savedPaymentDataForLinking = { ...currentPaymentPopupData };
+
+  console.log('💾 Saved payment data for linking:', {
+    id: currentPaymentPopupData.paymentId,
+    payer: currentPaymentPopupData.payerName,
+    amount: currentPaymentPopupData.amount,
+  });
+
+  // Get list of students
+  const students = getCachedStudents();
+
+  if (!students || students.length === 0) {
+    showNotification('⚠️ No students found. Create students first.', 'warning');
+    return;
+  }
+
+  // Create student list items for search
+  const studentListHTML = students
+    .map(s => {
+      const escapedId = String(s.id).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+      const escapedName = String(s.name).replace(/'/g, "\\'");
+      const escapedEmail = String(s.email || '').replace(/'/g, "\\'");
+
+      return `<div class="student-search-item" data-student-id="${escapedId}" data-student-name="${s.name.toLowerCase()}" data-student-email="${(s.email || '').toLowerCase()}" onclick="event.stopPropagation(); selectStudentFromSearch('${escapedId}')" style="padding: 12px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; border-radius: 6px; margin-bottom: 4px; pointer-events: auto;" onmouseover="this.style.background='rgba(138,180,255,0.15)'" onmouseout="this.style.background='transparent'">
           <div style="color: white; font-weight: 600; font-size: 14px;">${s.name}</div>
           ${s.email ? `<div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">${s.email}</div>` : ''}
         </div>`;
-        })
-        .join('');
-      
-      const modalHTML = `
+    })
+    .join('');
+
+  const modalHTML = `
         <div id="linkStudentModalBackdrop" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10000; backdrop-filter: blur(6px); cursor: pointer;" onclick="closeLinkStudentModal()"></div>
         <div id="linkStudentModal" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 24px; min-width: 400px; max-width: 500px; z-index: 10001; box-shadow: 0 20px 60px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.25s ease;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative;">
@@ -3196,1704 +3254,1736 @@
             <button onclick="closeLinkStudentModal()" style="background: none; border: none; color: white; font-size: 24px; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; opacity: 0.7; transition: opacity 0.2s; pointer-events: auto;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.7'">&times;</button>
           </div>
           <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 14px;">Search and select a student to link this payment to:</p>
-          
+
           <input type="text" id="linkStudentSearchInput" placeholder="Search students by name..." style="width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 14px; margin-bottom: 16px; outline: none; pointer-events: auto;" oninput="filterStudentSearch()" onkeydown="if(event.key==='Escape'){closeLinkStudentModal();}" autofocus>
-          
+
           <div id="studentSearchResults" style="max-height: 320px; overflow-y: auto; margin-bottom: 16px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             ${studentListHTML}
           </div>
-          
+
           <div style="display: flex; gap: 10px;">
             <button onclick="closeLinkStudentModal()" style="flex: 1; padding: 12px; background: rgba(255,255,255,0.1); border: none; border-radius: 8px; color: white; font-weight: 600; cursor: pointer; transition: all 0.2s; pointer-events: auto;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">Cancel</button>
           </div>
         </div>
       `;
-      
-      // Remove any existing modal
-      const existingModal = document.getElementById('linkStudentModal');
-      const existingBackdrop = document.getElementById('linkStudentModalBackdrop');
-      if (existingModal) existingModal.remove();
-      if (existingBackdrop) existingBackdrop.remove();
-      
-      // Add modal to page
-      document.body.insertAdjacentHTML('beforeend', modalHTML);
-      
-      // Register with PopupManager
-      if (window.PopupManager) {
-        window.PopupManager.register('linkStudentModal', {
-          hasBackButton: false,  // We have our own back button in the HTML
-          closeOnOutsideClick: true,
-          onBack: closeLinkStudentModal,
-          parent: 'paymentActionsPopup'
-        });
-      }
-      
-      // Fade in
-      requestAnimationFrame(() => {
-        const modal = document.getElementById('linkStudentModal');
-        const backdrop = document.getElementById('linkStudentModalBackdrop');
-        if (backdrop) {
-          backdrop.style.display = 'block';
-          backdrop.style.opacity = '0';
-          requestAnimationFrame(() => {
-            backdrop.style.opacity = '1';
-          });
-        }
-        if (modal) {
-          modal.style.opacity = '1';
-        }
-      });
-      
-      // Focus search input
-      setTimeout(() => {
-        const input = document.getElementById('linkStudentSearchInput');
-        if (input) input.focus();
-      }, 100);
-    }
-    // END POPUP BACK & EXIT FIX
-    
-    // BEGIN SEARCH FIX - Search by name AND email
-    function filterStudentSearch() {
-      const input = document.getElementById('linkStudentSearchInput');
-      const filter = input ? input.value.toLowerCase().trim() : '';
-      const items = document.querySelectorAll('.student-search-item');
-      
-      let visibleCount = 0;
-      items.forEach(item => {
-        const studentName = item.getAttribute('data-student-name') || '';
-        const studentEmail = item.getAttribute('data-student-email') || '';
-        const textContent = item.textContent.toLowerCase();
-        
-        // Search in name, email, or visible text
-        const matches = !filter || 
-                       studentName.includes(filter) || 
-                       studentEmail.includes(filter) ||
-                       textContent.includes(filter);
-        
-        if (matches) {
-          item.style.display = 'block';
-          visibleCount++;
-        } else {
-          item.style.display = 'none';
-        }
-      });
-      
-      // Show message if no results
-      const resultsContainer = document.getElementById('studentSearchResults');
-      if (resultsContainer && visibleCount === 0 && filter) {
-        if (!document.getElementById('noStudentsMessage')) {
-          resultsContainer.insertAdjacentHTML('beforeend', '<div id="noStudentsMessage" style="padding: 20px; text-align: center; color: #94a3b8; font-size: 14px;">No students match your search</div>');
-        }
-      } else {
-        const noMsg = document.getElementById('noStudentsMessage');
-        if (noMsg) noMsg.remove();
-      }
-    }
-    // END SEARCH FIX
-    
-    function selectStudentFromSearch(studentId) {
-      confirmLinkStudent(studentId);
-    }
-    
-    function closeLinkStudentModal() {
-      const modal = document.getElementById('linkStudentModal');
-      const backdrop = document.getElementById('linkStudentModalBackdrop');
-      
-      if (modal && backdrop) {
-        // BEGIN POPUP BACK & EXIT FIX
-        // Fade out before removing
-        modal.style.opacity = '0';
-        backdrop.style.opacity = '0';
-        
-        setTimeout(() => {
-          modal.remove();
-          backdrop.remove();
-          window.PopupManager?.activePopups?.delete('linkStudentModal');
-        }, 250);
-        // END POPUP BACK & EXIT FIX
-      }
-    }
-    
-    async function confirmLinkStudent(studentId) {
-      if (!studentId) {
-        showNotification('⚠️ Please select a student', 'warning');
-        return;
-      }
-      
-      // CRITICAL FIX: Try multiple sources for payment data
-      // 1. First try current popup data
-      // 2. Fall back to persistent saved data
-      // 3. If both are null, fail gracefully
-      let paymentDataSnapshot = currentPaymentPopupData ? { ...currentPaymentPopupData } : null;
-      
-      if (!paymentDataSnapshot && savedPaymentDataForLinking) {
-        console.log('⚠️ currentPaymentPopupData was null, using savedPaymentDataForLinking');
-        paymentDataSnapshot = { ...savedPaymentDataForLinking };
-      }
-      
-      if (!paymentDataSnapshot) {
-        console.error('❌ No payment data available from any source');
-        console.error('   - currentPaymentPopupData:', currentPaymentPopupData);
-        console.error('   - savedPaymentDataForLinking:', savedPaymentDataForLinking);
-        showNotification('❌ No payment selected', 'error');
-        closeLinkStudentModal();
-        return;
-      }
-      
-      
-      try {
-  const students = getCachedStudents();
-        
-        // Convert studentId to number for comparison (it comes from HTML as string)
-        const studentIdNum = parseInt(studentId, 10);
-        
-        const student = students.find(s => s.id === studentIdNum);
-        
-        if (!student) {
-          console.error('❌ Student not found. ID:', studentIdNum, 'Available:', students.map(s => ({ id: s.id, name: s.name })));
-          showNotification('❌ Student not found', 'error');
-          return;
-        }
-        
-        
-        // BEGIN CRITICAL BUG FIX - Payment ↔ Student Linking Logic
-        // Update payment with student link using correct field names:
-        // - linkedStudentId: for manual linking (checked first by resolver)
-        // - manuallyLinked: flag to trigger manual resolution path
-        // - linkedAt: timestamp for audit trail
-        const payments = PaymentStore.getAll();
-        const payment = payments.find(p => p.id === paymentDataSnapshot.paymentId);
-        
-        if (!payment) {
-          showNotification('❌ Payment not found', 'error');
-          return;
-        }
-        
-        payment.linkedStudentId = student.id; // ✅ Correct field for manual linking
-        payment.manuallyLinked = true;
-        payment.linkedAt = new Date().toISOString();
-        payment.resolutionSource = 'manual';
-        
-        // Add payer name to student's alias if not already there
-        const payerName = payment.payerName || payment.fromName || '';
-        
-        if (payerName && payerName.trim()) {
-          const currentAliases = student.aliases || [];
-          const normalizedPayerName = payerName.trim().toLowerCase();
-          const normalizedStudentName = student.name.toLowerCase();
-          
-          console.log('🔍 Normalized payer:', normalizedPayerName);
-          
-          // Only add if payer name is different from student name and not already in aliases
-          const aliasExists = currentAliases.some(alias => 
-            alias.toLowerCase() === normalizedPayerName
-          );
-          
-          
-          if (normalizedPayerName !== normalizedStudentName && !aliasExists) {
-            const originalAliases = Array.isArray(currentAliases) ? [...currentAliases] : [];
-            student.aliases = [...originalAliases, payerName.trim()];
-            
-            
-            const savedAliasUpdate = await saveStudent(student);
-            if (!savedAliasUpdate) {
-              student.aliases = originalAliases;
-              showNotification('❌ Failed to save alias to Supabase', 'error');
-            } else {
-              Object.assign(student, savedAliasUpdate);
-              window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
-            }
-          } else {
-            console.log('⏭️ Skipped adding alias (already exists or same as student name)');
-          }
-        } else {
-        }
-        
-        // Compute derived fields immediately (before saving)
-        const resolution = resolvePaymentToStudent(payment, students);
-        payment.derivedStudentId = resolution.studentId;
-        payment.resolvedStudentName = resolution.studentName;
-        payment.derivedStudentGroup = resolution.studentGroup;
-        
-        PaymentStore.save(payments);
-        // END CRITICAL BUG FIX
-        
-        // Recompute payment resolutions
-        recomputePaymentResolutions();
-        
-        showNotification(`✅ Payment linked to ${student.name}`, 'success');
-        
-        // Clear persistent storage after successful link
-        savedPaymentDataForLinking = null;
-        console.log('🧹 Cleared savedPaymentDataForLinking after successful link');
-        
-        closeLinkStudentModal();
-        closePaymentActionsPopup();
-        renderPaymentEmailsView();
-        
-      } catch (error) {
-        console.error('Error linking payment:', error);
-        showNotification('❌ Failed to link payment', 'error');
-        // Clear persistent storage on error too
-        savedPaymentDataForLinking = null;
-      }
-    }
-    
-    // Open student edit from payment record click
-    function openStudentEditFromPayment(studentId) {
-      if (!studentId) return;
-      
-      // Open Student Manager modal
-      openStudentManager();
-      
-      // Wait for modal to render, then trigger edit
-      setTimeout(() => {
-        const studentCard = document.querySelector(`[data-student-id="${studentId}"]`);
-        if (studentCard) {
-          // Scroll into view
-          studentCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-          
-          // Highlight the card briefly
-          studentCard.style.transition = 'all 0.3s ease';
-          studentCard.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
-          studentCard.style.transform = 'scale(1.02)';
-          
-          // Toggle into edit mode
-          setTimeout(() => {
-            toggleInlineEdit(studentId);
-            
-            // Remove highlight after edit opens
-            setTimeout(() => {
-              studentCard.style.boxShadow = '';
-              studentCard.style.transform = '';
-            }, 500);
-          }, 300);
-        } else {
-          showNotification('⚠️ Student not found', 'warning');
-        }
-      }, 300);
-    }
-    
-    // Close popup when clicking outside
-    document.addEventListener('click', function(event) {
-      const popup = document.getElementById('paymentActionsPopup');
-      if (popup && popup.classList.contains('active') && !popup.contains(event.target)) {
-        closePaymentActionsPopup();
-      }
-      
-      // Note: fullSyncModal has its own close buttons, no need for click-outside-to-close
-    });
-    
-    // ============================================================================
-    // FULL SYNC FUNCTIONALITY
-    // ============================================================================
-    
-    function openFullSyncDatePicker() {
-      const modal = document.getElementById('fullSyncModal');
-      if (!modal) {
-        console.error('fullSyncModal element not found');
-        showNotification('❌ UI error: Modal not found', 'error');
-        return;
-      }
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Register with PopupManager
-      window.PopupManager.register('fullSyncModal', {
-        hasBackButton: false, // Top-level modal
-        closeOnOutsideClick: true,
-        onClose: closeFullSyncDatePicker
-      });
-      
-      // Fade in animation
-      modal.style.opacity = '0';
-      modal.style.display = 'block';
-      
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
-      // END POPUP BACK & EXIT FIX
-      
-      // Set default dates
-      const today = new Date();
-      const toDateInput = document.getElementById('fullSyncToDate');
-      if (toDateInput) {
-        toDateInput.value = today.toISOString().split('T')[0];
-      }
-      
-      // Default from date is July 1, 2024 (already set in HTML)
-    }
-    
-    function setFullSyncThisWeek() {
-      const today = new Date();
-      const dayOfWeek = today.getDay();
-      const monday = new Date(today);
-      monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
-      
-      document.getElementById('fullSyncFromDate').value = monday.toISOString().split('T')[0];
-      document.getElementById('fullSyncToDate').value = today.toISOString().split('T')[0];
-    }
-    
-    function setFullSyncThisMonth() {
-      const today = new Date();
-      const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-      
-      document.getElementById('fullSyncFromDate').value = firstDay.toISOString().split('T')[0];
-      document.getElementById('fullSyncToDate').value = today.toISOString().split('T')[0];
-    }
-    
-    function setFullSyncLastMonth() {
-      const today = new Date();
-      const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-      const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-      
-      document.getElementById('fullSyncFromDate').value = firstDayLastMonth.toISOString().split('T')[0];
-      document.getElementById('fullSyncToDate').value = lastDayLastMonth.toISOString().split('T')[0];
-    }
-    
-    function closeFullSyncDatePicker() {
-      const modal = document.getElementById('fullSyncModal');
-      if (!modal) return;
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Fade out before hiding
-      modal.style.opacity = '0';
-      
-      setTimeout(() => {
-        modal.style.display = 'none';
-        window.PopupManager?.activePopups?.delete('fullSyncModal');
-      }, 250);
-      // END POPUP BACK & EXIT FIX
-    }
-    
-    async function performFullSync() {
-      const fromDateInput = document.getElementById('fullSyncFromDate');
-      const toDateInput = document.getElementById('fullSyncToDate');
-      
-      if (!fromDateInput || !toDateInput) {
-        console.error('Date input elements not found');
-        showNotification('❌ UI error: Date inputs missing', 'error');
-        return;
-      }
-      
-      let fromDateStr = fromDateInput.value;
-      let toDateStr = toDateInput.value;
-      
-      // DEFENSIVE FIX: Ensure inputs have values with smart defaults
-      if (!fromDateStr || !toDateStr) {
-        // If toDate is missing, default to today
-        if (!toDateStr) {
-          toDateStr = new Date().toISOString().split('T')[0];
-          toDateInput.value = toDateStr;
-        }
-        // If fromDate is missing, default to one month ago
-        if (!fromDateStr) {
-          const defaultFrom = new Date();
-          defaultFrom.setMonth(defaultFrom.getMonth() - 1);
-          fromDateStr = defaultFrom.toISOString().split('T')[0];
-          fromDateInput.value = fromDateStr;
-        }
-        console.log('📅 Applied default dates - From:', fromDateStr, 'To:', toDateStr);
-      }
-      
-      if (!fromDateStr || !toDateStr) {
-        showNotification('⚠️ Please select both dates', 'warning');
-        return;
-      }
-      
-      // Check token validity before attempting full sync
-      const isValid = await ensureGmailTokenValid();
-      if (!isValid || !gmailAccessToken) {
-        showNotification('⚠️ Please connect Gmail first', 'warning');
-        closeFullSyncDatePicker();
-        return;
-      }
-      
-      const fromDate = new Date(fromDateStr);
-      const toDate = new Date(toDateStr);
-      
-      if (fromDate > toDate) {
-        showNotification('⚠️ From date must be before To date', 'warning');
-        return;
-      }
-      
-      closeFullSyncDatePicker();
-      
-      const btn = document.getElementById('fullSyncBtn');
-      const text = document.getElementById('fullSyncBtnText');
-      
-      if (!btn || !text) {
-        console.error('Full sync button elements not found');
-        showNotification('❌ UI error: Button elements missing', 'error');
-        return;
-      }
-      
-      btn.disabled = true;
-      text.textContent = 'Syncing...';
-      
-      try {
-        // REDESIGNED DATE RANGE LOGIC
-        // Gmail's after: is INCLUSIVE (gets emails from this date forward)
-        // Gmail's before: is EXCLUSIVE (gets emails up to but not including this date)
-        // Solution: Use after:YYYY/MM/DD and before:NEXT_DAY to include the end date
-        
-        const formatGmailDate = (date) => {
-          const year = date.getFullYear();
-          const month = String(date.getMonth() + 1).padStart(2, '0');
-          const day = String(date.getDate()).padStart(2, '0');
-          return `${year}/${month}/${day}`;
-        };
-        
-        const afterDate = formatGmailDate(fromDate);
-        
-        // Add 1 day to toDate for exclusive 'before:' parameter
-        const beforeDate = new Date(toDate);
-        beforeDate.setDate(beforeDate.getDate() + 1);
-        const beforeDateStr = formatGmailDate(beforeDate);
-        
-        console.log('� FULL SYNC - Date Range:');
-        
-        showNotification(`🔍 Syncing ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`, 'info');
-        
-        // Build Gmail search query
-        const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
-        
-        // Fetch all messages with pagination
-        let allMessages = [];
-        let pageToken = null;
-        
-        do {
-          const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=500${pageToken ? `&pageToken=${pageToken}` : ''}`;
-          
-          const searchResponse = await fetch(searchUrl, {
-            headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-          });
-          
-          if (!searchResponse.ok) {
-            if (searchResponse.status === 401) {
-              localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
-              localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
-              gmailAccessToken = null;
-              updateGmailButtonState(false);
-              throw new Error('Gmail session expired. Please reconnect.');
-            }
-            throw new Error(`Gmail API error: ${searchResponse.status}`);
-          }
-          
-          const searchData = await searchResponse.json();
-          
-          if (searchData.messages) {
-            allMessages = allMessages.concat(searchData.messages);
-            text.textContent = `Found ${allMessages.length}...`;
-          }
-          
-          pageToken = searchData.nextPageToken;
-          
-        } while (pageToken);
-        
-        
-        if (allMessages.length === 0) {
-          showNotification('📭 No Zelle emails found in this date range', 'info');
-          btn.disabled = false;
-          text.textContent = 'Full Sync';
-          return;
-        }
-        
-        // Process messages and remove duplicates
-        text.textContent = `Processing ${allMessages.length} emails...`;
-        
-        const existingPayments = PaymentStore.getAll();
-        const existingGmailIds = new Set(existingPayments.map(p => p.gmailId).filter(Boolean));
-        
-        
-        const newPayments = [];
-        const skippedDuplicates = [];
-        const processedInBatch = new Set();
-        let invalidEmails = 0;
-        
-        for (let i = 0; i < allMessages.length; i++) {
-          const message = allMessages[i];
-          
-          if (i % 10 === 0 || i === allMessages.length - 1) {
-            text.textContent = `Processing ${i + 1}/${allMessages.length}...`;
-          }
-          
-          try {
-            const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
-            const messageResponse = await fetch(messageUrl, {
-              headers: { 'Authorization': `Bearer ${gmailAccessToken}` }
-            });
-            
-            if (!messageResponse.ok) {
-              console.warn(`⚠️ Failed to fetch message ${message.id}: ${messageResponse.status}`);
-              invalidEmails++;
-              continue;
-            }
-            
-            const messageData = await messageResponse.json();
-            const payment = parseZelleEmail(messageData);
-            
-            if (!payment) {
-              // Email didn't match Zelle criteria (wrong account, outgoing, etc.)
-              invalidEmails++;
-              continue;
-            }
-            
-            // Check if Gmail ID already exists in database
-            if (existingGmailIds.has(payment.gmailId)) {
-              skippedDuplicates.push(payment.gmailId);
-              continue;
-            }
-            
-            // Check if Gmail ID was already processed in this batch
-            if (processedInBatch.has(payment.gmailId)) {
-              console.warn(`⚠️ Duplicate in batch: ${payment.gmailId}`);
-              skippedDuplicates.push(payment.gmailId);
-              continue;
-            }
-            
-            // Valid new payment
-            newPayments.push(payment);
-            processedInBatch.add(payment.gmailId);
-            
-          } catch (error) {
-            console.error(`❌ Error processing message ${message.id}:`, error);
-            invalidEmails++;
-          }
-          
-          // Rate limiting
-          if (i < allMessages.length - 1) {
-            await new Promise(resolve => setTimeout(resolve, 50));
-          }
-        }
-        
-        // Summary
-        
-        if (newPayments.length > 0) {
-          // Debug: Log all new payment Gmail IDs before saving
-          newPayments.forEach((p, idx) => {
-          });
-          
-          // Save new payments
-          const allPayments = [...existingPayments, ...newPayments];
-          
-          // Debug: Check for Gmail ID duplicates in the combined array
-          const gmailIdCounts = {};
-          allPayments.forEach(p => {
-            if (p.gmailId) {
-              gmailIdCounts[p.gmailId] = (gmailIdCounts[p.gmailId] || 0) + 1;
-            }
-          });
-          
-          const duplicateGmailIds = Object.entries(gmailIdCounts).filter(([_, count]) => count > 1);
-          if (duplicateGmailIds.length > 0) {
-            console.error('❌ DUPLICATE GMAIL IDs DETECTED BEFORE SAVE:');
-            duplicateGmailIds.forEach(([gmailId, count]) => {
-              console.error(`   Gmail ID ${gmailId} appears ${count} times`);
-              const dupes = allPayments.filter(p => p.gmailId === gmailId);
-              dupes.forEach((p, idx) => {
-                console.error(`     ${idx + 1}. ${p.payerName} ($${p.amount}) - Payment ID: ${p.id}`);
-              });
-            });
-          }
-          
-          await PaymentStore.save(allPayments);
-          
-          // Recompute resolutions
-          await recomputePaymentResolutions();
-          
-          const totalAmount = newPayments.reduce((sum, p) => sum + p.amount, 0);
-          showNotification(`✅ Added ${newPayments.length} payment${newPayments.length > 1 ? 's' : ''}! Total: ${formatCurrency(totalAmount, '$')}`, 'success');
-          renderPaymentEmailsView();
-        } else {
-          showNotification('✅ All payments already synced', 'success');
-        }
-        
-      } catch (error) {
-        console.error('❌ Full sync error:', error);
-        showNotification(`❌ Sync failed: ${error.message}`, 'error');
-      } finally {
-        btn.disabled = false;
-        text.textContent = 'Full Sync';
-      }
-    }
-    
-    // ============================================================================
-    // AUTO-REFRESH FUNCTIONALITY
-    // ============================================================================
-    
-    let autoRefreshInterval = null;
-    let autoRefreshEnabled = localStorage.getItem('paymentEmailAutoRefresh') === 'true';
-    
-    function toggleAutoRefresh() {
-      autoRefreshEnabled = !autoRefreshEnabled;
-      localStorage.setItem('paymentEmailAutoRefresh', autoRefreshEnabled.toString());
-      
-      const toggleBtn = document.getElementById('autoRefreshToggle');
-      if (!toggleBtn) {
-        console.error('autoRefreshToggle button not found');
-        return;
-      }
-      
-      if (autoRefreshEnabled) {
-        toggleBtn.classList.add('auto-refresh-active');
-        toggleBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
-        startAutoRefresh();
-        showNotification('✅ Auto-refresh enabled (every 30 seconds)', 'success');
-      } else {
-        toggleBtn.classList.remove('auto-refresh-active');
-        toggleBtn.title = 'Auto-refresh OFF - Click to enable';
-        stopAutoRefresh();
-        showNotification('⏸️ Auto-refresh disabled', 'info');
-      }
-    }
-    
-    function startAutoRefresh() {
-      stopAutoRefresh();
-      autoRefreshInterval = setInterval(() => {
-        console.log('🔄 Auto-refreshing payments...');
-        refreshPayments();
-      }, TIMING.AUTO_REFRESH_INTERVAL);
-    }
-    
-    function stopAutoRefresh() {
-      if (autoRefreshInterval) {
-        clearInterval(autoRefreshInterval);
-        autoRefreshInterval = null;
-      }
-    }
-    
-    // ============================================================================
-    // NOTIFICATIONS SYSTEM
-    // ============================================================================
 
-    // Notification stub (removed notification center)
-    function showNotification(message, type = 'info') {
-      const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
-    }
-    
-    // ============================================================================
-    // SETTINGS MENU
-    // ============================================================================
-    
-    function toggleSettingsMenu() {
-      const menu = document.getElementById('settingsMenu');
-      if (!menu) return;
-      menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-    }
-    
-    // Close settings menu when clicking outside
-    document.addEventListener('click', function(e) {
-      const settingsBtn = document.getElementById('settingsBtn');
-      const menu = document.getElementById('settingsMenu');
-      
-      if (settingsBtn && menu && !settingsBtn.contains(e.target) && !menu.contains(e.target)) {
-        menu.style.display = 'none';
-      }
+  // Remove any existing modal
+  const existingModal = document.getElementById('linkStudentModal');
+  const existingBackdrop = document.getElementById('linkStudentModalBackdrop');
+  if (existingModal) existingModal.remove();
+  if (existingBackdrop) existingBackdrop.remove();
+
+  // Add modal to page
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+  // Register with PopupManager
+  if (window.PopupManager) {
+    window.PopupManager.register('linkStudentModal', {
+      hasBackButton: false, // We have our own back button in the HTML
+      closeOnOutsideClick: true,
+      onBack: closeLinkStudentModal,
+      parent: 'paymentActionsPopup',
     });
-    
-    // ============================================================================
-    // LA TIMEZONE OFFSET CORRECTION
-    // ============================================================================
-    
-    // Load saved offset settings
-    function getLAOffsetSettings() {
-      const offset12 = localStorage.getItem('la-offset-12') === 'true';
-      const offset11 = localStorage.getItem('la-offset-11') === 'true';
-      return { offset12, offset11 };
+  }
+
+  // Fade in
+  requestAnimationFrame(() => {
+    const modal = document.getElementById('linkStudentModal');
+    const backdrop = document.getElementById('linkStudentModalBackdrop');
+    if (backdrop) {
+      backdrop.style.display = 'block';
+      backdrop.style.opacity = '0';
+      requestAnimationFrame(() => {
+        backdrop.style.opacity = '1';
+      });
     }
-    
-    // Toggle LA offset (only one can be active)
-    function toggleLAOffset(hours) {
-      const toggle12 = document.getElementById('laOffset12Toggle');
-      const toggle11 = document.getElementById('laOffset11Toggle');
-      
-      if (hours === 12) {
-        const newState = !toggle12.checked;
-        toggle12.checked = newState;
-        localStorage.setItem('la-offset-12', newState.toString());
-        
-        // Turn off the other toggle
-        if (newState) {
-          toggle11.checked = false;
-          localStorage.setItem('la-offset-11', 'false');
-        }
-        
-        // Update toggle styling
-        updateToggleStyle(toggle12, newState);
-        updateToggleStyle(toggle11, false);
-        
-        showNotification(newState ? '❄️ Winter offset enabled: –12 hours' : '✅ Winter offset disabled', 'success');
-      } else if (hours === 11) {
-        const newState = !toggle11.checked;
-        toggle11.checked = newState;
-        localStorage.setItem('la-offset-11', newState.toString());
-        
-        // Turn off the other toggle
-        if (newState) {
-          toggle12.checked = false;
-          localStorage.setItem('la-offset-12', 'false');
-        }
-        
-        // Update toggle styling
-        updateToggleStyle(toggle11, newState);
-        updateToggleStyle(toggle12, false);
-        
-        showNotification(newState ? '☀️ Summer offset enabled: –11 hours (DST)' : '✅ Summer offset disabled', 'success');
-      }
+    if (modal) {
+      modal.style.opacity = '1';
     }
-    
-    // Update toggle visual styling
-    function updateToggleStyle(toggleElement, isActive) {
-      if (!toggleElement) return;
-      const slider = toggleElement.nextElementSibling;
-      const knob = slider ? slider.nextElementSibling : null;
-      
-      if (slider) {
-        slider.style.background = isActive ? 'rgba(34, 197, 94, 0.6)' : 'rgba(100,116,139,0.4)';
-      }
-      if (knob) {
-        knob.style.transform = isActive ? 'translateX(20px)' : 'translateX(0)';
-      }
+  });
+
+  // Focus search input
+  setTimeout(() => {
+    const input = document.getElementById('linkStudentSearchInput');
+    if (input) input.focus();
+  }, 100);
+}
+// END POPUP BACK & EXIT FIX
+
+// BEGIN SEARCH FIX - Search by name AND email
+function filterStudentSearch() {
+  const input = document.getElementById('linkStudentSearchInput');
+  const filter = input ? input.value.toLowerCase().trim() : '';
+  const items = document.querySelectorAll('.student-search-item');
+
+  let visibleCount = 0;
+  items.forEach(item => {
+    const studentName = item.getAttribute('data-student-name') || '';
+    const studentEmail = item.getAttribute('data-student-email') || '';
+    const textContent = item.textContent.toLowerCase();
+
+    // Search in name, email, or visible text
+    const matches =
+      !filter ||
+      studentName.includes(filter) ||
+      studentEmail.includes(filter) ||
+      textContent.includes(filter);
+
+    if (matches) {
+      item.style.display = 'block';
+      visibleCount++;
+    } else {
+      item.style.display = 'none';
     }
-    
-    // Apply LA offset to a Date object
-    function applyLAOffset(date) {
-      const settings = getLAOffsetSettings();
-      const adjustedDate = new Date(date);
-      
-      if (settings.offset12) {
-        adjustedDate.setHours(adjustedDate.getHours() - 12);
-      } else if (settings.offset11) {
-        adjustedDate.setHours(adjustedDate.getHours() - 11);
-      }
-      
-      return adjustedDate;
+  });
+
+  // Show message if no results
+  const resultsContainer = document.getElementById('studentSearchResults');
+  if (resultsContainer && visibleCount === 0 && filter) {
+    if (!document.getElementById('noStudentsMessage')) {
+      resultsContainer.insertAdjacentHTML(
+        'beforeend',
+        '<div id="noStudentsMessage" style="padding: 20px; text-align: center; color: #94a3b8; font-size: 14px;">No students match your search</div>'
+      );
     }
-    
-    // Initialize toggle states on page load
-    function initializeLAOffsetToggles() {
-      const settings = getLAOffsetSettings();
-      const toggle12 = document.getElementById('laOffset12Toggle');
-      const toggle11 = document.getElementById('laOffset11Toggle');
-      
-      if (toggle12) {
-        toggle12.checked = settings.offset12;
-        updateToggleStyle(toggle12, settings.offset12);
-      }
-      if (toggle11) {
-        toggle11.checked = settings.offset11;
-        updateToggleStyle(toggle11, settings.offset11);
-      }
+  } else {
+    const noMsg = document.getElementById('noStudentsMessage');
+    if (noMsg) noMsg.remove();
+  }
+}
+// END SEARCH FIX
+
+function selectStudentFromSearch(studentId) {
+  confirmLinkStudent(studentId);
+}
+
+function closeLinkStudentModal() {
+  const modal = document.getElementById('linkStudentModal');
+  const backdrop = document.getElementById('linkStudentModalBackdrop');
+
+  if (modal && backdrop) {
+    // BEGIN POPUP BACK & EXIT FIX
+    // Fade out before removing
+    modal.style.opacity = '0';
+    backdrop.style.opacity = '0';
+
+    setTimeout(() => {
+      modal.remove();
+      backdrop.remove();
+      window.PopupManager?.activePopups?.delete('linkStudentModal');
+    }, 250);
+    // END POPUP BACK & EXIT FIX
+  }
+}
+
+async function confirmLinkStudent(studentId) {
+  if (!studentId) {
+    showNotification('⚠️ Please select a student', 'warning');
+    return;
+  }
+
+  // CRITICAL FIX: Try multiple sources for payment data
+  // 1. First try current popup data
+  // 2. Fall back to persistent saved data
+  // 3. If both are null, fail gracefully
+  let paymentDataSnapshot = currentPaymentPopupData ? { ...currentPaymentPopupData } : null;
+
+  if (!paymentDataSnapshot && savedPaymentDataForLinking) {
+    console.log('⚠️ currentPaymentPopupData was null, using savedPaymentDataForLinking');
+    paymentDataSnapshot = { ...savedPaymentDataForLinking };
+  }
+
+  if (!paymentDataSnapshot) {
+    console.error('❌ No payment data available from any source');
+    console.error('   - currentPaymentPopupData:', currentPaymentPopupData);
+    console.error('   - savedPaymentDataForLinking:', savedPaymentDataForLinking);
+    showNotification('❌ No payment selected', 'error');
+    closeLinkStudentModal();
+    return;
+  }
+
+  try {
+    const students = getCachedStudents();
+
+    // Convert studentId to number for comparison (it comes from HTML as string)
+    const studentIdNum = parseInt(studentId, 10);
+
+    const student = students.find(s => s.id === studentIdNum);
+
+    if (!student) {
+      console.error(
+        '❌ Student not found. ID:',
+        studentIdNum,
+        'Available:',
+        students.map(s => ({ id: s.id, name: s.name }))
+      );
+      showNotification('❌ Student not found', 'error');
+      return;
     }
-    
-    // ============================================================================
-    // BACKUP & RESTORE SYSTEM
-    // ============================================================================
-    
-    /**
-     * Export Full Backup
-     * Creates a comprehensive JSON backup of all app data
-     */
-    function exportFullBackup() {
-      try {
-        // Close settings menu
-        const menu = document.getElementById('settingsMenu');
-        if (menu) menu.style.display = 'none';
-        
-        // Gather all data from localStorage
-        const backup = {
-          version: '2.0',
-          timestamp: new Date().toISOString(),
-          students: JSON.parse(localStorage.getItem('students:v2') || '[]'),
-          groups: JSON.parse(localStorage.getItem('group-manager:v2') || '[]'),
-          payments: JSON.parse(localStorage.getItem('payments:v2') || '[]'),
-          waitingList: JSON.parse(localStorage.getItem('waiting-list:v2') || '[]'),
-          settings: JSON.parse(localStorage.getItem('settings:v2') || '{}'),
-          gmailConnection: JSON.parse(localStorage.getItem('gmail-connection') || 'null'),
-          exchangeRate: localStorage.getItem('exchangeRate') || '400',
-          lastSync: localStorage.getItem('lastSyncTime') || null
-        };
-        
-        // Convert to JSON string with formatting
-        const jsonString = JSON.stringify(backup, null, 2);
-        
-        // Create blob and download
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        
-        // Create filename with timestamp
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
-        a.download = `ARNOMA_Backup_${timestamp}.json`;
-        
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        
-        // Create auto-backup in localStorage (keep last 5)
-        createAutoBackup(backup);
-        
-        showNotificationSimple('✅ Backup exported successfully', 'success');
-        
-      } catch (error) {
-        console.error('Error exporting backup:', error);
-        showNotificationSimple('❌ Failed to export backup', 'error');
-      }
+
+    // BEGIN CRITICAL BUG FIX - Payment ↔ Student Linking Logic
+    // Update payment with student link using correct field names:
+    // - linkedStudentId: for manual linking (checked first by resolver)
+    // - manuallyLinked: flag to trigger manual resolution path
+    // - linkedAt: timestamp for audit trail
+    const payments = PaymentStore.getAll();
+    const payment = payments.find(p => p.id === paymentDataSnapshot.paymentId);
+
+    if (!payment) {
+      showNotification('❌ Payment not found', 'error');
+      return;
     }
-    
-    /**
-     * Trigger Import Backup
-     * Opens file selector for backup restoration
-     */
-    function triggerImportBackup() {
-      try {
-        // Close settings menu
-        const menu = document.getElementById('settingsMenu');
-        if (menu) menu.style.display = 'none';
-        
-        const fileInput = document.getElementById('backupFileInput');
-        if (!fileInput) {
-          showNotificationSimple('❌ File input not found', 'error');
-          return;
-        }
-        
-        // Set up file input handler
-        fileInput.onchange = async (e) => {
-          const file = e.target.files[0];
-          if (!file) return;
-          
-          try {
-            const text = await file.text();
-            await importFullBackup(text);
-          } catch (error) {
-            console.error('Error reading backup file:', error);
-            showNotificationSimple('❌ Failed to read backup file', 'error');
-          }
-          
-          // Reset file input
-          fileInput.value = '';
-        };
-        
-        // Trigger file selection
-        fileInput.click();
-        
-      } catch (error) {
-        console.error('Error triggering import:', error);
-        showNotificationSimple('❌ Failed to open file selector', 'error');
-      }
-    }
-    
-    /**
-     * Import Full Backup
-     * Restores all app data from a backup file
-     */
-    async function importFullBackup(jsonData) {
-      try {
-        // Confirm before overwriting
-        const confirmed = await customConfirm(
-          'Restoring a backup will overwrite all current data.\n\nThis action cannot be undone.\n\nContinue?',
-          {
-            title: 'Restore Backup',
-            icon: '⚠️',
-            okText: 'Restore',
-            type: 'danger'
-          }
-        );
-        
-        if (!confirmed) return;
-        
-        // Parse JSON
-        let data;
-        try {
-          data = JSON.parse(jsonData);
-        } catch (parseError) {
-          showNotificationSimple('❌ Invalid backup file format', 'error');
-          return;
-        }
-        
-        // Validate backup structure
-        if (!data.version || !data.timestamp) {
-          showNotificationSimple('❌ Invalid backup file: missing version info', 'error');
-          return;
-        }
-        
-        if (!data.students && !data.groups && !data.payments) {
-          showNotificationSimple('❌ Invalid backup file: no data found', 'error');
-          return;
-        }
-        
-        // Create automatic backup of current state before restore
-        const currentBackup = {
-          version: '2.0',
-          timestamp: new Date().toISOString(),
-          students: JSON.parse(localStorage.getItem('students:v2') || '[]'),
-          groups: JSON.parse(localStorage.getItem('group-manager:v2') || '[]'),
-          payments: JSON.parse(localStorage.getItem('payments:v2') || '[]'),
-          waitingList: JSON.parse(localStorage.getItem('waiting-list:v2') || '[]'),
-          settings: JSON.parse(localStorage.getItem('settings:v2') || '{}')
-        };
-        localStorage.setItem('lastAutoBackup:v2', JSON.stringify(currentBackup));
-        
-        // Restore data to localStorage
-        if (data.students) {
-          localStorage.setItem('students:v2', JSON.stringify(data.students));
-        }
-        
-        if (data.groups) {
-          localStorage.setItem('group-manager:v2', JSON.stringify(data.groups));
-        }
-        
-        if (data.payments) {
-          localStorage.setItem('payments:v2', JSON.stringify(data.payments));
-          PaymentStore.save(data.payments); // Update PaymentStore
-        }
-        
-        if (data.waitingList) {
-          localStorage.setItem('waiting-list:v2', JSON.stringify(data.waitingList));
-        }
-        
-        if (data.settings) {
-          localStorage.setItem('settings:v2', JSON.stringify(data.settings));
-        }
-        
-        if (data.gmailConnection !== undefined) {
-          localStorage.setItem('gmail-connection', JSON.stringify(data.gmailConnection));
-        }
-        
-        if (data.exchangeRate) {
-          localStorage.setItem('exchangeRate', data.exchangeRate);
-        }
-        
-        if (data.lastSync) {
-          localStorage.setItem('lastSyncTime', data.lastSync);
-        }
-        
-        // Dispatch update events
-        window.dispatchEvent(new CustomEvent('students:updated', { detail: data.students || [] }));
-        window.dispatchEvent(new CustomEvent('groups:updated', { detail: data.groups || [] }));
-        window.dispatchEvent(new CustomEvent('payments:updated', { detail: data.payments || [] }));
-        
-        // Reload all views
-        if (typeof loadStudents === 'function') {
-          students = getCachedStudents();
-        }
-        
-        if (typeof loadGroups === 'function') {
-          groups = loadGroups();
-        }
-        
-        if (typeof loadWaitingList === 'function') {
-          waitingList = loadWaitingList();
-        }
-        
-        // Re-render all views
-        if (typeof renderPaymentEmailsView === 'function') {
-          renderPaymentEmailsView();
-        }
-        
-        if (typeof renderStudents === 'function') {
-          renderStudents();
-        }
-        
-        if (typeof renderGroups === 'function') {
-          renderGroups();
-        }
-        
-        // Update month selector and totals
-        if (typeof populateMonthSelector === 'function') {
-          populateMonthSelector();
-        }
-        
-        if (typeof updateMonthTotals === 'function') {
-          updateMonthTotals();
-        }
-        
-        // Show success message
-        showNotificationSimple('✅ Backup restored successfully! All data reloaded.', 'success');
-        
-        // Optional: Reload page after a short delay for clean state
-        setTimeout(() => {
-          if (confirm('Reload page to ensure all components are properly initialized?')) {
-            window.location.reload();
-          }
-        }, 1500);
-        
-      } catch (error) {
-        console.error('Error importing backup:', error);
-        showNotificationSimple('❌ Failed to restore backup: ' + error.message, 'error');
-      }
-    }
-    
-    /**
-     * Create Auto Backup
-     * Stores automatic backups in localStorage (keeps last 5)
-     */
-    function createAutoBackup(backupData) {
-      try {
-        // Get existing auto backups
-        const autoBackupsRaw = localStorage.getItem('autoBackups:v2');
-        let autoBackups = autoBackupsRaw ? JSON.parse(autoBackupsRaw) : [];
-        
-        // Add new backup
-        autoBackups.push({
-          timestamp: backupData.timestamp,
-          data: backupData
-        });
-        
-        // Keep only last 5 backups
-        if (autoBackups.length > 5) {
-          autoBackups = autoBackups.slice(-5);
-        }
-        
-        // Save back to localStorage
-        localStorage.setItem('autoBackups:v2', JSON.stringify(autoBackups));
-        
-        // Also save as lastAutoBackup for quick access
-        localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
-      } catch (error) {
-        console.error('Error creating auto backup:', error);
-      }
-    }
-    /**
-     * Create Auto Backup
-     * All data is already in Supabase, so this just logs the backup event
-     */
-    async function createAutoBackup(backupData) {
-      try {
-        // Store backup metadata in localStorage for quick access
-        localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
-        
-        console.log('✅ Auto-backup completed (data already in Supabase)');
-      } catch (error) {
-        console.error('Error creating auto-backup metadata:', error);
-      }
-    }
-    
-    /**
-     * Restore from Cloud
-     * Reloads all data from Supabase
-     */
-    async function restoreFromCloud() {
-      try {
-        showNotification('🔄 Loading data from Supabase...', 'info');
-        
-        const confirmed = await customConfirm(
-          'Reload all data from Supabase cloud?\n\n' +
-          'This will refresh your local view with the latest cloud data.',
-          {
-            title: 'Restore from Cloud',
-            icon: '☁️',
-            okText: 'Reload',
-            type: 'info'
-          }
-        );
-        
-        if (!confirmed) return;
-        
-        // Reload data from Supabase
-        const students = await loadStudents();
-  const payments = await PaymentStore.fetchAll();
-        
-        showNotification(`✅ Loaded ${students.length} students and ${payments.length} payments from cloud`, 'success');
-        
-        // Refresh UI
-        window.location.reload();
-        
-      } catch (error) {
-        console.error('Error restoring from cloud:', error);
-        showNotification('❌ Failed to restore from cloud', 'error');
-      }
-    }
-    
-    /**
-     * Restore Last Auto Backup
-     * Restores the most recent automatic backup
-     */
-    async function restoreLastAutoBackup() {
-      try {
-        // Close settings menu
-        const menu = document.getElementById('settingsMenu');
-        if (menu) menu.style.display = 'none';
-        
-        // Get last auto backup
-        const lastBackupRaw = localStorage.getItem('lastAutoBackup:v2');
-        
-        if (!lastBackupRaw) {
-          showNotificationSimple('❌ No auto backup found', 'error');
-          return;
-        }
-        
-        const lastBackup = JSON.parse(lastBackupRaw);
-        
-        // Show backup info
-        const backupDate = new Date(lastBackup.timestamp).toLocaleString('en-US', { 
-          month: 'short', 
-          day: 'numeric', 
-          year: 'numeric', 
-          hour: 'numeric', 
-          minute: '2-digit',
-          hour12: true 
-        });
-        const confirmed = await customConfirm(
-          `Restore automatic backup from:\n${backupDate}\n\nThis will overwrite all current data.\n\nContinue?`,
-          {
-            title: 'Restore Auto Backup',
-            icon: '⏮️',
-            okText: 'Restore',
-            type: 'danger'
-          }
-        );
-        
-        if (!confirmed) return;
-        
-        // Use the import function to restore
-        await importFullBackup(JSON.stringify(lastBackup));
-        
-      } catch (error) {
-        console.error('Error restoring auto backup:', error);
-        showNotificationSimple('❌ Failed to restore auto backup', 'error');
-      }
-    }
-    
-    /**
-     * Initialize Daily Auto Backup
-     * Automatically creates backups once per day
-     */
-    function initializeDailyAutoBackup() {
-      try {
-        // Check last auto backup date
-        const lastAutoBackupDate = localStorage.getItem('lastAutoBackupDate');
-        const today = getTodayLA(); // YYYY-MM-DD in LA timezone
-        
-        // If no backup today, create one
-        if (lastAutoBackupDate !== today) {
-          performDailyAutoBackup();
-        }
-        
-        // Set up interval to check daily (every hour)
-        setInterval(() => {
-          const currentDate = new Date().toISOString().slice(0, 10);
-          const lastBackupDate = localStorage.getItem('lastAutoBackupDate');
-          
-          if (lastBackupDate !== currentDate) {
-            performDailyAutoBackup();
-          }
-        }, 60 * 60 * 1000); // Check every hour
-        
-      } catch (error) {
-        console.error('Error initializing daily auto backup:', error);
-      }
-    }
-    
-    /**
-     * Perform Daily Auto Backup
-     * Creates a silent backup in localStorage
-     */
-    function performDailyAutoBackup() {
-      try {
-        // Gather all data
-        const backup = {
-          version: '2.0',
-          timestamp: new Date().toISOString(),
-          students: JSON.parse(localStorage.getItem('students:v2') || '[]'),
-          groups: JSON.parse(localStorage.getItem('group-manager:v2') || '[]'),
-          payments: JSON.parse(localStorage.getItem('payments:v2') || '[]'),
-          waitingList: JSON.parse(localStorage.getItem('waiting-list:v2') || '[]'),
-          settings: JSON.parse(localStorage.getItem('settings:v2') || '{}'),
-          gmailConnection: JSON.parse(localStorage.getItem('gmail-connection') || 'null'),
-          exchangeRate: localStorage.getItem('exchangeRate') || '400',
-          lastSync: localStorage.getItem('lastSyncTime') || null
-        };
-        
-        // Store auto backup
-        createAutoBackup(backup);
-        
-        // Update last backup date
-        const today = getTodayLA();
-        localStorage.setItem('lastAutoBackupDate', today);
-        
-        
-      } catch (error) {
-        console.error('Error performing daily auto backup:', error);
-      }
-    }
-    
-    // ============================================================================
-    // CUSTOM DIALOG SYSTEM (Replaces browser confirm/alert/prompt)
-    // ============================================================================
-    
-    // Custom Confirm Dialog
-    function customConfirm(message, options = {}) {
-      return new Promise((resolve) => {
-        const modal = document.getElementById('customConfirmModal');
-        const messageEl = document.getElementById('confirmMessage');
-        const titleEl = document.getElementById('confirmTitle');
-        const iconEl = document.getElementById('confirmIcon');
-        const okBtn = document.getElementById('confirmOkBtn');
-        const cancelBtn = document.getElementById('confirmCancelBtn');
-        
-        // Set content
-        messageEl.textContent = message;
-        titleEl.textContent = options.title || 'Confirm Action';
-        iconEl.textContent = options.icon || '⚠️';
-        okBtn.textContent = options.okText || 'Confirm';
-        cancelBtn.textContent = options.cancelText || 'Cancel';
-        
-        // Style OK button based on type
-        if (options.type === 'danger') {
-          okBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
-          okBtn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+
+    payment.linkedStudentId = student.id; // ✅ Correct field for manual linking
+    payment.manuallyLinked = true;
+    payment.linkedAt = new Date().toISOString();
+    payment.resolutionSource = 'manual';
+
+    // Add payer name to student's alias if not already there
+    const payerName = payment.payerName || payment.fromName || '';
+
+    if (payerName && payerName.trim()) {
+      const currentAliases = student.aliases || [];
+      const normalizedPayerName = payerName.trim().toLowerCase();
+      const normalizedStudentName = student.name.toLowerCase();
+
+      console.log('🔍 Normalized payer:', normalizedPayerName);
+
+      // Only add if payer name is different from student name and not already in aliases
+      const aliasExists = currentAliases.some(alias => alias.toLowerCase() === normalizedPayerName);
+
+      if (normalizedPayerName !== normalizedStudentName && !aliasExists) {
+        const originalAliases = Array.isArray(currentAliases) ? [...currentAliases] : [];
+        student.aliases = [...originalAliases, payerName.trim()];
+
+        const savedAliasUpdate = await saveStudent(student);
+        if (!savedAliasUpdate) {
+          student.aliases = originalAliases;
+          showNotification('❌ Failed to save alias to Supabase', 'error');
         } else {
-          okBtn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
-          okBtn.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
+          Object.assign(student, savedAliasUpdate);
+          window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
         }
-        
-        // Show modal
-        modal.style.display = 'flex';
-        
-        // Handle button clicks
-        const handleOk = () => {
-          modal.style.display = 'none';
-          cleanup();
-          resolve(true);
-        };
-        
-        const handleCancel = () => {
-          modal.style.display = 'none';
-          cleanup();
-          resolve(false);
-        };
-        
-        const cleanup = () => {
-          okBtn.removeEventListener('click', handleOk);
-          cancelBtn.removeEventListener('click', handleCancel);
-        };
-        
-        okBtn.addEventListener('click', handleOk);
-        cancelBtn.addEventListener('click', handleCancel);
-        
-        // ESC key support
-        const handleEsc = (e) => {
-          if (e.key === 'Escape') {
-            handleCancel();
-            document.removeEventListener('keydown', handleEsc);
-          }
-        };
-        document.addEventListener('keydown', handleEsc);
-      });
+      } else {
+        console.log('⏭️ Skipped adding alias (already exists or same as student name)');
+      }
+    } else {
     }
-    
-    // Custom Alert Dialog
-    function customAlert(message, options = {}) {
-      return new Promise((resolve) => {
-        const modal = document.getElementById('customAlertModal');
-        const messageEl = document.getElementById('alertMessage');
-        const titleEl = document.getElementById('alertTitle');
-        const iconEl = document.getElementById('alertIcon');
-        const okBtn = document.getElementById('alertOkBtn');
-        
-        // Set content
-        messageEl.textContent = message;
-        titleEl.textContent = options.title || 'Notice';
-        iconEl.textContent = options.icon || 'ℹ️';
-        okBtn.textContent = options.okText || 'OK';
-        
-        // Show modal
-        modal.style.display = 'flex';
-        
-        // Handle button click
-        const handleOk = () => {
-          modal.style.display = 'none';
-          okBtn.removeEventListener('click', handleOk);
-          resolve();
-        };
-        
-        okBtn.addEventListener('click', handleOk);
-        
-        // ESC key support
-        const handleEsc = (e) => {
-          if (e.key === 'Escape') {
-            handleOk();
-            document.removeEventListener('keydown', handleEsc);
-          }
-        };
-        document.addEventListener('keydown', handleEsc);
-      });
+
+    // Compute derived fields immediately (before saving)
+    const resolution = resolvePaymentToStudent(payment, students);
+    payment.derivedStudentId = resolution.studentId;
+    payment.resolvedStudentName = resolution.studentName;
+    payment.derivedStudentGroup = resolution.studentGroup;
+
+    PaymentStore.save(payments);
+    // END CRITICAL BUG FIX
+
+    // Recompute payment resolutions
+    recomputePaymentResolutions();
+
+    showNotification(`✅ Payment linked to ${student.name}`, 'success');
+
+    // Clear persistent storage after successful link
+    savedPaymentDataForLinking = null;
+    console.log('🧹 Cleared savedPaymentDataForLinking after successful link');
+
+    closeLinkStudentModal();
+    closePaymentActionsPopup();
+    renderPaymentEmailsView();
+  } catch (error) {
+    console.error('Error linking payment:', error);
+    showNotification('❌ Failed to link payment', 'error');
+    // Clear persistent storage on error too
+    savedPaymentDataForLinking = null;
+  }
+}
+
+// Open student edit from payment record click
+function openStudentEditFromPayment(studentId) {
+  if (!studentId) return;
+
+  // Open Student Manager modal
+  openStudentManager();
+
+  // Wait for modal to render, then trigger edit
+  setTimeout(() => {
+    const studentCard = document.querySelector(`[data-student-id="${studentId}"]`);
+    if (studentCard) {
+      // Scroll into view
+      studentCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+      // Highlight the card briefly
+      studentCard.style.transition = 'all 0.3s ease';
+      studentCard.style.boxShadow = '0 0 0 3px rgba(59, 130, 246, 0.5)';
+      studentCard.style.transform = 'scale(1.02)';
+
+      // Toggle into edit mode
+      setTimeout(() => {
+        toggleInlineEdit(studentId);
+
+        // Remove highlight after edit opens
+        setTimeout(() => {
+          studentCard.style.boxShadow = '';
+          studentCard.style.transform = '';
+        }, 500);
+      }, 300);
+    } else {
+      showNotification('⚠️ Student not found', 'warning');
     }
-    
-    // Custom Prompt Dialog
-    function customPrompt(message, defaultValue = '', options = {}) {
-      return new Promise((resolve) => {
-        const modal = document.getElementById('customPromptModal');
-        const messageEl = document.getElementById('promptMessage');
-        const titleEl = document.getElementById('promptTitle');
-        const inputEl = document.getElementById('promptInput');
-        const okBtn = document.getElementById('promptOkBtn');
-        const cancelBtn = document.getElementById('promptCancelBtn');
-        
-        // Set content
-        messageEl.textContent = message;
-        titleEl.textContent = options.title || 'Input Required';
-        inputEl.value = defaultValue;
-        inputEl.placeholder = options.placeholder || 'Enter value...';
-        okBtn.textContent = options.okText || 'Submit';
-        cancelBtn.textContent = options.cancelText || 'Cancel';
-        
-        // Show modal and focus input
-        modal.style.display = 'flex';
-        setTimeout(() => inputEl.focus(), 100);
-        
-        // Handle button clicks
-        const handleOk = () => {
-          const value = inputEl.value.trim();
-          modal.style.display = 'none';
-          cleanup();
-          resolve(value || null);
-        };
-        
-        const handleCancel = () => {
-          modal.style.display = 'none';
-          cleanup();
-          resolve(null);
-        };
-        
-        const cleanup = () => {
-          okBtn.removeEventListener('click', handleOk);
-          cancelBtn.removeEventListener('click', handleCancel);
-          inputEl.removeEventListener('keypress', handleEnter);
-        };
-        
-        const handleEnter = (e) => {
-          if (e.key === 'Enter') handleOk();
-        };
-        
-        okBtn.addEventListener('click', handleOk);
-        cancelBtn.addEventListener('click', handleCancel);
-        inputEl.addEventListener('keypress', handleEnter);
-        
-        // ESC key support
-        const handleEsc = (e) => {
-          if (e.key === 'Escape') {
-            handleCancel();
-            document.removeEventListener('keydown', handleEsc);
-          }
-        };
-        document.addEventListener('keydown', handleEsc);
-      });
+  }, 300);
+}
+
+// Close popup when clicking outside
+document.addEventListener('click', function (event) {
+  const popup = document.getElementById('paymentActionsPopup');
+  if (popup && popup.classList.contains('active') && !popup.contains(event.target)) {
+    closePaymentActionsPopup();
+  }
+
+  // Note: fullSyncModal has its own close buttons, no need for click-outside-to-close
+});
+
+// ============================================================================
+// FULL SYNC FUNCTIONALITY
+// ============================================================================
+
+function openFullSyncDatePicker() {
+  const modal = document.getElementById('fullSyncModal');
+  if (!modal) {
+    console.error('fullSyncModal element not found');
+    showNotification('❌ UI error: Modal not found', 'error');
+    return;
+  }
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Register with PopupManager
+  window.PopupManager.register('fullSyncModal', {
+    hasBackButton: false, // Top-level modal
+    closeOnOutsideClick: true,
+    onClose: closeFullSyncDatePicker,
+  });
+
+  // Fade in animation
+  modal.style.opacity = '0';
+  modal.style.display = 'block';
+
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+  // END POPUP BACK & EXIT FIX
+
+  // Set default dates
+  const today = new Date();
+  const toDateInput = document.getElementById('fullSyncToDate');
+  if (toDateInput) {
+    toDateInput.value = today.toISOString().split('T')[0];
+  }
+
+  // Default from date is July 1, 2024 (already set in HTML)
+}
+
+function setFullSyncThisWeek() {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
+
+  document.getElementById('fullSyncFromDate').value = monday.toISOString().split('T')[0];
+  document.getElementById('fullSyncToDate').value = today.toISOString().split('T')[0];
+}
+
+function setFullSyncThisMonth() {
+  const today = new Date();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  document.getElementById('fullSyncFromDate').value = firstDay.toISOString().split('T')[0];
+  document.getElementById('fullSyncToDate').value = today.toISOString().split('T')[0];
+}
+
+function setFullSyncLastMonth() {
+  const today = new Date();
+  const firstDayLastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const lastDayLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+
+  document.getElementById('fullSyncFromDate').value = firstDayLastMonth.toISOString().split('T')[0];
+  document.getElementById('fullSyncToDate').value = lastDayLastMonth.toISOString().split('T')[0];
+}
+
+function closeFullSyncDatePicker() {
+  const modal = document.getElementById('fullSyncModal');
+  if (!modal) return;
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Fade out before hiding
+  modal.style.opacity = '0';
+
+  setTimeout(() => {
+    modal.style.display = 'none';
+    window.PopupManager?.activePopups?.delete('fullSyncModal');
+  }, 250);
+  // END POPUP BACK & EXIT FIX
+}
+
+async function performFullSync() {
+  const fromDateInput = document.getElementById('fullSyncFromDate');
+  const toDateInput = document.getElementById('fullSyncToDate');
+
+  if (!fromDateInput || !toDateInput) {
+    console.error('Date input elements not found');
+    showNotification('❌ UI error: Date inputs missing', 'error');
+    return;
+  }
+
+  let fromDateStr = fromDateInput.value;
+  let toDateStr = toDateInput.value;
+
+  // DEFENSIVE FIX: Ensure inputs have values with smart defaults
+  if (!fromDateStr || !toDateStr) {
+    // If toDate is missing, default to today
+    if (!toDateStr) {
+      toDateStr = new Date().toISOString().split('T')[0];
+      toDateInput.value = toDateStr;
     }
-    
-    // Override browser dialogs (optional - for consistency)
-    window.confirm = customConfirm;
-    window.alert = customAlert;
-    window.prompt = customPrompt;
-    
-    // ============================================================================
-    // 👩‍⚕️ STUDENT MANAGER - ENHANCED VERSION WITH ALL FEATURES
-    // ============================================================================
-    
-    const STORAGE_KEY = 'students:v2';
-    const WAITING_LIST_KEY = 'waiting-list';
-    const STUDENT_STATUSES = {
-      ACTIVE: 'active',
-      PAUSED: 'paused',
-      GRADUATED: 'graduated'
+    // If fromDate is missing, default to one month ago
+    if (!fromDateStr) {
+      const defaultFrom = new Date();
+      defaultFrom.setMonth(defaultFrom.getMonth() - 1);
+      fromDateStr = defaultFrom.toISOString().split('T')[0];
+      fromDateInput.value = fromDateStr;
+    }
+    console.log('📅 Applied default dates - From:', fromDateStr, 'To:', toDateStr);
+  }
+
+  if (!fromDateStr || !toDateStr) {
+    showNotification('⚠️ Please select both dates', 'warning');
+    return;
+  }
+
+  // Check token validity before attempting full sync
+  const isValid = await ensureGmailTokenValid();
+  if (!isValid || !gmailAccessToken) {
+    showNotification('⚠️ Please connect Gmail first', 'warning');
+    closeFullSyncDatePicker();
+    return;
+  }
+
+  const fromDate = new Date(fromDateStr);
+  const toDate = new Date(toDateStr);
+
+  if (fromDate > toDate) {
+    showNotification('⚠️ From date must be before To date', 'warning');
+    return;
+  }
+
+  closeFullSyncDatePicker();
+
+  const btn = document.getElementById('fullSyncBtn');
+  const text = document.getElementById('fullSyncBtnText');
+
+  if (!btn || !text) {
+    console.error('Full sync button elements not found');
+    showNotification('❌ UI error: Button elements missing', 'error');
+    return;
+  }
+
+  btn.disabled = true;
+  text.textContent = 'Syncing...';
+
+  try {
+    // REDESIGNED DATE RANGE LOGIC
+    // Gmail's after: is INCLUSIVE (gets emails from this date forward)
+    // Gmail's before: is EXCLUSIVE (gets emails up to but not including this date)
+    // Solution: Use after:YYYY/MM/DD and before:NEXT_DAY to include the end date
+
+    const formatGmailDate = date => {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      return `${year}/${month}/${day}`;
     };
 
-    // Students will be loaded from Supabase on initialization
-    let students = [];
-    let waitingList = JSON.parse(localStorage.getItem(WAITING_LIST_KEY) || '[]');
-    let selectedStudent = null;
-    let editingStudentId = null;
-    
-    // Initialize students from Supabase when page loads
-    (async function initializeStudents() {
-      try {
-        students = await loadStudents();
-        // Render if student manager is open
-        const studentManager = document.getElementById('studentManagerModal');
-        if (studentManager && studentManager.style.display !== 'none') {
-          renderStudents();
-        }
-      } catch (error) {
-        console.error('Error loading students on init:', error);
-        students = [];
-      }
-    })();
+    const afterDate = formatGmailDate(fromDate);
 
-    // ===== UTILITY FUNCTIONS =====
-    function generateId() {
-      return 'student_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
-    }
+    // Add 1 day to toDate for exclusive 'before:' parameter
+    const beforeDate = new Date(toDate);
+    beforeDate.setDate(beforeDate.getDate() + 1);
+    const beforeDateStr = formatGmailDate(beforeDate);
 
-    function showNotificationSimple(message, type = 'info') {
-      // Notification toast removed - only log to console
-      const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
-    }
+    console.log('� FULL SYNC - Date Range:');
 
-    function normalizeStatus(status) {
-      const normalized = normalizeStudentStatusValue(status);
-      switch (normalized) {
-        case 'paused':
-          return STUDENT_STATUSES.PAUSED;
-        case 'graduated':
-          return STUDENT_STATUSES.GRADUATED;
-        default:
-          return STUDENT_STATUSES.ACTIVE;
-      }
-    }
+    showNotification(
+      `🔍 Syncing ${fromDate.toLocaleDateString()} to ${toDate.toLocaleDateString()}...`,
+      'info'
+    );
 
-    function getStatusDetails(status) {
-      const normalized = normalizeStatus(status);
-      switch (normalized) {
-        case STUDENT_STATUSES.PAUSED:
-          return { label: 'Paused', color: '#fbbf24', bg: 'rgba(251,191,36,.15)', border: 'rgba(251,191,36,.4)' };
-        case STUDENT_STATUSES.GRADUATED:
-          return { label: 'Graduated', color: '#a78bfa', bg: 'rgba(167,139,250,.15)', border: 'rgba(167,139,250,.4)' };
-        default:
-          return { label: 'Active', color: '#4caf50', bg: 'rgba(76,175,80,.15)', border: 'rgba(76,175,80,.4)' };
-      }
-    }
+    // Build Gmail search query
+    const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate} before:${beforeDateStr}`;
 
-    // ===== SAVE/LOAD FUNCTIONS =====
-    async function saveStudents() {
-      try {
-        // Save all students to Supabase
-        for (const student of students) {
-          await saveStudent(student);
-        }
-        
-        // Update global cache
-        window.studentsCache = students;
-        
-        // Dispatch event for cross-module communication
-        window.dispatchEvent(new CustomEvent("students:updated", { detail: students }));
-        
-        // Auto-backup on every student save
-        try {
-          const payments = await PaymentStore.fetchAll();
-          const backupData = {
-            timestamp: new Date().toISOString(),
-            students: students,
-            payments: payments,
-            student_count: students.length,
-            payment_count: payments.length,
-            source: 'student-save'
-          };
-          await createAutoBackup(backupData);
-        } catch (error) {
-          console.error('Auto-backup from student save failed:', error);
-        }
-        
-      } catch (e) {
-        console.error('Error saving students:', e);
-      }
-    }
+    // Fetch all messages with pagination
+    let allMessages = [];
+    let pageToken = null;
 
-    function saveWaitingList() {
-      try {
-        localStorage.setItem(WAITING_LIST_KEY, JSON.stringify(waitingList));
-      } catch (e) {
-        console.error('Error saving waiting list:', e);
-      }
-    }
+    do {
+      const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=500${pageToken ? `&pageToken=${pageToken}` : ''}`;
 
-    async function loadStudentsFromDB() {
-      try {
-        const loadedStudents = await loadStudents();
-        students = loadedStudents;
-        return students;
-      } catch (error) {
-        console.error('Error loading students:', error);
-        return [];
-      }
-    }
-
-    // ===== CLOUD SYNC (AUTOMATIC VIA SUPABASE) =====
-    async function syncWithCloud() {
-      try {
-        showNotificationSimple('Syncing with Supabase...');
-
-        // Save all students to Supabase cloud database
-        await saveStudents();
-
-        showNotificationSimple('✅ Synced with Supabase', 'success');
-      } catch (error) {
-        console.error('Supabase sync error:', error);
-        showNotificationSimple('Sync failed', 'error');
-      }
-    }
-
-    // ===== OPEN/CLOSE STUDENT MANAGER =====
-    function openStudentManager() {
-      const menu = document.getElementById('settingsMenu');
-      if (menu) menu.style.display = 'none';
-      
-      const modal = document.getElementById('studentManagerModal');
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Register with PopupManager
-      window.PopupManager.register('studentManagerModal', {
-        hasBackButton: false, // Top-level modal
-        closeOnOutsideClick: true,
-        onClose: closeStudentManager
+      const searchResponse = await fetch(searchUrl, {
+        headers: { Authorization: `Bearer ${gmailAccessToken}` },
       });
-      
-      // Fade in animation
-      modal.style.opacity = '0';
-      modal.style.display = 'block';
-      
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
+
+      if (!searchResponse.ok) {
+        if (searchResponse.status === 401) {
+          localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
+          localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
+          gmailAccessToken = null;
+          updateGmailButtonState(false);
+          throw new Error('Gmail session expired. Please reconnect.');
+        }
+        throw new Error(`Gmail API error: ${searchResponse.status}`);
+      }
+
+      const searchData = await searchResponse.json();
+
+      if (searchData.messages) {
+        allMessages = allMessages.concat(searchData.messages);
+        text.textContent = `Found ${allMessages.length}...`;
+      }
+
+      pageToken = searchData.nextPageToken;
+    } while (pageToken);
+
+    if (allMessages.length === 0) {
+      showNotification('📭 No Zelle emails found in this date range', 'info');
+      btn.disabled = false;
+      text.textContent = 'Full Sync';
+      return;
+    }
+
+    // Process messages and remove duplicates
+    text.textContent = `Processing ${allMessages.length} emails...`;
+
+    const existingPayments = PaymentStore.getAll();
+    const existingGmailIds = new Set(existingPayments.map(p => p.gmailId).filter(Boolean));
+
+    const newPayments = [];
+    const skippedDuplicates = [];
+    const processedInBatch = new Set();
+    let invalidEmails = 0;
+
+    for (let i = 0; i < allMessages.length; i++) {
+      const message = allMessages[i];
+
+      if (i % 10 === 0 || i === allMessages.length - 1) {
+        text.textContent = `Processing ${i + 1}/${allMessages.length}...`;
+      }
+
+      try {
+        const messageUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages/${message.id}`;
+        const messageResponse = await fetch(messageUrl, {
+          headers: { Authorization: `Bearer ${gmailAccessToken}` },
+        });
+
+        if (!messageResponse.ok) {
+          console.warn(`⚠️ Failed to fetch message ${message.id}: ${messageResponse.status}`);
+          invalidEmails++;
+          continue;
+        }
+
+        const messageData = await messageResponse.json();
+        const payment = parseZelleEmail(messageData);
+
+        if (!payment) {
+          // Email didn't match Zelle criteria (wrong account, outgoing, etc.)
+          invalidEmails++;
+          continue;
+        }
+
+        // Check if Gmail ID already exists in database
+        if (existingGmailIds.has(payment.gmailId)) {
+          skippedDuplicates.push(payment.gmailId);
+          continue;
+        }
+
+        // Check if Gmail ID was already processed in this batch
+        if (processedInBatch.has(payment.gmailId)) {
+          console.warn(`⚠️ Duplicate in batch: ${payment.gmailId}`);
+          skippedDuplicates.push(payment.gmailId);
+          continue;
+        }
+
+        // Valid new payment
+        newPayments.push(payment);
+        processedInBatch.add(payment.gmailId);
+      } catch (error) {
+        console.error(`❌ Error processing message ${message.id}:`, error);
+        invalidEmails++;
+      }
+
+      // Rate limiting
+      if (i < allMessages.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+
+    // Summary
+
+    if (newPayments.length > 0) {
+      // Debug: Log all new payment Gmail IDs before saving
+      newPayments.forEach((p, idx) => {});
+
+      // Save new payments
+      const allPayments = [...existingPayments, ...newPayments];
+
+      // Debug: Check for Gmail ID duplicates in the combined array
+      const gmailIdCounts = {};
+      allPayments.forEach(p => {
+        if (p.gmailId) {
+          gmailIdCounts[p.gmailId] = (gmailIdCounts[p.gmailId] || 0) + 1;
+        }
       });
-      // END POPUP BACK & EXIT FIX
-      
-      loadGroupsForStudentManager();
+
+      const duplicateGmailIds = Object.entries(gmailIdCounts).filter(([_, count]) => count > 1);
+      if (duplicateGmailIds.length > 0) {
+        console.error('❌ DUPLICATE GMAIL IDs DETECTED BEFORE SAVE:');
+        duplicateGmailIds.forEach(([gmailId, count]) => {
+          console.error(`   Gmail ID ${gmailId} appears ${count} times`);
+          const dupes = allPayments.filter(p => p.gmailId === gmailId);
+          dupes.forEach((p, idx) => {
+            console.error(`     ${idx + 1}. ${p.payerName} ($${p.amount}) - Payment ID: ${p.id}`);
+          });
+        });
+      }
+
+      await PaymentStore.save(allPayments);
+
+      // Recompute resolutions
+      await recomputePaymentResolutions();
+
+      const totalAmount = newPayments.reduce((sum, p) => sum + p.amount, 0);
+      showNotification(
+        `✅ Added ${newPayments.length} payment${newPayments.length > 1 ? 's' : ''}! Total: ${formatCurrency(totalAmount, '$')}`,
+        'success'
+      );
+      renderPaymentEmailsView();
+    } else {
+      showNotification('✅ All payments already synced', 'success');
+    }
+  } catch (error) {
+    console.error('❌ Full sync error:', error);
+    showNotification(`❌ Sync failed: ${error.message}`, 'error');
+  } finally {
+    btn.disabled = false;
+    text.textContent = 'Full Sync';
+  }
+}
+
+// ============================================================================
+// AUTO-REFRESH FUNCTIONALITY
+// ============================================================================
+
+let autoRefreshInterval = null;
+let autoRefreshEnabled = localStorage.getItem('paymentEmailAutoRefresh') === 'true';
+
+function toggleAutoRefresh() {
+  autoRefreshEnabled = !autoRefreshEnabled;
+  localStorage.setItem('paymentEmailAutoRefresh', autoRefreshEnabled.toString());
+
+  const toggleBtn = document.getElementById('autoRefreshToggle');
+  if (!toggleBtn) {
+    console.error('autoRefreshToggle button not found');
+    return;
+  }
+
+  if (autoRefreshEnabled) {
+    toggleBtn.classList.add('auto-refresh-active');
+    toggleBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
+    startAutoRefresh();
+    showNotification('✅ Auto-refresh enabled (every 30 seconds)', 'success');
+  } else {
+    toggleBtn.classList.remove('auto-refresh-active');
+    toggleBtn.title = 'Auto-refresh OFF - Click to enable';
+    stopAutoRefresh();
+    showNotification('⏸️ Auto-refresh disabled', 'info');
+  }
+}
+
+function startAutoRefresh() {
+  stopAutoRefresh();
+  autoRefreshInterval = setInterval(() => {
+    console.log('🔄 Auto-refreshing payments...');
+    refreshPayments();
+  }, TIMING.AUTO_REFRESH_INTERVAL);
+}
+
+function stopAutoRefresh() {
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval);
+    autoRefreshInterval = null;
+  }
+}
+
+// ============================================================================
+// NOTIFICATIONS SYSTEM
+// ============================================================================
+
+// Notification stub (removed notification center)
+function showNotification(message, type = 'info') {
+  const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
+}
+
+// ============================================================================
+// SETTINGS MENU
+// ============================================================================
+
+function toggleSettingsMenu() {
+  const menu = document.getElementById('settingsMenu');
+  if (!menu) return;
+  menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+}
+
+// Close settings menu when clicking outside
+document.addEventListener('click', function (e) {
+  const settingsBtn = document.getElementById('settingsBtn');
+  const menu = document.getElementById('settingsMenu');
+
+  if (settingsBtn && menu && !settingsBtn.contains(e.target) && !menu.contains(e.target)) {
+    menu.style.display = 'none';
+  }
+});
+
+// ============================================================================
+// LA TIMEZONE OFFSET CORRECTION
+// ============================================================================
+
+// Load saved offset settings
+function getLAOffsetSettings() {
+  const offset12 = localStorage.getItem('la-offset-12') === 'true';
+  const offset11 = localStorage.getItem('la-offset-11') === 'true';
+  return { offset12, offset11 };
+}
+
+// Toggle LA offset (only one can be active)
+function toggleLAOffset(hours) {
+  const toggle12 = document.getElementById('laOffset12Toggle');
+  const toggle11 = document.getElementById('laOffset11Toggle');
+
+  if (hours === 12) {
+    const newState = !toggle12.checked;
+    toggle12.checked = newState;
+    localStorage.setItem('la-offset-12', newState.toString());
+
+    // Turn off the other toggle
+    if (newState) {
+      toggle11.checked = false;
+      localStorage.setItem('la-offset-11', 'false');
+    }
+
+    // Update toggle styling
+    updateToggleStyle(toggle12, newState);
+    updateToggleStyle(toggle11, false);
+
+    showNotification(
+      newState ? '❄️ Winter offset enabled: –12 hours' : '✅ Winter offset disabled',
+      'success'
+    );
+  } else if (hours === 11) {
+    const newState = !toggle11.checked;
+    toggle11.checked = newState;
+    localStorage.setItem('la-offset-11', newState.toString());
+
+    // Turn off the other toggle
+    if (newState) {
+      toggle12.checked = false;
+      localStorage.setItem('la-offset-12', 'false');
+    }
+
+    // Update toggle styling
+    updateToggleStyle(toggle11, newState);
+    updateToggleStyle(toggle12, false);
+
+    showNotification(
+      newState ? '☀️ Summer offset enabled: –11 hours (DST)' : '✅ Summer offset disabled',
+      'success'
+    );
+  }
+}
+
+// Update toggle visual styling
+function updateToggleStyle(toggleElement, isActive) {
+  if (!toggleElement) return;
+  const slider = toggleElement.nextElementSibling;
+  const knob = slider ? slider.nextElementSibling : null;
+
+  if (slider) {
+    slider.style.background = isActive ? 'rgba(34, 197, 94, 0.6)' : 'rgba(100,116,139,0.4)';
+  }
+  if (knob) {
+    knob.style.transform = isActive ? 'translateX(20px)' : 'translateX(0)';
+  }
+}
+
+// Apply LA offset to a Date object
+function applyLAOffset(date) {
+  const settings = getLAOffsetSettings();
+  const adjustedDate = new Date(date);
+
+  if (settings.offset12) {
+    adjustedDate.setHours(adjustedDate.getHours() - 12);
+  } else if (settings.offset11) {
+    adjustedDate.setHours(adjustedDate.getHours() - 11);
+  }
+
+  return adjustedDate;
+}
+
+// Initialize toggle states on page load
+function initializeLAOffsetToggles() {
+  const settings = getLAOffsetSettings();
+  const toggle12 = document.getElementById('laOffset12Toggle');
+  const toggle11 = document.getElementById('laOffset11Toggle');
+
+  if (toggle12) {
+    toggle12.checked = settings.offset12;
+    updateToggleStyle(toggle12, settings.offset12);
+  }
+  if (toggle11) {
+    toggle11.checked = settings.offset11;
+    updateToggleStyle(toggle11, settings.offset11);
+  }
+}
+
+// ============================================================================
+// BACKUP & RESTORE SYSTEM
+// ============================================================================
+
+/**
+ * Export Full Backup
+ * Creates a comprehensive JSON backup of all app data
+ */
+function exportFullBackup() {
+  try {
+    // Close settings menu
+    const menu = document.getElementById('settingsMenu');
+    if (menu) menu.style.display = 'none';
+
+    // Gather all data from localStorage
+    const backup = {
+      version: '2.0',
+      timestamp: new Date().toISOString(),
+      students: JSON.parse(localStorage.getItem('students:v2') || '[]'),
+      groups: JSON.parse(localStorage.getItem('group-manager:v2') || '[]'),
+      payments: JSON.parse(localStorage.getItem('payments:v2') || '[]'),
+      waitingList: JSON.parse(localStorage.getItem('waiting-list:v2') || '[]'),
+      settings: JSON.parse(localStorage.getItem('settings:v2') || '{}'),
+      gmailConnection: JSON.parse(localStorage.getItem('gmail-connection') || 'null'),
+      exchangeRate: localStorage.getItem('exchangeRate') || '400',
+      lastSync: localStorage.getItem('lastSyncTime') || null,
+    };
+
+    // Convert to JSON string with formatting
+    const jsonString = JSON.stringify(backup, null, 2);
+
+    // Create blob and download
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+
+    // Create filename with timestamp
+    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
+    a.download = `ARNOMA_Backup_${timestamp}.json`;
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Create auto-backup in localStorage (keep last 5)
+    createAutoBackup(backup);
+
+    showNotificationSimple('✅ Backup exported successfully', 'success');
+  } catch (error) {
+    console.error('Error exporting backup:', error);
+    showNotificationSimple('❌ Failed to export backup', 'error');
+  }
+}
+
+/**
+ * Trigger Import Backup
+ * Opens file selector for backup restoration
+ */
+function triggerImportBackup() {
+  try {
+    // Close settings menu
+    const menu = document.getElementById('settingsMenu');
+    if (menu) menu.style.display = 'none';
+
+    const fileInput = document.getElementById('backupFileInput');
+    if (!fileInput) {
+      showNotificationSimple('❌ File input not found', 'error');
+      return;
+    }
+
+    // Set up file input handler
+    fileInput.onchange = async e => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      try {
+        const text = await file.text();
+        await importFullBackup(text);
+      } catch (error) {
+        console.error('Error reading backup file:', error);
+        showNotificationSimple('❌ Failed to read backup file', 'error');
+      }
+
+      // Reset file input
+      fileInput.value = '';
+    };
+
+    // Trigger file selection
+    fileInput.click();
+  } catch (error) {
+    console.error('Error triggering import:', error);
+    showNotificationSimple('❌ Failed to open file selector', 'error');
+  }
+}
+
+/**
+ * Import Full Backup
+ * Restores all app data from a backup file
+ */
+async function importFullBackup(jsonData) {
+  try {
+    // Confirm before overwriting
+    const confirmed = await customConfirm(
+      'Restoring a backup will overwrite all current data.\n\nThis action cannot be undone.\n\nContinue?',
+      {
+        title: 'Restore Backup',
+        icon: '⚠️',
+        okText: 'Restore',
+        type: 'danger',
+      }
+    );
+
+    if (!confirmed) return;
+
+    // Parse JSON
+    let data;
+    try {
+      data = JSON.parse(jsonData);
+    } catch (parseError) {
+      showNotificationSimple('❌ Invalid backup file format', 'error');
+      return;
+    }
+
+    // Validate backup structure
+    if (!data.version || !data.timestamp) {
+      showNotificationSimple('❌ Invalid backup file: missing version info', 'error');
+      return;
+    }
+
+    if (!data.students && !data.groups && !data.payments) {
+      showNotificationSimple('❌ Invalid backup file: no data found', 'error');
+      return;
+    }
+
+    // Create automatic backup of current state before restore
+    const currentBackup = {
+      version: '2.0',
+      timestamp: new Date().toISOString(),
+      students: JSON.parse(localStorage.getItem('students:v2') || '[]'),
+      groups: JSON.parse(localStorage.getItem('group-manager:v2') || '[]'),
+      payments: JSON.parse(localStorage.getItem('payments:v2') || '[]'),
+      waitingList: JSON.parse(localStorage.getItem('waiting-list:v2') || '[]'),
+      settings: JSON.parse(localStorage.getItem('settings:v2') || '{}'),
+    };
+    localStorage.setItem('lastAutoBackup:v2', JSON.stringify(currentBackup));
+
+    // Restore data to localStorage
+    if (data.students) {
+      localStorage.setItem('students:v2', JSON.stringify(data.students));
+    }
+
+    if (data.groups) {
+      localStorage.setItem('group-manager:v2', JSON.stringify(data.groups));
+    }
+
+    if (data.payments) {
+      localStorage.setItem('payments:v2', JSON.stringify(data.payments));
+      PaymentStore.save(data.payments); // Update PaymentStore
+    }
+
+    if (data.waitingList) {
+      localStorage.setItem('waiting-list:v2', JSON.stringify(data.waitingList));
+    }
+
+    if (data.settings) {
+      localStorage.setItem('settings:v2', JSON.stringify(data.settings));
+    }
+
+    if (data.gmailConnection !== undefined) {
+      localStorage.setItem('gmail-connection', JSON.stringify(data.gmailConnection));
+    }
+
+    if (data.exchangeRate) {
+      localStorage.setItem('exchangeRate', data.exchangeRate);
+    }
+
+    if (data.lastSync) {
+      localStorage.setItem('lastSyncTime', data.lastSync);
+    }
+
+    // Dispatch update events
+    window.dispatchEvent(new CustomEvent('students:updated', { detail: data.students || [] }));
+    window.dispatchEvent(new CustomEvent('groups:updated', { detail: data.groups || [] }));
+    window.dispatchEvent(new CustomEvent('payments:updated', { detail: data.payments || [] }));
+
+    // Reload all views
+    if (typeof loadStudents === 'function') {
+      students = getCachedStudents();
+    }
+
+    if (typeof loadGroups === 'function') {
+      groups = loadGroups();
+    }
+
+    if (typeof loadWaitingList === 'function') {
+      waitingList = loadWaitingList();
+    }
+
+    // Re-render all views
+    if (typeof renderPaymentEmailsView === 'function') {
+      renderPaymentEmailsView();
+    }
+
+    if (typeof renderStudents === 'function') {
       renderStudents();
     }
 
-    function closeStudentManager() {
-      const modal = document.getElementById('studentManagerModal');
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Fade out before hiding
-      modal.style.opacity = '0';
-      
-      setTimeout(() => {
-        modal.style.display = 'none';
-        window.PopupManager?.activePopups?.delete('studentManagerModal');
-      }, 250);
-      // END POPUP BACK & EXIT FIX
-      
-      // Close any open editing cards
-      document.querySelectorAll('.student-item.editing').forEach(card => {
-        card.classList.remove('editing');
-      });
+    if (typeof renderGroups === 'function') {
+      renderGroups();
     }
 
-    function closeStudentManagerOnOutsideClick(event) {
-      if (event.target.id === 'studentManagerModal') {
-        closeStudentManager();
-      }
+    // Update month selector and totals
+    if (typeof populateMonthSelector === 'function') {
+      populateMonthSelector();
     }
 
-    // ===== LOAD GROUPS FROM GROUP MANAGER =====
-    function loadGroupsForStudentManager() {
-      // Request groups from Group Manager
-      window.dispatchEvent(new CustomEvent("groups:request"));
-      
-      // Load from Supabase cache
-      const storedGroups = window.groupsCache || window.globalData?.groups || [];
-      if (storedGroups.length > 0) {
-        groups = storedGroups;
-      }
+    if (typeof updateMonthTotals === 'function') {
+      updateMonthTotals();
     }
 
-    // ===== RENDER STUDENTS =====
-    function renderStudents() {
-      const grid = document.getElementById('studentGrid');
-      if (!grid) return;
-      
-      // Always use the most current data from cache
-      students = window.studentsCache || students || [];
-      
-      grid.innerHTML = '';
-      const activeStudents = students.filter(s => s.isActive !== false);
-      
-      // Populate group filter dropdown
-      const uniqueGroups = [...new Set(activeStudents.map(s => s.group).filter(g => g))].sort();
-      const groupFilter = document.getElementById('filterGroup');
-      if (groupFilter) {
-        groupFilter.innerHTML = '<option value="">All Groups</option>' +
-          '<option value="no-group">No Group</option>' +
-          uniqueGroups.map(g => `<option value="${escapeHtml(g)}">Group ${escapeHtml(g)}</option>`).join('');
+    // Show success message
+    showNotificationSimple('✅ Backup restored successfully! All data reloaded.', 'success');
+
+    // Optional: Reload page after a short delay for clean state
+    setTimeout(() => {
+      if (confirm('Reload page to ensure all components are properly initialized?')) {
+        window.location.reload();
       }
+    }, 1500);
+  } catch (error) {
+    console.error('Error importing backup:', error);
+    showNotificationSimple('❌ Failed to restore backup: ' + error.message, 'error');
+  }
+}
 
-      // Sort students
-      activeStudents.sort((a, b) => {
-        if (a.group !== b.group) return (a.group || '').localeCompare(b.group || '');
-        return (a.name || '').localeCompare(b.name || '');
-      });
+/**
+ * Create Auto Backup
+ * Stores automatic backups in localStorage (keeps last 5)
+ */
+function createAutoBackup(backupData) {
+  try {
+    // Get existing auto backups
+    const autoBackupsRaw = localStorage.getItem('autoBackups:v2');
+    let autoBackups = autoBackupsRaw ? JSON.parse(autoBackupsRaw) : [];
 
-      if (activeStudents.length === 0) {
-        grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #6b7280; font-size: 18px;">No students found. Click "+ Add Student" to get started.</div>';
-        return;
+    // Add new backup
+    autoBackups.push({
+      timestamp: backupData.timestamp,
+      data: backupData,
+    });
+
+    // Keep only last 5 backups
+    if (autoBackups.length > 5) {
+      autoBackups = autoBackups.slice(-5);
+    }
+
+    // Save back to localStorage
+    localStorage.setItem('autoBackups:v2', JSON.stringify(autoBackups));
+
+    // Also save as lastAutoBackup for quick access
+    localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
+  } catch (error) {
+    console.error('Error creating auto backup:', error);
+  }
+}
+/**
+ * Create Auto Backup
+ * All data is already in Supabase, so this just logs the backup event
+ */
+async function createAutoBackup(backupData) {
+  try {
+    // Store backup metadata in localStorage for quick access
+    localStorage.setItem('lastAutoBackup:v2', JSON.stringify(backupData));
+
+    console.log('✅ Auto-backup completed (data already in Supabase)');
+  } catch (error) {
+    console.error('Error creating auto-backup metadata:', error);
+  }
+}
+
+/**
+ * Restore from Cloud
+ * Reloads all data from Supabase
+ */
+async function restoreFromCloud() {
+  try {
+    showNotification('🔄 Loading data from Supabase...', 'info');
+
+    const confirmed = await customConfirm(
+      'Reload all data from Supabase cloud?\n\n' +
+        'This will refresh your local view with the latest cloud data.',
+      {
+        title: 'Restore from Cloud',
+        icon: '☁️',
+        okText: 'Reload',
+        type: 'info',
       }
+    );
 
-      activeStudents.forEach(student => {
-        try {
-          grid.appendChild(createStudentCard(student));
-        } catch (error) {
-          console.error('Error creating card for student:', student.name, error);
+    if (!confirmed) return;
+
+    // Reload data from Supabase
+    const students = await loadStudents();
+    const payments = await PaymentStore.fetchAll();
+
+    showNotification(
+      `✅ Loaded ${students.length} students and ${payments.length} payments from cloud`,
+      'success'
+    );
+
+    // Refresh UI
+    window.location.reload();
+  } catch (error) {
+    console.error('Error restoring from cloud:', error);
+    showNotification('❌ Failed to restore from cloud', 'error');
+  }
+}
+
+/**
+ * Restore Last Auto Backup
+ * Restores the most recent automatic backup
+ */
+async function restoreLastAutoBackup() {
+  try {
+    // Close settings menu
+    const menu = document.getElementById('settingsMenu');
+    if (menu) menu.style.display = 'none';
+
+    // Get last auto backup
+    const lastBackupRaw = localStorage.getItem('lastAutoBackup:v2');
+
+    if (!lastBackupRaw) {
+      showNotificationSimple('❌ No auto backup found', 'error');
+      return;
+    }
+
+    const lastBackup = JSON.parse(lastBackupRaw);
+
+    // Show backup info
+    const backupDate = new Date(lastBackup.timestamp).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+    const confirmed = await customConfirm(
+      `Restore automatic backup from:\n${backupDate}\n\nThis will overwrite all current data.\n\nContinue?`,
+      {
+        title: 'Restore Auto Backup',
+        icon: '⏮️',
+        okText: 'Restore',
+        type: 'danger',
+      }
+    );
+
+    if (!confirmed) return;
+
+    // Use the import function to restore
+    await importFullBackup(JSON.stringify(lastBackup));
+  } catch (error) {
+    console.error('Error restoring auto backup:', error);
+    showNotificationSimple('❌ Failed to restore auto backup', 'error');
+  }
+}
+
+/**
+ * Initialize Daily Auto Backup
+ * Automatically creates backups once per day
+ */
+function initializeDailyAutoBackup() {
+  try {
+    // Check last auto backup date
+    const lastAutoBackupDate = localStorage.getItem('lastAutoBackupDate');
+    const today = getTodayLA(); // YYYY-MM-DD in LA timezone
+
+    // If no backup today, create one
+    if (lastAutoBackupDate !== today) {
+      performDailyAutoBackup();
+    }
+
+    // Set up interval to check daily (every hour)
+    setInterval(
+      () => {
+        const currentDate = new Date().toISOString().slice(0, 10);
+        const lastBackupDate = localStorage.getItem('lastAutoBackupDate');
+
+        if (lastBackupDate !== currentDate) {
+          performDailyAutoBackup();
         }
-      });
-      
-      // Add click-outside-to-cancel-edit listener
-      setupClickOutsideEditListener();
+      },
+      60 * 60 * 1000
+    ); // Check every hour
+  } catch (error) {
+    console.error('Error initializing daily auto backup:', error);
+  }
+}
+
+/**
+ * Perform Daily Auto Backup
+ * Creates a silent backup in localStorage
+ */
+function performDailyAutoBackup() {
+  try {
+    // Gather all data
+    const backup = {
+      version: '2.0',
+      timestamp: new Date().toISOString(),
+      students: JSON.parse(localStorage.getItem('students:v2') || '[]'),
+      groups: JSON.parse(localStorage.getItem('group-manager:v2') || '[]'),
+      payments: JSON.parse(localStorage.getItem('payments:v2') || '[]'),
+      waitingList: JSON.parse(localStorage.getItem('waiting-list:v2') || '[]'),
+      settings: JSON.parse(localStorage.getItem('settings:v2') || '{}'),
+      gmailConnection: JSON.parse(localStorage.getItem('gmail-connection') || 'null'),
+      exchangeRate: localStorage.getItem('exchangeRate') || '400',
+      lastSync: localStorage.getItem('lastSyncTime') || null,
+    };
+
+    // Store auto backup
+    createAutoBackup(backup);
+
+    // Update last backup date
+    const today = getTodayLA();
+    localStorage.setItem('lastAutoBackupDate', today);
+  } catch (error) {
+    console.error('Error performing daily auto backup:', error);
+  }
+}
+
+// ============================================================================
+// CUSTOM DIALOG SYSTEM (Replaces browser confirm/alert/prompt)
+// ============================================================================
+
+// Custom Confirm Dialog
+function customConfirm(message, options = {}) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('customConfirmModal');
+    const messageEl = document.getElementById('confirmMessage');
+    const titleEl = document.getElementById('confirmTitle');
+    const iconEl = document.getElementById('confirmIcon');
+    const okBtn = document.getElementById('confirmOkBtn');
+    const cancelBtn = document.getElementById('confirmCancelBtn');
+
+    // Set content
+    messageEl.textContent = message;
+    titleEl.textContent = options.title || 'Confirm Action';
+    iconEl.textContent = options.icon || '⚠️';
+    okBtn.textContent = options.okText || 'Confirm';
+    cancelBtn.textContent = options.cancelText || 'Cancel';
+
+    // Style OK button based on type
+    if (options.type === 'danger') {
+      okBtn.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+      okBtn.style.boxShadow = '0 4px 12px rgba(239, 68, 68, 0.4)';
+    } else {
+      okBtn.style.background = 'linear-gradient(135deg, #3b82f6, #2563eb)';
+      okBtn.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)';
     }
-    
-    // ===== CLICK OUTSIDE TO CANCEL EDIT =====
-    function setupClickOutsideEditListener() {
-      // Remove existing listener if any
-      if (window._studentEditClickListener) {
-        document.removeEventListener('click', window._studentEditClickListener);
+
+    // Show modal
+    modal.style.display = 'flex';
+
+    // Handle button clicks
+    const handleOk = () => {
+      modal.style.display = 'none';
+      cleanup();
+      resolve(true);
+    };
+
+    const handleCancel = () => {
+      modal.style.display = 'none';
+      cleanup();
+      resolve(false);
+    };
+
+    const cleanup = () => {
+      okBtn.removeEventListener('click', handleOk);
+      cancelBtn.removeEventListener('click', handleCancel);
+    };
+
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
+
+    // ESC key support
+    const handleEsc = e => {
+      if (e.key === 'Escape') {
+        handleCancel();
+        document.removeEventListener('keydown', handleEsc);
       }
-      
-      // Create new listener
-      window._studentEditClickListener = function(event) {
-        const editingCards = document.querySelectorAll('.student-item.editing');
-        if (editingCards.length === 0) return;
-        
-        // Check if click is inside any editing card
-        const clickedInsideCard = Array.from(editingCards).some(card => card.contains(event.target));
-        
-        // Check if clicked on any interactive element (button, input, select, etc.)
-        const clickedInteractive = event.target.closest('button, input, textarea, select, a, label, .status-pill-single, .mini-toggle, .group-btn');
-        
-        // If clicked outside all editing cards and not on an interactive element, cancel all edits
-        if (!clickedInsideCard && !clickedInteractive) {
-          editingCards.forEach(card => {
-            // Extract student ID from card ID (format: card-student_123_abc)
-            const studentId = card.id.replace('card-', '');
-            // Call cancelInlineEdit to properly exit edit mode
-            cancelInlineEdit(studentId);
-          });
-        }
+    };
+    document.addEventListener('keydown', handleEsc);
+  });
+}
+
+// Custom Alert Dialog
+function customAlert(message, options = {}) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('customAlertModal');
+    const messageEl = document.getElementById('alertMessage');
+    const titleEl = document.getElementById('alertTitle');
+    const iconEl = document.getElementById('alertIcon');
+    const okBtn = document.getElementById('alertOkBtn');
+
+    // Set content
+    messageEl.textContent = message;
+    titleEl.textContent = options.title || 'Notice';
+    iconEl.textContent = options.icon || 'ℹ️';
+    okBtn.textContent = options.okText || 'OK';
+
+    // Show modal
+    modal.style.display = 'flex';
+
+    // Handle button click
+    const handleOk = () => {
+      modal.style.display = 'none';
+      okBtn.removeEventListener('click', handleOk);
+      resolve();
+    };
+
+    okBtn.addEventListener('click', handleOk);
+
+    // ESC key support
+    const handleEsc = e => {
+      if (e.key === 'Escape') {
+        handleOk();
+        document.removeEventListener('keydown', handleEsc);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+  });
+}
+
+// Custom Prompt Dialog
+function customPrompt(message, defaultValue = '', options = {}) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('customPromptModal');
+    const messageEl = document.getElementById('promptMessage');
+    const titleEl = document.getElementById('promptTitle');
+    const inputEl = document.getElementById('promptInput');
+    const okBtn = document.getElementById('promptOkBtn');
+    const cancelBtn = document.getElementById('promptCancelBtn');
+
+    // Set content
+    messageEl.textContent = message;
+    titleEl.textContent = options.title || 'Input Required';
+    inputEl.value = defaultValue;
+    inputEl.placeholder = options.placeholder || 'Enter value...';
+    okBtn.textContent = options.okText || 'Submit';
+    cancelBtn.textContent = options.cancelText || 'Cancel';
+
+    // Show modal and focus input
+    modal.style.display = 'flex';
+    setTimeout(() => inputEl.focus(), 100);
+
+    // Handle button clicks
+    const handleOk = () => {
+      const value = inputEl.value.trim();
+      modal.style.display = 'none';
+      cleanup();
+      resolve(value || null);
+    };
+
+    const handleCancel = () => {
+      modal.style.display = 'none';
+      cleanup();
+      resolve(null);
+    };
+
+    const cleanup = () => {
+      okBtn.removeEventListener('click', handleOk);
+      cancelBtn.removeEventListener('click', handleCancel);
+      inputEl.removeEventListener('keypress', handleEnter);
+    };
+
+    const handleEnter = e => {
+      if (e.key === 'Enter') handleOk();
+    };
+
+    okBtn.addEventListener('click', handleOk);
+    cancelBtn.addEventListener('click', handleCancel);
+    inputEl.addEventListener('keypress', handleEnter);
+
+    // ESC key support
+    const handleEsc = e => {
+      if (e.key === 'Escape') {
+        handleCancel();
+        document.removeEventListener('keydown', handleEsc);
+      }
+    };
+    document.addEventListener('keydown', handleEsc);
+  });
+}
+
+// Override browser dialogs (optional - for consistency)
+window.confirm = customConfirm;
+window.alert = customAlert;
+window.prompt = customPrompt;
+
+// ============================================================================
+// 👩‍⚕️ STUDENT MANAGER - ENHANCED VERSION WITH ALL FEATURES
+// ============================================================================
+
+const STORAGE_KEY = 'students:v2';
+const WAITING_LIST_KEY = 'waiting-list';
+const STUDENT_STATUSES = {
+  ACTIVE: 'active',
+  PAUSED: 'paused',
+  GRADUATED: 'graduated',
+};
+
+// Students will be loaded from Supabase on initialization
+let students = [];
+let waitingList = JSON.parse(localStorage.getItem(WAITING_LIST_KEY) || '[]');
+let selectedStudent = null;
+let editingStudentId = null;
+
+// Initialize students from Supabase when page loads
+(async function initializeStudents() {
+  try {
+    students = await loadStudents();
+    // Render if student manager is open
+    const studentManager = document.getElementById('studentManagerModal');
+    if (studentManager && studentManager.style.display !== 'none') {
+      renderStudents();
+    }
+  } catch (error) {
+    console.error('Error loading students on init:', error);
+    students = [];
+  }
+})();
+
+// ===== UTILITY FUNCTIONS =====
+function generateId() {
+  return 'student_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+}
+
+function showNotificationSimple(message, type = 'info') {
+  // Notification toast removed - only log to console
+  const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
+}
+
+function normalizeStatus(status) {
+  const normalized = normalizeStudentStatusValue(status);
+  switch (normalized) {
+    case 'paused':
+      return STUDENT_STATUSES.PAUSED;
+    case 'graduated':
+      return STUDENT_STATUSES.GRADUATED;
+    default:
+      return STUDENT_STATUSES.ACTIVE;
+  }
+}
+
+function getStatusDetails(status) {
+  const normalized = normalizeStatus(status);
+  switch (normalized) {
+    case STUDENT_STATUSES.PAUSED:
+      return {
+        label: 'Paused',
+        color: '#fbbf24',
+        bg: 'rgba(251,191,36,.15)',
+        border: 'rgba(251,191,36,.4)',
       };
-      
-      // Attach listener with capture phase to catch events before stopPropagation
-      document.addEventListener('click', window._studentEditClickListener, true);
+    case STUDENT_STATUSES.GRADUATED:
+      return {
+        label: 'Graduated',
+        color: '#a78bfa',
+        bg: 'rgba(167,139,250,.15)',
+        border: 'rgba(167,139,250,.4)',
+      };
+    default:
+      return {
+        label: 'Active',
+        color: '#4caf50',
+        bg: 'rgba(76,175,80,.15)',
+        border: 'rgba(76,175,80,.4)',
+      };
+  }
+}
+
+// ===== SAVE/LOAD FUNCTIONS =====
+async function saveStudents() {
+  try {
+    // Save all students to Supabase
+    for (const student of students) {
+      await saveStudent(student);
     }
 
-    // ===== CREATE STUDENT CARD =====
-    function createStudentCard(student) {
-      const card = document.createElement('div');
-      card.className = 'student-item';
-      card.id = `card-${student.id}`;
-      
-      // Set data attributes for filtering
-      card.setAttribute('data-student-id', student.id);
-      card.setAttribute('data-name', (student.name || '').toLowerCase());
-      card.setAttribute('data-group', (student.group || '').toLowerCase());
-      card.setAttribute('data-phone', (student.phone || '').toLowerCase());
-      card.setAttribute('data-email', (student.email || '').toLowerCase());
-      card.setAttribute('data-notes', (student.notes || '').toLowerCase());
-      card.setAttribute('data-status', normalizeStatus(student.status));
-      card.setAttribute('data-pay', student.payPerClass || 0);
-      
-      const statusDetails = getStatusDetails(student.status);
-      const showInGrid = student.showInGrid !== false;
-      const aliases = (student.aliases && typeof student.aliases === 'string') 
-        ? student.aliases.split(',').map(a => a.trim()).filter(a => a) 
-        : (Array.isArray(student.aliases) ? student.aliases : []);
-      
-      card.innerHTML = `
+    // Update global cache
+    window.studentsCache = students;
+
+    // Dispatch event for cross-module communication
+    window.dispatchEvent(new CustomEvent('students:updated', { detail: students }));
+
+    // Auto-backup on every student save
+    try {
+      const payments = await PaymentStore.fetchAll();
+      const backupData = {
+        timestamp: new Date().toISOString(),
+        students: students,
+        payments: payments,
+        student_count: students.length,
+        payment_count: payments.length,
+        source: 'student-save',
+      };
+      await createAutoBackup(backupData);
+    } catch (error) {
+      console.error('Auto-backup from student save failed:', error);
+    }
+  } catch (e) {
+    console.error('Error saving students:', e);
+  }
+}
+
+function saveWaitingList() {
+  try {
+    localStorage.setItem(WAITING_LIST_KEY, JSON.stringify(waitingList));
+  } catch (e) {
+    console.error('Error saving waiting list:', e);
+  }
+}
+
+async function loadStudentsFromDB() {
+  try {
+    const loadedStudents = await loadStudents();
+    students = loadedStudents;
+    return students;
+  } catch (error) {
+    console.error('Error loading students:', error);
+    return [];
+  }
+}
+
+// ===== CLOUD SYNC (AUTOMATIC VIA SUPABASE) =====
+async function syncWithCloud() {
+  try {
+    showNotificationSimple('Syncing with Supabase...');
+
+    // Save all students to Supabase cloud database
+    await saveStudents();
+
+    showNotificationSimple('✅ Synced with Supabase', 'success');
+  } catch (error) {
+    console.error('Supabase sync error:', error);
+    showNotificationSimple('Sync failed', 'error');
+  }
+}
+
+// ===== OPEN/CLOSE STUDENT MANAGER =====
+function openStudentManager() {
+  const menu = document.getElementById('settingsMenu');
+  if (menu) menu.style.display = 'none';
+
+  const modal = document.getElementById('studentManagerModal');
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Register with PopupManager
+  window.PopupManager.register('studentManagerModal', {
+    hasBackButton: false, // Top-level modal
+    closeOnOutsideClick: true,
+    onClose: closeStudentManager,
+  });
+
+  // Fade in animation
+  modal.style.opacity = '0';
+  modal.style.display = 'block';
+
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+  // END POPUP BACK & EXIT FIX
+
+  loadGroupsForStudentManager();
+  renderStudents();
+}
+
+function closeStudentManager() {
+  const modal = document.getElementById('studentManagerModal');
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Fade out before hiding
+  modal.style.opacity = '0';
+
+  setTimeout(() => {
+    modal.style.display = 'none';
+    window.PopupManager?.activePopups?.delete('studentManagerModal');
+  }, 250);
+  // END POPUP BACK & EXIT FIX
+
+  // Close any open editing cards
+  document.querySelectorAll('.student-item.editing').forEach(card => {
+    card.classList.remove('editing');
+  });
+}
+
+function closeStudentManagerOnOutsideClick(event) {
+  if (event.target.id === 'studentManagerModal') {
+    closeStudentManager();
+  }
+}
+
+// ===== LOAD GROUPS FROM GROUP MANAGER =====
+function loadGroupsForStudentManager() {
+  // Request groups from Group Manager
+  window.dispatchEvent(new CustomEvent('groups:request'));
+
+  // Load from Supabase cache
+  const storedGroups = window.groupsCache || window.globalData?.groups || [];
+  if (storedGroups.length > 0) {
+    groups = storedGroups;
+  }
+}
+
+// ===== RENDER STUDENTS =====
+function renderStudents() {
+  const grid = document.getElementById('studentGrid');
+  if (!grid) return;
+
+  // Always use the most current data from cache
+  students = window.studentsCache || students || [];
+
+  grid.innerHTML = '';
+  const activeStudents = students.filter(s => s.isActive !== false);
+
+  // Populate group filter dropdown
+  const uniqueGroups = [...new Set(activeStudents.map(s => s.group).filter(g => g))].sort();
+  const groupFilter = document.getElementById('filterGroup');
+  if (groupFilter) {
+    groupFilter.innerHTML =
+      '<option value="">All Groups</option>' +
+      '<option value="no-group">No Group</option>' +
+      uniqueGroups
+        .map(g => `<option value="${escapeHtml(g)}">Group ${escapeHtml(g)}</option>`)
+        .join('');
+  }
+
+  // Sort students
+  activeStudents.sort((a, b) => {
+    if (a.group !== b.group) return (a.group || '').localeCompare(b.group || '');
+    return (a.name || '').localeCompare(b.name || '');
+  });
+
+  if (activeStudents.length === 0) {
+    grid.innerHTML =
+      '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #6b7280; font-size: 18px;">No students found. Click "+ Add Student" to get started.</div>';
+    return;
+  }
+
+  activeStudents.forEach(student => {
+    try {
+      grid.appendChild(createStudentCard(student));
+    } catch (error) {
+      console.error('Error creating card for student:', student.name, error);
+    }
+  });
+
+  // Add click-outside-to-cancel-edit listener
+  setupClickOutsideEditListener();
+}
+
+// ===== CLICK OUTSIDE TO CANCEL EDIT =====
+function setupClickOutsideEditListener() {
+  // Remove existing listener if any
+  if (window._studentEditClickListener) {
+    document.removeEventListener('click', window._studentEditClickListener);
+  }
+
+  // Create new listener
+  window._studentEditClickListener = function (event) {
+    const editingCards = document.querySelectorAll('.student-item.editing');
+    if (editingCards.length === 0) return;
+
+    // Check if click is inside any editing card
+    const clickedInsideCard = Array.from(editingCards).some(card => card.contains(event.target));
+
+    // Check if clicked on any interactive element (button, input, select, etc.)
+    const clickedInteractive = event.target.closest(
+      'button, input, textarea, select, a, label, .status-pill-single, .mini-toggle, .group-btn'
+    );
+
+    // If clicked outside all editing cards and not on an interactive element, cancel all edits
+    if (!clickedInsideCard && !clickedInteractive) {
+      editingCards.forEach(card => {
+        // Extract student ID from card ID (format: card-student_123_abc)
+        const studentId = card.id.replace('card-', '');
+        // Call cancelInlineEdit to properly exit edit mode
+        cancelInlineEdit(studentId);
+      });
+    }
+  };
+
+  // Attach listener with capture phase to catch events before stopPropagation
+  document.addEventListener('click', window._studentEditClickListener, true);
+}
+
+// ===== CREATE STUDENT CARD =====
+function createStudentCard(student) {
+  const card = document.createElement('div');
+  card.className = 'student-item';
+  card.id = `card-${student.id}`;
+
+  // Set data attributes for filtering
+  card.setAttribute('data-student-id', student.id);
+  card.setAttribute('data-name', (student.name || '').toLowerCase());
+  card.setAttribute('data-group', (student.group || '').toLowerCase());
+  card.setAttribute('data-phone', (student.phone || '').toLowerCase());
+  card.setAttribute('data-email', (student.email || '').toLowerCase());
+  card.setAttribute('data-notes', (student.notes || '').toLowerCase());
+  card.setAttribute('data-status', normalizeStatus(student.status));
+  card.setAttribute('data-pay', student.payPerClass || 0);
+
+  const statusDetails = getStatusDetails(student.status);
+  const showInGrid = student.showInGrid !== false;
+  const aliases =
+    student.aliases && typeof student.aliases === 'string'
+      ? student.aliases
+          .split(',')
+          .map(a => a.trim())
+          .filter(a => a)
+      : Array.isArray(student.aliases)
+        ? student.aliases
+        : [];
+
+  card.innerHTML = `
         <!-- VIEW MODE -->
         <div class="student-view" onclick="toggleInlineEdit('${student.id}', event)">
           <div class="student-header">
             <div style="display: flex; gap: 8px; align-items: center; flex: 1;">
-              <span class="status-pill-single status-${normalizeStatus(student.status)}" 
+              <span class="status-pill-single status-${normalizeStatus(student.status)}"
                     onclick="event.stopPropagation(); cycleStatus('${student.id}')"
                     title="Click to cycle: Active → Paused → Graduated"
                     style="cursor: pointer; user-select: none; transition: all 0.2s;">
@@ -4911,23 +5001,31 @@
 
           <!-- BEGIN FEATURE 2 - Instant Group Switch Buttons -->
           <div class="group-buttons" onclick="event.stopPropagation()">
-            ${['A','B','C','D','E','F'].map(g => `
-              <button 
-                class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" 
+            ${['A', 'B', 'C', 'D', 'E', 'F']
+              .map(
+                g => `
+              <button
+                class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}"
                 onclick="changeStudentGroup('${student.id}', '${g}')"
                 title="Switch to Group ${g}">${g}</button>
-            `).join('')}
+            `
+              )
+              .join('')}
           </div>
           <!-- END FEATURE 2 -->
 
           <!-- Payment Amount Quick Switch Buttons -->
           <div class="group-buttons" onclick="event.stopPropagation()">
-            ${[25, 50, 75, 100].map(amount => `
-              <button 
-                class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" 
+            ${[25, 50, 75, 100]
+              .map(
+                amount => `
+              <button
+                class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}"
                 onclick="changeStudentPayAmount('${student.id}', ${amount})"
                 title="Set pay to $${amount}">$${amount}</button>
-            `).join('')}
+            `
+              )
+              .join('')}
           </div>
 
           <div class="student-info">
@@ -4947,16 +5045,20 @@
               <span class="info-label">EMAIL</span>
               <span class="info-text">${escapeHtml(student.email || 'N/A')}</span>
             </div>
-            ${aliases.length > 0 ? `
+            ${
+              aliases.length > 0
+                ? `
               <div class="info-column">
                 <span class="info-label">ALIASES</span>
                 <div class="aliases-container">
-                  ${(Array.isArray(aliases) ? aliases : (aliases ? String(aliases).split(',') : []))
+                  ${(Array.isArray(aliases) ? aliases : aliases ? String(aliases).split(',') : [])
                     .map(alias => `<span class="alias-badge">${escapeHtml(alias.trim())}</span>`)
                     .join('')}
                 </div>
               </div>
-            ` : ''}
+            `
+                : ''
+            }
           </div>
 
           <div style="text-align: center; margin-top: 12px; color: #6b7280; font-size: 12px; font-style: italic;">
@@ -5004,7 +5106,7 @@
             <div style="margin-bottom: 6px; font-size: 11px; color: #94a3b8;">Auto-applies to upcoming classes</div>
             <div style="position: relative;">
               <span style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: #eab308; font-weight: 700;">$</span>
-              <input type="number" id="inline-balance-${student.id}" value="${(student.balance || 0)}" placeholder="0.00" step="0.01" min="0" style="padding-left: 28px; background: rgba(234,179,8,.1); border: 2px solid rgba(234,179,8,.3); color: #eab308; font-weight: 700;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
+              <input type="number" id="inline-balance-${student.id}" value="${student.balance || 0}" placeholder="0.00" step="0.01" min="0" style="padding-left: 28px; background: rgba(234,179,8,.1); border: 2px solid rgba(234,179,8,.3); color: #eab308; font-weight: 700;" onkeydown="if(event.key==='Enter'){event.preventDefault();saveInlineEdit('${student.id}');}">
             </div>
           </div>
 
@@ -5044,301 +5146,575 @@
           </button>
         </div>
       `;
-      
-      return card;
+
+  return card;
+}
+
+// ===== FILTER STUDENTS =====
+function filterStudents() {
+  const searchTerm = (document.getElementById('studentSearchInput')?.value || '')
+    .toLowerCase()
+    .trim();
+  const groupFilter = document.getElementById('filterGroup')?.value || '';
+  const statusFilter = document.getElementById('filterStatus')?.value || '';
+  const paymentFilter = document.getElementById('filterPayment')?.value || '';
+  const sortPrice = document.getElementById('sortPrice')?.value || '';
+
+  let cards = Array.from(document.querySelectorAll('.student-item'));
+  let visibleCount = 0;
+
+  // Filter cards
+  cards.forEach(card => {
+    const name = card.getAttribute('data-name') || '';
+    const group = card.getAttribute('data-group') || '';
+    const phone = card.getAttribute('data-phone') || '';
+    const email = card.getAttribute('data-email') || '';
+    const notes = card.getAttribute('data-notes') || '';
+    const status = card.getAttribute('data-status') || '';
+
+    const searchMatch =
+      searchTerm === '' ||
+      name.includes(searchTerm) ||
+      group.includes(searchTerm) ||
+      phone.includes(searchTerm) ||
+      email.includes(searchTerm) ||
+      notes.includes(searchTerm);
+
+    // Group filter
+    let groupMatch = !groupFilter;
+    if (groupFilter === 'no-group') {
+      groupMatch = !group || group === 'n/a' || group.trim() === '';
+    } else if (groupFilter) {
+      groupMatch = group === groupFilter.toLowerCase();
+    } else {
+      groupMatch = true;
     }
 
-    // ===== FILTER STUDENTS =====
-    function filterStudents() {
-      const searchTerm = (document.getElementById('studentSearchInput')?.value || '').toLowerCase().trim();
-      const groupFilter = document.getElementById('filterGroup')?.value || '';
-      const statusFilter = document.getElementById('filterStatus')?.value || '';
-      const paymentFilter = document.getElementById('filterPayment')?.value || '';
-      const sortPrice = document.getElementById('sortPrice')?.value || '';
+    // Status filter
+    const statusMatch = !statusFilter || status === statusFilter;
 
-      let cards = Array.from(document.querySelectorAll('.student-item'));
-      let visibleCount = 0;
+    // Payment filter (placeholder - requires payment data integration)
+    const paymentMatch = !paymentFilter;
 
-      // Filter cards
-      cards.forEach(card => {
-        const name = card.getAttribute('data-name') || '';
-        const group = card.getAttribute('data-group') || '';
-        const phone = card.getAttribute('data-phone') || '';
-        const email = card.getAttribute('data-email') || '';
-        const notes = card.getAttribute('data-notes') || '';
-        const status = card.getAttribute('data-status') || '';
+    if (searchMatch && groupMatch && statusMatch && paymentMatch) {
+      card.style.display = 'flex';
+      visibleCount++;
+    } else {
+      card.style.display = 'none';
+    }
+  });
 
-        const searchMatch = searchTerm === '' ||
-          name.includes(searchTerm) ||
-          group.includes(searchTerm) ||
-          phone.includes(searchTerm) ||
-          email.includes(searchTerm) ||
-          notes.includes(searchTerm);
+  // Sort visible cards by price
+  if (sortPrice) {
+    const grid = document.getElementById('studentGrid');
+    const visibleCards = cards.filter(card => card.style.display === 'flex');
 
-        // Group filter
-        let groupMatch = !groupFilter;
-        if (groupFilter === 'no-group') {
-          groupMatch = !group || group === 'n/a' || group.trim() === '';
-        } else if (groupFilter) {
-          groupMatch = group === groupFilter.toLowerCase();
+    visibleCards.sort((a, b) => {
+      const priceA = parseInt(a.getAttribute('data-pay') || '0');
+      const priceB = parseInt(b.getAttribute('data-pay') || '0');
+
+      if (sortPrice === 'highest') {
+        return priceB - priceA;
+      } else if (sortPrice === 'lowest') {
+        return priceA - priceB;
+      }
+      return 0;
+    });
+
+    // Reorder DOM elements
+    visibleCards.forEach(card => {
+      grid.appendChild(card);
+    });
+  }
+}
+
+function clearFilters() {
+  const searchInput = document.getElementById('studentSearchInput');
+  const filterGroup = document.getElementById('filterGroup');
+  const filterStatus = document.getElementById('filterStatus');
+  const filterPayment = document.getElementById('filterPayment');
+  const sortPrice = document.getElementById('sortPrice');
+
+  if (searchInput) searchInput.value = '';
+  if (filterGroup) filterGroup.value = '';
+  if (filterStatus) filterStatus.value = '';
+  if (filterPayment) filterPayment.value = '';
+  if (sortPrice) sortPrice.value = '';
+
+  filterStudents();
+}
+
+// ===== INLINE EDITING =====
+// BEGIN FEATURE 2 - Instant Group Switch Function
+
+// Helper function to update a single student card's display without re-sorting
+function updateStudentCardDisplay(student) {
+  const card = document.getElementById(`card-${student.id}`);
+  if (!card) {
+    console.warn('Card not found for student:', student.id);
+    return;
+  }
+
+  // Update group display
+  const groupDisplay = card.querySelector('.student-group');
+  if (groupDisplay) {
+    groupDisplay.textContent = `Group ${student.group || 'N/A'}`;
+  }
+
+  // Update pay display - find the correct info-value for PAY/CLASS
+  const infoRows = card.querySelectorAll('.info-row');
+  infoRows.forEach(row => {
+    const label = row.querySelector('.info-label');
+    if (label && label.textContent === 'PAY/CLASS') {
+      const payDisplay = row.querySelector('.info-value');
+      if (payDisplay) {
+        payDisplay.textContent = formatCurrency(student.payPerClass || 0, '$');
+      }
+    }
+  });
+
+  // Update group button active states (buttons A-F)
+  const allButtonContainers = card.querySelectorAll('.group-buttons');
+  allButtonContainers.forEach(container => {
+    const buttons = container.querySelectorAll('.group-btn');
+    buttons.forEach(btn => {
+      const btnText = btn.textContent.trim();
+
+      // Check if this is a group button (single letter A-F)
+      if (btnText.length === 1 && /[A-F]/.test(btnText)) {
+        if ((student.group || '').toUpperCase() === btnText) {
+          btn.classList.add('active');
         } else {
-          groupMatch = true;
+          btn.classList.remove('active');
         }
+      }
 
-        // Status filter
-        const statusMatch = !statusFilter || status === statusFilter;
-
-        // Payment filter (placeholder - requires payment data integration)
-        const paymentMatch = !paymentFilter;
-
-        if (searchMatch && groupMatch && statusMatch && paymentMatch) {
-          card.style.display = 'flex';
-          visibleCount++;
+      // Check if this is a payment button (starts with $)
+      if (btnText.startsWith('$')) {
+        const btnAmount = parseInt(btnText.replace('$', ''));
+        if (Number(student.payPerClass) === btnAmount) {
+          btn.classList.add('active');
         } else {
-          card.style.display = 'none';
+          btn.classList.remove('active');
         }
-      });
-
-      // Sort visible cards by price
-      if (sortPrice) {
-        const grid = document.getElementById('studentGrid');
-        const visibleCards = cards.filter(card => card.style.display === 'flex');
-        
-        visibleCards.sort((a, b) => {
-          const priceA = parseInt(a.getAttribute('data-pay') || '0');
-          const priceB = parseInt(b.getAttribute('data-pay') || '0');
-          
-          if (sortPrice === 'highest') {
-            return priceB - priceA;
-          } else if (sortPrice === 'lowest') {
-            return priceA - priceB;
-          }
-          return 0;
-        });
-
-        // Reorder DOM elements
-        visibleCards.forEach(card => {
-          grid.appendChild(card);
-        });
       }
+    });
+  });
+}
+
+async function changeStudentGroup(studentId, newGroup) {
+  // Prevent event bubbling
+  event.stopPropagation();
+
+  // Find student in both local array and cache
+  const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+  if (!student) {
+    console.error('Student not found:', studentId);
+    return;
+  }
+
+  // Check if already in this group
+  if ((student.group || '').toUpperCase() === newGroup.toUpperCase()) {
+    return; // Already in this group, no action needed
+  }
+
+  // Update student group
+  student.group = newGroup;
+
+  // Save only this student to Supabase
+  await saveStudent(student);
+
+  // Update cache
+  window.studentsCache = students;
+
+  // Show success feedback
+  showNotification(`✅ ${student.name} moved to Group ${newGroup}`, 'success');
+
+  // Update the card's display without re-sorting
+  updateStudentCardDisplay(student);
+}
+
+async function changeStudentPayAmount(studentId, newAmount) {
+  // Prevent event bubbling
+  event.stopPropagation();
+
+  // Find student in local array
+  const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+  if (!student) {
+    console.error('Student not found:', studentId);
+    return;
+  }
+
+  // Check if already this amount (compare as numbers)
+  if (Number(student.payPerClass) === Number(newAmount)) {
+    return; // Already this amount, no action needed
+  }
+
+  // Update student pay amount
+  student.payPerClass = Number(newAmount);
+
+  // Save only this student to Supabase
+  await saveStudent(student);
+
+  // Update cache
+  window.studentsCache = students;
+
+  // Show success feedback
+  showNotification(`✅ ${student.name} pay/class set to $${newAmount}`, 'success');
+
+  // Update the card's display without re-sorting
+  updateStudentCardDisplay(student);
+}
+// END FEATURE 2
+
+function toggleInlineEdit(studentId, event) {
+  // Don't open edit if clicking on status badge, toggle, or group buttons
+  if (
+    event &&
+    (event.target.closest('.status-pill-single') ||
+      event.target.closest('.mini-toggle') ||
+      event.target.closest('.group-btn') ||
+      event.target.closest('.group-buttons'))
+  ) {
+    return;
+  }
+
+  const card = document.getElementById(`card-${studentId}`);
+  if (!card) return;
+
+  // Toggle edit mode
+  if (card.classList.contains('editing')) {
+    card.classList.remove('editing');
+    return;
+  }
+
+  // Close any other open edit cards
+  document.querySelectorAll('.student-item.editing').forEach(item => {
+    if (item.id !== `card-${studentId}`) {
+      item.classList.remove('editing');
+    }
+  });
+
+  card.classList.add('editing');
+}
+
+function cancelInlineEdit(studentId) {
+  const card = document.getElementById(`card-${studentId}`);
+  if (card) {
+    card.classList.remove('editing');
+  }
+}
+
+async function saveInlineEdit(studentId) {
+  // Convert to number for comparison (passed as string from onclick)
+  const numericId = parseInt(studentId);
+  const student = students.find(s => s.id === numericId);
+  if (!student) {
+    console.error('❌ Student not found:', studentId);
+    return;
+  }
+
+  const nameInput = document.getElementById(`inline-name-${studentId}`);
+  const groupInput = document.getElementById(`inline-group-${studentId}`);
+  const payInput = document.getElementById(`inline-pay-${studentId}`);
+  const balanceInput = document.getElementById(`inline-balance-${studentId}`);
+  const phoneInput = document.getElementById(`inline-phone-${studentId}`);
+  const emailInput = document.getElementById(`inline-email-${studentId}`);
+  const aliasesInputEl = document.getElementById(`inline-aliases-${studentId}`);
+  const notesInput = document.getElementById(`inline-notes-${studentId}`);
+
+  if (!nameInput) {
+    console.error('❌ Input elements not found for student:', studentId);
+    return;
+  }
+
+  const name = nameInput.value.trim();
+  const group = groupInput.value.trim();
+  const payPerClass = parseFloat(payInput.value) || 0;
+  const balance = parseFloat(balanceInput.value) || 0;
+  const phone = phoneInput.value.trim();
+  const email = emailInput.value.trim();
+  const aliasesInput = aliasesInputEl.value.trim();
+  const aliases = aliasesInput
+    ? aliasesInput
+        .split(',')
+        .map(a => a.trim())
+        .filter(a => a)
+    : [];
+  const notes = notesInput.value.trim();
+
+  if (!name) {
+    showNotificationSimple('Please enter student name', 'warning');
+    nameInput.focus();
+    return;
+  }
+
+  student.name = name;
+  student.group = group;
+  student.payPerClass = payPerClass;
+  student.balance = balance;
+  student.phone = phone;
+  student.email = email;
+  student.aliases = aliases;
+  student.notes = notes;
+
+  // Save only this student to Supabase
+  await saveStudent(student);
+
+  // No longer need localStorage for balance - it's in Supabase now
+
+  // Update cache
+  window.studentsCache = students;
+
+  renderStudents();
+  showNotificationSimple('Student updated', 'success');
+}
+
+// ===== STATUS MANAGEMENT =====
+async function cycleStatus(studentId) {
+  // Handle both string and numeric IDs from Supabase
+  const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+  if (!student) {
+    console.error(
+      '❌ Student not found:',
+      studentId,
+      'Available IDs:',
+      students.map(s => s.id)
+    );
+    return;
+  }
+
+  // Define status cycle: Active → Paused → Graduated → Active
+  const statusCycle = {
+    [STUDENT_STATUSES.ACTIVE]: STUDENT_STATUSES.PAUSED,
+    [STUDENT_STATUSES.PAUSED]: STUDENT_STATUSES.GRADUATED,
+    [STUDENT_STATUSES.GRADUATED]: STUDENT_STATUSES.ACTIVE,
+  };
+
+  const oldStatus = normalizeStatus(student.status);
+  const newStatus = statusCycle[oldStatus] || STUDENT_STATUSES.ACTIVE;
+
+  student.status = newStatus;
+
+  // Record timestamp when status changes to paused or graduated
+  if (newStatus === STUDENT_STATUSES.PAUSED || newStatus === STUDENT_STATUSES.GRADUATED) {
+    student.statusChangedDate = new Date().toISOString();
+  } else {
+    // Clear timestamp when returning to active
+    student.statusChangedDate = null;
+  }
+
+  // Save only this student to Supabase
+  const saved = await saveStudent(student);
+
+  if (!saved) {
+    showNotificationSimple('❌ Failed to update status', 'error');
+    return;
+  }
+
+  // Update cache with saved record
+  Object.assign(student, saved);
+  window.studentsCache = students;
+
+  // Update only the status badge on the card
+  const card = document.getElementById(`card-${student.id}`);
+  if (card) {
+    const statusBadge = card.querySelector('.status-pill-single');
+    if (statusBadge) {
+      const statusDetails = getStatusDetails(newStatus);
+      statusBadge.className = `status-pill-single status-${newStatus}`;
+      statusBadge.textContent = statusDetails.label;
+
+      // Add a quick animation to show the change
+      statusBadge.style.transform = 'scale(1.1)';
+      setTimeout(() => {
+        statusBadge.style.transform = 'scale(1)';
+      }, 200);
     }
 
-    function clearFilters() {
-      const searchInput = document.getElementById('studentSearchInput');
-      const filterGroup = document.getElementById('filterGroup');
-      const filterStatus = document.getElementById('filterStatus');
-      const filterPayment = document.getElementById('filterPayment');
-      const sortPrice = document.getElementById('sortPrice');
-      
-      if (searchInput) searchInput.value = '';
-      if (filterGroup) filterGroup.value = '';
-      if (filterStatus) filterStatus.value = '';
-      if (filterPayment) filterPayment.value = '';
-      if (sortPrice) sortPrice.value = '';
-      
-      filterStudents();
-    }
+    // Update data attribute for filtering
+    card.setAttribute('data-status', newStatus);
+  }
 
-    // ===== INLINE EDITING =====
-    // BEGIN FEATURE 2 - Instant Group Switch Function
-    
-    // Helper function to update a single student card's display without re-sorting
-    function updateStudentCardDisplay(student) {
-      const card = document.getElementById(`card-${student.id}`);
-      if (!card) {
-        console.warn('Card not found for student:', student.id);
-        return;
-      }
-      
-      // Update group display
-      const groupDisplay = card.querySelector('.student-group');
-      if (groupDisplay) {
-        groupDisplay.textContent = `Group ${student.group || 'N/A'}`;
-      }
-      
-      // Update pay display - find the correct info-value for PAY/CLASS
-      const infoRows = card.querySelectorAll('.info-row');
-      infoRows.forEach(row => {
-        const label = row.querySelector('.info-label');
-        if (label && label.textContent === 'PAY/CLASS') {
-          const payDisplay = row.querySelector('.info-value');
-          if (payDisplay) {
-            payDisplay.textContent = formatCurrency(student.payPerClass || 0, '$');
-          }
-        }
-      });
-      
-      // Update group button active states (buttons A-F)
-      const allButtonContainers = card.querySelectorAll('.group-buttons');
-      allButtonContainers.forEach(container => {
-        const buttons = container.querySelectorAll('.group-btn');
-        buttons.forEach(btn => {
-          const btnText = btn.textContent.trim();
-          
-          // Check if this is a group button (single letter A-F)
-          if (btnText.length === 1 && /[A-F]/.test(btnText)) {
-            if ((student.group || '').toUpperCase() === btnText) {
-              btn.classList.add('active');
-            } else {
-              btn.classList.remove('active');
-            }
-          }
-          
-          // Check if this is a payment button (starts with $)
-          if (btnText.startsWith('$')) {
-            const btnAmount = parseInt(btnText.replace('$', ''));
-            if (Number(student.payPerClass) === btnAmount) {
-              btn.classList.add('active');
-            } else {
-              btn.classList.remove('active');
-            }
-          }
-        });
-      });
-    }
-    
-    async function changeStudentGroup(studentId, newGroup) {
-      // Prevent event bubbling
-      event.stopPropagation();
-      
-      // Find student in both local array and cache
-      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
-      if (!student) {
-        console.error('Student not found:', studentId);
-        return;
-      }
-      
-      // Check if already in this group
-      if ((student.group || '').toUpperCase() === newGroup.toUpperCase()) {
-        return; // Already in this group, no action needed
-      }
-      
-      // Update student group
-      student.group = newGroup;
-      
-      // Save only this student to Supabase
-      await saveStudent(student);
-      
-      // Update cache
-      window.studentsCache = students;
-      
-      // Show success feedback
-      showNotification(`✅ ${student.name} moved to Group ${newGroup}`, 'success');
-      
-      // Update the card's display without re-sorting
-      updateStudentCardDisplay(student);
-    }
+  // Show status-specific notification
+  const statusMessages = {
+    [STUDENT_STATUSES.ACTIVE]: '✅ Student is now active',
+    [STUDENT_STATUSES.PAUSED]: '⏸️ Student is now paused',
+    [STUDENT_STATUSES.GRADUATED]: '🎓 Student has graduated',
+  };
 
-    async function changeStudentPayAmount(studentId, newAmount) {
-      // Prevent event bubbling
-      event.stopPropagation();
-      
-      // Find student in local array
-      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
-      if (!student) {
-        console.error('Student not found:', studentId);
-        return;
-      }
-      
-      // Check if already this amount (compare as numbers)
-      if (Number(student.payPerClass) === Number(newAmount)) {
-        return; // Already this amount, no action needed
-      }
-      
-      // Update student pay amount
-      student.payPerClass = Number(newAmount);
-      
-      // Save only this student to Supabase
-      await saveStudent(student);
-      
-      // Update cache
-      window.studentsCache = students;
-      
-      // Show success feedback
-      showNotification(`✅ ${student.name} pay/class set to $${newAmount}`, 'success');
-      
-      // Update the card's display without re-sorting
-      updateStudentCardDisplay(student);
-    }
-    // END FEATURE 2
+  showNotificationSimple(statusMessages[newStatus] || 'Status updated', 'success');
 
-    function toggleInlineEdit(studentId, event) {
-      // Don't open edit if clicking on status badge, toggle, or group buttons
-      if (event && (
-        event.target.closest('.status-pill-single') || 
-        event.target.closest('.mini-toggle') ||
-        event.target.closest('.group-btn') ||
-        event.target.closest('.group-buttons')
-      )) {
-        return;
-      }
+  // Trigger forecast update if forecast modal is open
+  const forecastModal = document.getElementById('earningsForecastModal');
+  if (forecastModal && forecastModal.style.opacity === '1') {
+    updateForecastData();
+  }
+}
 
-      const card = document.getElementById(`card-${studentId}`);
-      if (!card) return;
+async function toggleVisibility(studentId, visible) {
+  // Handle both string and numeric IDs from Supabase
+  const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+  if (!student) return;
 
-      // Toggle edit mode
-      if (card.classList.contains('editing')) {
-        card.classList.remove('editing');
-        return;
-      }
+  student.showInGrid = visible;
 
-      // Close any other open edit cards
-      document.querySelectorAll('.student-item.editing').forEach(item => {
-        if (item.id !== `card-${studentId}`) {
-          item.classList.remove('editing');
-        }
-      });
+  // Save only this student to Supabase
+  await saveStudent(student);
 
-      card.classList.add('editing');
-    }
+  // Update cache
+  window.studentsCache = students;
 
-    function cancelInlineEdit(studentId) {
-      const card = document.getElementById(`card-${studentId}`);
-      if (card) {
-        card.classList.remove('editing');
-      }
-    }
+  showNotificationSimple(
+    visible ? 'Student shown in calendar' : 'Student hidden from calendar',
+    'success'
+  );
+}
 
-    async function saveInlineEdit(studentId) {
-      
-      // Convert to number for comparison (passed as string from onclick)
-      const numericId = parseInt(studentId);
-      const student = students.find(s => s.id === numericId);
-      if (!student) {
-        console.error('❌ Student not found:', studentId);
-        return;
-      }
+// ===== ADD/EDIT STUDENT MODAL =====
+function openAddStudent() {
+  editingStudentId = null;
+  document.getElementById('modalTitle').textContent = 'Add New Student';
+  document.getElementById('studentName').value = '';
+  document.getElementById('customGroups').value = '';
+  document.getElementById('studentPay').value = '';
+  document.getElementById('studentBalance').value = '';
+  document.getElementById('studentPhone').value = '';
+  document.getElementById('studentEmail').value = '';
+  document.getElementById('studentAliases').value = '';
+  document.getElementById('studentNotes').value = '';
+  document.getElementById('currentBalanceDisplay').textContent = '';
 
-      const nameInput = document.getElementById(`inline-name-${studentId}`);
-      const groupInput = document.getElementById(`inline-group-${studentId}`);
-      const payInput = document.getElementById(`inline-pay-${studentId}`);
-      const balanceInput = document.getElementById(`inline-balance-${studentId}`);
-      const phoneInput = document.getElementById(`inline-phone-${studentId}`);
-      const emailInput = document.getElementById(`inline-email-${studentId}`);
-      const aliasesInputEl = document.getElementById(`inline-aliases-${studentId}`);
-      const notesInput = document.getElementById(`inline-notes-${studentId}`);
-      
-      if (!nameInput) {
-        console.error('❌ Input elements not found for student:', studentId);
-        return;
-      }
-      
-      const name = nameInput.value.trim();
-      const group = groupInput.value.trim();
-      const payPerClass = parseFloat(payInput.value) || 0;
-      const balance = parseFloat(balanceInput.value) || 0;
-      const phone = phoneInput.value.trim();
-      const email = emailInput.value.trim();
-      const aliasesInput = aliasesInputEl.value.trim();
-      const aliases = aliasesInput ? aliasesInput.split(',').map(a => a.trim()).filter(a => a) : [];
-      const notes = notesInput.value.trim();
+  // Clear group selections
+  document.querySelectorAll('.group-select-btn').forEach(btn => btn.classList.remove('selected'));
 
-      if (!name) {
-        showNotificationSimple('Please enter student name', 'warning');
-        nameInput.focus();
-        return;
-      }
+  // Clear pay amount selections
+  document.querySelectorAll('.pay-select-btn').forEach(btn => {
+    btn.classList.remove('selected');
+    btn.style.background = 'rgba(255,255,255,.05)';
+    btn.style.color = '#6b7280';
+    btn.style.borderColor = 'rgba(255,255,255,.2)';
+  });
 
+  const modal = document.getElementById('studentModal');
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Register with PopupManager
+  window.PopupManager.register('studentModal', {
+    hasBackButton: true, // Sub-modal of studentManagerModal
+    closeOnOutsideClick: true,
+    onBack: closeStudentModal,
+    parent: 'studentManagerModal',
+  });
+
+  // Fade in animation
+  modal.style.opacity = '0';
+  modal.style.display = 'flex';
+
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+  // END POPUP BACK & EXIT FIX
+}
+
+function closeStudentModal() {
+  const modal = document.getElementById('studentModal');
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Fade out before hiding
+  modal.style.opacity = '0';
+
+  setTimeout(() => {
+    modal.style.display = 'none';
+    window.PopupManager?.activePopups?.delete('studentModal');
+  }, 250);
+  // END POPUP BACK & EXIT FIX
+
+  editingStudentId = null;
+}
+
+function toggleGroup(btn, group) {
+  btn.classList.toggle('selected');
+}
+
+function selectPayAmount(btn, amount) {
+  // Remove selected class from all pay buttons
+  document.querySelectorAll('.pay-select-btn').forEach(b => {
+    b.classList.remove('selected');
+    b.style.background = 'rgba(255,255,255,.05)';
+    b.style.color = '#6b7280';
+    b.style.borderColor = 'rgba(255,255,255,.2)';
+  });
+
+  // Add selected class to clicked button
+  btn.classList.add('selected');
+  btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+  btn.style.color = 'white';
+  btn.style.borderColor = '#22c55e';
+
+  // Set the amount in the input field
+  document.getElementById('studentPay').value = amount;
+}
+
+function selectInlinePayAmount(btn, studentId, amount) {
+  // Get all buttons for this student's inline editor
+  const container = btn.parentElement;
+  container.querySelectorAll('.pay-select-btn-inline').forEach(b => {
+    b.style.background = 'rgba(255,255,255,.05)';
+    b.style.color = '#6b7280';
+    b.style.borderColor = 'rgba(255,255,255,.2)';
+  });
+
+  // Highlight selected button
+  btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
+  btn.style.color = 'white';
+  btn.style.borderColor = '#22c55e';
+
+  // Set the amount in the input field
+  document.getElementById(`inline-pay-${studentId}`).value = amount;
+}
+
+async function saveStudentFromModal() {
+  const name = document.getElementById('studentName').value.trim();
+  const payPerClass = parseFloat(document.getElementById('studentPay').value) || 0;
+  const balance = parseFloat(document.getElementById('studentBalance').value) || 0;
+  const phone = document.getElementById('studentPhone').value.trim();
+  const email = document.getElementById('studentEmail').value.trim();
+  const notes = document.getElementById('studentNotes').value.trim();
+  const aliasesInput = document.getElementById('studentAliases').value.trim();
+  const aliases = aliasesInput
+    ? aliasesInput
+        .split(',')
+        .map(a => a.trim())
+        .filter(a => a)
+    : [];
+
+  // Get selected groups
+  const selectedGroups = Array.from(document.querySelectorAll('.group-select-btn.selected')).map(
+    btn => btn.textContent.trim()
+  );
+  const customGroups = document.getElementById('customGroups').value.trim();
+  const allGroups = customGroups
+    ? customGroups
+        .split(',')
+        .map(g => g.trim())
+        .filter(g => g)
+    : selectedGroups;
+  const group = allGroups.join(', ');
+
+  if (!name) {
+    await customAlert('Please enter student name', {
+      title: 'Missing Information',
+      icon: '⚠️',
+    });
+    return;
+  }
+
+  let savedStudent;
+
+  if (editingStudentId) {
+    const student = students.find(s => s.id === editingStudentId);
+    if (student) {
       student.name = name;
       student.group = group;
       student.payPerClass = payPerClass;
@@ -5347,683 +5723,437 @@
       student.email = email;
       student.aliases = aliases;
       student.notes = notes;
+      savedStudent = student;
+    }
+  } else {
+    // For new students, create without ID - let Supabase generate it
+    const newStudent = {
+      name,
+      group,
+      payPerClass,
+      balance,
+      phone,
+      email,
+      aliases,
+      notes,
+      status: STUDENT_STATUSES.ACTIVE,
+      showInGrid: true,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    };
+    savedStudent = newStudent;
+  }
 
-      // Save only this student to Supabase
-      await saveStudent(student);
-      
-      // No longer need localStorage for balance - it's in Supabase now
-      
-      // Update cache
-      window.studentsCache = students;
-      
-      renderStudents();
-      showNotificationSimple('Student updated', 'success');
-      
+  const savedRecord = await saveStudent(savedStudent);
+
+  if (!savedRecord) {
+    showNotificationSimple('Error saving student', 'error');
+    return;
+  }
+
+  // No longer need to save balance to localStorage - it's in Supabase now
+  // Remove localStorage balance management code
+
+  if (!editingStudentId) {
+    students.push(savedRecord);
+  } else if (savedStudent) {
+    Object.assign(savedStudent, savedRecord);
+  }
+
+  // Update global cache
+  window.studentsCache = students;
+
+  // Dispatch event
+  window.dispatchEvent(new CustomEvent('students:updated', { detail: students }));
+
+  renderStudents();
+  closeStudentModal();
+  showNotificationSimple(editingStudentId ? 'Student updated' : 'Student added', 'success');
+}
+
+async function deleteStudent(studentId) {
+  const student = students.find(s => s.id === studentId);
+  if (!student) return;
+
+  const confirmed = await customConfirm(
+    `Delete ${student.name}?\n\nThis will permanently remove all records.`,
+    {
+      title: 'Delete Student',
+      icon: '🗑️',
+      okText: 'Delete',
+      type: 'danger',
+    }
+  );
+
+  if (!confirmed) return;
+
+  const deleted = await deleteStudentRecord(studentId);
+  if (!deleted) {
+    showNotificationSimple('Failed to delete student', 'error');
+    return;
+  }
+
+  students = students.filter(s => s.id !== studentId);
+  window.studentsCache = students;
+  window.dispatchEvent(new CustomEvent('students:updated', { detail: students }));
+
+  try {
+    const payments = await PaymentStore.fetchAll();
+    const backupData = {
+      timestamp: new Date().toISOString(),
+      students,
+      payments,
+      student_count: students.length,
+      payment_count: payments.length,
+      source: 'student-delete',
+    };
+    await createAutoBackup(backupData);
+  } catch (error) {
+    console.error('Auto-backup after student delete failed:', error);
+  }
+
+  renderStudents();
+  showNotificationSimple('Student deleted', 'success');
+}
+
+// BEGIN BULK ADD STUDENTS FEATURE
+// ===== BULK ADD STUDENTS =====
+function openBulkAddStudents() {
+  const modal = document.getElementById('bulkAddStudentsModal');
+  const input = document.getElementById('bulkStudentInput');
+  const validationMsg = document.getElementById('bulkAddValidationMessage');
+
+  if (!modal || !input) {
+    console.error('Bulk add students modal elements not found');
+    return;
+  }
+
+  // Reset state
+  input.value = '';
+  validationMsg.style.display = 'none';
+  validationMsg.textContent = '';
+
+  // Fade in animation
+  modal.style.opacity = '0';
+  modal.style.display = 'flex';
+
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+
+  // Focus input after modal opens
+  setTimeout(() => input.focus(), 100);
+}
+
+function closeBulkAddStudents() {
+  const modal = document.getElementById('bulkAddStudentsModal');
+  if (!modal) return;
+
+  // Fade out animation
+  modal.style.opacity = '0';
+
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 250);
+}
+
+function parseBulkStudentLine(line) {
+  try {
+    // BEGIN BULK ADD STUDENTS FEATURE - FLEXIBLE PARSING
+    // Support multiple formats:
+    // Format 1: Name - John Doe (Alias), Email - john@example.com, Phone N - 123-456-7890, Group N - A, Pay per class - $100
+    // Format 2: John Doe, john@example.com, 123-456-7890, A, $100
+    // Format 3: John Doe (Alias), john@example.com, (123)456-7890, A, $100
+
+    line = line.trim();
+    if (!line) return { error: 'Empty line' };
+
+    // Try labeled format first
+    const labeledNameMatch = line.match(/Name\s*-\s*([^(,]+?)(?:\s*\(([^)]+)\))?(?:,|$)/i);
+    const labeledEmailMatch = line.match(/Email\s*-\s*([^,]+)/i);
+    const labeledPhoneMatch = line.match(/Phone\s*N?\s*-\s*([^,]+)/i);
+    const labeledGroupMatch = line.match(/Group\s*N?\s*-\s*([^,]+)/i);
+    const labeledPayMatch = line.match(/Pay\s*per\s*class\s*-\s*\$?([0-9.]+)/i);
+
+    if (labeledNameMatch) {
+      // Labeled format detected
+      const name = labeledNameMatch[1].trim();
+      const alias = labeledNameMatch[2] ? labeledNameMatch[2].trim() : '';
+      const email = labeledEmailMatch ? labeledEmailMatch[1].trim() : '';
+      const phone = labeledPhoneMatch ? labeledPhoneMatch[1].trim() : '';
+      const group = labeledGroupMatch ? labeledGroupMatch[1].trim() : '';
+      const payPerClass = labeledPayMatch ? parseFloat(labeledPayMatch[1]) : 0;
+
+      return { name, alias, email, phone, group, payPerClass, valid: true };
     }
 
-    // ===== STATUS MANAGEMENT =====
-    async function cycleStatus(studentId) {
-      
-      // Handle both string and numeric IDs from Supabase
-      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
-      if (!student) {
-        console.error('❌ Student not found:', studentId, 'Available IDs:', students.map(s => s.id));
-        return;
+    // Try comma-separated format (more flexible)
+    const parts = line.split(',').map(p => p.trim());
+
+    if (parts.length < 2) {
+      return { error: 'Insufficient data - need at least name and one other field' };
+    }
+
+    // Extract name (first part, may contain alias in parentheses)
+    let name = parts[0];
+    let alias = '';
+
+    const aliasMatch = name.match(/^([^(]+?)\s*\(([^)]+)\)$/);
+    if (aliasMatch) {
+      name = aliasMatch[1].trim();
+      alias = aliasMatch[2].trim();
+    }
+
+    if (!name) {
+      return { error: 'Missing name' };
+    }
+
+    // Identify remaining parts by pattern matching
+    let email = '';
+    let phone = '';
+    let group = '';
+    let payPerClass = 0;
+
+    for (let i = 1; i < parts.length; i++) {
+      const part = parts[i];
+
+      // Check if it's an email (contains @ and .)
+      if (part.includes('@') && part.includes('.')) {
+        email = part;
+        continue;
       }
-      
 
-      // Define status cycle: Active → Paused → Graduated → Active
-      const statusCycle = {
-        [STUDENT_STATUSES.ACTIVE]: STUDENT_STATUSES.PAUSED,
-        [STUDENT_STATUSES.PAUSED]: STUDENT_STATUSES.GRADUATED,
-        [STUDENT_STATUSES.GRADUATED]: STUDENT_STATUSES.ACTIVE
-      };
-
-      const oldStatus = normalizeStatus(student.status);
-      const newStatus = statusCycle[oldStatus] || STUDENT_STATUSES.ACTIVE;
-      
-      
-      student.status = newStatus;
-
-      // Record timestamp when status changes to paused or graduated
-      if (newStatus === STUDENT_STATUSES.PAUSED || newStatus === STUDENT_STATUSES.GRADUATED) {
-        student.statusChangedDate = new Date().toISOString();
-      } else {
-        // Clear timestamp when returning to active
-        student.statusChangedDate = null;
-      }
-
-      // Save only this student to Supabase
-      const saved = await saveStudent(student);
-      
-      if (!saved) {
-        showNotificationSimple('❌ Failed to update status', 'error');
-        return;
-      }
-      
-      // Update cache with saved record
-      Object.assign(student, saved);
-      window.studentsCache = students;
-      
-      // Update only the status badge on the card
-      const card = document.getElementById(`card-${student.id}`);
-      if (card) {
-        const statusBadge = card.querySelector('.status-pill-single');
-        if (statusBadge) {
-          const statusDetails = getStatusDetails(newStatus);
-          statusBadge.className = `status-pill-single status-${newStatus}`;
-          statusBadge.textContent = statusDetails.label;
-          
-          // Add a quick animation to show the change
-          statusBadge.style.transform = 'scale(1.1)';
-          setTimeout(() => {
-            statusBadge.style.transform = 'scale(1)';
-          }, 200);
+      // Check if it's a price (contains $ or is just a number > 10)
+      const priceMatch = part.match(/\$?([0-9.]+)/);
+      if (priceMatch) {
+        const numValue = parseFloat(priceMatch[1]);
+        if (part.includes('$') || numValue >= 10) {
+          payPerClass = numValue;
+          continue;
         }
-        
-        // Update data attribute for filtering
-        card.setAttribute('data-status', newStatus);
-      }
-      
-      // Show status-specific notification
-      const statusMessages = {
-        [STUDENT_STATUSES.ACTIVE]: '✅ Student is now active',
-        [STUDENT_STATUSES.PAUSED]: '⏸️ Student is now paused',
-        [STUDENT_STATUSES.GRADUATED]: '🎓 Student has graduated'
-      };
-      
-      showNotificationSimple(statusMessages[newStatus] || 'Status updated', 'success');
-      
-      // Trigger forecast update if forecast modal is open
-      const forecastModal = document.getElementById('earningsForecastModal');
-      if (forecastModal && forecastModal.style.opacity === '1') {
-        updateForecastData();
-      }
-    }
-
-    async function toggleVisibility(studentId, visible) {
-      // Handle both string and numeric IDs from Supabase
-      const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
-      if (!student) return;
-
-      student.showInGrid = visible;
-      
-      // Save only this student to Supabase
-      await saveStudent(student);
-      
-      // Update cache
-      window.studentsCache = students;
-      
-      showNotificationSimple(visible ? 'Student shown in calendar' : 'Student hidden from calendar', 'success');
-    }
-
-    // ===== ADD/EDIT STUDENT MODAL =====
-    function openAddStudent() {
-      editingStudentId = null;
-      document.getElementById('modalTitle').textContent = 'Add New Student';
-      document.getElementById('studentName').value = '';
-      document.getElementById('customGroups').value = '';
-      document.getElementById('studentPay').value = '';
-      document.getElementById('studentBalance').value = '';
-      document.getElementById('studentPhone').value = '';
-      document.getElementById('studentEmail').value = '';
-      document.getElementById('studentAliases').value = '';
-      document.getElementById('studentNotes').value = '';
-      document.getElementById('currentBalanceDisplay').textContent = '';
-      
-      // Clear group selections
-      document.querySelectorAll('.group-select-btn').forEach(btn => btn.classList.remove('selected'));
-      
-      // Clear pay amount selections
-      document.querySelectorAll('.pay-select-btn').forEach(btn => {
-        btn.classList.remove('selected');
-        btn.style.background = 'rgba(255,255,255,.05)';
-        btn.style.color = '#6b7280';
-        btn.style.borderColor = 'rgba(255,255,255,.2)';
-      });
-      
-      const modal = document.getElementById('studentModal');
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Register with PopupManager
-      window.PopupManager.register('studentModal', {
-        hasBackButton: true, // Sub-modal of studentManagerModal
-        closeOnOutsideClick: true,
-        onBack: closeStudentModal,
-        parent: 'studentManagerModal'
-      });
-      
-      // Fade in animation
-      modal.style.opacity = '0';
-      modal.style.display = 'flex';
-      
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
-      // END POPUP BACK & EXIT FIX
-    }
-
-    function closeStudentModal() {
-      const modal = document.getElementById('studentModal');
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Fade out before hiding
-      modal.style.opacity = '0';
-      
-      setTimeout(() => {
-        modal.style.display = 'none';
-        window.PopupManager?.activePopups?.delete('studentModal');
-      }, 250);
-      // END POPUP BACK & EXIT FIX
-      
-      editingStudentId = null;
-    }
-
-    function toggleGroup(btn, group) {
-      btn.classList.toggle('selected');
-    }
-
-    function selectPayAmount(btn, amount) {
-      // Remove selected class from all pay buttons
-      document.querySelectorAll('.pay-select-btn').forEach(b => {
-        b.classList.remove('selected');
-        b.style.background = 'rgba(255,255,255,.05)';
-        b.style.color = '#6b7280';
-        b.style.borderColor = 'rgba(255,255,255,.2)';
-      });
-      
-      // Add selected class to clicked button
-      btn.classList.add('selected');
-      btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
-      btn.style.color = 'white';
-      btn.style.borderColor = '#22c55e';
-      
-      // Set the amount in the input field
-      document.getElementById('studentPay').value = amount;
-    }
-
-    function selectInlinePayAmount(btn, studentId, amount) {
-      // Get all buttons for this student's inline editor
-      const container = btn.parentElement;
-      container.querySelectorAll('.pay-select-btn-inline').forEach(b => {
-        b.style.background = 'rgba(255,255,255,.05)';
-        b.style.color = '#6b7280';
-        b.style.borderColor = 'rgba(255,255,255,.2)';
-      });
-      
-      // Highlight selected button
-      btn.style.background = 'linear-gradient(135deg, #22c55e, #16a34a)';
-      btn.style.color = 'white';
-      btn.style.borderColor = '#22c55e';
-      
-      // Set the amount in the input field
-      document.getElementById(`inline-pay-${studentId}`).value = amount;
-    }
-
-    async function saveStudentFromModal() {
-      const name = document.getElementById('studentName').value.trim();
-      const payPerClass = parseFloat(document.getElementById('studentPay').value) || 0;
-      const balance = parseFloat(document.getElementById('studentBalance').value) || 0;
-      const phone = document.getElementById('studentPhone').value.trim();
-      const email = document.getElementById('studentEmail').value.trim();
-      const notes = document.getElementById('studentNotes').value.trim();
-      const aliasesInput = document.getElementById('studentAliases').value.trim();
-      const aliases = aliasesInput ? aliasesInput.split(',').map(a => a.trim()).filter(a => a) : [];
-
-      // Get selected groups
-      const selectedGroups = Array.from(document.querySelectorAll('.group-select-btn.selected'))
-        .map(btn => btn.textContent.trim());
-      const customGroups = document.getElementById('customGroups').value.trim();
-      const allGroups = customGroups ? customGroups.split(',').map(g => g.trim()).filter(g => g) : selectedGroups;
-      const group = allGroups.join(', ');
-
-      if (!name) {
-        await customAlert('Please enter student name', {
-          title: 'Missing Information',
-          icon: '⚠️'
-        });
-        return;
       }
 
-      let savedStudent;
-      
-      if (editingStudentId) {
-        const student = students.find(s => s.id === editingStudentId);
-        if (student) {
-          student.name = name;
-          student.group = group;
-          student.payPerClass = payPerClass;
-          student.balance = balance;
-          student.phone = phone;
-          student.email = email;
-          student.aliases = aliases;
-          student.notes = notes;
-          savedStudent = student;
-        }
-      } else {
-        // For new students, create without ID - let Supabase generate it
-        const newStudent = {
-          name,
-          group,
-          payPerClass,
-          balance,
-          phone,
-          email,
-          aliases,
-          notes,
-          status: STUDENT_STATUSES.ACTIVE,
-          showInGrid: true,
-          isActive: true,
-          createdAt: new Date().toISOString()
-        };
-        savedStudent = newStudent;
+      // Check if it's a phone number (contains digits and ()-. or is numeric)
+      if (/[\d\-\(\)\.]{7,}/.test(part) || /^\+?\d+$/.test(part.replace(/[\s\-\(\)\.]/g, ''))) {
+        phone = part;
+        continue;
       }
 
-      const savedRecord = await saveStudent(savedStudent);
-
-      if (!savedRecord) {
-        showNotificationSimple('Error saving student', 'error');
-        return;
+      // Check if it's a single letter or short string (likely a group)
+      if (part.length <= 3 && /^[A-Za-z0-9]+$/.test(part)) {
+        group = part;
+        continue;
       }
 
-      
-      // No longer need to save balance to localStorage - it's in Supabase now
-      // Remove localStorage balance management code
-      
-      if (!editingStudentId) {
-        students.push(savedRecord);
-      } else if (savedStudent) {
-        Object.assign(savedStudent, savedRecord);
+      // If nothing else matched and it's short, assume it's a group
+      if (part.length <= 10) {
+        group = part;
       }
-      
-      // Update global cache
-      window.studentsCache = students;
-      
-      // Dispatch event
-      window.dispatchEvent(new CustomEvent("students:updated", { detail: students }));
-      
-      renderStudents();
-      closeStudentModal();
-      showNotificationSimple(editingStudentId ? 'Student updated' : 'Student added', 'success');
     }
 
-    async function deleteStudent(studentId) {
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
+    return {
+      name,
+      alias,
+      email,
+      phone,
+      group,
+      payPerClass,
+      valid: true,
+    };
+    // END BULK ADD STUDENTS FEATURE - FLEXIBLE PARSING
+  } catch (error) {
+    console.error('Error parsing line:', error);
+    return { error: 'Parse error: ' + error.message };
+  }
+}
 
-      const confirmed = await customConfirm(
-        `Delete ${student.name}?\n\nThis will permanently remove all records.`,
-        {
-          title: 'Delete Student',
-          icon: '🗑️',
-          okText: 'Delete',
-          type: 'danger'
-        }
-      );
-      
-      if (!confirmed) return;
+function checkDuplicateStudent(newStudent, existingStudents) {
+  // Check for duplicates based on name + email + group combination
+  return existingStudents.some(existing => {
+    const nameMatch = existing.name.toLowerCase() === newStudent.name.toLowerCase();
+    const emailMatch =
+      existing.email &&
+      newStudent.email &&
+      existing.email.toLowerCase() === newStudent.email.toLowerCase();
+    const groupMatch = existing.group === newStudent.group;
 
-      const deleted = await deleteStudentRecord(studentId);
-      if (!deleted) {
-        showNotificationSimple('Failed to delete student', 'error');
+    return nameMatch && (emailMatch || groupMatch);
+  });
+}
+
+async function processBulkAddStudents() {
+  const input = document.getElementById('bulkStudentInput');
+  const validationMsg = document.getElementById('bulkAddValidationMessage');
+
+  if (!input || !validationMsg) {
+    console.error('Bulk add input elements not found');
+    return;
+  }
+
+  const rawText = input.value.trim();
+
+  if (!rawText) {
+    validationMsg.style.display = 'block';
+    validationMsg.style.background = 'rgba(239, 68, 68, 0.15)';
+    validationMsg.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+    validationMsg.style.color = '#ef4444';
+    validationMsg.textContent = '⚠️ Please paste student records before clicking Add Students.';
+    return;
+  }
+
+  try {
+    // Split by newlines or semicolons
+    const lines = rawText.split(/[\n;]/).filter(line => line.trim());
+
+    if (lines.length === 0) {
+      validationMsg.style.display = 'block';
+      validationMsg.style.background = 'rgba(239, 68, 68, 0.15)';
+      validationMsg.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+      validationMsg.style.color = '#ef4444';
+      validationMsg.textContent = '⚠️ No valid student records found.';
+      return;
+    }
+
+    const parsedStudents = [];
+    const skippedLines = [];
+    const duplicateLines = [];
+
+    // Deep clone existing students array to avoid mutations
+    const existingStudents = JSON.parse(JSON.stringify(students));
+
+    lines.forEach((line, index) => {
+      const parsed = parseBulkStudentLine(line);
+
+      if (parsed.error || !parsed.valid) {
+        skippedLines.push({ line: index + 1, reason: parsed.error || 'Invalid format' });
         return;
       }
 
-      students = students.filter(s => s.id !== studentId);
-      window.studentsCache = students;
-      window.dispatchEvent(new CustomEvent('students:updated', { detail: students }));
-
-      try {
-        const payments = await PaymentStore.fetchAll();
-        const backupData = {
-          timestamp: new Date().toISOString(),
-          students,
-          payments,
-          student_count: students.length,
-          payment_count: payments.length,
-          source: 'student-delete'
-        };
-        await createAutoBackup(backupData);
-      } catch (error) {
-        console.error('Auto-backup after student delete failed:', error);
-      }
-
-      renderStudents();
-      showNotificationSimple('Student deleted', 'success');
-    }
-
-    // BEGIN BULK ADD STUDENTS FEATURE
-    // ===== BULK ADD STUDENTS =====
-    function openBulkAddStudents() {
-      const modal = document.getElementById('bulkAddStudentsModal');
-      const input = document.getElementById('bulkStudentInput');
-      const validationMsg = document.getElementById('bulkAddValidationMessage');
-      
-      if (!modal || !input) {
-        console.error('Bulk add students modal elements not found');
+      // Check for duplicates
+      if (checkDuplicateStudent(parsed, existingStudents)) {
+        duplicateLines.push({ line: index + 1, name: parsed.name });
         return;
       }
-      
-      // Reset state
-      input.value = '';
-      validationMsg.style.display = 'none';
-      validationMsg.textContent = '';
-      
-      // Fade in animation
-      modal.style.opacity = '0';
-      modal.style.display = 'flex';
-      
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
-      
-      // Focus input after modal opens
-      setTimeout(() => input.focus(), 100);
-    }
-    
-    function closeBulkAddStudents() {
-      const modal = document.getElementById('bulkAddStudentsModal');
-      if (!modal) return;
-      
-      // Fade out animation
-      modal.style.opacity = '0';
-      
-      setTimeout(() => {
-        modal.style.display = 'none';
-      }, 250);
-    }
-    
-    function parseBulkStudentLine(line) {
-      try {
-        // BEGIN BULK ADD STUDENTS FEATURE - FLEXIBLE PARSING
-        // Support multiple formats:
-        // Format 1: Name - John Doe (Alias), Email - john@example.com, Phone N - 123-456-7890, Group N - A, Pay per class - $100
-        // Format 2: John Doe, john@example.com, 123-456-7890, A, $100
-        // Format 3: John Doe (Alias), john@example.com, (123)456-7890, A, $100
-        
-        line = line.trim();
-        if (!line) return { error: 'Empty line' };
-        
-        // Try labeled format first
-        const labeledNameMatch = line.match(/Name\s*-\s*([^(,]+?)(?:\s*\(([^)]+)\))?(?:,|$)/i);
-        const labeledEmailMatch = line.match(/Email\s*-\s*([^,]+)/i);
-        const labeledPhoneMatch = line.match(/Phone\s*N?\s*-\s*([^,]+)/i);
-        const labeledGroupMatch = line.match(/Group\s*N?\s*-\s*([^,]+)/i);
-        const labeledPayMatch = line.match(/Pay\s*per\s*class\s*-\s*\$?([0-9.]+)/i);
-        
-        if (labeledNameMatch) {
-          // Labeled format detected
-          const name = labeledNameMatch[1].trim();
-          const alias = labeledNameMatch[2] ? labeledNameMatch[2].trim() : '';
-          const email = labeledEmailMatch ? labeledEmailMatch[1].trim() : '';
-          const phone = labeledPhoneMatch ? labeledPhoneMatch[1].trim() : '';
-          const group = labeledGroupMatch ? labeledGroupMatch[1].trim() : '';
-          const payPerClass = labeledPayMatch ? parseFloat(labeledPayMatch[1]) : 0;
-          
-          return { name, alias, email, phone, group, payPerClass, valid: true };
-        }
-        
-        // Try comma-separated format (more flexible)
-        const parts = line.split(',').map(p => p.trim());
-        
-        if (parts.length < 2) {
-          return { error: 'Insufficient data - need at least name and one other field' };
-        }
-        
-        // Extract name (first part, may contain alias in parentheses)
-        let name = parts[0];
-        let alias = '';
-        
-        const aliasMatch = name.match(/^([^(]+?)\s*\(([^)]+)\)$/);
-        if (aliasMatch) {
-          name = aliasMatch[1].trim();
-          alias = aliasMatch[2].trim();
-        }
-        
-        if (!name) {
-          return { error: 'Missing name' };
-        }
-        
-        // Identify remaining parts by pattern matching
-        let email = '';
-        let phone = '';
-        let group = '';
-        let payPerClass = 0;
-        
-        for (let i = 1; i < parts.length; i++) {
-          const part = parts[i];
-          
-          // Check if it's an email (contains @ and .)
-          if (part.includes('@') && part.includes('.')) {
-            email = part;
-            continue;
-          }
-          
-          // Check if it's a price (contains $ or is just a number > 10)
-          const priceMatch = part.match(/\$?([0-9.]+)/);
-          if (priceMatch) {
-            const numValue = parseFloat(priceMatch[1]);
-            if (part.includes('$') || numValue >= 10) {
-              payPerClass = numValue;
-              continue;
-            }
-          }
-          
-          // Check if it's a phone number (contains digits and ()-. or is numeric)
-          if (/[\d\-\(\)\.]{7,}/.test(part) || /^\+?\d+$/.test(part.replace(/[\s\-\(\)\.]/g, ''))) {
-            phone = part;
-            continue;
-          }
-          
-          // Check if it's a single letter or short string (likely a group)
-          if (part.length <= 3 && /^[A-Za-z0-9]+$/.test(part)) {
-            group = part;
-            continue;
-          }
-          
-          // If nothing else matched and it's short, assume it's a group
-          if (part.length <= 10) {
-            group = part;
-          }
-        }
-        
-        return {
-          name,
-          alias,
-          email,
-          phone,
-          group,
-          payPerClass,
-          valid: true
-        };
-        // END BULK ADD STUDENTS FEATURE - FLEXIBLE PARSING
-      } catch (error) {
-        console.error('Error parsing line:', error);
-        return { error: 'Parse error: ' + error.message };
-      }
-    }
-    
-    function checkDuplicateStudent(newStudent, existingStudents) {
-      // Check for duplicates based on name + email + group combination
-      return existingStudents.some(existing => {
-        const nameMatch = existing.name.toLowerCase() === newStudent.name.toLowerCase();
-        const emailMatch = existing.email && newStudent.email && 
-                          existing.email.toLowerCase() === newStudent.email.toLowerCase();
-        const groupMatch = existing.group === newStudent.group;
-        
-        return nameMatch && (emailMatch || groupMatch);
-      });
-    }
-    
-    async function processBulkAddStudents() {
-      const input = document.getElementById('bulkStudentInput');
-      const validationMsg = document.getElementById('bulkAddValidationMessage');
-      
-      if (!input || !validationMsg) {
-        console.error('Bulk add input elements not found');
-        return;
-      }
-      
-      const rawText = input.value.trim();
-      
-      if (!rawText) {
-        validationMsg.style.display = 'block';
-        validationMsg.style.background = 'rgba(239, 68, 68, 0.15)';
-        validationMsg.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-        validationMsg.style.color = '#ef4444';
-        validationMsg.textContent = '⚠️ Please paste student records before clicking Add Students.';
-        return;
-      }
-      
-      try {
-        // Split by newlines or semicolons
-        const lines = rawText.split(/[\n;]/).filter(line => line.trim());
-        
-        if (lines.length === 0) {
-          validationMsg.style.display = 'block';
-          validationMsg.style.background = 'rgba(239, 68, 68, 0.15)';
-          validationMsg.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-          validationMsg.style.color = '#ef4444';
-          validationMsg.textContent = '⚠️ No valid student records found.';
-          return;
-        }
-        
-        const parsedStudents = [];
-        const skippedLines = [];
-        const duplicateLines = [];
-        
-        // Deep clone existing students array to avoid mutations
-        const existingStudents = JSON.parse(JSON.stringify(students));
-        
-        lines.forEach((line, index) => {
-          const parsed = parseBulkStudentLine(line);
-          
-          if (parsed.error || !parsed.valid) {
-            skippedLines.push({ line: index + 1, reason: parsed.error || 'Invalid format' });
-            return;
-          }
-          
-          // Check for duplicates
-          if (checkDuplicateStudent(parsed, existingStudents)) {
-            duplicateLines.push({ line: index + 1, name: parsed.name });
-            return;
-          }
-          
-          // Add to parsed list
-          parsedStudents.push(parsed);
-          
-          // Add to temporary existing list to check subsequent entries
-          existingStudents.push(parsed);
-        });
-        
-        if (parsedStudents.length === 0) {
-          let errorMessage = '⚠️ No students could be added.';
-          if (skippedLines.length > 0) {
-            errorMessage += ` ${skippedLines.length} lines skipped due to errors.`;
-          }
-          if (duplicateLines.length > 0) {
-            errorMessage += ` ${duplicateLines.length} duplicates found.`;
-          }
-          
-          validationMsg.style.display = 'block';
-          validationMsg.style.background = 'rgba(239, 68, 68, 0.15)';
-          validationMsg.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-          validationMsg.style.color = '#ef4444';
-          validationMsg.textContent = errorMessage;
-          return;
-        }
-        
-        // Atomic batch update - add all students at once
-        const newStudents = parsedStudents.map(parsed => ({
-          id: generateId(),
-          name: parsed.name,
-          group: parsed.group,
-          payPerClass: parsed.payPerClass,
-          phone: parsed.phone,
-          email: parsed.email,
-          aliases: parsed.alias ? [parsed.alias] : [],
-          notes: '',
-          status: STUDENT_STATUSES.ACTIVE,
-          showInGrid: true,
-          isActive: true,
-          createdAt: new Date().toISOString()
-        }));
-        
-        // Validate array integrity before writing
-        if (!Array.isArray(newStudents) || newStudents.some(s => !s.id || !s.name)) {
-          throw new Error('Data validation failed - invalid student records');
-        }
-        
-        // Append to existing students array
-        students.push(...newStudents);
-        
-        // Save to localStorage
-        saveStudents();
-        
-        // Refresh UI
-        renderStudents();
-        
-        // Dispatch custom event for potential external listeners
-        window.dispatchEvent(new CustomEvent('bulkAddStudents:complete', { 
-          detail: { 
-            added: newStudents.length,
-            skipped: skippedLines.length,
-            duplicates: duplicateLines.length
-          } 
-        }));
-        
-        // Show success message
-        let successMessage = `✅ Successfully added ${newStudents.length} student${newStudents.length > 1 ? 's' : ''}.`;
-        
-        if (skippedLines.length > 0 || duplicateLines.length > 0) {
-          successMessage += ' ';
-          if (skippedLines.length > 0) {
-            successMessage += `${skippedLines.length} skipped. `;
-          }
-          if (duplicateLines.length > 0) {
-            successMessage += `${duplicateLines.length} duplicate${duplicateLines.length > 1 ? 's' : ''} ignored.`;
-          }
-          
-          validationMsg.style.display = 'block';
-          validationMsg.style.background = 'rgba(251, 146, 60, 0.15)';
-          validationMsg.style.border = '1px solid rgba(251, 146, 60, 0.3)';
-          validationMsg.style.color = '#fb923c';
-          validationMsg.textContent = successMessage;
-        } else {
-          validationMsg.style.display = 'block';
-          validationMsg.style.background = 'rgba(34, 197, 94, 0.15)';
-          validationMsg.style.border = '1px solid rgba(34, 197, 94, 0.3)';
-          validationMsg.style.color = '#22c55e';
-          validationMsg.textContent = successMessage;
-        }
-        
-        showNotificationSimple(`Bulk added ${newStudents.length} students`, 'success');
-        
-        // Clear input and close modal after success
-        setTimeout(() => {
-          closeBulkAddStudents();
-        }, 1500);
-        
-      } catch (error) {
-        console.error('Bulk add students error:', error);
-        
-        validationMsg.style.display = 'block';
-        validationMsg.style.background = 'rgba(239, 68, 68, 0.15)';
-        validationMsg.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-        validationMsg.style.color = '#ef4444';
-        validationMsg.textContent = `❌ Error: ${error.message}. No students were added.`;
-      }
-    }
-    // END BULK ADD STUDENTS FEATURE
 
-    // ===== WAITING LIST =====
-    function openWaitingList() {
-      const content = document.getElementById('waitingListContent');
+      // Add to parsed list
+      parsedStudents.push(parsed);
 
-      if (waitingList.length === 0) {
-        content.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #6b7280;">No students on waiting list</div>';
-      } else {
-        content.innerHTML = waitingList.map(student => `
+      // Add to temporary existing list to check subsequent entries
+      existingStudents.push(parsed);
+    });
+
+    if (parsedStudents.length === 0) {
+      let errorMessage = '⚠️ No students could be added.';
+      if (skippedLines.length > 0) {
+        errorMessage += ` ${skippedLines.length} lines skipped due to errors.`;
+      }
+      if (duplicateLines.length > 0) {
+        errorMessage += ` ${duplicateLines.length} duplicates found.`;
+      }
+
+      validationMsg.style.display = 'block';
+      validationMsg.style.background = 'rgba(239, 68, 68, 0.15)';
+      validationMsg.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+      validationMsg.style.color = '#ef4444';
+      validationMsg.textContent = errorMessage;
+      return;
+    }
+
+    // Atomic batch update - add all students at once
+    const newStudents = parsedStudents.map(parsed => ({
+      id: generateId(),
+      name: parsed.name,
+      group: parsed.group,
+      payPerClass: parsed.payPerClass,
+      phone: parsed.phone,
+      email: parsed.email,
+      aliases: parsed.alias ? [parsed.alias] : [],
+      notes: '',
+      status: STUDENT_STATUSES.ACTIVE,
+      showInGrid: true,
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    }));
+
+    // Validate array integrity before writing
+    if (!Array.isArray(newStudents) || newStudents.some(s => !s.id || !s.name)) {
+      throw new Error('Data validation failed - invalid student records');
+    }
+
+    // Append to existing students array
+    students.push(...newStudents);
+
+    // Save to localStorage
+    saveStudents();
+
+    // Refresh UI
+    renderStudents();
+
+    // Dispatch custom event for potential external listeners
+    window.dispatchEvent(
+      new CustomEvent('bulkAddStudents:complete', {
+        detail: {
+          added: newStudents.length,
+          skipped: skippedLines.length,
+          duplicates: duplicateLines.length,
+        },
+      })
+    );
+
+    // Show success message
+    let successMessage = `✅ Successfully added ${newStudents.length} student${newStudents.length > 1 ? 's' : ''}.`;
+
+    if (skippedLines.length > 0 || duplicateLines.length > 0) {
+      successMessage += ' ';
+      if (skippedLines.length > 0) {
+        successMessage += `${skippedLines.length} skipped. `;
+      }
+      if (duplicateLines.length > 0) {
+        successMessage += `${duplicateLines.length} duplicate${duplicateLines.length > 1 ? 's' : ''} ignored.`;
+      }
+
+      validationMsg.style.display = 'block';
+      validationMsg.style.background = 'rgba(251, 146, 60, 0.15)';
+      validationMsg.style.border = '1px solid rgba(251, 146, 60, 0.3)';
+      validationMsg.style.color = '#fb923c';
+      validationMsg.textContent = successMessage;
+    } else {
+      validationMsg.style.display = 'block';
+      validationMsg.style.background = 'rgba(34, 197, 94, 0.15)';
+      validationMsg.style.border = '1px solid rgba(34, 197, 94, 0.3)';
+      validationMsg.style.color = '#22c55e';
+      validationMsg.textContent = successMessage;
+    }
+
+    showNotificationSimple(`Bulk added ${newStudents.length} students`, 'success');
+
+    // Clear input and close modal after success
+    setTimeout(() => {
+      closeBulkAddStudents();
+    }, 1500);
+  } catch (error) {
+    console.error('Bulk add students error:', error);
+
+    validationMsg.style.display = 'block';
+    validationMsg.style.background = 'rgba(239, 68, 68, 0.15)';
+    validationMsg.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+    validationMsg.style.color = '#ef4444';
+    validationMsg.textContent = `❌ Error: ${error.message}. No students were added.`;
+  }
+}
+// END BULK ADD STUDENTS FEATURE
+
+// ===== WAITING LIST =====
+function openWaitingList() {
+  const content = document.getElementById('waitingListContent');
+
+  if (waitingList.length === 0) {
+    content.innerHTML =
+      '<div style="grid-column: 1/-1; text-align: center; padding: 60px; color: #6b7280;">No students on waiting list</div>';
+  } else {
+    content.innerHTML = waitingList
+      .map(
+        student => `
           <div class="student-item" style="background: linear-gradient(135deg, rgba(168,85,247,.08), rgba(147,51,234,.08)); border: 2px solid rgba(168,85,247,.3);">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 16px;">
               <div style="font-size: 20px; font-weight: 700; color: #f3f4f6;">${escapeHtml(student.fullName || 'N/A')}</div>
@@ -6038,264 +6168,281 @@
                 <span class="info-label">PHONE</span>
                 <span class="info-text">${escapeHtml(student.phone || 'N/A')}</span>
               </div>
-              ${student.language ? `
+              ${
+                student.language
+                  ? `
                 <div class="info-column">
                   <span class="info-label">LANGUAGE</span>
                   <span class="info-text">${escapeHtml(student.language)}</span>
                 </div>
-              ` : ''}
-              ${student.startDate ? `
+              `
+                  : ''
+              }
+              ${
+                student.startDate
+                  ? `
                 <div class="info-column">
                   <span class="info-label">START DATE</span>
                   <span class="info-text">${new Date(student.startDate).toLocaleDateString()}</span>
                 </div>
-              ` : ''}
-              ${student.notes ? `
+              `
+                  : ''
+              }
+              ${
+                student.notes
+                  ? `
                 <div class="info-column">
                   <span class="info-label">NOTES</span>
                   <span class="info-text">${escapeHtml(student.notes)}</span>
                 </div>
-              ` : ''}
+              `
+                  : ''
+              }
               <div style="font-size: 11px; color: #6b7280; margin-top: 8px;">
                 Added: ${new Date(student.addedDate).toLocaleDateString()}
               </div>
             </div>
           </div>
-        `).join('');
-      }
+        `
+      )
+      .join('');
+  }
 
-      document.getElementById('waitingListModal').style.display = 'flex';
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      const modal = document.getElementById('waitingListModal');
-      
-      // Register with PopupManager
-      window.PopupManager.register('waitingListModal', {
-        hasBackButton: false, // Top-level modal
-        closeOnOutsideClick: true,
-        onClose: closeWaitingList
-      });
-      
-      // Fade in animation
-      modal.style.opacity = '0';
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
-      // END POPUP BACK & EXIT FIX
+  document.getElementById('waitingListModal').style.display = 'flex';
+
+  // BEGIN POPUP BACK & EXIT FIX
+  const modal = document.getElementById('waitingListModal');
+
+  // Register with PopupManager
+  window.PopupManager.register('waitingListModal', {
+    hasBackButton: false, // Top-level modal
+    closeOnOutsideClick: true,
+    onClose: closeWaitingList,
+  });
+
+  // Fade in animation
+  modal.style.opacity = '0';
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+  // END POPUP BACK & EXIT FIX
+}
+
+function closeWaitingList() {
+  const modal = document.getElementById('waitingListModal');
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Fade out before hiding
+  modal.style.opacity = '0';
+
+  setTimeout(() => {
+    modal.style.display = 'none';
+    window.PopupManager?.activePopups?.delete('waitingListModal');
+  }, 250);
+  // END POPUP BACK & EXIT FIX
+}
+
+function openAddWaitingList() {
+  document.getElementById('waitingListModal').style.display = 'none';
+  document.getElementById('waitingListFullName').value = '';
+  document.getElementById('waitingListEmail').value = '';
+  document.getElementById('waitingListPhone').value = '';
+  document.getElementById('waitingListLanguage').value = '';
+  document.getElementById('waitingListStartDate').value = '';
+  document.getElementById('waitingListNotes').value = '';
+
+  const modal = document.getElementById('addWaitingListModal');
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Register with PopupManager
+  window.PopupManager.register('addWaitingListModal', {
+    hasBackButton: true, // Sub-modal of waitingListModal
+    closeOnOutsideClick: true,
+    onBack: closeAddWaitingList,
+    parent: 'waitingListModal',
+  });
+
+  // Fade in animation
+  modal.style.opacity = '0';
+  modal.style.display = 'flex';
+
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+  // END POPUP BACK & EXIT FIX
+}
+
+function closeAddWaitingList() {
+  const modal = document.getElementById('addWaitingListModal');
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Fade out before hiding
+  modal.style.opacity = '0';
+
+  setTimeout(() => {
+    modal.style.display = 'none';
+    window.PopupManager?.activePopups?.delete('addWaitingListModal');
+  }, 250);
+  // END POPUP BACK & EXIT FIX
+}
+
+async function saveWaitingListStudent() {
+  const fullName = document.getElementById('waitingListFullName').value.trim();
+  const email = document.getElementById('waitingListEmail').value.trim();
+  const phone = document.getElementById('waitingListPhone').value.trim();
+  const language = document.getElementById('waitingListLanguage').value.trim();
+  const startDate = document.getElementById('waitingListStartDate').value;
+  const notes = document.getElementById('waitingListNotes').value.trim();
+
+  if (!fullName || !email || !phone) {
+    await customAlert('Please fill in all required fields (Name, Email, Phone)', {
+      title: 'Missing Information',
+      icon: '⚠️',
+    });
+    return;
+  }
+
+  waitingList.push({
+    id: 'waiting-' + Date.now(),
+    fullName,
+    email,
+    phone,
+    language,
+    startDate,
+    notes,
+    addedDate: new Date().toISOString(),
+  });
+
+  saveWaitingList();
+  closeAddWaitingList();
+  openWaitingList();
+  showNotificationSimple('Student added to waiting list', 'success');
+}
+
+async function removeFromWaitingList(id) {
+  const confirmed = await customConfirm('Remove this student from the waiting list?', {
+    title: 'Remove from Waiting List',
+    icon: '📋',
+    okText: 'Remove',
+  });
+
+  if (!confirmed) return;
+
+  waitingList = waitingList.filter(s => s.id !== id);
+  saveWaitingList();
+  openWaitingList();
+  showNotificationSimple('Student removed from waiting list', 'success');
+}
+
+async function moveToWaitingList(studentId) {
+  const student = students.find(s => s.id === studentId);
+  if (!student) return;
+
+  const confirmed = await customConfirm(
+    `Move ${student.name} to waiting list?\n\nThis will set their status to Paused.`,
+    {
+      title: 'Move to Waiting List',
+      icon: '📋',
+      okText: 'Move',
     }
+  );
 
-    function closeWaitingList() {
-      const modal = document.getElementById('waitingListModal');
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Fade out before hiding
-      modal.style.opacity = '0';
-      
-      setTimeout(() => {
-        modal.style.display = 'none';
-        window.PopupManager?.activePopups?.delete('waitingListModal');
-      }, 250);
-      // END POPUP BACK & EXIT FIX
-    }
+  if (!confirmed) return;
 
-    function openAddWaitingList() {
-      document.getElementById('waitingListModal').style.display = 'none';
-      document.getElementById('waitingListFullName').value = '';
-      document.getElementById('waitingListEmail').value = '';
-      document.getElementById('waitingListPhone').value = '';
-      document.getElementById('waitingListLanguage').value = '';
-      document.getElementById('waitingListStartDate').value = '';
-      document.getElementById('waitingListNotes').value = '';
-      
-      const modal = document.getElementById('addWaitingListModal');
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Register with PopupManager
-      window.PopupManager.register('addWaitingListModal', {
-        hasBackButton: true, // Sub-modal of waitingListModal
-        closeOnOutsideClick: true,
-        onBack: closeAddWaitingList,
-        parent: 'waitingListModal'
+  student.status = STUDENT_STATUSES.PAUSED;
+  student.statusChangedDate = new Date().toISOString();
+
+  waitingList.push({
+    id: 'waiting-' + Date.now(),
+    fullName: student.name,
+    email: student.email || '',
+    phone: student.phone || '',
+    language: '',
+    startDate: '',
+    notes: student.notes || '',
+    addedDate: new Date().toISOString(),
+    originalStudentId: student.id,
+  });
+
+  saveStudents();
+  saveWaitingList();
+  renderStudents();
+  showNotificationSimple(`${student.name} moved to waiting list`, 'success');
+}
+
+// ===== DUPLICATE DETECTION =====
+function findDuplicates() {
+  const duplicateGroups = [];
+  const processed = new Set();
+
+  students
+    .filter(s => s.isActive !== false)
+    .forEach((student, index, arr) => {
+      if (processed.has(student.id)) return;
+
+      const matches = [];
+
+      arr.forEach((otherStudent, otherIndex) => {
+        if (index === otherIndex || processed.has(otherStudent.id)) return;
+
+        const name1 = (student.name || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        const name2 = (otherStudent.name || '').toLowerCase().trim().replace(/\s+/g, ' ');
+        const email1 = (student.email || '').toLowerCase().trim();
+        const email2 = (otherStudent.email || '').toLowerCase().trim();
+
+        const namesMatch =
+          name1 === name2 ||
+          (name1.includes(name2) && name2.length > 3) ||
+          (name2.includes(name1) && name1.length > 3);
+        const emailsMatch = email1 && email2 && email1 === email2;
+
+        if (namesMatch || emailsMatch) {
+          matches.push(otherStudent);
+          processed.add(otherStudent.id);
+        }
       });
-      
-      // Fade in animation
-      modal.style.opacity = '0';
-      modal.style.display = 'flex';
-      
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
-      // END POPUP BACK & EXIT FIX
-    }
 
-    function closeAddWaitingList() {
-      const modal = document.getElementById('addWaitingListModal');
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Fade out before hiding
-      modal.style.opacity = '0';
-      
-      setTimeout(() => {
-        modal.style.display = 'none';
-        window.PopupManager?.activePopups?.delete('addWaitingListModal');
-      }, 250);
-      // END POPUP BACK & EXIT FIX
-    }
-
-    async function saveWaitingListStudent() {
-      const fullName = document.getElementById('waitingListFullName').value.trim();
-      const email = document.getElementById('waitingListEmail').value.trim();
-      const phone = document.getElementById('waitingListPhone').value.trim();
-      const language = document.getElementById('waitingListLanguage').value.trim();
-      const startDate = document.getElementById('waitingListStartDate').value;
-      const notes = document.getElementById('waitingListNotes').value.trim();
-
-      if (!fullName || !email || !phone) {
-        await customAlert('Please fill in all required fields (Name, Email, Phone)', {
-          title: 'Missing Information',
-          icon: '⚠️'
+      if (matches.length > 0) {
+        processed.add(student.id);
+        duplicateGroups.push({
+          primary: student,
+          duplicates: matches,
         });
-        return;
       }
+    });
 
-      waitingList.push({
-        id: 'waiting-' + Date.now(),
-        fullName,
-        email,
-        phone,
-        language,
-        startDate,
-        notes,
-        addedDate: new Date().toISOString()
-      });
+  displayDuplicates(duplicateGroups);
+}
 
-      saveWaitingList();
-      closeAddWaitingList();
-      openWaitingList();
-      showNotificationSimple('Student added to waiting list', 'success');
-    }
+function displayDuplicates(duplicateGroups) {
+  const content = document.getElementById('duplicatesContent');
 
-    async function removeFromWaitingList(id) {
-      const confirmed = await customConfirm(
-        'Remove this student from the waiting list?',
-        {
-          title: 'Remove from Waiting List',
-          icon: '📋',
-          okText: 'Remove'
-        }
-      );
-      
-      if (!confirmed) return;
-
-      waitingList = waitingList.filter(s => s.id !== id);
-      saveWaitingList();
-      openWaitingList();
-      showNotificationSimple('Student removed from waiting list', 'success');
-    }
-
-    async function moveToWaitingList(studentId) {
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
-
-      const confirmed = await customConfirm(
-        `Move ${student.name} to waiting list?\n\nThis will set their status to Paused.`,
-        {
-          title: 'Move to Waiting List',
-          icon: '📋',
-          okText: 'Move'
-        }
-      );
-      
-      if (!confirmed) return;
-
-      student.status = STUDENT_STATUSES.PAUSED;
-      student.statusChangedDate = new Date().toISOString();
-
-      waitingList.push({
-        id: 'waiting-' + Date.now(),
-        fullName: student.name,
-        email: student.email || '',
-        phone: student.phone || '',
-        language: '',
-        startDate: '',
-        notes: student.notes || '',
-        addedDate: new Date().toISOString(),
-        originalStudentId: student.id
-      });
-
-      saveStudents();
-      saveWaitingList();
-      renderStudents();
-      showNotificationSimple(`${student.name} moved to waiting list`, 'success');
-    }
-
-    // ===== DUPLICATE DETECTION =====
-    function findDuplicates() {
-      const duplicateGroups = [];
-      const processed = new Set();
-
-      students.filter(s => s.isActive !== false).forEach((student, index, arr) => {
-        if (processed.has(student.id)) return;
-
-        const matches = [];
-
-        arr.forEach((otherStudent, otherIndex) => {
-          if (index === otherIndex || processed.has(otherStudent.id)) return;
-
-          const name1 = (student.name || '').toLowerCase().trim().replace(/\s+/g, ' ');
-          const name2 = (otherStudent.name || '').toLowerCase().trim().replace(/\s+/g, ' ');
-          const email1 = (student.email || '').toLowerCase().trim();
-          const email2 = (otherStudent.email || '').toLowerCase().trim();
-
-          const namesMatch = name1 === name2 ||
-            (name1.includes(name2) && name2.length > 3) ||
-            (name2.includes(name1) && name1.length > 3);
-          const emailsMatch = email1 && email2 && email1 === email2;
-
-          if (namesMatch || emailsMatch) {
-            matches.push(otherStudent);
-            processed.add(otherStudent.id);
-          }
-        });
-
-        if (matches.length > 0) {
-          processed.add(student.id);
-          duplicateGroups.push({
-            primary: student,
-            duplicates: matches
-          });
-        }
-      });
-
-      displayDuplicates(duplicateGroups);
-    }
-
-    function displayDuplicates(duplicateGroups) {
-      const content = document.getElementById('duplicatesContent');
-
-      if (duplicateGroups.length === 0) {
-        content.innerHTML = `
+  if (duplicateGroups.length === 0) {
+    content.innerHTML = `
           <div style="text-align: center; padding: 60px 20px;">
             <h3 style="color: #8ab4ff; margin-bottom: 10px; font-size: 24px;">No Duplicates Found</h3>
             <p style="color: #6b7280;">All student records appear to be unique.</p>
           </div>
         `;
-      } else {
-        content.innerHTML = `
+  } else {
+    content.innerHTML = `
           <div style="background: linear-gradient(135deg, rgba(251,146,60,.15), rgba(249,115,22,.15)); padding: 20px; border-radius: 12px; border: 2px solid rgba(251,146,60,.3); margin-bottom: 25px;">
             <h3 style="margin: 0 0 6px 0; color: #fb923c; font-size: 18px;">Found ${duplicateGroups.length} Potential Duplicate${duplicateGroups.length > 1 ? 's' : ''}</h3>
             <p style="margin: 0; color: rgba(255,255,255,0.8); font-size: 14px;">Review and merge duplicate student records to keep your data clean.</p>
           </div>
-          ${duplicateGroups.map((group, groupIndex) => `
+          ${duplicateGroups
+            .map(
+              (group, groupIndex) => `
             <div style="background: rgba(255,255,255,.04); border: 2px solid rgba(138,180,255,.15); border-radius: 16px; padding: 24px; margin-bottom: 20px;">
               <h3 style="color: #8ab4ff; margin: 0 0 20px 0; font-size: 18px;">
                 <span style="background: #8ab4ff; color: white; width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; margin-right: 10px;">${groupIndex + 1}</span>
                 Duplicate Group
               </h3>
 
-              ${[group.primary, ...group.duplicates].map((student, index) => {
-                const isPrimary = index === 0;
-                return `
+              ${[group.primary, ...group.duplicates]
+                .map((student, index) => {
+                  const isPrimary = index === 0;
+                  return `
                   <div style="background: ${isPrimary ? 'rgba(138,180,255,.12)' : 'rgba(255,255,255,.03)'}; border: 2px solid ${isPrimary ? '#8ab4ff' : 'rgba(255,255,255,.08)'}; border-radius: 12px; padding: 18px; margin-bottom: 12px; position: relative;">
                     ${isPrimary ? '<div style="position: absolute; top: -10px; left: 20px; background: #8ab4ff; color: white; padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 700;">PRIMARY</div>' : ''}
 
@@ -6322,230 +6469,250 @@
                           </div>
                         </div>
 
-                        ${student.notes ? `
+                        ${
+                          student.notes
+                            ? `
                           <div style="margin-top: 12px;">
                             <div style="font-size: 11px; color: #6b7280; font-weight: 600; margin-bottom: 4px;">NOTES</div>
                             <div style="font-size: 13px; color: rgba(255,255,255,0.8);">${escapeHtml(student.notes)}</div>
                           </div>
-                        ` : ''}
+                        `
+                            : ''
+                        }
                       </div>
 
-                      ${!isPrimary ? `
+                      ${
+                        !isPrimary
+                          ? `
                         <button onclick="mergeDuplicates('${group.primary.id}', '${student.id}')" style="padding: 10px 16px; background: linear-gradient(135deg, #4ade80, #22c55e); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 13px; white-space: nowrap; margin-left: 16px; box-shadow: 0 4px 12px rgba(34,197,94,0.3);">
                           Merge into Primary
                         </button>
-                      ` : ''}
+                      `
+                          : ''
+                      }
                     </div>
                   </div>
                 `;
-              }).join('')}
+                })
+                .join('')}
             </div>
-          `).join('')}
+          `
+            )
+            .join('')}
         `;
-      }
+  }
 
-      document.getElementById('duplicatesModal').style.display = 'flex';
+  document.getElementById('duplicatesModal').style.display = 'flex';
+}
+
+function closeDuplicatesModal() {
+  document.getElementById('duplicatesModal').style.display = 'none';
+}
+
+async function mergeDuplicates(primaryId, duplicateId) {
+  const primary = students.find(s => s.id === primaryId);
+  const duplicate = students.find(s => s.id === duplicateId);
+
+  if (!primary || !duplicate) {
+    showNotificationSimple('Student not found', 'error');
+    return;
+  }
+
+  const confirmed = await customConfirm(
+    `Merge "${duplicate.name}" into "${primary.name}"?\n\nThis will transfer all information and delete the duplicate entry.\n\nThis action cannot be undone.`,
+    {
+      title: 'Merge Duplicates',
+      icon: '⚠️',
+      okText: 'Merge',
+      type: 'danger',
     }
+  );
 
-    function closeDuplicatesModal() {
-      document.getElementById('duplicatesModal').style.display = 'none';
-    }
+  if (!confirmed) {
+    return;
+  }
 
-    async function mergeDuplicates(primaryId, duplicateId) {
-      const primary = students.find(s => s.id === primaryId);
-      const duplicate = students.find(s => s.id === duplicateId);
+  // Merge missing information
+  if (!primary.email && duplicate.email) primary.email = duplicate.email;
+  if (!primary.phone && duplicate.phone) primary.phone = duplicate.phone;
+  if (!primary.notes && duplicate.notes) {
+    primary.notes = duplicate.notes;
+  } else if (duplicate.notes && primary.notes !== duplicate.notes) {
+    primary.notes += '\n[Merged]: ' + duplicate.notes;
+  }
 
-      if (!primary || !duplicate) {
-        showNotificationSimple('Student not found', 'error');
-        return;
-      }
+  // Merge groups
+  const primaryGroups = new Set(
+    (primary.group || '')
+      .split(',')
+      .map(g => g.trim())
+      .filter(g => g)
+  );
+  const duplicateGroups = (duplicate.group || '')
+    .split(',')
+    .map(g => g.trim())
+    .filter(g => g);
+  duplicateGroups.forEach(g => primaryGroups.add(g));
+  primary.group = Array.from(primaryGroups).join(', ');
 
-      const confirmed = await customConfirm(
-        `Merge "${duplicate.name}" into "${primary.name}"?\n\nThis will transfer all information and delete the duplicate entry.\n\nThis action cannot be undone.`,
-        {
-          title: 'Merge Duplicates',
-          icon: '⚠️',
-          okText: 'Merge',
-          type: 'danger'
-        }
-      );
-      
-      if (!confirmed) {
-        return;
-      }
-
-      // Merge missing information
-      if (!primary.email && duplicate.email) primary.email = duplicate.email;
-      if (!primary.phone && duplicate.phone) primary.phone = duplicate.phone;
-      if (!primary.notes && duplicate.notes) {
-        primary.notes = duplicate.notes;
-      } else if (duplicate.notes && primary.notes !== duplicate.notes) {
-        primary.notes += '\n[Merged]: ' + duplicate.notes;
-      }
-
-      // Merge groups
-      const primaryGroups = new Set((primary.group || '').split(',').map(g => g.trim()).filter(g => g));
-      const duplicateGroups = (duplicate.group || '').split(',').map(g => g.trim()).filter(g => g);
-      duplicateGroups.forEach(g => primaryGroups.add(g));
-      primary.group = Array.from(primaryGroups).join(', ');
-
-      // Merge aliases
-      if (duplicate.aliases && duplicate.aliases.length > 0) {
-        if (!primary.aliases) primary.aliases = [];
-        duplicate.aliases.forEach(alias => {
-          if (!primary.aliases.includes(alias)) {
-            primary.aliases.push(alias);
-          }
-        });
-      }
-
-      // Mark duplicate as inactive
-      duplicate.isActive = false;
-
-      saveStudents();
-      showNotificationSimple(`Merged "${duplicate.name}" into "${primary.name}"`, 'success');
-
-      setTimeout(() => {
-        findDuplicates();
-      }, 500);
-    }
-
-    // ===== EVENT LISTENERS FOR INTEGRATION =====
-    
-    // Listen for group updates from Group Manager
-    window.addEventListener("groups:updated", function(event) {
-      if (event.detail) {
-        groups = event.detail;
-        
-        // Refresh student display if Student Manager is open
-        if (document.getElementById('studentManagerModal')?.style.display === 'block') {
-          renderStudents();
-        }
+  // Merge aliases
+  if (duplicate.aliases && duplicate.aliases.length > 0) {
+    if (!primary.aliases) primary.aliases = [];
+    duplicate.aliases.forEach(alias => {
+      if (!primary.aliases.includes(alias)) {
+        primary.aliases.push(alias);
       }
     });
+  }
 
-    // Listen for payment updates from Payment Records
-    window.addEventListener("payments:updated", function(event) {
-      // Can be used to update payment indicators in the future
-    });
+  // Mark duplicate as inactive
+  duplicate.isActive = false;
 
-    // Listen for requests to open student manager with specific filter
-    window.addEventListener("openStudentManager:withFilter", function(event) {
-      openStudentManager();
-      if (event.detail?.name) {
-        const searchInput = document.getElementById('studentSearchInput');
-        if (searchInput) {
-          searchInput.value = event.detail.name;
-          filterStudents();
-        }
-      }
-    });
+  saveStudents();
+  showNotificationSimple(`Merged "${duplicate.name}" into "${primary.name}"`, 'success');
 
-    // Click outside to close editing
-    document.addEventListener('click', function(event) {
-      if (!event.target.closest('.student-item')) {
-        document.querySelectorAll('.student-item.editing').forEach(card => {
-          card.classList.remove('editing');
-        });
-      }
-    });
+  setTimeout(() => {
+    findDuplicates();
+  }, 500);
+}
 
-    // ===== INITIALIZE GLOBAL DATA =====
-    if (!window.globalData) window.globalData = {};
-    window.globalData.students = students;
+// ===== EVENT LISTENERS FOR INTEGRATION =====
 
-    // ============================================================================
-    let selectedGroupDays = [];
-    // ============================================================================
-    // 📚 GROUP MANAGER - EXACT STANDALONE VERSION
-    // ============================================================================
-    
-    // Groups will be loaded from Supabase on initialization
-    let groups = [];
-    let countdownTimer;
-    
-    // Initialize groups from Supabase when page loads
-    (async function initializeGroups() {
-      try {
-        groups = await loadGroupsFromSupabase();
-      } catch (error) {
-        console.error('Error loading groups on init:', error);
-        groups = [];
-      }
-    })();
+// Listen for group updates from Group Manager
+window.addEventListener('groups:updated', function (event) {
+  if (event.detail) {
+    groups = event.detail;
 
-    // ===== OPEN/CLOSE GROUP MANAGER =====
-    function openGroupManager() {
-      const modal = document.getElementById('groupManagerModal');
-      document.getElementById('settingsMenu').style.display = 'none';
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Register with PopupManager
-      window.PopupManager.register('groupManagerModal', {
-        hasBackButton: false, // Top-level modal
-        closeOnOutsideClick: true,
-        onClose: closeGroupManager
-      });
-      
-      // Fade in animation
-      modal.style.opacity = '0';
-      modal.style.display = 'block';
-      
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
-      // END POPUP BACK & EXIT FIX
-      
-      renderGroups();
+    // Refresh student display if Student Manager is open
+    if (document.getElementById('studentManagerModal')?.style.display === 'block') {
+      renderStudents();
     }
-    
-    function closeGroupManager() {
-      const modal = document.getElementById('groupManagerModal');
-      
-      // BEGIN POPUP BACK & EXIT FIX
-      // Fade out before hiding
-      modal.style.opacity = '0';
-      
-      setTimeout(() => {
-        modal.style.display = 'none';
-        window.PopupManager?.activePopups?.delete('groupManagerModal');
-      }, 250);
-      // END POPUP BACK & EXIT FIX
-      
-      if (countdownTimer) {
-        clearInterval(countdownTimer);
-        countdownTimer = null;
-      }
+  }
+});
+
+// Listen for payment updates from Payment Records
+window.addEventListener('payments:updated', function (event) {
+  // Can be used to update payment indicators in the future
+});
+
+// Listen for requests to open student manager with specific filter
+window.addEventListener('openStudentManager:withFilter', function (event) {
+  openStudentManager();
+  if (event.detail?.name) {
+    const searchInput = document.getElementById('studentSearchInput');
+    if (searchInput) {
+      searchInput.value = event.detail.name;
+      filterStudents();
     }
-    
-    function closeGroupManagerOnOutsideClick(event) {
-      if (event.target.id === 'groupManagerModal') {
-        closeGroupManager();
-      }
-    }
-    
-    // ===== RENDER GROUP CARDS =====
-    function renderGroups() {
-      const grid = document.getElementById('groupGrid');
-      if (!grid) return;
-      grid.innerHTML = '';
-      
-      if (groups.length === 0) {
-        grid.innerHTML = '<div style="text-align:center;padding:60px 20px;color:#94a3b8;grid-column:1/-1;"><div style="font-size:48px;margin-bottom:16px;opacity:0.5;">📚</div><p style="font-size:16px;">No groups yet. Click "+ Add Group" to get started.</p></div>';
-        return;
-      }
-      
-      // Sort groups alphabetically by name
-      const sortedGroups = [...groups].sort((a, b) => {
-        const nameA = String(a.name || '').toUpperCase();
-        const nameB = String(b.name || '').toUpperCase();
-        return nameA.localeCompare(nameB);
-      });
-      
-      sortedGroups.forEach(group => {
-        const card = document.createElement('div');
-        card.className = 'group-card';
-        card.innerHTML = `
+  }
+});
+
+// Click outside to close editing
+document.addEventListener('click', function (event) {
+  if (!event.target.closest('.student-item')) {
+    document.querySelectorAll('.student-item.editing').forEach(card => {
+      card.classList.remove('editing');
+    });
+  }
+});
+
+// ===== INITIALIZE GLOBAL DATA =====
+if (!window.globalData) window.globalData = {};
+window.globalData.students = students;
+
+// ============================================================================
+let selectedGroupDays = [];
+// ============================================================================
+// 📚 GROUP MANAGER - EXACT STANDALONE VERSION
+// ============================================================================
+
+// Groups will be loaded from Supabase on initialization
+let groups = [];
+let countdownTimer;
+
+// Initialize groups from Supabase when page loads
+(async function initializeGroups() {
+  try {
+    groups = await loadGroupsFromSupabase();
+  } catch (error) {
+    console.error('Error loading groups on init:', error);
+    groups = [];
+  }
+})();
+
+// ===== OPEN/CLOSE GROUP MANAGER =====
+function openGroupManager() {
+  const modal = document.getElementById('groupManagerModal');
+  document.getElementById('settingsMenu').style.display = 'none';
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Register with PopupManager
+  window.PopupManager.register('groupManagerModal', {
+    hasBackButton: false, // Top-level modal
+    closeOnOutsideClick: true,
+    onClose: closeGroupManager,
+  });
+
+  // Fade in animation
+  modal.style.opacity = '0';
+  modal.style.display = 'block';
+
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+  // END POPUP BACK & EXIT FIX
+
+  renderGroups();
+}
+
+function closeGroupManager() {
+  const modal = document.getElementById('groupManagerModal');
+
+  // BEGIN POPUP BACK & EXIT FIX
+  // Fade out before hiding
+  modal.style.opacity = '0';
+
+  setTimeout(() => {
+    modal.style.display = 'none';
+    window.PopupManager?.activePopups?.delete('groupManagerModal');
+  }, 250);
+  // END POPUP BACK & EXIT FIX
+
+  if (countdownTimer) {
+    clearInterval(countdownTimer);
+    countdownTimer = null;
+  }
+}
+
+function closeGroupManagerOnOutsideClick(event) {
+  if (event.target.id === 'groupManagerModal') {
+    closeGroupManager();
+  }
+}
+
+// ===== RENDER GROUP CARDS =====
+function renderGroups() {
+  const grid = document.getElementById('groupGrid');
+  if (!grid) return;
+  grid.innerHTML = '';
+
+  if (groups.length === 0) {
+    grid.innerHTML =
+      '<div style="text-align:center;padding:60px 20px;color:#94a3b8;grid-column:1/-1;"><div style="font-size:48px;margin-bottom:16px;opacity:0.5;">📚</div><p style="font-size:16px;">No groups yet. Click "+ Add Group" to get started.</p></div>';
+    return;
+  }
+
+  // Sort groups alphabetically by name
+  const sortedGroups = [...groups].sort((a, b) => {
+    const nameA = String(a.name || '').toUpperCase();
+    const nameB = String(b.name || '').toUpperCase();
+    return nameA.localeCompare(nameB);
+  });
+
+  sortedGroups.forEach(group => {
+    const card = document.createElement('div');
+    card.className = 'group-card';
+    card.innerHTML = `
           <div class="group-title">
             <span>${escapeHtml(group.name)}</span>
           </div>
@@ -6557,108 +6724,111 @@
             <button onclick="deleteGroup('${escapeHtml(group.name)}')">🗑️ Delete</button>
           </div>
         `;
-        grid.appendChild(card);
-      });
-      updateScheduleItemStates();
-    }
+    grid.appendChild(card);
+  });
+  updateScheduleItemStates();
+}
 
-    // ===== RENDER SLOT CHIPS =====
-    function renderScheduleSlots(scheduleStr) {
-      return scheduleStr.split(',').map(slot => {
-        const parts = slot.trim().split(' ');
-        const day = parts[0] || '';
-        const time = parts.slice(1).join(' ') || '';
-        return `<div class="schedule-item" data-day="${day}" data-time="${time}">
+// ===== RENDER SLOT CHIPS =====
+function renderScheduleSlots(scheduleStr) {
+  return scheduleStr
+    .split(',')
+    .map(slot => {
+      const parts = slot.trim().split(' ');
+      const day = parts[0] || '';
+      const time = parts.slice(1).join(' ') || '';
+      return `<div class="schedule-item" data-day="${day}" data-time="${time}">
           <div>${slot.trim()}</div>
         </div>`;
-      }).join('');
-    }
+    })
+    .join('');
+}
 
-    // ===== ADD GROUP =====
-    async function addNewGroup() {
-      const name = await customPrompt('Enter group name:', '', {
-        title: 'Add Group',
-        icon: '➕',
-        okText: 'Add Group'
-      });
-      
-      if (!name) return;
-      
-      if (groups.some(g => g.name === name)) {
-        await customAlert('Group name already exists!', {
-          title: 'Duplicate Group',
-          icon: '⚠️'
-        });
-        return;
-      }
-      // Persist only the new group to Supabase to get an id
-      const saved = await saveGroup({ name, schedule: '' });
-      if (saved && saved.id) {
-        groups.push({ id: saved.id, name: saved.group_name || name, schedule: saved.schedule || '' });
-        // Update cache and notify
-        window.groupsCache = groups;
-        window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
-        window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
-        showToast('✅ Group Added');
-        renderGroups();
-      } else {
-        await customAlert('Could not save group. Please try again.');
-      }
-    }
+// ===== ADD GROUP =====
+async function addNewGroup() {
+  const name = await customPrompt('Enter group name:', '', {
+    title: 'Add Group',
+    icon: '➕',
+    okText: 'Add Group',
+  });
 
-    // ===== DELETE GROUP =====
-    async function deleteGroup(name) {
-      const confirmed = await customConfirm(
-        `Delete group "${name}"?\n\nThis action cannot be undone.`,
-        {
-          title: 'Delete Group',
-          icon: '🗑️',
-          okText: 'Delete',
-          type: 'danger'
-        }
-      );
-      
-      if (!confirmed) return;
-      // Collect ids of matching groups to delete exact rows
-      const idsToDelete = groups.filter(g => g.name === name && g.id).map(g => g.id);
-      try {
-        if (idsToDelete.length > 0) {
-          const { error } = await supabase.from('groups').delete().in('id', idsToDelete);
-          if (error) console.error('❌ Error deleting groups by id:', error);
-        } else {
-          // Fallback: delete by group_name
-          const { error } = await supabase.from('groups').delete().eq('group_name', name);
-          if (error) console.error('❌ Error deleting groups by name:', error);
-        }
-      } catch (e) {
-        console.error('❌ Delete operation failed:', e);
-      }
-      // Update local state
-      groups = groups.filter(g => g.name !== name);
-      window.groupsCache = groups;
-      window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
-      window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
-      showToast('🗑️ Group Deleted');
-      renderGroups();
-    }
+  if (!name) return;
 
-    // ===== EDIT SCHEDULE =====
-    function editGroupSchedule(groupName) {
-      const grid = document.getElementById('groupGrid');
-      grid.querySelectorAll('.schedule-editor').forEach(el => el.remove());
-      const group = groups.find(g => g.name === groupName);
-      if (!group) return;
-      
-      const card = [...grid.children].find(c => {
-        const titleSpan = c.querySelector('.group-title span');
-        return titleSpan && titleSpan.textContent === groupName;
-      });
-      
-      if (!card) return;
-      
-      const editor = document.createElement('div');
-      editor.className = 'schedule-editor';
-      editor.innerHTML = `
+  if (groups.some(g => g.name === name)) {
+    await customAlert('Group name already exists!', {
+      title: 'Duplicate Group',
+      icon: '⚠️',
+    });
+    return;
+  }
+  // Persist only the new group to Supabase to get an id
+  const saved = await saveGroup({ name, schedule: '' });
+  if (saved && saved.id) {
+    groups.push({ id: saved.id, name: saved.group_name || name, schedule: saved.schedule || '' });
+    // Update cache and notify
+    window.groupsCache = groups;
+    window.dispatchEvent(new CustomEvent('groups:updated', { detail: groups }));
+    window.dispatchEvent(new CustomEvent('schedules:updated', { detail: groups }));
+    showToast('✅ Group Added');
+    renderGroups();
+  } else {
+    await customAlert('Could not save group. Please try again.');
+  }
+}
+
+// ===== DELETE GROUP =====
+async function deleteGroup(name) {
+  const confirmed = await customConfirm(
+    `Delete group "${name}"?\n\nThis action cannot be undone.`,
+    {
+      title: 'Delete Group',
+      icon: '🗑️',
+      okText: 'Delete',
+      type: 'danger',
+    }
+  );
+
+  if (!confirmed) return;
+  // Collect ids of matching groups to delete exact rows
+  const idsToDelete = groups.filter(g => g.name === name && g.id).map(g => g.id);
+  try {
+    if (idsToDelete.length > 0) {
+      const { error } = await supabase.from('groups').delete().in('id', idsToDelete);
+      if (error) console.error('❌ Error deleting groups by id:', error);
+    } else {
+      // Fallback: delete by group_name
+      const { error } = await supabase.from('groups').delete().eq('group_name', name);
+      if (error) console.error('❌ Error deleting groups by name:', error);
+    }
+  } catch (e) {
+    console.error('❌ Delete operation failed:', e);
+  }
+  // Update local state
+  groups = groups.filter(g => g.name !== name);
+  window.groupsCache = groups;
+  window.dispatchEvent(new CustomEvent('groups:updated', { detail: groups }));
+  window.dispatchEvent(new CustomEvent('schedules:updated', { detail: groups }));
+  showToast('🗑️ Group Deleted');
+  renderGroups();
+}
+
+// ===== EDIT SCHEDULE =====
+function editGroupSchedule(groupName) {
+  const grid = document.getElementById('groupGrid');
+  grid.querySelectorAll('.schedule-editor').forEach(el => el.remove());
+  const group = groups.find(g => g.name === groupName);
+  if (!group) return;
+
+  const card = [...grid.children].find(c => {
+    const titleSpan = c.querySelector('.group-title span');
+    return titleSpan && titleSpan.textContent === groupName;
+  });
+
+  if (!card) return;
+
+  const editor = document.createElement('div');
+  editor.className = 'schedule-editor';
+  editor.innerHTML = `
         <h4 style="color:#a855f7;margin:0 0 12px 0;font-size:1rem;">Edit Schedule for ${escapeHtml(groupName)}</h4>
         <div id="scheduleItems"></div>
         <button onclick="addScheduleItem()" style="width:100%;padding:8px;margin:10px 0;background:rgba(168,85,247,0.2);border:2px dashed rgba(168,85,247,0.5);border-radius:8px;color:#a855f7;font-weight:600;cursor:pointer;">+ Add Day/Time</button>
@@ -6667,1343 +6837,1445 @@
           <button onclick="saveScheduleEdit('${escapeHtml(groupName)}')" style="flex:2;padding:10px;background:linear-gradient(135deg,#22c55e,#16a34a);border:none;border-radius:8px;color:#fff;font-weight:700;cursor:pointer;">💾 Save</button>
         </div>
       `;
-      card.appendChild(editor);
-      
-      const container = editor.querySelector('#scheduleItems');
-      const slots = group.schedule ? parseSchedule(group.schedule) : [{day:'Monday',time:'10:00 AM'}];
-      slots.forEach(s => addScheduleItem(s.day, s.time, container));
-    }
+  card.appendChild(editor);
 
-    // ===== ADD SCHEDULE ITEM =====
-    function addScheduleItem(day='Monday', time='10:00 AM', container) {
-      const c = container || document.querySelector('#scheduleItems');
-      if (!c) return;
-      
-      // Convert 12h AM/PM to 24h for HTML5 time input
-      const time24 = convert12to24(time);
-      
-      const div = document.createElement('div');
-      div.className = 'slot-row';
-      div.innerHTML = `
+  const container = editor.querySelector('#scheduleItems');
+  const slots = group.schedule
+    ? parseSchedule(group.schedule)
+    : [{ day: 'Monday', time: '10:00 AM' }];
+  slots.forEach(s => addScheduleItem(s.day, s.time, container));
+}
+
+// ===== ADD SCHEDULE ITEM =====
+function addScheduleItem(day = 'Monday', time = '10:00 AM', container) {
+  const c = container || document.querySelector('#scheduleItems');
+  if (!c) return;
+
+  // Convert 12h AM/PM to 24h for HTML5 time input
+  const time24 = convert12to24(time);
+
+  const div = document.createElement('div');
+  div.className = 'slot-row';
+  div.innerHTML = `
         <select style="flex:1;">
-          ${['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'].map(d=>`<option ${d===day?'selected':''}>${d}</option>`).join('')}
+          ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => `<option ${d === day ? 'selected' : ''}>${d}</option>`).join('')}
         </select>
         <input type="time" value="${time24}" style="flex:1;" onkeydown="if(event.key==='Enter'){event.target.closest('.group-card').querySelector('button[onclick*=saveScheduleEdit]').click();}">
         <button onclick="this.parentElement.remove()">🗑️</button>
       `;
-      c.appendChild(div);
-    }
+  c.appendChild(div);
+}
 
-    // ===== CONVERT 12H AM/PM TO 24H =====
-    function convert12to24(time12) {
-      if (!time12) return '10:00';
-      
-      // If already in 24h format, return as-is
-      if (!time12.includes('AM') && !time12.includes('PM')) {
-        return time12.length === 5 ? time12 : '10:00';
-      }
-      
-      const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-      if (!match) return '10:00';
-      
-      let hours = parseInt(match[1]);
-      const minutes = match[2];
-      const period = match[3].toUpperCase();
-      
-      if (period === 'PM' && hours !== 12) hours += 12;
-      if (period === 'AM' && hours === 12) hours = 0;
-      
-      return `${hours.toString().padStart(2, '0')}:${minutes}`;
-    }
+// ===== CONVERT 12H AM/PM TO 24H =====
+function convert12to24(time12) {
+  if (!time12) return '10:00';
 
-    // ===== CONVERT 24H TO 12H AM/PM =====
-    function convert24to12(time24) {
-      if (!time24) return '';
-      const [hours, minutes] = time24.split(':').map(Number);
-      if (isNaN(hours) || isNaN(minutes)) return time24;
-      
-      let period = 'AM';
-      let hours12 = hours;
-      
-      if (hours >= 12) {
-        period = 'PM';
-        if (hours > 12) hours12 = hours - 12;
-      }
-      if (hours === 0) hours12 = 12;
-      
-      return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
-    }
+  // If already in 24h format, return as-is
+  if (!time12.includes('AM') && !time12.includes('PM')) {
+    return time12.length === 5 ? time12 : '10:00';
+  }
 
-    // ===== SAVE SCHEDULE =====
-    // BEGIN GROUP MANAGER SCHEDULE FIX
-    async function saveScheduleEdit(groupName) {
-      const card = event.target.closest('.group-card');
-      if (!card) return;
-      
-      const rows = card.querySelectorAll('.slot-row');
-      let schedule = []; // Clear and rebuild schedule array
-      
-      rows.forEach(r => {
-        const d = r.querySelector('select').value.slice(0,3);
-        const t = r.querySelector('input').value;
-        if (d && t) {
-          // Convert 24-hour time to 12-hour AM/PM format
-          const time12 = convert24to12(t);
-          schedule.push(`${d} ${time12}`);
-        }
-      });
-      
-      const group = groups.find(g => g.name === groupName);
-      if (!group) return;
-      
-      // CRITICAL FIX: Replace old schedule entirely (no appending)
-      group.schedule = schedule.join(', ');
-      
-      // Save only this group (not all groups)
-      const savedGroup = await saveGroup(group);
+  const match = time12.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return '10:00';
+
+  let hours = parseInt(match[1]);
+  const minutes = match[2];
+  const period = match[3].toUpperCase();
+
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+
+  return `${hours.toString().padStart(2, '0')}:${minutes}`;
+}
+
+// ===== CONVERT 24H TO 12H AM/PM =====
+function convert24to12(time24) {
+  if (!time24) return '';
+  const [hours, minutes] = time24.split(':').map(Number);
+  if (isNaN(hours) || isNaN(minutes)) return time24;
+
+  let period = 'AM';
+  let hours12 = hours;
+
+  if (hours >= 12) {
+    period = 'PM';
+    if (hours > 12) hours12 = hours - 12;
+  }
+  if (hours === 0) hours12 = 12;
+
+  return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
+}
+
+// ===== SAVE SCHEDULE =====
+// BEGIN GROUP MANAGER SCHEDULE FIX
+async function saveScheduleEdit(groupName) {
+  const card = event.target.closest('.group-card');
+  if (!card) return;
+
+  const rows = card.querySelectorAll('.slot-row');
+  let schedule = []; // Clear and rebuild schedule array
+
+  rows.forEach(r => {
+    const d = r.querySelector('select').value.slice(0, 3);
+    const t = r.querySelector('input').value;
+    if (d && t) {
+      // Convert 24-hour time to 12-hour AM/PM format
+      const time12 = convert24to12(t);
+      schedule.push(`${d} ${time12}`);
+    }
+  });
+
+  const group = groups.find(g => g.name === groupName);
+  if (!group) return;
+
+  // CRITICAL FIX: Replace old schedule entirely (no appending)
+  group.schedule = schedule.join(', ');
+
+  // Save only this group (not all groups)
+  const savedGroup = await saveGroup(group);
+  if (savedGroup && savedGroup.id) {
+    group.id = savedGroup.id;
+    group.name = savedGroup.group_name || group.name;
+  }
+
+  // Update cache and notify
+  window.groupsCache = groups;
+  window.dispatchEvent(new CustomEvent('groups:updated', { detail: groups }));
+  window.dispatchEvent(new CustomEvent('schedules:updated', { detail: groups }));
+
+  // Flash save confirmation
+  const saveBtn = card.querySelector('button[onclick*="saveScheduleEdit"]');
+  if (saveBtn) {
+    const originalBg = saveBtn.style.background;
+    saveBtn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
+    saveBtn.style.boxShadow = '0 0 20px rgba(16,185,129,0.6)';
+    setTimeout(() => {
+      saveBtn.style.background = originalBg;
+      saveBtn.style.boxShadow = '';
+    }, 800);
+  }
+
+  showToast('✅ Schedule Updated');
+  renderGroups();
+}
+// END GROUP MANAGER SCHEDULE FIX
+
+// ===== PARSE SCHEDULE STRING =====
+// ===== PARSE SCHEDULE STRING =====
+// BEGIN GROUP MANAGER SCHEDULE FIX - Convert day abbreviations to full names
+function convertDayAbbrevToFull(abbrev) {
+  const map = {
+    Mon: 'Monday',
+    'Mon.': 'Monday',
+    Tue: 'Tuesday',
+    'Tue.': 'Tuesday',
+    Wed: 'Wednesday',
+    'Wed.': 'Wednesday',
+    Thu: 'Thursday',
+    'Thu.': 'Thursday',
+    Fri: 'Friday',
+    'Fri.': 'Friday',
+    Sat: 'Saturday',
+    'Sat.': 'Saturday',
+    Sun: 'Sunday',
+    'Sun.': 'Sunday',
+    // Lowercase versions
+    mon: 'Monday',
+    tue: 'Tuesday',
+    wed: 'Wednesday',
+    thu: 'Thursday',
+    fri: 'Friday',
+    sat: 'Saturday',
+    sun: 'Sunday',
+    // Already full names
+    Monday: 'Monday',
+    Tuesday: 'Tuesday',
+    Wednesday: 'Wednesday',
+    Thursday: 'Thursday',
+    Friday: 'Friday',
+    Saturday: 'Saturday',
+    Sunday: 'Sunday',
+  };
+  return map[abbrev] || abbrev || 'Monday';
+}
+
+function parseSchedule(str) {
+  if (!str || !str.trim()) {
+    return [{ day: 'Monday', time: '10:00 AM' }];
+  }
+
+  return str.split(',').map(s => {
+    const parts = s.trim().split(' ');
+    const dayAbbrev = parts[0] || 'Monday';
+    const day = convertDayAbbrevToFull(dayAbbrev);
+    const time = parts.slice(1).join(' ') || '10:00 AM';
+    return { day, time };
+  });
+}
+// END GROUP MANAGER SCHEDULE FIX
+
+// ===== SAVE GROUPS =====
+async function saveGroups() {
+  try {
+    // Save all groups to Supabase and update with returned IDs
+    for (let i = 0; i < groups.length; i++) {
+      const savedGroup = await saveGroup(groups[i]);
       if (savedGroup && savedGroup.id) {
-        group.id = savedGroup.id;
-        group.name = savedGroup.group_name || group.name;
-      }
-      
-      // Update cache and notify
-      window.groupsCache = groups;
-      window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
-      window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
-      
-      // Flash save confirmation
-      const saveBtn = card.querySelector('button[onclick*="saveScheduleEdit"]');
-      if (saveBtn) {
-        const originalBg = saveBtn.style.background;
-        saveBtn.style.background = 'linear-gradient(135deg,#10b981,#059669)';
-        saveBtn.style.boxShadow = '0 0 20px rgba(16,185,129,0.6)';
-        setTimeout(() => {
-          saveBtn.style.background = originalBg;
-          saveBtn.style.boxShadow = '';
-        }, 800);
-      }
-      
-      showToast('✅ Schedule Updated');
-      renderGroups();
-    }
-    // END GROUP MANAGER SCHEDULE FIX
-
-    // ===== PARSE SCHEDULE STRING =====
-    // ===== PARSE SCHEDULE STRING =====
-    // BEGIN GROUP MANAGER SCHEDULE FIX - Convert day abbreviations to full names
-    function convertDayAbbrevToFull(abbrev) {
-      const map = {
-        'Mon': 'Monday', 'Mon.': 'Monday',
-        'Tue': 'Tuesday', 'Tue.': 'Tuesday',
-        'Wed': 'Wednesday', 'Wed.': 'Wednesday',
-        'Thu': 'Thursday', 'Thu.': 'Thursday',
-        'Fri': 'Friday', 'Fri.': 'Friday',
-        'Sat': 'Saturday', 'Sat.': 'Saturday',
-        'Sun': 'Sunday', 'Sun.': 'Sunday',
-        // Lowercase versions
-        'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday',
-        'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday', 'sun': 'Sunday',
-        // Already full names
-        'Monday': 'Monday', 'Tuesday': 'Tuesday', 'Wednesday': 'Wednesday',
-        'Thursday': 'Thursday', 'Friday': 'Friday', 'Saturday': 'Saturday', 'Sunday': 'Sunday'
-      };
-      return map[abbrev] || abbrev || 'Monday';
-    }
-    
-    function parseSchedule(str) {
-      if (!str || !str.trim()) {
-        return [{day: 'Monday', time: '10:00 AM'}];
-      }
-      
-      return str.split(',').map(s => {
-        const parts = s.trim().split(' ');
-        const dayAbbrev = parts[0] || 'Monday';
-        const day = convertDayAbbrevToFull(dayAbbrev);
-        const time = parts.slice(1).join(' ') || '10:00 AM';
-        return { day, time };
-      });
-    }
-    // END GROUP MANAGER SCHEDULE FIX
-
-    // ===== SAVE GROUPS =====
-    async function saveGroups() {
-      try {
-        // Save all groups to Supabase and update with returned IDs
-        for (let i = 0; i < groups.length; i++) {
-          const savedGroup = await saveGroup(groups[i]);
-          if (savedGroup && savedGroup.id) {
-            // Update the local group with the id from Supabase
-            groups[i].id = savedGroup.id;
-            // Also map back group_name to name
-            groups[i].name = savedGroup.group_name || groups[i].name;
-          }
-        }
-        
-        // Update global cache
-        window.groupsCache = groups;
-        
-        // Dispatch events for Student Manager and Payment Records
-        window.dispatchEvent(new CustomEvent("groups:updated", { detail: groups }));
-        window.dispatchEvent(new CustomEvent("schedules:updated", { detail: groups }));
-        
-      } catch (error) {
-        console.error('Error saving groups:', error);
+        // Update the local group with the id from Supabase
+        groups[i].id = savedGroup.id;
+        // Also map back group_name to name
+        groups[i].name = savedGroup.group_name || groups[i].name;
       }
     }
 
-    // ===== UPDATE COLORS =====
-    function updateScheduleItemStates() {
-      document.querySelectorAll('.schedule-item').forEach(item => {
-        const day = item.dataset.day;
-        const time = item.dataset.time;
-        if (!day || !time) return;
-        
-        const mins = getMinutesUntilClass(day, time);
-        item.classList.remove('upcoming-green','upcoming-orange','upcoming-red');
-        if (mins < 120) item.classList.add('upcoming-red');
-        else if (mins < 360) item.classList.add('upcoming-orange');
-        else if (mins < 720) item.classList.add('upcoming-green');
-        
-        item.onmouseenter = e => showCountdownPanel(e, day, time);
-        item.onmouseleave = hideCountdownPanel;
-      });
+    // Update global cache
+    window.groupsCache = groups;
+
+    // Dispatch events for Student Manager and Payment Records
+    window.dispatchEvent(new CustomEvent('groups:updated', { detail: groups }));
+    window.dispatchEvent(new CustomEvent('schedules:updated', { detail: groups }));
+  } catch (error) {
+    console.error('Error saving groups:', error);
+  }
+}
+
+// ===== UPDATE COLORS =====
+function updateScheduleItemStates() {
+  document.querySelectorAll('.schedule-item').forEach(item => {
+    const day = item.dataset.day;
+    const time = item.dataset.time;
+    if (!day || !time) return;
+
+    const mins = getMinutesUntilClass(day, time);
+    item.classList.remove('upcoming-green', 'upcoming-orange', 'upcoming-red');
+    if (mins < 120) item.classList.add('upcoming-red');
+    else if (mins < 360) item.classList.add('upcoming-orange');
+    else if (mins < 720) item.classList.add('upcoming-green');
+
+    item.onmouseenter = e => showCountdownPanel(e, day, time);
+    item.onmouseleave = hideCountdownPanel;
+  });
+}
+
+// ===== COUNTDOWN =====
+// BEGIN GROUP MANAGER SCHEDULE FIX - Correct nearest class calculation
+function getMinutesUntilClass(day, time) {
+  const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const now = getNowLA(); // Use LA timezone
+
+  // Parse the day index
+  const targetDayIndex = days.findIndex(d => d.startsWith(day));
+  if (targetDayIndex === -1) return 10080; // 1 week fallback
+
+  // Parse the time (handle both "10:00 AM" and "10:00" formats)
+  let targetHours = 0;
+  let targetMinutes = 0;
+
+  if (time.includes('AM') || time.includes('PM')) {
+    // 12-hour format: "10:00 AM" or "3:30 PM"
+    const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+    if (match) {
+      targetHours = parseInt(match[1]);
+      targetMinutes = parseInt(match[2]);
+      const period = match[3].toUpperCase();
+
+      if (period === 'PM' && targetHours !== 12) targetHours += 12;
+      if (period === 'AM' && targetHours === 12) targetHours = 0;
+    }
+  } else {
+    // 24-hour format: "14:30"
+    const [hh, mm] = time.split(':');
+    targetHours = parseInt(hh) || 0;
+    targetMinutes = parseInt(mm) || 0;
+  }
+
+  // Create target date for this week
+  const target = new Date(now);
+  target.setHours(targetHours, targetMinutes, 0, 0);
+
+  // Calculate days until target
+  const currentDay = now.getDay();
+  let daysUntil = targetDayIndex - currentDay;
+
+  // If target day is today, check if time has passed
+  if (daysUntil === 0) {
+    if (target <= now) {
+      // Time passed today, move to next week
+      daysUntil = 7;
+    }
+  } else if (daysUntil < 0) {
+    // Target day already passed this week, move to next week
+    daysUntil += 7;
+  }
+
+  // Set the correct date
+  target.setDate(now.getDate() + daysUntil);
+
+  // Calculate minutes difference
+  const diffMs = target - now;
+  const diffMinutes = Math.floor(diffMs / 60000);
+
+  return diffMinutes > 0 ? diffMinutes : 0;
+}
+// END GROUP MANAGER SCHEDULE FIX
+
+// ===== COUNTDOWN PANEL =====
+// BEGIN GROUP MANAGER SCHEDULE FIX - Better countdown display
+function showCountdownPanel(e, day, time) {
+  const panel = document.getElementById('countdownPanel');
+  if (!panel) return;
+
+  panel.style.display = 'block';
+  panel.style.left = e.pageX + 15 + 'px';
+  panel.style.top = e.pageY + 15 + 'px';
+  clearInterval(countdownTimer);
+
+  const update = () => {
+    const mins = getMinutesUntilClass(day, time);
+    const totalHours = Math.floor(mins / 60);
+    const remainingMins = Math.floor(mins % 60);
+
+    // Format display based on time remaining
+    let displayText = '';
+    if (totalHours >= 24) {
+      const days = Math.floor(totalHours / 24);
+      const hours = totalHours % 24;
+      displayText = `${days}d ${hours}h ${remainingMins}m`;
+    } else {
+      displayText = `${totalHours}h ${remainingMins}m`;
     }
 
-    // ===== COUNTDOWN =====
-    // BEGIN GROUP MANAGER SCHEDULE FIX - Correct nearest class calculation
-    function getMinutesUntilClass(day, time) {
-      const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-      const now = getNowLA(); // Use LA timezone
-      
-      // Parse the day index
-      const targetDayIndex = days.findIndex(d => d.startsWith(day));
-      if (targetDayIndex === -1) return 10080; // 1 week fallback
-      
-      // Parse the time (handle both "10:00 AM" and "10:00" formats)
-      let targetHours = 0;
-      let targetMinutes = 0;
-      
-      if (time.includes('AM') || time.includes('PM')) {
-        // 12-hour format: "10:00 AM" or "3:30 PM"
-        const match = time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-        if (match) {
-          targetHours = parseInt(match[1]);
-          targetMinutes = parseInt(match[2]);
-          const period = match[3].toUpperCase();
-          
-          if (period === 'PM' && targetHours !== 12) targetHours += 12;
-          if (period === 'AM' && targetHours === 12) targetHours = 0;
-        }
-      } else {
-        // 24-hour format: "14:30"
-        const [hh, mm] = time.split(':');
-        targetHours = parseInt(hh) || 0;
-        targetMinutes = parseInt(mm) || 0;
-      }
-      
-      // Create target date for this week
-      const target = new Date(now);
-      target.setHours(targetHours, targetMinutes, 0, 0);
-      
-      // Calculate days until target
-      const currentDay = now.getDay();
-      let daysUntil = targetDayIndex - currentDay;
-      
-      // If target day is today, check if time has passed
-      if (daysUntil === 0) {
-        if (target <= now) {
-          // Time passed today, move to next week
-          daysUntil = 7;
-        }
-      } else if (daysUntil < 0) {
-        // Target day already passed this week, move to next week
-        daysUntil += 7;
-      }
-      
-      // Set the correct date
-      target.setDate(now.getDate() + daysUntil);
-      
-      // Calculate minutes difference
-      const diffMs = target - now;
-      const diffMinutes = Math.floor(diffMs / 60000);
-      
-      return diffMinutes > 0 ? diffMinutes : 0;
-    }
-    // END GROUP MANAGER SCHEDULE FIX
+    panel.innerHTML = `Next ${day} at ${time}<br><b style="font-size:1.2rem;">${displayText}</b>`;
+  };
+  update();
+  countdownTimer = setInterval(update, 60000);
+}
+// END GROUP MANAGER SCHEDULE FIX
 
-    // ===== COUNTDOWN PANEL =====
-    // BEGIN GROUP MANAGER SCHEDULE FIX - Better countdown display
-    function showCountdownPanel(e, day, time) {
-      const panel = document.getElementById('countdownPanel');
-      if (!panel) return;
-      
-      panel.style.display = 'block';
-      panel.style.left = (e.pageX+15)+'px';
-      panel.style.top = (e.pageY+15)+'px';
-      clearInterval(countdownTimer);
-      
-      const update = () => {
-        const mins = getMinutesUntilClass(day, time);
-        const totalHours = Math.floor(mins / 60);
-        const remainingMins = Math.floor(mins % 60);
-        
-        // Format display based on time remaining
-        let displayText = '';
-        if (totalHours >= 24) {
-          const days = Math.floor(totalHours / 24);
-          const hours = totalHours % 24;
-          displayText = `${days}d ${hours}h ${remainingMins}m`;
-        } else {
-          displayText = `${totalHours}h ${remainingMins}m`;
-        }
-        
-        panel.innerHTML = `Next ${day} at ${time}<br><b style="font-size:1.2rem;">${displayText}</b>`;
-      };
-      update();
-      countdownTimer = setInterval(update, 60000);
-    }
-    // END GROUP MANAGER SCHEDULE FIX
+function hideCountdownPanel() {
+  const panel = document.getElementById('countdownPanel');
+  if (panel) panel.style.display = 'none';
+  clearInterval(countdownTimer);
+}
 
-    function hideCountdownPanel() {
-      const panel = document.getElementById('countdownPanel');
-      if (panel) panel.style.display = 'none';
-      clearInterval(countdownTimer);
-    }
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
 
-    // ===== TOAST =====
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      if (!t) return;
-      t.textContent = msg;
-      t.classList.add('show');
-      setTimeout(() => t.classList.remove('show'), 2000);
-    }
+// ===== LOAD GROUPS ON INIT =====
+if (!window.globalData) window.globalData = {};
+window.globalData.groups = groups;
 
-    // ===== LOAD GROUPS ON INIT =====
-    if (!window.globalData) window.globalData = {};
+// For backwards compatibility with Student Manager
+function loadGroups() {
+  return loadGroupsFromSupabase();
+}
+
+// Listen for student updates to refresh group displays
+window.addEventListener('students:updated', function (event) {
+  // Refresh group data when students are updated
+  if (document.getElementById('groupManagerModal').style.display === 'block') {
+    renderGroups();
+  }
+});
+
+// ============================================================================
+// INITIALIZATION
+// ============================================================================
+
+async function initialize() {
+  console.log('🚀 Initializing ARNOMA app with Supabase...');
+
+  // Initialize global data
+  if (!window.globalData) {
+    window.globalData = {
+      groups: [],
+      students: [],
+      payments: [],
+    };
+  }
+
+  // Load data from Supabase into global state
+  try {
+    const [groups, students, payments] = await Promise.all([
+      loadGroups(),
+      loadStudents(),
+      PaymentStore.fetchAll(),
+    ]);
+
     window.globalData.groups = groups;
-    
-    // For backwards compatibility with Student Manager
-    function loadGroups() {
-      return loadGroupsFromSupabase();
+    window.globalData.students = students;
+    window.globalData.payments = payments;
+  } catch (error) {
+    console.error('❌ Error loading data from Supabase:', error);
+  }
+
+  // Handle OAuth callback
+  handleOAuthCallback();
+
+  // Restore Gmail connection state (per developer command)
+  const connection = getGmailConnection();
+  if (connection && connection.access_token) {
+    gmailAccessToken = connection.access_token;
+    gmailTokenExpiry = connection.expiry_date.toString();
+    updateGmailButtonState(true);
+
+    // Add Gmail status indicator (🟢 connected)
+    showNotification('🟢 Gmail connected', 'success');
+  } else {
+    // Clear any stale tokens
+    if (gmailAccessToken) {
+      const expiry = parseInt(gmailTokenExpiry || '0');
+      if (expiry && Date.now() < expiry) {
+        updateGmailButtonState(true);
+      } else {
+        clearGmailConnection();
+        gmailAccessToken = null;
+        updateGmailButtonState(false);
+      }
+    }
+  }
+
+  // Initialize auto-refresh state
+  const autoRefreshBtn = document.getElementById('autoRefreshToggle');
+  if (autoRefreshEnabled) {
+    autoRefreshBtn.classList.add('auto-refresh-active');
+    autoRefreshBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
+    startAutoRefresh();
+  }
+
+  // Populate month selector
+  populateMonthSelector();
+
+  // Initialize LA offset toggles
+  initializeLAOffsetToggles();
+
+  // Render payments
+  renderPaymentEmailsView();
+
+  // Initialize daily auto-backup system
+  initializeDailyAutoBackup();
+
+  // Add filter change listener
+  const filterDropdown = document.getElementById('paymentFilterDropdown');
+  if (filterDropdown) {
+    filterDropdown.addEventListener('change', renderPaymentEmailsView);
+  }
+}
+
+// ============================
+// BEGIN QUICK VIEW FUNCTIONS
+// ============================
+
+let currentQuickViewTab = 'byGroup';
+
+// Open Quick View modal
+function openQuickView() {
+  const modal = document.getElementById('quickViewModal');
+  if (!modal) return;
+
+  // Close Group Manager if open
+  const groupModal = document.getElementById('groupManagerModal');
+  if (groupModal) groupModal.style.display = 'none';
+
+  // Show Quick View modal
+  modal.style.display = 'flex';
+
+  // Render content
+  renderQuickView();
+}
+
+// Close Quick View modal
+function closeQuickView() {
+  const modal = document.getElementById('quickViewModal');
+  if (!modal) return;
+  modal.style.display = 'none';
+}
+
+// Switch between tabs
+function switchQuickViewTab(tab) {
+  currentQuickViewTab = tab;
+
+  // Update tab button styles
+  const tabs = {
+    byGroup: document.getElementById('tabByGroup'),
+    byWeekday: document.getElementById('tabByWeekday'),
+    byWeekdayYerevan: document.getElementById('tabByWeekdayYerevan'),
+  };
+
+  // Reset all tabs to inactive style
+  Object.values(tabs).forEach(btn => {
+    if (!btn) return;
+    btn.style.background = 'rgba(255,255,255,0.1)';
+    btn.style.border = '1px solid rgba(255,255,255,0.2)';
+    btn.style.color = 'rgba(255,255,255,0.7)';
+    btn.style.boxShadow = 'none';
+    btn.style.fontWeight = '600';
+  });
+
+  // Set active tab style
+  const activeTab = tabs[tab];
+  if (activeTab) {
+    activeTab.style.background = 'linear-gradient(135deg, #8ab4ff, #a855f7)';
+    activeTab.style.border = 'none';
+    activeTab.style.color = 'white';
+    activeTab.style.boxShadow = '0 4px 12px rgba(138, 180, 255, 0.3)';
+    activeTab.style.fontWeight = '700';
+  }
+
+  // Re-render content
+  renderQuickView();
+}
+
+// BEGIN QUICK VIEW FIX: Convert LA time to Yerevan time
+// BEGIN DAY SHIFT FIX
+function convertLATimeToYerevan(timeStr, returnDayShift = false) {
+  if (!timeStr) return returnDayShift ? { time: '', dayShift: 0 } : '';
+
+  // Parse time (e.g., "8:00 AM", "10:30 PM")
+  const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return returnDayShift ? { time: timeStr, dayShift: 0 } : timeStr;
+
+  let hours = parseInt(match[1]);
+  const minutes = match[2];
+  const period = match[3].toUpperCase();
+
+  // Convert to 24-hour format
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+
+  // LA to Yerevan offset: DST (UTC-7) = +11h, Standard (UTC-8) = +12h
+  // Check if DST is active (timezone offset is 420 minutes / 7 hours)
+  const now = new Date();
+  const isDST = now.getTimezoneOffset() === 420;
+  const offsetHours = isDST ? 11 : 12;
+
+  let yerevanHours = hours + offsetHours;
+
+  // Handle day overflow
+  let dayShift = 0;
+  if (yerevanHours >= 24) {
+    yerevanHours -= 24;
+    dayShift = 1; // Next day
+  }
+
+  // Convert back to 12-hour format
+  let yerevanPeriod = 'AM';
+  if (yerevanHours >= 12) {
+    yerevanPeriod = 'PM';
+    if (yerevanHours > 12) yerevanHours -= 12;
+  }
+  if (yerevanHours === 0) yerevanHours = 12;
+
+  const timeResult = `${yerevanHours}:${minutes} ${yerevanPeriod}`;
+
+  return returnDayShift ? { time: timeResult, dayShift: dayShift } : timeResult;
+}
+
+// Convert Yerevan time back to LA time (for display purposes)
+function convertYerevanTimeToLA(timeStr, returnDayShift = false) {
+  if (!timeStr) return returnDayShift ? { time: '', dayShift: 0 } : '';
+
+  // Parse time and remove day offset if present
+  const cleanTime = timeStr.replace(/\s*\(\+1d\)|\s*\(-1d\)/, '');
+  const match = cleanTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+  if (!match) return returnDayShift ? { time: timeStr, dayShift: 0 } : timeStr;
+
+  let hours = parseInt(match[1]);
+  const minutes = match[2];
+  const period = match[3].toUpperCase();
+
+  // Convert to 24-hour format
+  if (period === 'PM' && hours !== 12) hours += 12;
+  if (period === 'AM' && hours === 12) hours = 0;
+
+  // Yerevan to LA offset: reverse of LA to Yerevan
+  const now = new Date();
+  const isDST = now.getTimezoneOffset() === 420;
+  const offsetHours = isDST ? -11 : -12;
+
+  let laHours = hours + offsetHours;
+
+  // Handle day underflow
+  let dayShift = 0;
+  if (laHours < 0) {
+    laHours += 24;
+    dayShift = -1; // Previous day
+  }
+
+  // Convert back to 12-hour format
+  let laPeriod = 'AM';
+  if (laHours >= 12) {
+    laPeriod = 'PM';
+    if (laHours > 12) laHours -= 12;
+  }
+  if (laHours === 0) laHours = 12;
+
+  const timeResult = `${laHours}:${minutes} ${laPeriod}`;
+
+  return returnDayShift ? { time: timeResult, dayShift: dayShift } : timeResult;
+}
+// END DAY SHIFT FIX
+// END QUICK VIEW FIX
+
+// Ensure time is in 12-hour AM/PM format
+function ensureAMPMFormat(timeStr) {
+  if (!timeStr) return '';
+
+  // If already has AM/PM, return as-is
+  if (/AM|PM/i.test(timeStr)) return timeStr;
+
+  // Try to parse 24-hour format (e.g., "20:00", "08:00")
+  const match24 = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+  if (match24) {
+    let hours = parseInt(match24[1]);
+    const minutes = match24[2];
+
+    let period = 'AM';
+    if (hours >= 12) {
+      period = 'PM';
+      if (hours > 12) hours -= 12;
+    }
+    if (hours === 0) hours = 12;
+
+    return `${hours}:${minutes} ${period}`;
+  }
+
+  // Return as-is if can't parse
+  return timeStr;
+}
+
+// Format schedule text into readable chips
+function formatScheduleQuickView(scheduleText, convertToYerevan = false) {
+  if (!scheduleText || scheduleText.trim() === '') {
+    return '<span style="color: rgba(255,255,255,0.5); font-style: italic;">No schedule</span>';
+  }
+
+  // Parse schedule: "Mon/Wed 8:00 AM, Fri 9:00 AM"
+  const parts = scheduleText
+    .split(',')
+    .map(p => p.trim())
+    .filter(p => p);
+  if (parts.length === 0) {
+    return '<span style="color: rgba(255,255,255,0.5); font-style: italic;">No schedule</span>';
+  }
+
+  const chips = parts
+    .map(part => {
+      // Extract days and time: "Mon/Wed 8:00 AM"
+      const match = part.match(/^([\w/]+)\s+(.+)$/);
+      if (!match) return null;
+
+      const days = match[1];
+      const time = match[2];
+      // Ensure time is in AM/PM format
+      const timeAMPM = ensureAMPMFormat(time);
+      // Get clean time without day markers for display
+      const displayTime = convertToYerevan ? convertLATimeToYerevan(timeAMPM, true).time : timeAMPM;
+
+      return `<span style="display: inline-block; padding: 6px 12px; margin: 4px; background: rgba(138,180,255,0.15); border: 1px solid rgba(138,180,255,0.3); border-radius: 8px; font-size: 13px; color: #8ab4ff; white-space: nowrap;">${days} ${displayTime}</span>`;
+    })
+    .filter(c => c);
+
+  return chips.join('');
+}
+
+// BEGIN QUICK VIEW FIX: Main render function
+function renderQuickView() {
+  const contentEl = document.getElementById('quickViewContent');
+  if (!contentEl) return;
+
+  try {
+    // Load groups from Supabase cache
+    const groupsData = window.groupsCache || window.globalData?.groups || [];
+
+    if (!Array.isArray(groupsData) || groupsData.length === 0) {
+      contentEl.innerHTML =
+        '<div style="text-align: center; padding: 60px; color: rgba(255,255,255,0.5); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">📚</div><p>No groups found.<br>Add groups in Group Manager to see schedules here.</p></div>';
+      return;
     }
 
-    // Listen for student updates to refresh group displays
-    window.addEventListener('students:updated', function(event) {
-      // Refresh group data when students are updated
-      if (document.getElementById('groupManagerModal').style.display === 'block') {
-        renderGroups();
-      }
-    });
-    
-    // ============================================================================
-    // INITIALIZATION
-    // ============================================================================
-    
-    async function initialize() {
-      console.log('🚀 Initializing ARNOMA app with Supabase...');
-      
-      // Initialize global data
-      if (!window.globalData) {
-        window.globalData = {
-          groups: [],
-          students: [],
-          payments: []
-        };
-      }
-      
-      // Load data from Supabase into global state
-      try {
-        const [groups, students, payments] = await Promise.all([
-          loadGroups(),
-          loadStudents(),
-          PaymentStore.fetchAll()
-        ]);
-        
-        window.globalData.groups = groups;
-        window.globalData.students = students;
-        window.globalData.payments = payments;
-        
-      } catch (error) {
-        console.error('❌ Error loading data from Supabase:', error);
-      }
-      
-      // Handle OAuth callback
-      handleOAuthCallback();
-      
-      // Restore Gmail connection state (per developer command)
-      const connection = getGmailConnection();
-      if (connection && connection.access_token) {
-        gmailAccessToken = connection.access_token;
-        gmailTokenExpiry = connection.expiry_date.toString();
-        updateGmailButtonState(true);
-        
-        // Add Gmail status indicator (🟢 connected)
-        showNotification('🟢 Gmail connected', 'success');
-      } else {
-        // Clear any stale tokens
-        if (gmailAccessToken) {
-          const expiry = parseInt(gmailTokenExpiry || '0');
-          if (expiry && Date.now() < expiry) {
-            updateGmailButtonState(true);
-          } else {
-            clearGmailConnection();
-            gmailAccessToken = null;
-            updateGmailButtonState(false);
-          }
-        }
-      }
-      
-      // Initialize auto-refresh state
-      const autoRefreshBtn = document.getElementById('autoRefreshToggle');
-      if (autoRefreshEnabled) {
-        autoRefreshBtn.classList.add('auto-refresh-active');
-        autoRefreshBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
-        startAutoRefresh();
-      }
-      
-      // Populate month selector
-      populateMonthSelector();
-      
-      // Initialize LA offset toggles
-      initializeLAOffsetToggles();
-      
-      // Render payments
-      renderPaymentEmailsView();
-      
-      // Initialize daily auto-backup system
-      initializeDailyAutoBackup();
-      
-      // Add filter change listener
-      const filterDropdown = document.getElementById('paymentFilterDropdown');
-      if (filterDropdown) {
-        filterDropdown.addEventListener('change', renderPaymentEmailsView);
-      }
-    }
-    
-    // ============================
-    // BEGIN QUICK VIEW FUNCTIONS
-    // ============================
-    
-    let currentQuickViewTab = 'byGroup';
-    
-    // Open Quick View modal
-    function openQuickView() {
-      const modal = document.getElementById('quickViewModal');
-      if (!modal) return;
-      
-      // Close Group Manager if open
-      const groupModal = document.getElementById('groupManagerModal');
-      if (groupModal) groupModal.style.display = 'none';
-      
-      // Show Quick View modal
-      modal.style.display = 'flex';
-      
-      // Render content
-      renderQuickView();
-    }
-    
-    // Close Quick View modal
-    function closeQuickView() {
-      const modal = document.getElementById('quickViewModal');
-      if (!modal) return;
-      modal.style.display = 'none';
-    }
-    
-    // Switch between tabs
-    function switchQuickViewTab(tab) {
-      currentQuickViewTab = tab;
-      
-      // Update tab button styles
-      const tabs = {
-        byGroup: document.getElementById('tabByGroup'),
-        byWeekday: document.getElementById('tabByWeekday'),
-        byWeekdayYerevan: document.getElementById('tabByWeekdayYerevan')
-      };
-      
-      // Reset all tabs to inactive style
-      Object.values(tabs).forEach(btn => {
-        if (!btn) return;
-        btn.style.background = 'rgba(255,255,255,0.1)';
-        btn.style.border = '1px solid rgba(255,255,255,0.2)';
-        btn.style.color = 'rgba(255,255,255,0.7)';
-        btn.style.boxShadow = 'none';
-        btn.style.fontWeight = '600';
-      });
-      
-      // Set active tab style
-      const activeTab = tabs[tab];
-      if (activeTab) {
-        activeTab.style.background = 'linear-gradient(135deg, #8ab4ff, #a855f7)';
-        activeTab.style.border = 'none';
-        activeTab.style.color = 'white';
-        activeTab.style.boxShadow = '0 4px 12px rgba(138, 180, 255, 0.3)';
-        activeTab.style.fontWeight = '700';
-      }
-      
-      // Re-render content
-      renderQuickView();
-    }
-    
-    // BEGIN QUICK VIEW FIX: Convert LA time to Yerevan time
-    // BEGIN DAY SHIFT FIX
-    function convertLATimeToYerevan(timeStr, returnDayShift = false) {
-      if (!timeStr) return returnDayShift ? { time: '', dayShift: 0 } : '';
-      
-      // Parse time (e.g., "8:00 AM", "10:30 PM")
-      const match = timeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-      if (!match) return returnDayShift ? { time: timeStr, dayShift: 0 } : timeStr;
-      
-      let hours = parseInt(match[1]);
-      const minutes = match[2];
-      const period = match[3].toUpperCase();
-      
-      // Convert to 24-hour format
-      if (period === 'PM' && hours !== 12) hours += 12;
-      if (period === 'AM' && hours === 12) hours = 0;
-      
-      // LA to Yerevan offset: DST (UTC-7) = +11h, Standard (UTC-8) = +12h
-      // Check if DST is active (timezone offset is 420 minutes / 7 hours)
-      const now = new Date();
-      const isDST = now.getTimezoneOffset() === 420;
-      const offsetHours = isDST ? 11 : 12;
-      
-      let yerevanHours = hours + offsetHours;
-      
-      // Handle day overflow
-      let dayShift = 0;
-      if (yerevanHours >= 24) {
-        yerevanHours -= 24;
-        dayShift = 1; // Next day
-      }
-      
-      // Convert back to 12-hour format
-      let yerevanPeriod = 'AM';
-      if (yerevanHours >= 12) {
-        yerevanPeriod = 'PM';
-        if (yerevanHours > 12) yerevanHours -= 12;
-      }
-      if (yerevanHours === 0) yerevanHours = 12;
-      
-      const timeResult = `${yerevanHours}:${minutes} ${yerevanPeriod}`;
-      
-      return returnDayShift ? { time: timeResult, dayShift: dayShift } : timeResult;
-    }
-    
-    // Convert Yerevan time back to LA time (for display purposes)
-    function convertYerevanTimeToLA(timeStr, returnDayShift = false) {
-      if (!timeStr) return returnDayShift ? { time: '', dayShift: 0 } : '';
-      
-      // Parse time and remove day offset if present
-      const cleanTime = timeStr.replace(/\s*\(\+1d\)|\s*\(-1d\)/, '');
-      const match = cleanTime.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-      if (!match) return returnDayShift ? { time: timeStr, dayShift: 0 } : timeStr;
-      
-      let hours = parseInt(match[1]);
-      const minutes = match[2];
-      const period = match[3].toUpperCase();
-      
-      // Convert to 24-hour format
-      if (period === 'PM' && hours !== 12) hours += 12;
-      if (period === 'AM' && hours === 12) hours = 0;
-      
-      // Yerevan to LA offset: reverse of LA to Yerevan
-      const now = new Date();
-      const isDST = now.getTimezoneOffset() === 420;
-      const offsetHours = isDST ? -11 : -12;
-      
-      let laHours = hours + offsetHours;
-      
-      // Handle day underflow
-      let dayShift = 0;
-      if (laHours < 0) {
-        laHours += 24;
-        dayShift = -1; // Previous day
-      }
-      
-      // Convert back to 12-hour format
-      let laPeriod = 'AM';
-      if (laHours >= 12) {
-        laPeriod = 'PM';
-        if (laHours > 12) laHours -= 12;
-      }
-      if (laHours === 0) laHours = 12;
-      
-      const timeResult = `${laHours}:${minutes} ${laPeriod}`;
-      
-      return returnDayShift ? { time: timeResult, dayShift: dayShift } : timeResult;
-    }
-    // END DAY SHIFT FIX
-    // END QUICK VIEW FIX
-    
-    // Ensure time is in 12-hour AM/PM format
-    function ensureAMPMFormat(timeStr) {
-      if (!timeStr) return '';
-      
-      // If already has AM/PM, return as-is
-      if (/AM|PM/i.test(timeStr)) return timeStr;
-      
-      // Try to parse 24-hour format (e.g., "20:00", "08:00")
-      const match24 = timeStr.match(/^(\d{1,2}):(\d{2})$/);
-      if (match24) {
-        let hours = parseInt(match24[1]);
-        const minutes = match24[2];
-        
-        let period = 'AM';
-        if (hours >= 12) {
-          period = 'PM';
-          if (hours > 12) hours -= 12;
-        }
-        if (hours === 0) hours = 12;
-        
-        return `${hours}:${minutes} ${period}`;
-      }
-      
-      // Return as-is if can't parse
-      return timeStr;
-    }
-    
-    // Format schedule text into readable chips
-    function formatScheduleQuickView(scheduleText, convertToYerevan = false) {
-      if (!scheduleText || scheduleText.trim() === '') {
-        return '<span style="color: rgba(255,255,255,0.5); font-style: italic;">No schedule</span>';
-      }
-      
-      // Parse schedule: "Mon/Wed 8:00 AM, Fri 9:00 AM"
-      const parts = scheduleText.split(',').map(p => p.trim()).filter(p => p);
-      if (parts.length === 0) {
-        return '<span style="color: rgba(255,255,255,0.5); font-style: italic;">No schedule</span>';
-      }
-      
-      const chips = parts.map(part => {
-        // Extract days and time: "Mon/Wed 8:00 AM"
-        const match = part.match(/^([\w/]+)\s+(.+)$/);
-        if (!match) return null;
-        
-        const days = match[1];
-        const time = match[2];
-        // Ensure time is in AM/PM format
-        const timeAMPM = ensureAMPMFormat(time);
-        // Get clean time without day markers for display
-        const displayTime = convertToYerevan 
-          ? convertLATimeToYerevan(timeAMPM, true).time 
-          : timeAMPM;
-        
-        return `<span style="display: inline-block; padding: 6px 12px; margin: 4px; background: rgba(138,180,255,0.15); border: 1px solid rgba(138,180,255,0.3); border-radius: 8px; font-size: 13px; color: #8ab4ff; white-space: nowrap;">${days} ${displayTime}</span>`;
-      }).filter(c => c);
-      
-      return chips.join('');
-    }
-    
-    // BEGIN QUICK VIEW FIX: Main render function
-    function renderQuickView() {
-      const contentEl = document.getElementById('quickViewContent');
-      if (!contentEl) return;
-      
-      try {
-        // Load groups from Supabase cache
-        const groupsData = window.groupsCache || window.globalData?.groups || [];
-        
-        if (!Array.isArray(groupsData) || groupsData.length === 0) {
-          contentEl.innerHTML = '<div style="text-align: center; padding: 60px; color: rgba(255,255,255,0.5); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">📚</div><p>No groups found.<br>Add groups in Group Manager to see schedules here.</p></div>';
-          return;
-        }
-        
-        let html = '';
-        
-        if (currentQuickViewTab === 'byGroup') {
-          // BY GROUP VIEW
-          html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">';
-          groupsData.forEach(group => {
-            const schedule = formatScheduleQuickView(group.schedule || '');
-            // Ensure group name starts with "Group" prefix if it's just a letter
-            const groupName = group.name && group.name.length === 1 ? `Group ${group.name}` : (group.name || 'Unnamed Group');
-            html += `
+    let html = '';
+
+    if (currentQuickViewTab === 'byGroup') {
+      // BY GROUP VIEW
+      html =
+        '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">';
+      groupsData.forEach(group => {
+        const schedule = formatScheduleQuickView(group.schedule || '');
+        // Ensure group name starts with "Group" prefix if it's just a letter
+        const groupName =
+          group.name && group.name.length === 1
+            ? `Group ${group.name}`
+            : group.name || 'Unnamed Group';
+        html += `
               <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px; transition: all 0.2s;">
                 <div style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 8px;">${escapeHtml(groupName)}</div>
                 <div style="font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 8px; font-weight: 600;">Schedule:</div>
                 <div>${schedule}</div>
               </div>
             `;
-          });
-          html += '</div>';
-          
-        } else if (currentQuickViewTab === 'byWeekday') {
-          // BY WEEKDAY (LA) VIEW
-          const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-          const dayMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
-          const daySchedule = {};
-          
-          // Parse all schedules and organize by day
-          groupsData.forEach(group => {
-            const scheduleText = (group.schedule || '').trim();
-            if (!scheduleText) return;
-            
-            const parts = scheduleText.split(',').map(p => p.trim()).filter(p => p);
-            parts.forEach(part => {
-              const match = part.match(/^([\w/]+)\s+(.+)$/);
-              if (!match) return;
-              
-              const daysStr = match[1].toLowerCase();
-              const time = match[2];
-              // Ensure time is in AM/PM format before storing
-              const timeAMPM = ensureAMPMFormat(time);
-              
-              // Handle slash-separated days: "mon/wed"
-              const dayTokens = daysStr.split('/').map(d => d.trim());
-              dayTokens.forEach(token => {
-                const fullDay = dayMap[token];
-                if (!fullDay) return;
-                
-                if (!daySchedule[fullDay]) daySchedule[fullDay] = [];
-                daySchedule[fullDay].push({ group: escapeHtml(group.name), time: escapeHtml(timeAMPM) });
-              });
-            });
-          });
-          
-          // Sort sessions by time within each day
-          Object.keys(daySchedule).forEach(day => {
-            daySchedule[day].sort((a, b) => {
-              const timeA = new Date('1970-01-01 ' + a.time);
-              const timeB = new Date('1970-01-01 ' + b.time);
-              return timeA - timeB;
-            });
-          });
-          
-          html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
-          weekdays.forEach(day => {
-            const sessions = daySchedule[day] || [];
-            html += `
-              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
-                <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                  ${sessions.length === 0 
-                    ? '<span style="color: rgba(255,255,255,0.4); font-style: italic;">No sessions scheduled</span>' 
-                    : sessions.map(s => {
-                        // Get clean Yerevan time without day markers
-                        const yerevanResult = convertLATimeToYerevan(s.time, true);
-                        const yerevanTime = yerevanResult.time; // Clean time without markers
-                        // Ensure group name starts with "Group" prefix if it's just a letter
-                        const groupName = s.group.length === 1 ? `Group ${s.group}` : s.group;
-                        return `<span style="padding: 8px 14px; background: rgba(138,180,255,0.15); border: 1px solid rgba(138,180,255,0.3); border-radius: 8px; font-size: 12px; color: #8ab4ff;"><strong>${groupName}</strong> — ${s.time} (Los Angeles) <span style="opacity: 0.7;">(${yerevanTime} Yerevan Time)</span></span>`;
-                      }).join('')}
-                </div>
-              </div>
-            `;
-          });
-          html += '</div>';
-          
-        } else if (currentQuickViewTab === 'byWeekdayYerevan') {
-          // BY WEEKDAY (YEREVAN) VIEW
-          // BEGIN DAY SHIFT FIX - Calculate next weekday helper
-          function getNextWeekday(weekday, offset) {
-            const weekdayIndex = {
-              'Monday': 0, 'Tuesday': 1, 'Wednesday': 2, 'Thursday': 3,
-              'Friday': 4, 'Saturday': 5, 'Sunday': 6
-            };
-            const indexToDay = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-            
-            const currentIndex = weekdayIndex[weekday];
-            if (currentIndex === undefined) return weekday;
-            
-            const newIndex = (currentIndex + offset + 7) % 7; // +7 to handle negative offsets
-            return indexToDay[newIndex];
-          }
-          // END DAY SHIFT FIX
-          
-          const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-          const dayMap = { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' };
-          const daySchedule = {};
-          
-          // BEGIN DAY SHIFT FIX - Parse schedules with Yerevan weekday calculation
-          // Parse all schedules and organize by ACTUAL Yerevan day (not LA day)
-          groupsData.forEach(group => {
-            const scheduleText = (group.schedule || '').trim();
-            if (!scheduleText) return;
-            
-            const parts = scheduleText.split(',').map(p => p.trim()).filter(p => p);
-            parts.forEach(part => {
-              const match = part.match(/^([\w/]+)\s+(.+)$/);
-              if (!match) return;
-              
-              const daysStr = match[1].toLowerCase();
-              const laTime = match[2];
-              // Ensure LA time is in AM/PM format before converting
-              const laTimeAMPM = ensureAMPMFormat(laTime);
-              const conversionResult = convertLATimeToYerevan(laTimeAMPM, true); // Get day shift info
-              
-              // Handle slash-separated days: "mon/wed"
-              const dayTokens = daysStr.split('/').map(d => d.trim());
-              dayTokens.forEach(token => {
-                const laWeekday = dayMap[token]; // Original LA weekday
-                if (!laWeekday) return;
-                
-                // Calculate actual Yerevan weekday based on day shift
-                const yerevanWeekday = getNextWeekday(laWeekday, conversionResult.dayShift);
-                
-                if (!daySchedule[yerevanWeekday]) daySchedule[yerevanWeekday] = [];
-                daySchedule[yerevanWeekday].push({ 
-                  group: escapeHtml(group.name), 
-                  yerevanTime: escapeHtml(conversionResult.time), // Clean time without markers
-                  laTime: escapeHtml(laTimeAMPM)
-                });
-              });
-            });
-          });
-          // END DAY SHIFT FIX
-          
-          // Sort sessions by time within each day (chronological order)
-          Object.keys(daySchedule).forEach(day => {
-            daySchedule[day].sort((a, b) => {
-              // Clean time strings are already without markers
-              const timeA = new Date('1970-01-01 ' + a.yerevanTime);
-              const timeB = new Date('1970-01-01 ' + b.yerevanTime);
-              return timeA - timeB;
-            });
-          });
-          
-          html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
-          weekdays.forEach(day => {
-            const sessions = daySchedule[day] || [];
-            html += `
-              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
-                <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
-                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                  ${sessions.length === 0 
-                    ? '<span style="color: rgba(255,255,255,0.4); font-style: italic;">No sessions scheduled</span>' 
-                    : sessions.map(s => {
-                        // Ensure group name starts with "Group" prefix if it's just a letter
-                        const groupName = s.group.length === 1 ? `Group ${s.group}` : s.group;
-                        return `<span style="padding: 8px 14px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; font-size: 12px; color: #10b981;"><strong>${groupName}</strong> — ${s.yerevanTime} (Yerevan) <span style="opacity: 0.7;">(${s.laTime} Los Angeles Time)</span></span>`;
-                      }).join('')}
-                </div>
-              </div>
-            `;
-          });
-          html += '</div>';
-        }
-        
-        contentEl.innerHTML = html;
-      } catch (error) {
-        console.error('Quick View render error:', error);
-        contentEl.innerHTML = '<div style="text-align: center; padding: 60px; color: rgba(255,0,0,0.7); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">⚠️</div><p>Error loading schedules.<br>Please try again.</p></div>';
-      }
-    }
-    // END QUICK VIEW FIX
-    
-    // Listen for group updates and refresh Quick View if it's open
-    window.addEventListener('groups:updated', function() {
-      const quickViewModal = document.getElementById('quickViewModal');
-      if (quickViewModal && quickViewModal.style.display !== 'none') {
-        renderQuickView();
-      }
-    });
-    
-    // ============================
-    // END QUICK VIEW FUNCTIONS
-    // ============================
-
-    // ========== BEGIN FLOATING NAV FUNCTIONS ==========
-    /**
-     * Initialize Floating Navigation Bar
-     * Ensures idempotent initialization with guard flag
-     */
-    function initFloatingNav() {
-      if (window._floatingNavInitialized) {
-        return; // Already initialized, skip
-      }
-      window._floatingNavInitialized = true;
-
-      const floatingNav = document.getElementById('floatingNav');
-      if (!floatingNav) {
-        console.warn('Floating Nav: Element not found');
-        return;
-      }
-
-      // Show the nav bar
-      floatingNav.style.display = 'flex';
-
-      // Bind all button handlers with guards
-      bindNavBtn('navTopBtn', scrollToTop);
-      bindNavBtn('navUndoBtn', undoAction);
-      bindNavBtn('navRedoBtn', redoAction);
-      bindNavBtn('navRefreshBtn', refreshUIAction);
-      bindNavBtn('navTimerBtn', toggleClassCountdown);
-      bindNavBtn('navQuickViewBtn', openQuickView);
-
-    }
-
-    /**
-     * Bind button with duplicate prevention
-     */
-    function bindNavBtn(id, fn) {
-      const el = document.getElementById(id);
-      if (el && !el.dataset.bound) {
-        el.addEventListener('click', fn);
-        el.dataset.bound = '1';
-      }
-    }
-
-    /**
-     * Scroll to top smoothly
-     */
-    function scrollToTop() {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-
-    /**
-     * Undo action (browser history back)
-     */
-    function undoAction() {
-      if (window.history.length > 1) {
-        window.history.back();
-      } else {
-        console.info('Undo: No previous state');
-        showNotification('No previous state to undo', 'info');
-      }
-    }
-
-    /**
-     * Redo action (browser history forward)
-     */
-    function redoAction() {
-      // Note: Browser history forward is tricky without state management
-      console.info('Redo: Feature requires state tracking');
-      showNotification('Redo not available', 'info');
-    }
-
-    /**
-     * Refresh current UI view
-     */
-    function refreshUIAction() {
-      try {
-        document.body.classList.add('refreshing');
-        
-        // Re-render current view based on what's open
-        const studentManager = document.getElementById('studentManagerModal');
-        const groupManager = document.getElementById('groupManagerModal');
-        const quickView = document.getElementById('quickViewModal');
-        
-        if (studentManager && studentManager.style.display !== 'none') {
-          renderStudents();
-        } else if (groupManager && groupManager.style.display !== 'none') {
-          renderGroups();
-        } else if (quickView && quickView.style.display !== 'none') {
-          renderQuickView();
-        } else {
-          // Refresh main payment grid
-          if (typeof renderPaymentEmailsView === 'function') {
-            renderPaymentEmailsView();
-          }
-        }
-        
-        setTimeout(() => {
-          document.body.classList.remove('refreshing');
-          showNotification('Refreshed', 'success');
-        }, 800);
-      } catch (e) {
-        console.warn('Refresh failed:', e);
-        document.body.classList.remove('refreshing');
-        showNotification('Refresh failed', 'error');
-      }
-    }
-
-    /* BEGIN CLASS COUNTDOWN TIMER */
-    /**
-     * Toggle Class Countdown Timer overlay - Enhanced version
-     * Manages both legacy and enhanced countdown timers
-     */
-    function toggleClassCountdown() {
-      // Check for enhanced timer first
-      let enhancedTimer = document.getElementById('enhancedCountdownTimer');
-      
-      if (enhancedTimer) {
-        // Hide enhanced timer
-        if (window.ClassCountdownTimer && window.ClassCountdownTimer.destroy) {
-          window.ClassCountdownTimer.destroy();
-        }
-        showNotification('Countdown timer hidden', 'info');
-        return;
-      }
-
-      // Check for legacy overlay
-      let overlay = document.getElementById('classCountdownOverlay');
-      
-      if (overlay) {
-        // Remove legacy overlay
-        if (overlay._timer) {
-          clearInterval(overlay._timer);
-        }
-        overlay.remove();
-        showNotification('Countdown timer hidden', 'info');
-        return;
-      }
-
-      // Initialize enhanced countdown timer
-      if (window.ClassCountdownTimer && window.ClassCountdownTimer.init) {
-        window.ClassCountdownTimer.init();
-        showNotification('Countdown timer active', 'success');
-        
-        // Dispatch event for Skip Manager to attach handlers
-        window.dispatchEvent(new CustomEvent('timerOpened'));
-      } else {
-        // Fallback to legacy implementation
-        overlay = document.createElement('div');
-        overlay.id = 'classCountdownOverlay';
-        document.body.appendChild(overlay);
-        startCountdownTimer(overlay);
-        showNotification('Countdown timer active (legacy)', 'success');
-      }
-    }
-    /* END CLASS COUNTDOWN TIMER */
-
-    /**
-     * Start countdown timer with live updates (legacy function - preserved for compatibility)
-     */
-    function startCountdownTimer(overlay) {
-      function updateCountdown() {
-        const nextClass = getNextClassTime();
-        if (nextClass) {
-          overlay.textContent = `◷ ${nextClass.dayName}: ${nextClass.groupName} in ${nextClass.timeRemaining}`;
-        } else {
-          overlay.textContent = '◷ No classes scheduled';
-        }
-      }
-
-      // Initial update
-      updateCountdown();
-
-      // Update every minute
-      overlay._timer = setInterval(updateCountdown, 60000);
-    }
-
-    /**
-     * Calculate next upcoming class from schedules (up to 7 days ahead)
-     * Returns {groupName, timeRemaining, dayName} or null
-     */
-    function getNextClassTime() {
-      try {
-        const groups = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
-        const now = new Date();
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        const currentDayIndex = now.getDay();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-
-        let nextClass = null;
-        let minDiffInMinutes = Infinity;
-
-        // Check up to 7 days ahead
-        for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
-          const checkDayIndex = (currentDayIndex + daysAhead) % 7;
-          const checkDayName = dayNames[checkDayIndex];
-
-          groups.forEach(group => {
-            if (!group.schedule || !Array.isArray(group.schedule)) return;
-
-            group.schedule.forEach(slot => {
-              if (!slot.days || !slot.time) return;
-
-              slot.days.forEach(day => {
-                if (day !== checkDayName) return;
-
-                // Parse time (e.g., "2:00 PM" or "14:00")
-                const timeMatch = slot.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
-                if (!timeMatch) return;
-
-                let hours = parseInt(timeMatch[1]);
-                const minutes = parseInt(timeMatch[2]);
-                const ampm = timeMatch[3];
-
-                if (ampm) {
-                  if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
-                  if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
-                }
-
-                const classMinutes = hours * 60 + minutes;
-                
-                // Calculate total difference in minutes from now
-                let totalDiff;
-                if (daysAhead === 0) {
-                  totalDiff = classMinutes - currentMinutes;
-                  // Skip if class already passed today
-                  if (totalDiff <= 0) return;
-                } else {
-                  // For future days, add full days in minutes
-                  totalDiff = (daysAhead * 24 * 60) - currentMinutes + classMinutes;
-                }
-
-                if (totalDiff > 0 && totalDiff < minDiffInMinutes) {
-                  minDiffInMinutes = totalDiff;
-                  
-                  // Format time remaining
-                  const daysLeft = Math.floor(totalDiff / (24 * 60));
-                  const hoursLeft = Math.floor((totalDiff % (24 * 60)) / 60);
-                  const minsLeft = totalDiff % 60;
-                  
-                  let timeStr = '';
-                  if (daysLeft > 0) {
-                    timeStr = `${daysLeft}d ${hoursLeft}h`;
-                  } else if (hoursLeft > 0) {
-                    timeStr = `${hoursLeft}h ${minsLeft}m`;
-                  } else {
-                    timeStr = `${minsLeft}m`;
-                  }
-
-                  // Determine day label
-                  let dayLabel = '';
-                  if (daysAhead === 0) {
-                    dayLabel = 'Today';
-                  } else if (daysAhead === 1) {
-                    dayLabel = 'Tomorrow';
-                  } else {
-                    dayLabel = checkDayName;
-                  }
-
-                  nextClass = {
-                    groupName: group.name.length === 1 ? `Group ${group.name}` : group.name,
-                    timeRemaining: timeStr,
-                    dayName: dayLabel
-                  };
-                }
-              });
-            });
-          });
-        }
-
-        return nextClass;
-      } catch (error) {
-        console.error('Error calculating next class:', error);
-        return null;
-      }
-    }
-
-    /* BEGIN CLASS COUNTDOWN TIMER */
-    /**
-     * Enhanced Class Countdown Timer
-     * A comprehensive, self-contained timer system with:
-     * - Live per-minute updates
-     * - Full LA/Yerevan timezone display (DST-aware)
-     * - State-based visual feedback (<15m warning, <5m urgent)
-     * - 2-hour class duration with automatic skip to next class
-     * - Continuous rolling countdown without "in progress" pauses
-     * - Zero side effects on existing code
-     * 
-     * TIMEZONE SYNCHRONIZATION (Yerevan ⇄ Los Angeles):
-     * - Los Angeles: America/Los_Angeles (PST UTC-8 or PDT UTC-7)
-     * - Yerevan: Asia/Yerevan (AMT UTC+4, no DST)
-     * - Time difference between Yerevan and Los Angeles is usually 11 hours (during PDT),
-     *   but 12 hours during U.S. Standard Time (November → March).
-     * - All calculations are done in UTC internally, then converted to local time for display.
-     * - NEVER hard-code timezone offsets - always retrieve them dynamically.
-     */
-    window.ClassCountdownTimer = (function() {
-      // Private state
-      let timerElement = null;
-      let updateInterval = null;
-      let currentClassData = null;
-      let isPinned = false;
-
-      /**
-       * Timezone Utilities
-       * All time calculations use UTC internally, with dynamic timezone conversion
-       */
-      const TimezoneUtils = {
-        /**
-         * Get current time in a specific timezone
-         * @param {string} timezone - IANA timezone string (e.g., 'America/Los_Angeles')
-         * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
-         */
-        getCurrentTimeInZone(timezone) {
-          const now = new Date();
-          
-          // Get ISO string in the target timezone
-          const isoString = now.toLocaleString('en-CA', {
-            timeZone: timezone,
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            hour12: false
-          });
-          
-          // Get day of week separately
-          const dayOfWeek = now.toLocaleString('en-US', {
-            timeZone: timezone,
-            weekday: 'long'
-          });
-          
-          // Parse: "YYYY-MM-DD, HH:mm:ss"
-          const [datePart, timePart] = isoString.split(', ');
-          const [year, month, day] = datePart.split('-').map(n => parseInt(n));
-          const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
-          
-          return {
-            hours,
-            minutes,
-            seconds,
-            day,
-            month,
-            year,
-            dayOfWeek,
-            // For backwards compatibility, provide Date-like methods
-            getDay() {
-              const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-              return dayNames.indexOf(this.dayOfWeek);
-            },
-            getHours() { return this.hours; },
-            getMinutes() { return this.minutes; },
-            getSeconds() { return this.seconds; },
-            getTime() {
-              // Return milliseconds since epoch for this time
-              return new Date(this.year, this.month - 1, this.day, this.hours, this.minutes, this.seconds).getTime();
-            },
-            toLocaleString() {
-              return `${this.month}/${this.day}/${this.year}, ${String(this.hours).padStart(2, '0')}:${String(this.minutes).padStart(2, '0')}:${String(this.seconds).padStart(2, '0')}`;
-            }
-          };
-        },
-
-        /**
-         * Get the UTC offset for a timezone in hours (dynamically calculated)
-         * @param {string} timezone - IANA timezone string
-         * @returns {number} Offset in hours (e.g., -8 for PST, +4 for Yerevan)
-         */
-        getTimezoneOffset(timezone) {
-          const now = new Date();
-          const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
-          const zoneDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
-          return (zoneDate - utcDate) / (1000 * 60 * 60);
-        },
-
-        /**
-         * Convert a time from LA timezone to Yerevan timezone
-         * @param {string} laTimeStr - Time in LA (e.g., "8:00 PM")
-         * @param {Date} referenceDate - Reference date for the conversion (defaults to today)
-         * @returns {Object} { time: string, dayShift: number }
-         */
-        convertLATimeToYerevan(laTimeStr, referenceDate = new Date()) {
-          if (!laTimeStr) return { time: '', dayShift: 0 };
-          
-          const match = laTimeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-          if (!match) return { time: laTimeStr, dayShift: 0 };
-          
-          let hours = parseInt(match[1]);
-          const minutes = match[2];
-          const period = match[3].toUpperCase();
-          
-          // Convert to 24-hour
-          if (period === 'PM' && hours !== 12) hours += 12;
-          if (period === 'AM' && hours === 12) hours = 0;
-          
-          // Create a date object in LA timezone
-          const laDate = new Date(referenceDate);
-          const laString = laDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
-          const [month, day, year] = laString.split('/');
-          
-          // Create UTC date with LA time components
-          // Get LA's current UTC offset dynamically
-          const laOffset = this.getTimezoneOffset('America/Los_Angeles');
-          const utcHours = hours - laOffset;
-          
-          const utcDate = new Date(Date.UTC(
-            parseInt(year),
-            parseInt(month) - 1,
-            parseInt(day),
-            utcHours,
-            parseInt(minutes)
-          ));
-          
-          // Convert to Yerevan time
-          const yerevanString = utcDate.toLocaleString('en-US', { 
-            timeZone: 'Asia/Yerevan',
-            hour: 'numeric',
-            minute: '2-digit',
-            hour12: true
-          });
-          
-          // Calculate day shift
-          const yerevanDate = new Date(utcDate.toLocaleString('en-US', { timeZone: 'Asia/Yerevan' }));
-          const dayShift = yerevanDate.getDate() - laDate.getDate();
-          
-          return {
-            time: yerevanString,
-            dayShift: dayShift
-          };
-        }
+      });
+      html += '</div>';
+    } else if (currentQuickViewTab === 'byWeekday') {
+      // BY WEEKDAY (LA) VIEW
+      const weekdays = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
+      const dayMap = {
+        mon: 'Monday',
+        tue: 'Tuesday',
+        wed: 'Wednesday',
+        thu: 'Thursday',
+        fri: 'Friday',
+        sat: 'Saturday',
+        sun: 'Sunday',
       };
+      const daySchedule = {};
 
-      // Time conversion helper (reuses existing convertLATimeToYerevan function)
-      function ensureAMPMFormatLocal(timeStr) {
-        if (!timeStr) return '';
-        if (/AM|PM/i.test(timeStr)) return timeStr;
-        
-        const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
-        if (!match) return timeStr;
-        
-        let hours = parseInt(match[1]);
-        const minutes = match[2];
-        const period = hours >= 12 ? 'PM' : 'AM';
-        
-        if (hours > 12) hours -= 12;
-        if (hours === 0) hours = 12;
-        
-        return `${hours}:${minutes} ${period}`;
+      // Parse all schedules and organize by day
+      groupsData.forEach(group => {
+        const scheduleText = (group.schedule || '').trim();
+        if (!scheduleText) return;
+
+        const parts = scheduleText
+          .split(',')
+          .map(p => p.trim())
+          .filter(p => p);
+        parts.forEach(part => {
+          const match = part.match(/^([\w/]+)\s+(.+)$/);
+          if (!match) return;
+
+          const daysStr = match[1].toLowerCase();
+          const time = match[2];
+          // Ensure time is in AM/PM format before storing
+          const timeAMPM = ensureAMPMFormat(time);
+
+          // Handle slash-separated days: "mon/wed"
+          const dayTokens = daysStr.split('/').map(d => d.trim());
+          dayTokens.forEach(token => {
+            const fullDay = dayMap[token];
+            if (!fullDay) return;
+
+            if (!daySchedule[fullDay]) daySchedule[fullDay] = [];
+            daySchedule[fullDay].push({
+              group: escapeHtml(group.name),
+              time: escapeHtml(timeAMPM),
+            });
+          });
+        });
+      });
+
+      // Sort sessions by time within each day
+      Object.keys(daySchedule).forEach(day => {
+        daySchedule[day].sort((a, b) => {
+          const timeA = new Date('1970-01-01 ' + a.time);
+          const timeB = new Date('1970-01-01 ' + b.time);
+          return timeA - timeB;
+        });
+      });
+
+      html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
+      weekdays.forEach(day => {
+        const sessions = daySchedule[day] || [];
+        html += `
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
+                <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  ${
+                    sessions.length === 0
+                      ? '<span style="color: rgba(255,255,255,0.4); font-style: italic;">No sessions scheduled</span>'
+                      : sessions
+                          .map(s => {
+                            // Get clean Yerevan time without day markers
+                            const yerevanResult = convertLATimeToYerevan(s.time, true);
+                            const yerevanTime = yerevanResult.time; // Clean time without markers
+                            // Ensure group name starts with "Group" prefix if it's just a letter
+                            const groupName = s.group.length === 1 ? `Group ${s.group}` : s.group;
+                            return `<span style="padding: 8px 14px; background: rgba(138,180,255,0.15); border: 1px solid rgba(138,180,255,0.3); border-radius: 8px; font-size: 12px; color: #8ab4ff;"><strong>${groupName}</strong> — ${s.time} (Los Angeles) <span style="opacity: 0.7;">(${yerevanTime} Yerevan Time)</span></span>`;
+                          })
+                          .join('')
+                  }
+                </div>
+              </div>
+            `;
+      });
+      html += '</div>';
+    } else if (currentQuickViewTab === 'byWeekdayYerevan') {
+      // BY WEEKDAY (YEREVAN) VIEW
+      // BEGIN DAY SHIFT FIX - Calculate next weekday helper
+      function getNextWeekday(weekday, offset) {
+        const weekdayIndex = {
+          Monday: 0,
+          Tuesday: 1,
+          Wednesday: 2,
+          Thursday: 3,
+          Friday: 4,
+          Saturday: 5,
+          Sunday: 6,
+        };
+        const indexToDay = [
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+          'Sunday',
+        ];
+
+        const currentIndex = weekdayIndex[weekday];
+        if (currentIndex === undefined) return weekday;
+
+        const newIndex = (currentIndex + offset + 7) % 7; // +7 to handle negative offsets
+        return indexToDay[newIndex];
       }
+      // END DAY SHIFT FIX
 
-      // DST-aware LA to Yerevan conversion (legacy - kept for compatibility)
-      // NOTE: This uses dynamic offset calculation via TimezoneUtils
-      function convertLAToYerevanTime(laTimeStr) {
-        return TimezoneUtils.convertLATimeToYerevan(laTimeStr);
+      const weekdays = [
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+        'Sunday',
+      ];
+      const dayMap = {
+        mon: 'Monday',
+        tue: 'Tuesday',
+        wed: 'Wednesday',
+        thu: 'Thursday',
+        fri: 'Friday',
+        sat: 'Saturday',
+        sun: 'Sunday',
+      };
+      const daySchedule = {};
+
+      // BEGIN DAY SHIFT FIX - Parse schedules with Yerevan weekday calculation
+      // Parse all schedules and organize by ACTUAL Yerevan day (not LA day)
+      groupsData.forEach(group => {
+        const scheduleText = (group.schedule || '').trim();
+        if (!scheduleText) return;
+
+        const parts = scheduleText
+          .split(',')
+          .map(p => p.trim())
+          .filter(p => p);
+        parts.forEach(part => {
+          const match = part.match(/^([\w/]+)\s+(.+)$/);
+          if (!match) return;
+
+          const daysStr = match[1].toLowerCase();
+          const laTime = match[2];
+          // Ensure LA time is in AM/PM format before converting
+          const laTimeAMPM = ensureAMPMFormat(laTime);
+          const conversionResult = convertLATimeToYerevan(laTimeAMPM, true); // Get day shift info
+
+          // Handle slash-separated days: "mon/wed"
+          const dayTokens = daysStr.split('/').map(d => d.trim());
+          dayTokens.forEach(token => {
+            const laWeekday = dayMap[token]; // Original LA weekday
+            if (!laWeekday) return;
+
+            // Calculate actual Yerevan weekday based on day shift
+            const yerevanWeekday = getNextWeekday(laWeekday, conversionResult.dayShift);
+
+            if (!daySchedule[yerevanWeekday]) daySchedule[yerevanWeekday] = [];
+            daySchedule[yerevanWeekday].push({
+              group: escapeHtml(group.name),
+              yerevanTime: escapeHtml(conversionResult.time), // Clean time without markers
+              laTime: escapeHtml(laTimeAMPM),
+            });
+          });
+        });
+      });
+      // END DAY SHIFT FIX
+
+      // Sort sessions by time within each day (chronological order)
+      Object.keys(daySchedule).forEach(day => {
+        daySchedule[day].sort((a, b) => {
+          // Clean time strings are already without markers
+          const timeA = new Date('1970-01-01 ' + a.yerevanTime);
+          const timeB = new Date('1970-01-01 ' + b.yerevanTime);
+          return timeA - timeB;
+        });
+      });
+
+      html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
+      weekdays.forEach(day => {
+        const sessions = daySchedule[day] || [];
+        html += `
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
+                <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                  ${
+                    sessions.length === 0
+                      ? '<span style="color: rgba(255,255,255,0.4); font-style: italic;">No sessions scheduled</span>'
+                      : sessions
+                          .map(s => {
+                            // Ensure group name starts with "Group" prefix if it's just a letter
+                            const groupName = s.group.length === 1 ? `Group ${s.group}` : s.group;
+                            return `<span style="padding: 8px 14px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; font-size: 12px; color: #10b981;"><strong>${groupName}</strong> — ${s.yerevanTime} (Yerevan) <span style="opacity: 0.7;">(${s.laTime} Los Angeles Time)</span></span>`;
+                          })
+                          .join('')
+                  }
+                </div>
+              </div>
+            `;
+      });
+      html += '</div>';
+    }
+
+    contentEl.innerHTML = html;
+  } catch (error) {
+    console.error('Quick View render error:', error);
+    contentEl.innerHTML =
+      '<div style="text-align: center; padding: 60px; color: rgba(255,0,0,0.7); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">⚠️</div><p>Error loading schedules.<br>Please try again.</p></div>';
+  }
+}
+// END QUICK VIEW FIX
+
+// Listen for group updates and refresh Quick View if it's open
+window.addEventListener('groups:updated', function () {
+  const quickViewModal = document.getElementById('quickViewModal');
+  if (quickViewModal && quickViewModal.style.display !== 'none') {
+    renderQuickView();
+  }
+});
+
+// ============================
+// END QUICK VIEW FUNCTIONS
+// ============================
+
+// ========== BEGIN FLOATING NAV FUNCTIONS ==========
+/**
+ * Initialize Floating Navigation Bar
+ * Ensures idempotent initialization with guard flag
+ */
+function initFloatingNav() {
+  if (window._floatingNavInitialized) {
+    return; // Already initialized, skip
+  }
+  window._floatingNavInitialized = true;
+
+  const floatingNav = document.getElementById('floatingNav');
+  if (!floatingNav) {
+    console.warn('Floating Nav: Element not found');
+    return;
+  }
+
+  // Show the nav bar
+  floatingNav.style.display = 'flex';
+
+  // Bind all button handlers with guards
+  bindNavBtn('navTopBtn', scrollToTop);
+  bindNavBtn('navUndoBtn', undoAction);
+  bindNavBtn('navRedoBtn', redoAction);
+  bindNavBtn('navRefreshBtn', refreshUIAction);
+  bindNavBtn('navTimerBtn', toggleClassCountdown);
+  bindNavBtn('navQuickViewBtn', openQuickView);
+}
+
+/**
+ * Bind button with duplicate prevention
+ */
+function bindNavBtn(id, fn) {
+  const el = document.getElementById(id);
+  if (el && !el.dataset.bound) {
+    el.addEventListener('click', fn);
+    el.dataset.bound = '1';
+  }
+}
+
+/**
+ * Scroll to top smoothly
+ */
+function scrollToTop() {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/**
+ * Undo action (browser history back)
+ */
+function undoAction() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    console.info('Undo: No previous state');
+    showNotification('No previous state to undo', 'info');
+  }
+}
+
+/**
+ * Redo action (browser history forward)
+ */
+function redoAction() {
+  // Note: Browser history forward is tricky without state management
+  console.info('Redo: Feature requires state tracking');
+  showNotification('Redo not available', 'info');
+}
+
+/**
+ * Refresh current UI view
+ */
+function refreshUIAction() {
+  try {
+    document.body.classList.add('refreshing');
+
+    // Re-render current view based on what's open
+    const studentManager = document.getElementById('studentManagerModal');
+    const groupManager = document.getElementById('groupManagerModal');
+    const quickView = document.getElementById('quickViewModal');
+
+    if (studentManager && studentManager.style.display !== 'none') {
+      renderStudents();
+    } else if (groupManager && groupManager.style.display !== 'none') {
+      renderGroups();
+    } else if (quickView && quickView.style.display !== 'none') {
+      renderQuickView();
+    } else {
+      // Refresh main payment grid
+      if (typeof renderPaymentEmailsView === 'function') {
+        renderPaymentEmailsView();
       }
+    }
 
-      // Original implementation preserved below for reference
-      /*
+    setTimeout(() => {
+      document.body.classList.remove('refreshing');
+      showNotification('Refreshed', 'success');
+    }, 800);
+  } catch (e) {
+    console.warn('Refresh failed:', e);
+    document.body.classList.remove('refreshing');
+    showNotification('Refresh failed', 'error');
+  }
+}
+
+/* BEGIN CLASS COUNTDOWN TIMER */
+/**
+ * Toggle Class Countdown Timer overlay - Enhanced version
+ * Manages both legacy and enhanced countdown timers
+ */
+function toggleClassCountdown() {
+  // Check for enhanced timer first
+  let enhancedTimer = document.getElementById('enhancedCountdownTimer');
+
+  if (enhancedTimer) {
+    // Hide enhanced timer
+    if (window.ClassCountdownTimer && window.ClassCountdownTimer.destroy) {
+      window.ClassCountdownTimer.destroy();
+    }
+    showNotification('Countdown timer hidden', 'info');
+    return;
+  }
+
+  // Check for legacy overlay
+  let overlay = document.getElementById('classCountdownOverlay');
+
+  if (overlay) {
+    // Remove legacy overlay
+    if (overlay._timer) {
+      clearInterval(overlay._timer);
+    }
+    overlay.remove();
+    showNotification('Countdown timer hidden', 'info');
+    return;
+  }
+
+  // Initialize enhanced countdown timer
+  if (window.ClassCountdownTimer && window.ClassCountdownTimer.init) {
+    window.ClassCountdownTimer.init();
+    showNotification('Countdown timer active', 'success');
+
+    // Dispatch event for Skip Manager to attach handlers
+    window.dispatchEvent(new CustomEvent('timerOpened'));
+  } else {
+    // Fallback to legacy implementation
+    overlay = document.createElement('div');
+    overlay.id = 'classCountdownOverlay';
+    document.body.appendChild(overlay);
+    startCountdownTimer(overlay);
+    showNotification('Countdown timer active (legacy)', 'success');
+  }
+}
+/* END CLASS COUNTDOWN TIMER */
+
+/**
+ * Start countdown timer with live updates (legacy function - preserved for compatibility)
+ */
+function startCountdownTimer(overlay) {
+  function updateCountdown() {
+    const nextClass = getNextClassTime();
+    if (nextClass) {
+      overlay.textContent = `◷ ${nextClass.dayName}: ${nextClass.groupName} in ${nextClass.timeRemaining}`;
+    } else {
+      overlay.textContent = '◷ No classes scheduled';
+    }
+  }
+
+  // Initial update
+  updateCountdown();
+
+  // Update every minute
+  overlay._timer = setInterval(updateCountdown, 60000);
+}
+
+/**
+ * Calculate next upcoming class from schedules (up to 7 days ahead)
+ * Returns {groupName, timeRemaining, dayName} or null
+ */
+function getNextClassTime() {
+  try {
+    const groups = JSON.parse(localStorage.getItem('group-manager:v2') || '[]');
+    const now = new Date();
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const currentDayIndex = now.getDay();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    let nextClass = null;
+    let minDiffInMinutes = Infinity;
+
+    // Check up to 7 days ahead
+    for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
+      const checkDayIndex = (currentDayIndex + daysAhead) % 7;
+      const checkDayName = dayNames[checkDayIndex];
+
+      groups.forEach(group => {
+        if (!group.schedule || !Array.isArray(group.schedule)) return;
+
+        group.schedule.forEach(slot => {
+          if (!slot.days || !slot.time) return;
+
+          slot.days.forEach(day => {
+            if (day !== checkDayName) return;
+
+            // Parse time (e.g., "2:00 PM" or "14:00")
+            const timeMatch = slot.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);
+            if (!timeMatch) return;
+
+            let hours = parseInt(timeMatch[1]);
+            const minutes = parseInt(timeMatch[2]);
+            const ampm = timeMatch[3];
+
+            if (ampm) {
+              if (ampm.toUpperCase() === 'PM' && hours !== 12) hours += 12;
+              if (ampm.toUpperCase() === 'AM' && hours === 12) hours = 0;
+            }
+
+            const classMinutes = hours * 60 + minutes;
+
+            // Calculate total difference in minutes from now
+            let totalDiff;
+            if (daysAhead === 0) {
+              totalDiff = classMinutes - currentMinutes;
+              // Skip if class already passed today
+              if (totalDiff <= 0) return;
+            } else {
+              // For future days, add full days in minutes
+              totalDiff = daysAhead * 24 * 60 - currentMinutes + classMinutes;
+            }
+
+            if (totalDiff > 0 && totalDiff < minDiffInMinutes) {
+              minDiffInMinutes = totalDiff;
+
+              // Format time remaining
+              const daysLeft = Math.floor(totalDiff / (24 * 60));
+              const hoursLeft = Math.floor((totalDiff % (24 * 60)) / 60);
+              const minsLeft = totalDiff % 60;
+
+              let timeStr = '';
+              if (daysLeft > 0) {
+                timeStr = `${daysLeft}d ${hoursLeft}h`;
+              } else if (hoursLeft > 0) {
+                timeStr = `${hoursLeft}h ${minsLeft}m`;
+              } else {
+                timeStr = `${minsLeft}m`;
+              }
+
+              // Determine day label
+              let dayLabel = '';
+              if (daysAhead === 0) {
+                dayLabel = 'Today';
+              } else if (daysAhead === 1) {
+                dayLabel = 'Tomorrow';
+              } else {
+                dayLabel = checkDayName;
+              }
+
+              nextClass = {
+                groupName: group.name.length === 1 ? `Group ${group.name}` : group.name,
+                timeRemaining: timeStr,
+                dayName: dayLabel,
+              };
+            }
+          });
+        });
+      });
+    }
+
+    return nextClass;
+  } catch (error) {
+    console.error('Error calculating next class:', error);
+    return null;
+  }
+}
+
+/* BEGIN CLASS COUNTDOWN TIMER */
+/**
+ * Enhanced Class Countdown Timer
+ * A comprehensive, self-contained timer system with:
+ * - Live per-minute updates
+ * - Full LA/Yerevan timezone display (DST-aware)
+ * - State-based visual feedback (<15m warning, <5m urgent)
+ * - 2-hour class duration with automatic skip to next class
+ * - Continuous rolling countdown without "in progress" pauses
+ * - Zero side effects on existing code
+ *
+ * TIMEZONE SYNCHRONIZATION (Yerevan ⇄ Los Angeles):
+ * - Los Angeles: America/Los_Angeles (PST UTC-8 or PDT UTC-7)
+ * - Yerevan: Asia/Yerevan (AMT UTC+4, no DST)
+ * - Time difference between Yerevan and Los Angeles is usually 11 hours (during PDT),
+ *   but 12 hours during U.S. Standard Time (November → March).
+ * - All calculations are done in UTC internally, then converted to local time for display.
+ * - NEVER hard-code timezone offsets - always retrieve them dynamically.
+ */
+window.ClassCountdownTimer = (function () {
+  // Private state
+  let timerElement = null;
+  let updateInterval = null;
+  let currentClassData = null;
+  let isPinned = false;
+
+  /**
+   * Timezone Utilities
+   * All time calculations use UTC internally, with dynamic timezone conversion
+   */
+  const TimezoneUtils = {
+    /**
+     * Get current time in a specific timezone
+     * @param {string} timezone - IANA timezone string (e.g., 'America/Los_Angeles')
+     * @returns {Object} { hours, minutes, seconds, day, month, year, dayOfWeek }
+     */
+    getCurrentTimeInZone(timezone) {
+      const now = new Date();
+
+      // Get ISO string in the target timezone
+      const isoString = now.toLocaleString('en-CA', {
+        timeZone: timezone,
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+      });
+
+      // Get day of week separately
+      const dayOfWeek = now.toLocaleString('en-US', {
+        timeZone: timezone,
+        weekday: 'long',
+      });
+
+      // Parse: "YYYY-MM-DD, HH:mm:ss"
+      const [datePart, timePart] = isoString.split(', ');
+      const [year, month, day] = datePart.split('-').map(n => parseInt(n));
+      const [hours, minutes, seconds] = timePart.split(':').map(n => parseInt(n));
+
+      return {
+        hours,
+        minutes,
+        seconds,
+        day,
+        month,
+        year,
+        dayOfWeek,
+        // For backwards compatibility, provide Date-like methods
+        getDay() {
+          const dayNames = [
+            'Sunday',
+            'Monday',
+            'Tuesday',
+            'Wednesday',
+            'Thursday',
+            'Friday',
+            'Saturday',
+          ];
+          return dayNames.indexOf(this.dayOfWeek);
+        },
+        getHours() {
+          return this.hours;
+        },
+        getMinutes() {
+          return this.minutes;
+        },
+        getSeconds() {
+          return this.seconds;
+        },
+        getTime() {
+          // Return milliseconds since epoch for this time
+          return new Date(
+            this.year,
+            this.month - 1,
+            this.day,
+            this.hours,
+            this.minutes,
+            this.seconds
+          ).getTime();
+        },
+        toLocaleString() {
+          return `${this.month}/${this.day}/${this.year}, ${String(this.hours).padStart(2, '0')}:${String(this.minutes).padStart(2, '0')}:${String(this.seconds).padStart(2, '0')}`;
+        },
+      };
+    },
+
+    /**
+     * Get the UTC offset for a timezone in hours (dynamically calculated)
+     * @param {string} timezone - IANA timezone string
+     * @returns {number} Offset in hours (e.g., -8 for PST, +4 for Yerevan)
+     */
+    getTimezoneOffset(timezone) {
+      const now = new Date();
+      const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+      const zoneDate = new Date(now.toLocaleString('en-US', { timeZone: timezone }));
+      return (zoneDate - utcDate) / (1000 * 60 * 60);
+    },
+
+    /**
+     * Convert a time from LA timezone to Yerevan timezone
+     * @param {string} laTimeStr - Time in LA (e.g., "8:00 PM")
+     * @param {Date} referenceDate - Reference date for the conversion (defaults to today)
+     * @returns {Object} { time: string, dayShift: number }
+     */
+    convertLATimeToYerevan(laTimeStr, referenceDate = new Date()) {
+      if (!laTimeStr) return { time: '', dayShift: 0 };
+
+      const match = laTimeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+      if (!match) return { time: laTimeStr, dayShift: 0 };
+
+      let hours = parseInt(match[1]);
+      const minutes = match[2];
+      const period = match[3].toUpperCase();
+
+      // Convert to 24-hour
+      if (period === 'PM' && hours !== 12) hours += 12;
+      if (period === 'AM' && hours === 12) hours = 0;
+
+      // Create a date object in LA timezone
+      const laDate = new Date(referenceDate);
+      const laString = laDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles' });
+      const [month, day, year] = laString.split('/');
+
+      // Create UTC date with LA time components
+      // Get LA's current UTC offset dynamically
+      const laOffset = this.getTimezoneOffset('America/Los_Angeles');
+      const utcHours = hours - laOffset;
+
+      const utcDate = new Date(
+        Date.UTC(parseInt(year), parseInt(month) - 1, parseInt(day), utcHours, parseInt(minutes))
+      );
+
+      // Convert to Yerevan time
+      const yerevanString = utcDate.toLocaleString('en-US', {
+        timeZone: 'Asia/Yerevan',
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+
+      // Calculate day shift
+      const yerevanDate = new Date(utcDate.toLocaleString('en-US', { timeZone: 'Asia/Yerevan' }));
+      const dayShift = yerevanDate.getDate() - laDate.getDate();
+
+      return {
+        time: yerevanString,
+        dayShift: dayShift,
+      };
+    },
+  };
+
+  // Time conversion helper (reuses existing convertLATimeToYerevan function)
+  function ensureAMPMFormatLocal(timeStr) {
+    if (!timeStr) return '';
+    if (/AM|PM/i.test(timeStr)) return timeStr;
+
+    const match = timeStr.match(/^(\d{1,2}):(\d{2})$/);
+    if (!match) return timeStr;
+
+    let hours = parseInt(match[1]);
+    const minutes = match[2];
+    const period = hours >= 12 ? 'PM' : 'AM';
+
+    if (hours > 12) hours -= 12;
+    if (hours === 0) hours = 12;
+
+    return `${hours}:${minutes} ${period}`;
+  }
+
+  // DST-aware LA to Yerevan conversion (legacy - kept for compatibility)
+  // NOTE: This uses dynamic offset calculation via TimezoneUtils
+  function convertLAToYerevanTime(laTimeStr) {
+    return TimezoneUtils.convertLATimeToYerevan(laTimeStr);
+  }
+
+  // Original implementation preserved below for reference
+  /*
       function convertLAToYerevanTime(laTimeStr) {
         if (!laTimeStr) return { time: '', dayShift: 0 };
-        
+
         const match = laTimeStr.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
         if (!match) return { time: laTimeStr, dayShift: 0 };
-        
+
         let hours = parseInt(match[1]);
         const minutes = match[2];
         const period = match[3].toUpperCase();
-        
+
         // Convert to 24-hour
         if (period === 'PM' && hours !== 12) hours += 12;
         if (period === 'AM' && hours === 12) hours = 0;
-        
+
         // DST detection: Check if LA is in daylight saving time
         const now = new Date();
         const jan = new Date(now.getFullYear(), 0, 1);
         const jul = new Date(now.getFullYear(), 6, 1);
         const stdOffset = Math.max(jan.getTimezoneOffset(), jul.getTimezoneOffset());
         const isDST = now.getTimezoneOffset() < stdOffset;
-        
+
         // LA: UTC-8 (PST) or UTC-7 (PDT)
         // Yerevan: UTC+4 (year-round, no DST)
         // Difference: 12 hours (PST) or 11 hours (PDT)
         const offsetHours = isDST ? 11 : 12;
-        
+
         let yerevanHours = hours + offsetHours;
         let dayShift = 0;
-        
+
         if (yerevanHours >= 24) {
           yerevanHours -= 24;
           dayShift = 1;
         }
-        
+
         // Convert back to 12-hour
         let yerevanPeriod = 'AM';
         let displayHours = yerevanHours;
-        
+
         if (yerevanHours >= 12) {
           yerevanPeriod = 'PM';
           if (yerevanHours > 12) displayHours = yerevanHours - 12;
         }
         if (yerevanHours === 0) displayHours = 12;
-        
+
         return {
           time: `${displayHours}:${minutes} ${yerevanPeriod}`,
           dayShift: dayShift
@@ -8011,180 +8283,202 @@
       }
       */
 
-      // Parse schedule string format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
-      function parseScheduleString(scheduleStr) {
-        if (!scheduleStr || typeof scheduleStr !== 'string') return [];
-        
-        const sessions = [];
-        const parts = scheduleStr.split(',').map(p => p.trim()).filter(p => p);
-        
-        parts.forEach(part => {
-          const match = part.match(/^([\w/]+)\s+(.+)$/);
-          if (!match) return;
-          
-          const daysStr = match[1];
-          const timeStr = match[2];
-          const days = daysStr.split('/').map(d => d.trim().toLowerCase());
-          
-          const dayMap = {
-            'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday',
-            'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday', 'sun': 'Sunday'
-          };
-          
-          days.forEach(dayAbbr => {
-            const fullDay = dayMap[dayAbbr];
-            if (fullDay) {
-              sessions.push({
-                day: fullDay,
-                time: ensureAMPMFormatLocal(timeStr)
-              });
+  // Parse schedule string format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
+  function parseScheduleString(scheduleStr) {
+    if (!scheduleStr || typeof scheduleStr !== 'string') return [];
+
+    const sessions = [];
+    const parts = scheduleStr
+      .split(',')
+      .map(p => p.trim())
+      .filter(p => p);
+
+    parts.forEach(part => {
+      const match = part.match(/^([\w/]+)\s+(.+)$/);
+      if (!match) return;
+
+      const daysStr = match[1];
+      const timeStr = match[2];
+      const days = daysStr.split('/').map(d => d.trim().toLowerCase());
+
+      const dayMap = {
+        mon: 'Monday',
+        tue: 'Tuesday',
+        wed: 'Wednesday',
+        thu: 'Thursday',
+        fri: 'Friday',
+        sat: 'Saturday',
+        sun: 'Sunday',
+      };
+
+      days.forEach(dayAbbr => {
+        const fullDay = dayMap[dayAbbr];
+        if (fullDay) {
+          sessions.push({
+            day: fullDay,
+            time: ensureAMPMFormatLocal(timeStr),
+          });
+        }
+      });
+    });
+
+    return sessions;
+  }
+
+  // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "Class in Progress" & Auto-Jump to Next Class
+  // Find next class across all groups (up to 7 days ahead)
+  // Classes last 2 hours - automatically skip to next class after 2-hour window ends
+  function findNextClass() {
+    try {
+      const groups = window.groupsCache || window.globalData?.groups || [];
+
+      // Get current time in LA timezone using UTC-based calculation
+      // CRITICAL: All time calculations use UTC internally for accuracy
+      // Time difference between Yerevan and Los Angeles is usually 11 hours (PDT),
+      // but 12 hours during U.S. Standard Time (November → March). Always retrieve dynamically.
+      const now = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+      const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
+
+      const dayNames = [
+        'Sunday',
+        'Monday',
+        'Tuesday',
+        'Wednesday',
+        'Thursday',
+        'Friday',
+        'Saturday',
+      ];
+      const currentDayIndex = now.getDay();
+      const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
+      let nextClass = null;
+      let minDiffInSeconds = Infinity;
+
+      // Check up to 7 days ahead
+      for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
+        const checkDayIndex = (currentDayIndex + daysAhead) % 7;
+        const checkDayName = dayNames[checkDayIndex];
+
+        groups.forEach(group => {
+          let sessions = [];
+
+          // Handle both old array format and new string format
+          if (Array.isArray(group.schedule)) {
+            // Legacy array format
+            group.schedule.forEach(slot => {
+              if (slot.days && slot.time) {
+                slot.days.forEach(day => {
+                  sessions.push({ day, time: ensureAMPMFormatLocal(slot.time) });
+                });
+              }
+            });
+          } else if (typeof group.schedule === 'string') {
+            // New string format
+            sessions = parseScheduleString(group.schedule);
+          }
+
+          sessions.forEach(session => {
+            if (session.day !== checkDayName) return;
+
+            // Parse time
+            const match = session.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return;
+
+            let hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const period = match[3].toUpperCase();
+
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+
+            const classTimeInSeconds = hours * 3600 + minutes * 60;
+
+            // Calculate time difference in seconds
+            let totalDiffSeconds;
+            if (daysAhead === 0) {
+              totalDiffSeconds = classTimeInSeconds - currentTime;
+              console.log(
+                `[ClassCountdownTimer] Checking ${group.name} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds / 3600).toFixed(1)}h)`
+              );
+              // Skip if more than 2 hours (7200 seconds) past - class is over
+              if (totalDiffSeconds < -7200) return;
+            } else {
+              totalDiffSeconds = daysAhead * 86400 - currentTime + classTimeInSeconds;
+            }
+
+            // Skip classes currently in progress (started but not yet 2 hours past)
+            // Only count future classes (totalDiffSeconds > 0)
+            if (totalDiffSeconds > 0 && totalDiffSeconds < minDiffInSeconds) {
+              console.log(
+                `[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds / 3600).toFixed(1)}h away)`
+              );
+              minDiffInSeconds = totalDiffSeconds;
+
+              // Determine day label
+              let dayLabel = '';
+              if (daysAhead === 0) {
+                dayLabel = 'Today';
+              } else if (daysAhead === 1) {
+                dayLabel = 'Tomorrow';
+              } else {
+                dayLabel = checkDayName;
+              }
+
+              nextClass = {
+                groupName:
+                  group.name && group.name.length === 1
+                    ? `Group ${group.name}`
+                    : group.name || 'Unknown Group',
+                dayName: dayLabel,
+                laTime: session.time,
+                secondsRemaining: totalDiffSeconds,
+                actualDay: checkDayName,
+              };
             }
           });
         });
-        
-        return sessions;
       }
 
-      // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "Class in Progress" & Auto-Jump to Next Class
-      // Find next class across all groups (up to 7 days ahead)
-      // Classes last 2 hours - automatically skip to next class after 2-hour window ends
-      function findNextClass() {
-        try {
-          const groups = window.groupsCache || window.globalData?.groups || [];
-          
-          // Get current time in LA timezone using UTC-based calculation
-          // CRITICAL: All time calculations use UTC internally for accuracy
-          // Time difference between Yerevan and Los Angeles is usually 11 hours (PDT),
-          // but 12 hours during U.S. Standard Time (November → March). Always retrieve dynamically.
-          const now = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
-          const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
-          
-          const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-          const currentDayIndex = now.getDay();
-          const currentTime = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+      return nextClass;
+    } catch (error) {
+      console.error('[ClassCountdownTimer] Error finding next class:', error);
+      return null;
+    }
+  }
+  // END CLASS COUNTDOWN TIMER FIX
 
+  // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "Class in Progress" & Auto-Jump to Next Class
+  // Format seconds into readable countdown (no "in progress" state)
+  function formatCountdown(seconds) {
+    const absSeconds = Math.abs(seconds);
+    const days = Math.floor(absSeconds / 86400);
+    const hours = Math.floor((absSeconds % 86400) / 3600);
+    const mins = Math.floor((absSeconds % 3600) / 60);
 
-          let nextClass = null;
-          let minDiffInSeconds = Infinity;
+    if (days > 0) {
+      return `${days}d ${hours}h ${mins}m`;
+    } else if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    } else if (mins > 0) {
+      return `${mins}m`;
+    } else {
+      return `<1m`;
+    }
+  }
+  // END CLASS COUNTDOWN TIMER FIX
 
-          // Check up to 7 days ahead
-          for (let daysAhead = 0; daysAhead < 7; daysAhead++) {
-            const checkDayIndex = (currentDayIndex + daysAhead) % 7;
-            const checkDayName = dayNames[checkDayIndex];
+  // Create timer element as popup
+  function createElement() {
+    // Prevent duplicate creation
+    const existingTimer = document.getElementById('enhancedCountdownTimer');
+    if (existingTimer) {
+      timerElement = existingTimer;
+      return existingTimer;
+    }
 
-            groups.forEach(group => {
-              let sessions = [];
-              
-              // Handle both old array format and new string format
-              if (Array.isArray(group.schedule)) {
-                // Legacy array format
-                group.schedule.forEach(slot => {
-                  if (slot.days && slot.time) {
-                    slot.days.forEach(day => {
-                      sessions.push({ day, time: ensureAMPMFormatLocal(slot.time) });
-                    });
-                  }
-                });
-              } else if (typeof group.schedule === 'string') {
-                // New string format
-                sessions = parseScheduleString(group.schedule);
-              }
-
-              sessions.forEach(session => {
-                if (session.day !== checkDayName) return;
-
-                // Parse time
-                const match = session.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-                if (!match) return;
-
-                let hours = parseInt(match[1]);
-                const minutes = parseInt(match[2]);
-                const period = match[3].toUpperCase();
-
-                if (period === 'PM' && hours !== 12) hours += 12;
-                if (period === 'AM' && hours === 12) hours = 0;
-
-                const classTimeInSeconds = hours * 3600 + minutes * 60;
-                
-                // Calculate time difference in seconds
-                let totalDiffSeconds;
-                if (daysAhead === 0) {
-                  totalDiffSeconds = classTimeInSeconds - currentTime;
-                  console.log(`[ClassCountdownTimer] Checking ${group.name} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
-                  // Skip if more than 2 hours (7200 seconds) past - class is over
-                  if (totalDiffSeconds < -7200) return;
-                } else {
-                  totalDiffSeconds = (daysAhead * 86400) - currentTime + classTimeInSeconds;
-                }
-
-                // Skip classes currently in progress (started but not yet 2 hours past)
-                // Only count future classes (totalDiffSeconds > 0)
-                if (totalDiffSeconds > 0 && totalDiffSeconds < minDiffInSeconds) {
-                  console.log(`[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds/3600).toFixed(1)}h away)`);
-                  minDiffInSeconds = totalDiffSeconds;
-                  
-                  // Determine day label
-                  let dayLabel = '';
-                  if (daysAhead === 0) {
-                    dayLabel = 'Today';
-                  } else if (daysAhead === 1) {
-                    dayLabel = 'Tomorrow';
-                  } else {
-                    dayLabel = checkDayName;
-                  }
-
-                  nextClass = {
-                    groupName: group.name && group.name.length === 1 ? `Group ${group.name}` : (group.name || 'Unknown Group'),
-                    dayName: dayLabel,
-                    laTime: session.time,
-                    secondsRemaining: totalDiffSeconds,
-                    actualDay: checkDayName
-                  };
-                }
-              });
-            });
-          }
-
-          return nextClass;
-        } catch (error) {
-          console.error('[ClassCountdownTimer] Error finding next class:', error);
-          return null;
-        }
-      }
-      // END CLASS COUNTDOWN TIMER FIX
-
-      // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "Class in Progress" & Auto-Jump to Next Class
-      // Format seconds into readable countdown (no "in progress" state)
-      function formatCountdown(seconds) {
-        const absSeconds = Math.abs(seconds);
-        const days = Math.floor(absSeconds / 86400);
-        const hours = Math.floor((absSeconds % 86400) / 3600);
-        const mins = Math.floor((absSeconds % 3600) / 60);
-
-        if (days > 0) {
-          return `${days}d ${hours}h ${mins}m`;
-        } else if (hours > 0) {
-          return `${hours}h ${mins}m`;
-        } else if (mins > 0) {
-          return `${mins}m`;
-        } else {
-          return `<1m`;
-        }
-      }
-      // END CLASS COUNTDOWN TIMER FIX
-
-      // Create timer element as popup
-      function createElement() {
-        // Prevent duplicate creation
-        const existingTimer = document.getElementById('enhancedCountdownTimer');
-        if (existingTimer) {
-          timerElement = existingTimer;
-          return existingTimer;
-        }
-
-        const timer = document.createElement('div');
-        timer.id = 'enhancedCountdownTimer';
-        timer.innerHTML = `
+    const timer = document.createElement('div');
+    timer.id = 'enhancedCountdownTimer';
+    timer.innerHTML = `
           <div class="timer-header">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span class="timer-icon">🕒</span>
@@ -8195,284 +8489,311 @@
           <div class="timer-classes-list"></div>
         `;
 
-        const closeBtn = timer.querySelector('.timer-close');
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          destroy();
-        });
+    const closeBtn = timer.querySelector('.timer-close');
+    closeBtn.addEventListener('click', e => {
+      e.stopPropagation();
+      destroy();
+    });
 
-        // Add click-outside-to-close functionality
-        setTimeout(() => {
-          setupTimerClickOutsideListener(timer);
-        }, 100);
+    // Add click-outside-to-close functionality
+    setTimeout(() => {
+      setupTimerClickOutsideListener(timer);
+    }, 100);
 
-        document.body.appendChild(timer);
-        timerElement = timer;
-        
-        return timer;
-      }
-      
-      // Setup click outside to close timer
-      function setupTimerClickOutsideListener(timer) {
-        // Remove existing listener if any
-        if (window._timerClickOutsideListener) {
-          document.removeEventListener('click', window._timerClickOutsideListener);
-        }
-        
-        // Create new listener
-        window._timerClickOutsideListener = function(event) {
-          // Check if timer exists and is visible
-          if (!timer || !document.body.contains(timer)) {
-            // Cleanup listener if timer is gone
-            document.removeEventListener('click', window._timerClickOutsideListener);
-            window._timerClickOutsideListener = null;
-            return;
-          }
-          
-          // Check if click is inside timer
-          const clickedInsideTimer = timer.contains(event.target);
-          
-          // Check if click is on a button or interactive element
-          const clickedButton = event.target.closest('button');
-          const clickedInput = event.target.closest('input, textarea, select');
-          
-          // If clicked outside timer and not on a button/input, close timer
-          if (!clickedInsideTimer && !clickedButton && !clickedInput) {
-            destroy();
-          }
-        };
-        
-        // Attach listener with slight delay to prevent immediate trigger
-        setTimeout(() => {
-          document.addEventListener('click', window._timerClickOutsideListener);
-        }, 200);
+    document.body.appendChild(timer);
+    timerElement = timer;
+
+    return timer;
+  }
+
+  // Setup click outside to close timer
+  function setupTimerClickOutsideListener(timer) {
+    // Remove existing listener if any
+    if (window._timerClickOutsideListener) {
+      document.removeEventListener('click', window._timerClickOutsideListener);
+    }
+
+    // Create new listener
+    window._timerClickOutsideListener = function (event) {
+      // Check if timer exists and is visible
+      if (!timer || !document.body.contains(timer)) {
+        // Cleanup listener if timer is gone
+        document.removeEventListener('click', window._timerClickOutsideListener);
+        window._timerClickOutsideListener = null;
+        return;
       }
 
-      // Get all classes for the next 7 days
-      function getAllUpcomingClasses() {
-        try {
-          const allClasses = [];
-          
-          // Load groups from Supabase cache or global groups variable
-          const groups = window.groupsCache || window.globalData?.groups || [];
-          
-          if (!groups || groups.length === 0) {
-            return [];
-          }
+      // Check if click is inside timer
+      const clickedInsideTimer = timer.contains(event.target);
 
+      // Check if click is on a button or interactive element
+      const clickedButton = event.target.closest('button');
+      const clickedInput = event.target.closest('input, textarea, select');
 
-          // Get current LA time using UTC-based calculation
-          // CRITICAL: All time calculations use UTC internally for accuracy
-          // Time difference between Yerevan and Los Angeles is usually 11 hours (PDT),
-          // but 12 hours during U.S. Standard Time (November → March). Always retrieve dynamically.
-          const nowLA = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
-          const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
-          
-          
-          // Get current time in seconds since midnight LA time
-          const currentTimeInSeconds = nowLA.hours * 3600 + nowLA.minutes * 60 + nowLA.seconds;
-          
-          // Check each day for the next 7 days
-          for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
-            // Calculate the day we're checking
-            const checkDayIndex = (nowLA.getDay() + daysAhead) % 7;
-            const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-            const checkDayName = dayNames[checkDayIndex];
+      // If clicked outside timer and not on a button/input, close timer
+      if (!clickedInsideTimer && !clickedButton && !clickedInput) {
+        destroy();
+      }
+    };
 
-            groups.forEach(group => {
-              let sessions = [];
+    // Attach listener with slight delay to prevent immediate trigger
+    setTimeout(() => {
+      document.addEventListener('click', window._timerClickOutsideListener);
+    }, 200);
+  }
 
-              const normalizeDay = (day) => {
-                if (!day || typeof day !== 'string') return '';
-                const map = {
-                  'sun': 'Sunday', 'sunday': 'Sunday',
-                  'mon': 'Monday', 'monday': 'Monday',
-                  'tue': 'Tuesday', 'tues': 'Tuesday', 'tuesday': 'Tuesday',
-                  'wed': 'Wednesday', 'weds': 'Wednesday', 'wednesday': 'Wednesday',
-                  'thu': 'Thursday', 'thur': 'Thursday', 'thurs': 'Thursday', 'thursday': 'Thursday',
-                  'fri': 'Friday', 'friday': 'Friday',
-                  'sat': 'Saturday', 'saturday': 'Saturday'
-                };
-                return map[day.toLowerCase()] || day;
-              };
+  // Get all classes for the next 7 days
+  function getAllUpcomingClasses() {
+    try {
+      const allClasses = [];
 
-              if (Array.isArray(group.schedule)) {
-                // Legacy array format with { days: [], time: '' }
-                group.schedule.forEach(slot => {
-                  if (!slot || !slot.days || !slot.time) return;
-                  const timeFormatted = ensureAMPMFormatLocal(slot.time);
-                  slot.days.forEach(day => {
-                    if (day) {
-                      sessions.push({
-                        day: normalizeDay(day),
-                        time: timeFormatted
-                      });
-                    }
-                  });
-                });
-              } else if (Array.isArray(group.sessions)) {
-                // Some imports might store sessions separately
-                sessions = group.sessions
-                  .filter(s => s && s.day && s.time)
-                  .map(s => ({
-                    day: normalizeDay(s.day),
-                    time: ensureAMPMFormatLocal(s.time)
-                  }));
-              } else if (typeof group.schedule === 'string') {
-                // Primary format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
-                sessions = parseScheduleString(group.schedule);
-              }
+      // Load groups from Supabase cache or global groups variable
+      const groups = window.groupsCache || window.globalData?.groups || [];
 
-              if (!sessions.length) return;
-              
-              sessions.forEach(session => {
-                if (session.day !== checkDayName) return;
+      if (!groups || groups.length === 0) {
+        return [];
+      }
 
-                // Parse time
-                const match = session.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-                if (!match) return;
+      // Get current LA time using UTC-based calculation
+      // CRITICAL: All time calculations use UTC internally for accuracy
+      // Time difference between Yerevan and Los Angeles is usually 11 hours (PDT),
+      // but 12 hours during U.S. Standard Time (November → March). Always retrieve dynamically.
+      const nowLA = TimezoneUtils.getCurrentTimeInZone('America/Los_Angeles');
+      const laOffset = TimezoneUtils.getTimezoneOffset('America/Los_Angeles');
 
-                let hours = parseInt(match[1]);
-                const minutes = parseInt(match[2]);
-                const period = match[3].toUpperCase();
+      // Get current time in seconds since midnight LA time
+      const currentTimeInSeconds = nowLA.hours * 3600 + nowLA.minutes * 60 + nowLA.seconds;
 
-                if (period === 'PM' && hours !== 12) hours += 12;
-                if (period === 'AM' && hours === 12) hours = 0;
+      // Check each day for the next 7 days
+      for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
+        // Calculate the day we're checking
+        const checkDayIndex = (nowLA.getDay() + daysAhead) % 7;
+        const dayNames = [
+          'Sunday',
+          'Monday',
+          'Tuesday',
+          'Wednesday',
+          'Thursday',
+          'Friday',
+          'Saturday',
+        ];
+        const checkDayName = dayNames[checkDayIndex];
 
-                // Calculate class time in seconds since midnight
-                const classTimeInSeconds = hours * 3600 + minutes * 60;
-                
-                // Calculate total time difference in seconds
-                let totalDiffSeconds;
-                if (daysAhead === 0) {
-                  // Same day - just subtract current time
-                  totalDiffSeconds = classTimeInSeconds - currentTimeInSeconds;
-                } else {
-                  // Future day - add full days, subtract current time, add class time
-                  totalDiffSeconds = (daysAhead * 86400) - currentTimeInSeconds + classTimeInSeconds;
-                }
-                
-                console.log(`[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time} (day +${daysAhead}): classTime=${classTimeInSeconds}s, currentTime=${currentTimeInSeconds}s, diff=${totalDiffSeconds}s (${(totalDiffSeconds/3600).toFixed(1)}h)`);
-                
-                // Skip if more than 2 hours (7200 seconds) past - class is over
-                if (totalDiffSeconds < -7200) {
-                  console.log(`[ClassCountdownTimer] ❌ Skipping ${group.name} - more than 2h past`);
-                  return;
-                }
+        groups.forEach(group => {
+          let sessions = [];
 
-                // Only show future classes (totalDiffSeconds > 0)
-                if (totalDiffSeconds > 0) {
-                  let dayLabel = '';
-                  if (daysAhead === 0) {
-                    dayLabel = 'Today';
-                  } else if (daysAhead === 1) {
-                    dayLabel = 'Tomorrow';
-                  } else {
-                    dayLabel = checkDayName;
-                  }
+          const normalizeDay = day => {
+            if (!day || typeof day !== 'string') return '';
+            const map = {
+              sun: 'Sunday',
+              sunday: 'Sunday',
+              mon: 'Monday',
+              monday: 'Monday',
+              tue: 'Tuesday',
+              tues: 'Tuesday',
+              tuesday: 'Tuesday',
+              wed: 'Wednesday',
+              weds: 'Wednesday',
+              wednesday: 'Wednesday',
+              thu: 'Thursday',
+              thur: 'Thursday',
+              thurs: 'Thursday',
+              thursday: 'Thursday',
+              fri: 'Friday',
+              friday: 'Friday',
+              sat: 'Saturday',
+              saturday: 'Saturday',
+            };
+            return map[day.toLowerCase()] || day;
+          };
 
-                  allClasses.push({
-                    groupName: group.name && group.name.length === 1 ? `Group ${group.name}` : (group.name || 'Unknown Group'),
-                    dayName: dayLabel,
-                    laTime: session.time,
-                    secondsRemaining: totalDiffSeconds,
-                    actualDay: checkDayName,
-                    sortTime: totalDiffSeconds
+          if (Array.isArray(group.schedule)) {
+            // Legacy array format with { days: [], time: '' }
+            group.schedule.forEach(slot => {
+              if (!slot || !slot.days || !slot.time) return;
+              const timeFormatted = ensureAMPMFormatLocal(slot.time);
+              slot.days.forEach(day => {
+                if (day) {
+                  sessions.push({
+                    day: normalizeDay(day),
+                    time: timeFormatted,
                   });
                 }
               });
             });
+          } else if (Array.isArray(group.sessions)) {
+            // Some imports might store sessions separately
+            sessions = group.sessions
+              .filter(s => s && s.day && s.time)
+              .map(s => ({
+                day: normalizeDay(s.day),
+                time: ensureAMPMFormatLocal(s.time),
+              }));
+          } else if (typeof group.schedule === 'string') {
+            // Primary format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
+            sessions = parseScheduleString(group.schedule);
           }
 
-          // Sort by time chronologically
-          allClasses.sort((a, b) => a.sortTime - b.sortTime);
+          if (!sessions.length) return;
 
-          // Remove duplicates based on group name + time + day
-          const uniqueClasses = [];
-          const seenKeys = new Set();
-          
-          allClasses.forEach(classItem => {
-            const key = `${classItem.groupName}|${classItem.laTime}|${classItem.actualDay}`;
-            if (!seenKeys.has(key)) {
-              seenKeys.add(key);
-              uniqueClasses.push(classItem);
+          sessions.forEach(session => {
+            if (session.day !== checkDayName) return;
+
+            // Parse time
+            const match = session.time.match(/(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (!match) return;
+
+            let hours = parseInt(match[1]);
+            const minutes = parseInt(match[2]);
+            const period = match[3].toUpperCase();
+
+            if (period === 'PM' && hours !== 12) hours += 12;
+            if (period === 'AM' && hours === 12) hours = 0;
+
+            // Calculate class time in seconds since midnight
+            const classTimeInSeconds = hours * 3600 + minutes * 60;
+
+            // Calculate total time difference in seconds
+            let totalDiffSeconds;
+            if (daysAhead === 0) {
+              // Same day - just subtract current time
+              totalDiffSeconds = classTimeInSeconds - currentTimeInSeconds;
+            } else {
+              // Future day - add full days, subtract current time, add class time
+              totalDiffSeconds = daysAhead * 86400 - currentTimeInSeconds + classTimeInSeconds;
+            }
+
+            console.log(
+              `[ClassCountdownTimer] ${group.name} ${checkDayName} ${session.time} (day +${daysAhead}): classTime=${classTimeInSeconds}s, currentTime=${currentTimeInSeconds}s, diff=${totalDiffSeconds}s (${(totalDiffSeconds / 3600).toFixed(1)}h)`
+            );
+
+            // Skip if more than 2 hours (7200 seconds) past - class is over
+            if (totalDiffSeconds < -7200) {
+              console.log(`[ClassCountdownTimer] ❌ Skipping ${group.name} - more than 2h past`);
+              return;
+            }
+
+            // Only show future classes (totalDiffSeconds > 0)
+            if (totalDiffSeconds > 0) {
+              let dayLabel = '';
+              if (daysAhead === 0) {
+                dayLabel = 'Today';
+              } else if (daysAhead === 1) {
+                dayLabel = 'Tomorrow';
+              } else {
+                dayLabel = checkDayName;
+              }
+
+              allClasses.push({
+                groupName:
+                  group.name && group.name.length === 1
+                    ? `Group ${group.name}`
+                    : group.name || 'Unknown Group',
+                dayName: dayLabel,
+                laTime: session.time,
+                secondsRemaining: totalDiffSeconds,
+                actualDay: checkDayName,
+                sortTime: totalDiffSeconds,
+              });
             }
           });
-
-          return uniqueClasses;
-        } catch (error) {
-          console.error('[ClassCountdownTimer] Error getting all classes:', error);
-          return [];
-        }
+        });
       }
 
-      // Update timer display with all classes
-      function updateDisplay() {
-        if (!timerElement) return;
+      // Sort by time chronologically
+      allClasses.sort((a, b) => a.sortTime - b.sortTime);
 
-        const allClasses = getAllUpcomingClasses();
-        const listContainer = timerElement.querySelector('.timer-classes-list');
-        const titleEl = timerElement.querySelector('.timer-title');
-        
-        if (!allClasses || allClasses.length === 0) {
-          titleEl.textContent = 'Upcoming Classes';
-          listContainer.innerHTML = '<div class="timer-no-classes">No upcoming classes in the next 7 days</div>';
-          return;
+      // Remove duplicates based on group name + time + day
+      const uniqueClasses = [];
+      const seenKeys = new Set();
+
+      allClasses.forEach(classItem => {
+        const key = `${classItem.groupName}|${classItem.laTime}|${classItem.actualDay}`;
+        if (!seenKeys.has(key)) {
+          seenKeys.add(key);
+          uniqueClasses.push(classItem);
         }
+      });
 
-        // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "Class in Progress" title
-        // Update title based on content (never show "Class in Progress")
-        if (allClasses.length === 1) {
-          titleEl.textContent = `Next Class: ${allClasses[0].groupName}`;
-        } else {
-          titleEl.textContent = `${allClasses.length} Upcoming Classes`;
-        }
-        // END CLASS COUNTDOWN TIMER FIX
+      return uniqueClasses;
+    } catch (error) {
+      console.error('[ClassCountdownTimer] Error getting all classes:', error);
+      return [];
+    }
+  }
 
-        let html = '';
-        allClasses.forEach((classData, index) => {
-          const yerevanData = convertLAToYerevanTime(classData.laTime);
-          const countdown = formatCountdown(classData.secondsRemaining);
-          
-          // Check if this class is skipped
-          const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
-          const isSkipped = window.SkipClassManager && window.SkipClassManager.isClassSkipped(classData.groupName, dateStr);
-          
-          // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "in-progress" state
-          // Determine card tint class based on time remaining
-          let cardTintClass = '';
-          let stateClass = '';
-          let stateIcon = '';
-          
-          const hoursRemaining = classData.secondsRemaining / 3600;
-          
-          // Apply per-class tinting based on urgency
-          if (hoursRemaining > 24) {
-            cardTintClass = 'class-safe'; // Green
-          } else if (hoursRemaining > 12) {
-            cardTintClass = 'class-upcoming'; // Yellow
-          } else if (hoursRemaining > 6) {
-            cardTintClass = 'class-warning'; // Orange
-          } else {
-            cardTintClass = 'class-critical'; // Red with pulse
-          }
-          
-          // State icons based on urgency
-          if (classData.secondsRemaining < 900) { // <15m
-            stateClass = 'urgent';
-            stateIcon = '🔴';
-          } else if (classData.secondsRemaining < 3600) { // <60m
-            stateClass = 'warning';
-            stateIcon = '🟡';
-          } else {
-            stateIcon = '⏱️';
-          }
-          // END CLASS COUNTDOWN TIMER FIX
+  // Update timer display with all classes
+  function updateDisplay() {
+    if (!timerElement) return;
 
-          const isNext = index === 0;
-          const skippedClass = isSkipped ? 'skipped' : '';
+    const allClasses = getAllUpcomingClasses();
+    const listContainer = timerElement.querySelector('.timer-classes-list');
+    const titleEl = timerElement.querySelector('.timer-title');
 
-          html += `
+    if (!allClasses || allClasses.length === 0) {
+      titleEl.textContent = 'Upcoming Classes';
+      listContainer.innerHTML =
+        '<div class="timer-no-classes">No upcoming classes in the next 7 days</div>';
+      return;
+    }
+
+    // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "Class in Progress" title
+    // Update title based on content (never show "Class in Progress")
+    if (allClasses.length === 1) {
+      titleEl.textContent = `Next Class: ${allClasses[0].groupName}`;
+    } else {
+      titleEl.textContent = `${allClasses.length} Upcoming Classes`;
+    }
+    // END CLASS COUNTDOWN TIMER FIX
+
+    let html = '';
+    allClasses.forEach((classData, index) => {
+      const yerevanData = convertLAToYerevanTime(classData.laTime);
+      const countdown = formatCountdown(classData.secondsRemaining);
+
+      // Check if this class is skipped
+      const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
+      const isSkipped =
+        window.SkipClassManager &&
+        window.SkipClassManager.isClassSkipped(classData.groupName, dateStr);
+
+      // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "in-progress" state
+      // Determine card tint class based on time remaining
+      let cardTintClass = '';
+      let stateClass = '';
+      let stateIcon = '';
+
+      const hoursRemaining = classData.secondsRemaining / 3600;
+
+      // Apply per-class tinting based on urgency
+      if (hoursRemaining > 24) {
+        cardTintClass = 'class-safe'; // Green
+      } else if (hoursRemaining > 12) {
+        cardTintClass = 'class-upcoming'; // Yellow
+      } else if (hoursRemaining > 6) {
+        cardTintClass = 'class-warning'; // Orange
+      } else {
+        cardTintClass = 'class-critical'; // Red with pulse
+      }
+
+      // State icons based on urgency
+      if (classData.secondsRemaining < 900) {
+        // <15m
+        stateClass = 'urgent';
+        stateIcon = '🔴';
+      } else if (classData.secondsRemaining < 3600) {
+        // <60m
+        stateClass = 'warning';
+        stateIcon = '🟡';
+      } else {
+        stateIcon = '⏱️';
+      }
+      // END CLASS COUNTDOWN TIMER FIX
+
+      const isNext = index === 0;
+      const skippedClass = isSkipped ? 'skipped' : '';
+
+      html += `
             <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''} ${skippedClass}" data-group="${classData.groupName}" data-day="${classData.dayName}" data-time="${classData.laTime}">
               <div class="timer-class-header">
                 <span class="timer-class-icon">${stateIcon}</span>
@@ -8488,319 +8809,320 @@
               </div>
             </div>
           `;
-        });
-
-        listContainer.innerHTML = html;
-      }
-
-      // Helper function to calculate class date
-      function calculateClassDateForTimer(dayName, laTime) {
-        const now = new Date();
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        let targetDate;
-        if (dayName === 'Today') {
-          targetDate = new Date(now);
-        } else if (dayName === 'Tomorrow') {
-          targetDate = new Date(now);
-          targetDate.setDate(targetDate.getDate() + 1);
-        } else {
-          // Find next occurrence of this day
-          const currentDay = now.getDay();
-          const targetDay = dayNames.indexOf(dayName);
-          let daysAhead = targetDay - currentDay;
-          if (daysAhead <= 0) daysAhead += 7;
-          
-          targetDate = new Date(now);
-          targetDate.setDate(targetDate.getDate() + daysAhead);
-        }
-        
-        // Format as YYYY-MM-DD
-        const year = targetDate.getFullYear();
-        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-        const day = String(targetDate.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
-      }
-
-      // Initialize timer
-      function init() {
-        // Prevent duplicate initialization
-        if (updateInterval) {
-          console.warn('[ClassCountdownTimer] Already initialized - reusing existing instance');
-          return;
-        }
-
-        createElement();
-        updateDisplay();
-
-        // Start live updates (every minute)
-        updateInterval = setInterval(() => {
-          updateDisplay();
-        }, 60000);
-
-      }
-
-      // Destroy timer
-      function destroy() {
-        // Clear interval first
-        if (updateInterval) {
-          clearInterval(updateInterval);
-          updateInterval = null;
-        }
-
-        // Remove click-outside listener
-        if (window._timerClickOutsideListener) {
-          document.removeEventListener('click', window._timerClickOutsideListener);
-          window._timerClickOutsideListener = null;
-        }
-
-        // Remove element
-        if (timerElement) {
-          timerElement.remove();
-          timerElement = null;
-        }
-
-        currentClassData = null;
-      }
-
-      // Toggle pin mode (above modals)
-      function togglePin() {
-        isPinned = !isPinned;
-        if (timerElement) {
-          if (isPinned) {
-            timerElement.classList.add('pinned');
-          } else {
-            timerElement.classList.remove('pinned');
-          }
-        }
-        return isPinned;
-      }
-
-      // Public API
-      return {
-        init,
-        destroy,
-        togglePin,
-        getCurrentClass: () => currentClassData,
-        isActive: () => timerElement !== null
-      };
-    })();
-    
-    // Reinitialize countdown timer when groups/schedules are updated
-    window.addEventListener('groups:updated', () => {
-      if (window.ClassCountdownTimer) {
-        window.ClassCountdownTimer.destroy();
-        setTimeout(() => {
-          window.ClassCountdownTimer.init();
-        }, 500);
-      }
     });
-    
-    window.addEventListener('schedules:updated', () => {
-      if (window.ClassCountdownTimer) {
-        window.ClassCountdownTimer.destroy();
-        setTimeout(() => {
-          window.ClassCountdownTimer.init();
-        }, 500);
+
+    listContainer.innerHTML = html;
+  }
+
+  // Helper function to calculate class date
+  function calculateClassDateForTimer(dayName, laTime) {
+    const now = new Date();
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    let targetDate;
+    if (dayName === 'Today') {
+      targetDate = new Date(now);
+    } else if (dayName === 'Tomorrow') {
+      targetDate = new Date(now);
+      targetDate.setDate(targetDate.getDate() + 1);
+    } else {
+      // Find next occurrence of this day
+      const currentDay = now.getDay();
+      const targetDay = dayNames.indexOf(dayName);
+      let daysAhead = targetDay - currentDay;
+      if (daysAhead <= 0) daysAhead += 7;
+
+      targetDate = new Date(now);
+      targetDate.setDate(targetDate.getDate() + daysAhead);
+    }
+
+    // Format as YYYY-MM-DD
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Initialize timer
+  function init() {
+    // Prevent duplicate initialization
+    if (updateInterval) {
+      console.warn('[ClassCountdownTimer] Already initialized - reusing existing instance');
+      return;
+    }
+
+    createElement();
+    updateDisplay();
+
+    // Start live updates (every minute)
+    updateInterval = setInterval(() => {
+      updateDisplay();
+    }, 60000);
+  }
+
+  // Destroy timer
+  function destroy() {
+    // Clear interval first
+    if (updateInterval) {
+      clearInterval(updateInterval);
+      updateInterval = null;
+    }
+
+    // Remove click-outside listener
+    if (window._timerClickOutsideListener) {
+      document.removeEventListener('click', window._timerClickOutsideListener);
+      window._timerClickOutsideListener = null;
+    }
+
+    // Remove element
+    if (timerElement) {
+      timerElement.remove();
+      timerElement = null;
+    }
+
+    currentClassData = null;
+  }
+
+  // Toggle pin mode (above modals)
+  function togglePin() {
+    isPinned = !isPinned;
+    if (timerElement) {
+      if (isPinned) {
+        timerElement.classList.add('pinned');
+      } else {
+        timerElement.classList.remove('pinned');
       }
-    });
-    
-    /* END CLASS COUNTDOWN TIMER */
+    }
+    return isPinned;
+  }
 
-    // ============================================================================
-    // SKIP CLASS MANAGER - Smart Calendar + Timer Integration
-    // ============================================================================
-    /**
-     * Skip Class Manager
-     * - Double-click timer class items to skip
-     * - Automatic payment roll-over
-     * - Calendar integration with visual feedback
-     * - Undo functionality
-     */
-    window.SkipClassManager = (function() {
-      // Skipped classes data structure: { groupName: { 'YYYY-MM-DD': true } }
-      let skippedClasses = loadSkippedClasses();
-      let pendingSkip = null;
+  // Public API
+  return {
+    init,
+    destroy,
+    togglePin,
+    getCurrentClass: () => currentClassData,
+    isActive: () => timerElement !== null,
+  };
+})();
 
-      // Load skipped classes from localStorage
-      function loadSkippedClasses() {
-        try {
-          const data = localStorage.getItem('skipped-classes:v1');
-          return data ? JSON.parse(data) : {};
-        } catch (error) {
-          console.error('[SkipClassManager] Error loading skipped classes:', error);
-          return {};
-        }
+// Reinitialize countdown timer when groups/schedules are updated
+window.addEventListener('groups:updated', () => {
+  if (window.ClassCountdownTimer) {
+    window.ClassCountdownTimer.destroy();
+    setTimeout(() => {
+      window.ClassCountdownTimer.init();
+    }, 500);
+  }
+});
+
+window.addEventListener('schedules:updated', () => {
+  if (window.ClassCountdownTimer) {
+    window.ClassCountdownTimer.destroy();
+    setTimeout(() => {
+      window.ClassCountdownTimer.init();
+    }, 500);
+  }
+});
+
+/* END CLASS COUNTDOWN TIMER */
+
+// ============================================================================
+// SKIP CLASS MANAGER - Smart Calendar + Timer Integration
+// ============================================================================
+/**
+ * Skip Class Manager
+ * - Double-click timer class items to skip
+ * - Automatic payment roll-over
+ * - Calendar integration with visual feedback
+ * - Undo functionality
+ */
+window.SkipClassManager = (function () {
+  // Skipped classes data structure: { groupName: { 'YYYY-MM-DD': true } }
+  let skippedClasses = loadSkippedClasses();
+  let pendingSkip = null;
+
+  // Load skipped classes from localStorage
+  function loadSkippedClasses() {
+    try {
+      const data = localStorage.getItem('skipped-classes:v1');
+      return data ? JSON.parse(data) : {};
+    } catch (error) {
+      console.error('[SkipClassManager] Error loading skipped classes:', error);
+      return {};
+    }
+  }
+
+  // Save skipped classes to localStorage
+  function saveSkippedClasses() {
+    try {
+      localStorage.setItem('skipped-classes:v1', JSON.stringify(skippedClasses));
+    } catch (error) {
+      console.error('[SkipClassManager] Error saving skipped classes:', error);
+    }
+  }
+
+  // Calculate the date for a class (Today, Tomorrow, or specific day)
+  function calculateClassDate(dayName, laTime) {
+    const now = new Date();
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+    let targetDate;
+    if (dayName === 'Today') {
+      targetDate = new Date(now);
+    } else if (dayName === 'Tomorrow') {
+      targetDate = new Date(now);
+      targetDate.setDate(targetDate.getDate() + 1);
+    } else {
+      // Find next occurrence of this day
+      const currentDay = now.getDay();
+      const targetDay = dayNames.indexOf(dayName);
+      let daysAhead = targetDay - currentDay;
+      if (daysAhead <= 0) daysAhead += 7;
+
+      targetDate = new Date(now);
+      targetDate.setDate(targetDate.getDate() + daysAhead);
+    }
+
+    // Format as YYYY-MM-DD
+    const year = targetDate.getFullYear();
+    const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+    const day = String(targetDate.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
+
+  // Check if a class is skipped
+  function isClassSkipped(groupName, dateStr) {
+    return skippedClasses[groupName] && skippedClasses[groupName][dateStr] === true;
+  }
+
+  // Skip a class
+  function skipClass(groupName, dateStr, classInfo) {
+    if (!skippedClasses[groupName]) {
+      skippedClasses[groupName] = {};
+    }
+    skippedClasses[groupName][dateStr] = true;
+    saveSkippedClasses();
+
+    // Dispatch event for calendar refresh
+    window.dispatchEvent(
+      new CustomEvent('classSkipped', {
+        detail: { groupName, date: dateStr, classInfo },
+      })
+    );
+
+    // Refresh timer display
+    if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
+      window.ClassCountdownTimer.destroy();
+      setTimeout(() => {
+        window.ClassCountdownTimer.init();
+      }, 100);
+    }
+
+    // Refresh calendar if visible
+    if (typeof renderCalendar === 'function') {
+      try {
+        renderCalendar();
+      } catch (error) {
+        console.warn('[SkipClassManager] Could not refresh calendar:', error);
       }
+    }
+  }
 
-      // Save skipped classes to localStorage
-      function saveSkippedClasses() {
-        try {
-          localStorage.setItem('skipped-classes:v1', JSON.stringify(skippedClasses));
-        } catch (error) {
-          console.error('[SkipClassManager] Error saving skipped classes:', error);
-        }
+  // Unskip a class (undo)
+  function unskipClass(groupName, dateStr) {
+    if (skippedClasses[groupName]) {
+      delete skippedClasses[groupName][dateStr];
+      if (Object.keys(skippedClasses[groupName]).length === 0) {
+        delete skippedClasses[groupName];
       }
+      saveSkippedClasses();
+    }
 
-      // Calculate the date for a class (Today, Tomorrow, or specific day)
-      function calculateClassDate(dayName, laTime) {
-        const now = new Date();
-        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-        
-        let targetDate;
-        if (dayName === 'Today') {
-          targetDate = new Date(now);
-        } else if (dayName === 'Tomorrow') {
-          targetDate = new Date(now);
-          targetDate.setDate(targetDate.getDate() + 1);
-        } else {
-          // Find next occurrence of this day
-          const currentDay = now.getDay();
-          const targetDay = dayNames.indexOf(dayName);
-          let daysAhead = targetDay - currentDay;
-          if (daysAhead <= 0) daysAhead += 7;
-          
-          targetDate = new Date(now);
-          targetDate.setDate(targetDate.getDate() + daysAhead);
-        }
-        
-        // Format as YYYY-MM-DD
-        const year = targetDate.getFullYear();
-        const month = String(targetDate.getMonth() + 1).padStart(2, '0');
-        const day = String(targetDate.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}`;
+    // Dispatch event for calendar refresh
+    window.dispatchEvent(
+      new CustomEvent('classUnskipped', {
+        detail: { groupName, date: dateStr },
+      })
+    );
+
+    // Refresh timer display
+    if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
+      window.ClassCountdownTimer.destroy();
+      setTimeout(() => {
+        window.ClassCountdownTimer.init();
+      }, 100);
+    }
+
+    // Refresh calendar if visible
+    if (typeof renderCalendar === 'function') {
+      try {
+        renderCalendar();
+      } catch (error) {
+        console.warn('[SkipClassManager] Could not refresh calendar:', error);
       }
+    }
+  }
 
-      // Check if a class is skipped
-      function isClassSkipped(groupName, dateStr) {
-        return skippedClasses[groupName] && skippedClasses[groupName][dateStr] === true;
-      }
+  // Show skip confirmation dialog
+  function showSkipDialog(classData) {
+    pendingSkip = classData;
 
-      // Skip a class
-      function skipClass(groupName, dateStr, classInfo) {
-        if (!skippedClasses[groupName]) {
-          skippedClasses[groupName] = {};
-        }
-        skippedClasses[groupName][dateStr] = true;
-        saveSkippedClasses();
-        
-        
-        // Dispatch event for calendar refresh
-        window.dispatchEvent(new CustomEvent('classSkipped', { 
-          detail: { groupName, date: dateStr, classInfo } 
-        }));
-        
-        // Refresh timer display
-        if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
-          window.ClassCountdownTimer.destroy();
-          setTimeout(() => {
-            window.ClassCountdownTimer.init();
-          }, 100);
-        }
-        
-        // Refresh calendar if visible
-        if (typeof renderCalendar === 'function') {
-          try {
-            renderCalendar();
-          } catch (error) {
-            console.warn('[SkipClassManager] Could not refresh calendar:', error);
-          }
-        }
-      }
+    const dialog = document.getElementById('skipClassDialog');
+    const overlay = document.getElementById('skipClassOverlay');
+    const classNameEl = document.getElementById('skipDialogClassName');
+    const classTimeEl = document.getElementById('skipDialogClassTime');
 
-      // Unskip a class (undo)
-      function unskipClass(groupName, dateStr) {
-        if (skippedClasses[groupName]) {
-          delete skippedClasses[groupName][dateStr];
-          if (Object.keys(skippedClasses[groupName]).length === 0) {
-            delete skippedClasses[groupName];
-          }
-          saveSkippedClasses();
-        }
-        
-        
-        // Dispatch event for calendar refresh
-        window.dispatchEvent(new CustomEvent('classUnskipped', { 
-          detail: { groupName, date: dateStr } 
-        }));
-        
-        // Refresh timer display
-        if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
-          window.ClassCountdownTimer.destroy();
-          setTimeout(() => {
-            window.ClassCountdownTimer.init();
-          }, 100);
-        }
-        
-        // Refresh calendar if visible
-        if (typeof renderCalendar === 'function') {
-          try {
-            renderCalendar();
-          } catch (error) {
-            console.warn('[SkipClassManager] Could not refresh calendar:', error);
-          }
-        }
-      }
+    if (!dialog || !overlay) {
+      console.error('[SkipClassManager] Dialog elements not found');
+      return;
+    }
 
-      // Show skip confirmation dialog
-      function showSkipDialog(classData) {
-        pendingSkip = classData;
-        
-        const dialog = document.getElementById('skipClassDialog');
-        const overlay = document.getElementById('skipClassOverlay');
-        const classNameEl = document.getElementById('skipDialogClassName');
-        const classTimeEl = document.getElementById('skipDialogClassTime');
-        
-        if (!dialog || !overlay) {
-          console.error('[SkipClassManager] Dialog elements not found');
-          return;
-        }
-        
-        
-        // Populate dialog
-        classNameEl.textContent = classData.groupName;
-        classTimeEl.textContent = `${classData.dayName} at ${classData.laTime}`;
-        
-        
-        // Show dialog
-        overlay.classList.add('show');
-        dialog.classList.add('show');
-        
-      }
+    // Populate dialog
+    classNameEl.textContent = classData.groupName;
+    classTimeEl.textContent = `${classData.dayName} at ${classData.laTime}`;
 
-      // Hide skip dialog
-      function hideSkipDialog() {
-        const dialog = document.getElementById('skipClassDialog');
-        const overlay = document.getElementById('skipClassOverlay');
-        
-        if (dialog) dialog.classList.remove('show');
-        if (overlay) overlay.classList.remove('show');
-        
-        pendingSkip = null;
-      }
+    // Show dialog
+    overlay.classList.add('show');
+    dialog.classList.add('show');
+  }
 
-      // Confirm skip
-      function confirmSkip() {
-        if (!pendingSkip) return;
-        
-        const dateStr = calculateClassDate(pendingSkip.dayName, pendingSkip.laTime);
-        skipClass(pendingSkip.groupName, dateStr, pendingSkip);
-        hideSkipDialog();
-        
-        // Show success notification
-        showNotification(`✓ Class skipped: ${pendingSkip.groupName} on ${pendingSkip.dayName}`, 'success');
-      }
+  // Hide skip dialog
+  function hideSkipDialog() {
+    const dialog = document.getElementById('skipClassDialog');
+    const overlay = document.getElementById('skipClassOverlay');
 
-      // Cancel skip
-      function cancelSkip() {
-        hideSkipDialog();
-      }
+    if (dialog) dialog.classList.remove('show');
+    if (overlay) overlay.classList.remove('show');
 
-      // Show notification (simple version)
-      function showNotification(message, type = 'info') {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.style.cssText = `
+    pendingSkip = null;
+  }
+
+  // Confirm skip
+  function confirmSkip() {
+    if (!pendingSkip) return;
+
+    const dateStr = calculateClassDate(pendingSkip.dayName, pendingSkip.laTime);
+    skipClass(pendingSkip.groupName, dateStr, pendingSkip);
+    hideSkipDialog();
+
+    // Show success notification
+    showNotification(
+      `✓ Class skipped: ${pendingSkip.groupName} on ${pendingSkip.dayName}`,
+      'success'
+    );
+  }
+
+  // Cancel skip
+  function cancelSkip() {
+    hideSkipDialog();
+  }
+
+  // Show notification (simple version)
+  function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.style.cssText = `
           position: fixed;
           top: 80px;
           right: 20px;
@@ -8815,407 +9137,402 @@
           animation: slideInRight 0.3s ease-out;
           max-width: 350px;
         `;
-        notification.textContent = message;
-        
-        document.body.appendChild(notification);
-        
-        // Auto-remove after 3 seconds
-        setTimeout(() => {
-          notification.style.opacity = '0';
-          notification.style.transform = 'translateX(400px)';
-          notification.style.transition = 'all 0.3s ease-out';
-          setTimeout(() => notification.remove(), 300);
-        }, 3000);
+    notification.textContent = message;
+
+    document.body.appendChild(notification);
+
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transform = 'translateX(400px)';
+      notification.style.transition = 'all 0.3s ease-out';
+      setTimeout(() => notification.remove(), 300);
+    }, 3000);
+  }
+
+  // Initialize - attach double-click handlers to timer items
+  function init() {
+    // Attach button event listeners
+    const cancelBtn = document.getElementById('skipDialogCancelBtn');
+    const confirmBtn = document.getElementById('skipDialogConfirmBtn');
+    const overlay = document.getElementById('skipClassOverlay');
+
+    if (cancelBtn) {
+      cancelBtn.addEventListener('click', cancelSkip);
+    }
+
+    if (confirmBtn) {
+      confirmBtn.addEventListener('click', confirmSkip);
+    }
+
+    if (overlay) {
+      overlay.addEventListener('click', cancelSkip);
+    }
+
+    // Wait for timer to be rendered, then attach handlers
+    const attachHandlers = () => {
+      const timerElement = document.getElementById('enhancedCountdownTimer');
+      if (!timerElement) {
+        return;
       }
 
-      // Initialize - attach double-click handlers to timer items
-      function init() {
-        
-        // Attach button event listeners
-        const cancelBtn = document.getElementById('skipDialogCancelBtn');
-        const confirmBtn = document.getElementById('skipDialogConfirmBtn');
-        const overlay = document.getElementById('skipClassOverlay');
-        
-        if (cancelBtn) {
-          cancelBtn.addEventListener('click', cancelSkip);
+      // Remove existing listener if any
+      if (timerElement._skipHandlerAttached) {
+        return;
+      }
+
+      // Use event delegation for dynamic timer items
+      timerElement.addEventListener('dblclick', e => {
+        const classItem = e.target.closest('.timer-class-item');
+        if (!classItem) {
+          return;
         }
-        
-        if (confirmBtn) {
-          confirmBtn.addEventListener('click', confirmSkip);
+        if (classItem.classList.contains('skipped')) {
+          return;
         }
-        
-        if (overlay) {
-          overlay.addEventListener('click', cancelSkip);
+
+        // Extract class data from the element
+        const groupName = classItem.getAttribute('data-group');
+        const dayName = classItem.getAttribute('data-day');
+        const laTime = classItem.getAttribute('data-time');
+
+        if (!groupName || !dayName || !laTime) {
+          console.error('[SkipClassManager] Missing class data attributes');
+          return;
         }
-        
-        // Wait for timer to be rendered, then attach handlers
-        const attachHandlers = () => {
-          const timerElement = document.getElementById('enhancedCountdownTimer');
-          if (!timerElement) {
-            return;
-          }
-          
-          // Remove existing listener if any
-          if (timerElement._skipHandlerAttached) {
-            return;
-          }
-          
-          // Use event delegation for dynamic timer items
-          timerElement.addEventListener('dblclick', (e) => {
-            const classItem = e.target.closest('.timer-class-item');
-            if (!classItem) {
-              return;
-            }
-            if (classItem.classList.contains('skipped')) {
-              return;
-            }
-            
-            // Extract class data from the element
-            const groupName = classItem.getAttribute('data-group');
-            const dayName = classItem.getAttribute('data-day');
-            const laTime = classItem.getAttribute('data-time');
-            
-            
-            if (!groupName || !dayName || !laTime) {
-              console.error('[SkipClassManager] Missing class data attributes');
-              return;
-            }
-            
-            const classData = {
-              groupName,
-              dayName,
-              laTime
-            };
-            
-            showSkipDialog(classData);
-          });
-          
-          timerElement._skipHandlerAttached = true;
+
+        const classData = {
+          groupName,
+          dayName,
+          laTime,
         };
-        
-        // Try attaching handlers after a short delay
-        setTimeout(attachHandlers, 500);
-        setTimeout(attachHandlers, 1500); // Retry after 1.5s
-        setTimeout(attachHandlers, 3000); // Retry after 3s
-        
-        // Listen for timer being opened
-        window.addEventListener('timerOpened', () => {
-          setTimeout(attachHandlers, 200);
-        });
-        
-        // Also attach when timer is reinitialized
-        window.addEventListener('groups:updated', () => {
-          setTimeout(attachHandlers, 600);
-        });
-        window.addEventListener('schedules:updated', () => {
-          setTimeout(attachHandlers, 600);
-        });
-        
-      }
 
-      // Public API
-      return {
-        init,
-        isClassSkipped,
-        skipClass,
-        unskipClass,
-        confirmSkip,
-        cancelSkip,
-        getSkippedClasses: () => ({ ...skippedClasses })
-      };
-    })();
-
-    // Initialize Skip Class Manager
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => {
-        SkipClassManager.init();
+        showSkipDialog(classData);
       });
-    } else {
-      SkipClassManager.init();
-    }
 
-    // Listen for skip events to update calendar
-    window.addEventListener('classSkipped', (event) => {
+      timerElement._skipHandlerAttached = true;
+    };
+
+    // Try attaching handlers after a short delay
+    setTimeout(attachHandlers, 500);
+    setTimeout(attachHandlers, 1500); // Retry after 1.5s
+    setTimeout(attachHandlers, 3000); // Retry after 3s
+
+    // Listen for timer being opened
+    window.addEventListener('timerOpened', () => {
+      setTimeout(attachHandlers, 200);
     });
 
-    window.addEventListener('classUnskipped', (event) => {
-    });
-    
-    // ============================================================================
-    // END SKIP CLASS MANAGER
-    // ============================================================================
-
-    // Initialize Floating Nav on DOM ready
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', initFloatingNav);
-    } else {
-      // DOM already loaded
-      initFloatingNav();
-    }
-    // ========== END FLOATING NAV FUNCTIONS ==========
-    
-    // ============================================================================
-    // BEGIN EARNING FORECAST SYSTEM
-    // ============================================================================
-    
-    function openEarningsForecast() {
-      const modal = document.getElementById('earningsForecastModal');
-      if (!modal) return;
-      
-      modal.style.display = 'block';
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
-      
-      // Calculate and display forecast
-      updateForecastData();
-    }
-    
-    function closeEarningsForecast() {
-      const modal = document.getElementById('earningsForecastModal');
-      if (!modal) return;
-      
-      modal.style.opacity = '0';
-      setTimeout(() => {
-        modal.style.display = 'none';
-      }, 250);
-    }
-    
-    function updateForecastData() {
-      // Load students data from Supabase cache
-      const students = window.studentsCache || window.globalData?.students || [];
-      
-      // Safety check: ensure students is an array
-      if (!Array.isArray(students)) {
-        console.warn('⚠️ Students data is not an array:', students);
-        document.getElementById('forecastActiveCount').textContent = '0';
-        document.getElementById('forecastWeekly').textContent = formatCurrency(0, '$');
-        document.getElementById('forecastMonthly').textContent = formatCurrency(0, '$');
-        document.getElementById('forecastActual').textContent = formatCurrency(0, '$');
-        return;
-      }
-      
-      // Filter active students only (exclude paused, graduated, inactive)
-      const activeStudents = students.filter(s => {
-        const status = (s.status || 'active').toLowerCase();
-        return status === 'active' && s.isActive !== false;
-      });
-      
-      // Calculate weekly and monthly projections
-      let totalWeekly = 0;
-      let activeCount = 0;
-      
-      activeStudents.forEach(student => {
-        // Get student's per-class payment rate
-        const pricePerClass = parseFloat(student.payPerClass) || 0;
-        
-        // Skip if no price set
-        if (pricePerClass <= 0) return;
-        
-        const groupName = student.group || '';
-        
-        // Skip if no group assigned
-        if (!groupName.trim()) return;
-        
-        // Count weekly classes for this student's group
-        const weeklyClasses = countWeeklyClasses(groupName);
-        
-        // Skip if group has no schedule
-        if (weeklyClasses <= 0) return;
-        
-        // Calculate: student's weekly earning = price per class × weekly classes
-        const studentWeekly = pricePerClass * weeklyClasses;
-        
-        // Add to total
-        totalWeekly += studentWeekly;
-        activeCount++;
-      });
-      
-      // Calculate monthly projection (weekly × 4)
-      const totalMonthly = totalWeekly * 4;
-      
-      // Calculate actual earnings for current month
-      const actualEarnings = calculateActualMonthlyEarnings();
-      
-      // Update UI with formatted values
-      document.getElementById('forecastActiveCount').textContent = activeCount;
-      document.getElementById('forecastWeekly').textContent = formatCurrency(totalWeekly, '$');
-      document.getElementById('forecastMonthly').textContent = formatCurrency(totalMonthly, '$');
-      document.getElementById('forecastActual').textContent = formatCurrency(actualEarnings, '$');
-    }
-    
-    function countWeeklyClasses(groupName) {
-      // Return 0 if no group name provided
-      if (!groupName || !groupName.trim()) return 0;
-      
-      // Load groups from Supabase cache
-      const groups = window.groupsCache || window.globalData?.groups || [];
-      
-      // Find the group by name
-      const group = groups.find(g => g.name === groupName);
-      
-      // Return 0 if group not found or no schedule
-      if (!group || !group.schedule) return 0;
-      
-      // Parse schedule string (e.g., "Mon 8:00 AM, Wed 8:00 PM, Fri 8:00 PM")
-      // Count comma-separated day-time slots
-      const scheduleString = group.schedule.trim();
-      
-      if (!scheduleString) return 0;
-      
-      // Split by comma and count non-empty slots
-      const slots = scheduleString.split(',').filter(slot => slot.trim() !== '');
-      
-      return slots.length;
-    }
-    
-    function calculateActualMonthlyEarnings() {
-      // Load payments from localStorage
-      const payments = PaymentStore.getAll();
-      
-      // Get current month and year
-      const now = new Date();
-      const currentMonth = now.getMonth();
-      const currentYear = now.getFullYear();
-      
-      let total = 0;
-      
-      payments.forEach(payment => {
-        // Skip ignored payments
-        if (payment.ignoredOnce || payment.ignorePermanently) return;
-        
-        // Get payment date (try multiple date fields)
-        const dateString = payment.emailDate || payment.transactionDate || payment.createdAt;
-        
-        if (!dateString) return;
-        
-        const paymentDate = new Date(dateString);
-        
-        // Validate date
-        if (isNaN(paymentDate.getTime())) return;
-        
-        // Check if payment is from current month and year
-        if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
-          const amount = parseFloat(payment.amount) || 0;
-          total += amount;
-        }
-      });
-      
-      return total;
-    }
-    
-    // Listen for data updates to refresh forecast automatically
-    window.addEventListener('students:updated', () => {
-      const modal = document.getElementById('earningsForecastModal');
-      if (modal && modal.style.display === 'block') {
-        updateForecastData();
-      }
-    });
-    
-    window.addEventListener('payments:updated', () => {
-      const modal = document.getElementById('earningsForecastModal');
-      if (modal && modal.style.display === 'block') {
-        updateForecastData();
-      }
-    });
-    
+    // Also attach when timer is reinitialized
     window.addEventListener('groups:updated', () => {
-      const modal = document.getElementById('earningsForecastModal');
-      if (modal && modal.style.display === 'block') {
-        updateForecastData();
-      }
+      setTimeout(attachHandlers, 600);
     });
-    
     window.addEventListener('schedules:updated', () => {
-      const modal = document.getElementById('earningsForecastModal');
-      if (modal && modal.style.display === 'block') {
-        updateForecastData();
-      }
+      setTimeout(attachHandlers, 600);
     });
-    
-    // ============================================================================
-    // STUDENT BREAKDOWN MODAL
-    // ============================================================================
-    
-    function openStudentBreakdown() {
-      const modal = document.getElementById('studentBreakdownModal');
-      if (!modal) return;
-      
-      // Calculate and display breakdown
-      updateStudentBreakdown();
-      
-      modal.style.display = 'block';
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
+  }
+
+  // Public API
+  return {
+    init,
+    isClassSkipped,
+    skipClass,
+    unskipClass,
+    confirmSkip,
+    cancelSkip,
+    getSkippedClasses: () => ({ ...skippedClasses }),
+  };
+})();
+
+// Initialize Skip Class Manager
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    SkipClassManager.init();
+  });
+} else {
+  SkipClassManager.init();
+}
+
+// Listen for skip events to update calendar
+window.addEventListener('classSkipped', event => {});
+
+window.addEventListener('classUnskipped', event => {});
+
+// ============================================================================
+// END SKIP CLASS MANAGER
+// ============================================================================
+
+// Initialize Floating Nav on DOM ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initFloatingNav);
+} else {
+  // DOM already loaded
+  initFloatingNav();
+}
+// ========== END FLOATING NAV FUNCTIONS ==========
+
+// ============================================================================
+// BEGIN EARNING FORECAST SYSTEM
+// ============================================================================
+
+function openEarningsForecast() {
+  const modal = document.getElementById('earningsForecastModal');
+  if (!modal) return;
+
+  modal.style.display = 'block';
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+
+  // Calculate and display forecast
+  updateForecastData();
+}
+
+function closeEarningsForecast() {
+  const modal = document.getElementById('earningsForecastModal');
+  if (!modal) return;
+
+  modal.style.opacity = '0';
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 250);
+}
+
+function updateForecastData() {
+  // Load students data from Supabase cache
+  const students = window.studentsCache || window.globalData?.students || [];
+
+  // Safety check: ensure students is an array
+  if (!Array.isArray(students)) {
+    console.warn('⚠️ Students data is not an array:', students);
+    document.getElementById('forecastActiveCount').textContent = '0';
+    document.getElementById('forecastWeekly').textContent = formatCurrency(0, '$');
+    document.getElementById('forecastMonthly').textContent = formatCurrency(0, '$');
+    document.getElementById('forecastActual').textContent = formatCurrency(0, '$');
+    return;
+  }
+
+  // Filter active students only (exclude paused, graduated, inactive)
+  const activeStudents = students.filter(s => {
+    const status = (s.status || 'active').toLowerCase();
+    return status === 'active' && s.isActive !== false;
+  });
+
+  // Calculate weekly and monthly projections
+  let totalWeekly = 0;
+  let activeCount = 0;
+
+  activeStudents.forEach(student => {
+    // Get student's per-class payment rate
+    const pricePerClass = parseFloat(student.payPerClass) || 0;
+
+    // Skip if no price set
+    if (pricePerClass <= 0) return;
+
+    const groupName = student.group || '';
+
+    // Skip if no group assigned
+    if (!groupName.trim()) return;
+
+    // Count weekly classes for this student's group
+    const weeklyClasses = countWeeklyClasses(groupName);
+
+    // Skip if group has no schedule
+    if (weeklyClasses <= 0) return;
+
+    // Calculate: student's weekly earning = price per class × weekly classes
+    const studentWeekly = pricePerClass * weeklyClasses;
+
+    // Add to total
+    totalWeekly += studentWeekly;
+    activeCount++;
+  });
+
+  // Calculate monthly projection (weekly × 4)
+  const totalMonthly = totalWeekly * 4;
+
+  // Calculate actual earnings for current month
+  const actualEarnings = calculateActualMonthlyEarnings();
+
+  // Update UI with formatted values
+  document.getElementById('forecastActiveCount').textContent = activeCount;
+  document.getElementById('forecastWeekly').textContent = formatCurrency(totalWeekly, '$');
+  document.getElementById('forecastMonthly').textContent = formatCurrency(totalMonthly, '$');
+  document.getElementById('forecastActual').textContent = formatCurrency(actualEarnings, '$');
+}
+
+function countWeeklyClasses(groupName) {
+  // Return 0 if no group name provided
+  if (!groupName || !groupName.trim()) return 0;
+
+  // Load groups from Supabase cache
+  const groups = window.groupsCache || window.globalData?.groups || [];
+
+  // Find the group by name
+  const group = groups.find(g => g.name === groupName);
+
+  // Return 0 if group not found or no schedule
+  if (!group || !group.schedule) return 0;
+
+  // Parse schedule string (e.g., "Mon 8:00 AM, Wed 8:00 PM, Fri 8:00 PM")
+  // Count comma-separated day-time slots
+  const scheduleString = group.schedule.trim();
+
+  if (!scheduleString) return 0;
+
+  // Split by comma and count non-empty slots
+  const slots = scheduleString.split(',').filter(slot => slot.trim() !== '');
+
+  return slots.length;
+}
+
+function calculateActualMonthlyEarnings() {
+  // Load payments from localStorage
+  const payments = PaymentStore.getAll();
+
+  // Get current month and year
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const currentYear = now.getFullYear();
+
+  let total = 0;
+
+  payments.forEach(payment => {
+    // Skip ignored payments
+    if (payment.ignoredOnce || payment.ignorePermanently) return;
+
+    // Get payment date (try multiple date fields)
+    const dateString = payment.emailDate || payment.transactionDate || payment.createdAt;
+
+    if (!dateString) return;
+
+    const paymentDate = new Date(dateString);
+
+    // Validate date
+    if (isNaN(paymentDate.getTime())) return;
+
+    // Check if payment is from current month and year
+    if (paymentDate.getMonth() === currentMonth && paymentDate.getFullYear() === currentYear) {
+      const amount = parseFloat(payment.amount) || 0;
+      total += amount;
     }
-    
-    function closeStudentBreakdown() {
-      const modal = document.getElementById('studentBreakdownModal');
-      if (!modal) return;
-      
-      modal.style.opacity = '0';
-      setTimeout(() => {
-        modal.style.display = 'none';
-      }, 250);
-    }
-    
-    function updateStudentBreakdown() {
-      const students = window.studentsCache || window.globalData?.students || [];
-      const container = document.getElementById('studentBreakdownList');
-      
-      if (!container) return;
-      
-      // Safety check
-      if (!Array.isArray(students)) {
-        console.warn('⚠️ Students data is not an array in breakdown:', students);
-        container.innerHTML = '<div class="no-data">No student data available</div>';
-        return;
-      }
-      
-      // Filter active students
-      const activeStudents = students.filter(s => {
-        const status = (s.status || 'active').toLowerCase();
-        return status === 'active' && s.isActive !== false;
-      });
-      
-      let totalWeekly = 0;
-      let html = '';
-      
-      // Build list of students with their earnings
-      const studentData = [];
-      
-      activeStudents.forEach(student => {
-        const pricePerClass = parseFloat(student.payPerClass) || 0;
-        if (pricePerClass <= 0) return;
-        
-        const groupName = student.group || '';
-        if (!groupName.trim()) return;
-        
-        const weeklyClasses = countWeeklyClasses(groupName);
-        if (weeklyClasses <= 0) return;
-        
-        const studentWeekly = pricePerClass * weeklyClasses;
-        const studentMonthly = studentWeekly * 4;
-        
-        totalWeekly += studentWeekly;
-        
-        studentData.push({
-          name: student.name,
-          group: groupName,
-          pricePerClass,
-          weeklyClasses,
-          studentWeekly,
-          studentMonthly
-        });
-      });
-      
-      // Sort by name
-      studentData.sort((a, b) => a.name.localeCompare(b.name));
-      
-      // Generate HTML
-      studentData.forEach(data => {
-        html += `
+  });
+
+  return total;
+}
+
+// Listen for data updates to refresh forecast automatically
+window.addEventListener('students:updated', () => {
+  const modal = document.getElementById('earningsForecastModal');
+  if (modal && modal.style.display === 'block') {
+    updateForecastData();
+  }
+});
+
+window.addEventListener('payments:updated', () => {
+  const modal = document.getElementById('earningsForecastModal');
+  if (modal && modal.style.display === 'block') {
+    updateForecastData();
+  }
+});
+
+window.addEventListener('groups:updated', () => {
+  const modal = document.getElementById('earningsForecastModal');
+  if (modal && modal.style.display === 'block') {
+    updateForecastData();
+  }
+});
+
+window.addEventListener('schedules:updated', () => {
+  const modal = document.getElementById('earningsForecastModal');
+  if (modal && modal.style.display === 'block') {
+    updateForecastData();
+  }
+});
+
+// ============================================================================
+// STUDENT BREAKDOWN MODAL
+// ============================================================================
+
+function openStudentBreakdown() {
+  const modal = document.getElementById('studentBreakdownModal');
+  if (!modal) return;
+
+  // Calculate and display breakdown
+  updateStudentBreakdown();
+
+  modal.style.display = 'block';
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+}
+
+function closeStudentBreakdown() {
+  const modal = document.getElementById('studentBreakdownModal');
+  if (!modal) return;
+
+  modal.style.opacity = '0';
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 250);
+}
+
+function updateStudentBreakdown() {
+  const students = window.studentsCache || window.globalData?.students || [];
+  const container = document.getElementById('studentBreakdownList');
+
+  if (!container) return;
+
+  // Safety check
+  if (!Array.isArray(students)) {
+    console.warn('⚠️ Students data is not an array in breakdown:', students);
+    container.innerHTML = '<div class="no-data">No student data available</div>';
+    return;
+  }
+
+  // Filter active students
+  const activeStudents = students.filter(s => {
+    const status = (s.status || 'active').toLowerCase();
+    return status === 'active' && s.isActive !== false;
+  });
+
+  let totalWeekly = 0;
+  let html = '';
+
+  // Build list of students with their earnings
+  const studentData = [];
+
+  activeStudents.forEach(student => {
+    const pricePerClass = parseFloat(student.payPerClass) || 0;
+    if (pricePerClass <= 0) return;
+
+    const groupName = student.group || '';
+    if (!groupName.trim()) return;
+
+    const weeklyClasses = countWeeklyClasses(groupName);
+    if (weeklyClasses <= 0) return;
+
+    const studentWeekly = pricePerClass * weeklyClasses;
+    const studentMonthly = studentWeekly * 4;
+
+    totalWeekly += studentWeekly;
+
+    studentData.push({
+      name: student.name,
+      group: groupName,
+      pricePerClass,
+      weeklyClasses,
+      studentWeekly,
+      studentMonthly,
+    });
+  });
+
+  // Sort by name
+  studentData.sort((a, b) => a.name.localeCompare(b.name));
+
+  // Generate HTML
+  studentData.forEach(data => {
+    html += `
           <div style="padding: 16px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.06)'" onmouseout="this.style.background='rgba(255,255,255,0.03)'">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
               <div>
@@ -9235,547 +9552,581 @@
             </div>
           </div>
         `;
-      });
-      
-      // Show message if no students
-      if (studentData.length === 0) {
-        html = '<div style="padding: 40px; text-align: center; color: #94a3b8; font-style: italic;">No active students with pricing and schedules</div>';
-      }
-      
-      container.innerHTML = html;
-      
-      // Update totals
-      const totalMonthly = totalWeekly * 4;
-      document.getElementById('breakdownTotalWeekly').textContent = formatCurrency(totalWeekly, '$');
-      document.getElementById('breakdownTotalMonthly').textContent = formatCurrency(totalMonthly, '$');
-    }
-    
-    // ============================================================================
-    // SMART CALENDAR PAYMENT SYSTEM
-    // ============================================================================
-    
-    let currentCalendarDate = new Date();
-    let studentBalances = {}; // Track advance payments per student
-    
-    // Storage key for balances
-    const BALANCE_STORAGE_KEY = 'firestone:student-balances:v1';
-    const CALENDAR_SNAPSHOT_KEY = 'firestone:calendar-snapshots:v1';
-    
-    // Calendar start date - November 1, 2025
-    const CALENDAR_START_DATE = new Date('2025-11-01T00:00:00');
-    
-    // Load balances from localStorage
-    function loadStudentBalances() {
-      const stored = localStorage.getItem(BALANCE_STORAGE_KEY);
-      return stored ? JSON.parse(stored) : {};
-    }
-    
-    // Save balances to localStorage
-    function saveStudentBalances(balances) {
-      localStorage.setItem(BALANCE_STORAGE_KEY, JSON.stringify(balances));
-      studentBalances = balances;
-    }
-    
-    // Load calendar snapshots (frozen historical data)
-    function loadCalendarSnapshots() {
-      const stored = localStorage.getItem(CALENDAR_SNAPSHOT_KEY);
-      return stored ? JSON.parse(stored) : {};
-    }
-    
-    // Save calendar snapshot for a specific date
-    function saveCalendarSnapshot(dateStr, studentData) {
-      const snapshots = loadCalendarSnapshots();
-      
-      // Initialize snapshot for this date if it doesn't exist
-      if (!snapshots[dateStr]) {
-        snapshots[dateStr] = {
-          students: {},
-          frozenAt: new Date().toISOString()
-        };
-      }
-      
-      // Merge student data (don't overwrite existing students)
-      snapshots[dateStr].students = {
-        ...snapshots[dateStr].students,
-        ...studentData
+  });
+
+  // Show message if no students
+  if (studentData.length === 0) {
+    html =
+      '<div style="padding: 40px; text-align: center; color: #94a3b8; font-style: italic;">No active students with pricing and schedules</div>';
+  }
+
+  container.innerHTML = html;
+
+  // Update totals
+  const totalMonthly = totalWeekly * 4;
+  document.getElementById('breakdownTotalWeekly').textContent = formatCurrency(totalWeekly, '$');
+  document.getElementById('breakdownTotalMonthly').textContent = formatCurrency(totalMonthly, '$');
+}
+
+// ============================================================================
+// SMART CALENDAR PAYMENT SYSTEM
+// ============================================================================
+
+let currentCalendarDate = new Date();
+let studentBalances = {}; // Track advance payments per student
+
+// Storage key for balances
+const BALANCE_STORAGE_KEY = 'firestone:student-balances:v1';
+const CALENDAR_SNAPSHOT_KEY = 'firestone:calendar-snapshots:v1';
+
+// Calendar start date - November 1, 2025
+const CALENDAR_START_DATE = new Date('2025-11-01T00:00:00');
+
+// Load balances from localStorage
+function loadStudentBalances() {
+  const stored = localStorage.getItem(BALANCE_STORAGE_KEY);
+  return stored ? JSON.parse(stored) : {};
+}
+
+// Save balances to localStorage
+function saveStudentBalances(balances) {
+  localStorage.setItem(BALANCE_STORAGE_KEY, JSON.stringify(balances));
+  studentBalances = balances;
+}
+
+// Load calendar snapshots (frozen historical data)
+function loadCalendarSnapshots() {
+  const stored = localStorage.getItem(CALENDAR_SNAPSHOT_KEY);
+  return stored ? JSON.parse(stored) : {};
+}
+
+// Save calendar snapshot for a specific date
+function saveCalendarSnapshot(dateStr, studentData) {
+  const snapshots = loadCalendarSnapshots();
+
+  // Initialize snapshot for this date if it doesn't exist
+  if (!snapshots[dateStr]) {
+    snapshots[dateStr] = {
+      students: {},
+      frozenAt: new Date().toISOString(),
+    };
+  }
+
+  // Merge student data (don't overwrite existing students)
+  snapshots[dateStr].students = {
+    ...snapshots[dateStr].students,
+    ...studentData,
+  };
+
+  // Update frozen timestamp
+  snapshots[dateStr].frozenAt = new Date().toISOString();
+
+  localStorage.setItem(CALENDAR_SNAPSHOT_KEY, JSON.stringify(snapshots));
+}
+
+// Get snapshot for a date if it exists
+function getCalendarSnapshot(dateStr) {
+  const snapshots = loadCalendarSnapshots();
+  return snapshots[dateStr] || null;
+}
+
+// Initialize balances
+studentBalances = loadStudentBalances();
+
+// Helper function to get current date in LA timezone
+function getLADate() {
+  const now = new Date();
+  const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+  return laTime;
+}
+
+// Helper function to convert any date to LA timezone
+function toLADate(date) {
+  const laTime = new Date(date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+  return laTime;
+}
+
+function openSmartCalendar() {
+  const modal = document.getElementById('smartCalendarModal');
+  if (!modal) return;
+
+  currentCalendarDate = getLADate();
+  renderCalendar();
+
+  modal.style.display = 'block';
+  requestAnimationFrame(() => {
+    modal.style.opacity = '1';
+  });
+}
+
+function closeSmartCalendar() {
+  const modal = document.getElementById('smartCalendarModal');
+  if (!modal) return;
+
+  modal.style.opacity = '0';
+  setTimeout(() => {
+    modal.style.display = 'none';
+  }, 300);
+}
+
+function changeCalendarMonth(delta) {
+  currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
+  renderCalendar();
+}
+
+function renderCalendar() {
+  const year = currentCalendarDate.getFullYear();
+  const month = currentCalendarDate.getMonth();
+
+  // Update header
+  const monthNames = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
+
+  // Get calendar data
+  const calendarData = generateCalendarData(year, month);
+
+  // Update subtitle
+  const totalClasses = calendarData.totalScheduledClasses;
+  const activeStudentCount = calendarData.activeStudents.length;
+  document.getElementById('calendarSubtitle').textContent =
+    `${activeStudentCount} active student${activeStudentCount !== 1 ? 's' : ''} • ${totalClasses} scheduled class${totalClasses !== 1 ? 'es' : ''}`;
+
+  // Render grid
+  renderCalendarGrid(calendarData);
+}
+
+function generateCalendarData(year, month) {
+  // Get first day of month and number of days
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+  // Load data from Supabase cache
+  const students = window.studentsCache || window.globalData?.students || [];
+  const groups = window.groupsCache || window.globalData?.groups || [];
+  const payments = PaymentStore.getAll();
+
+  // Filter active students
+  const activeStudents = students.filter(s => {
+    const status = (s.status || 'active').toLowerCase();
+    return status === 'active' && s.isActive !== false;
+  });
+
+  // Map students to their schedules
+  const scheduleMap = {};
+  let totalScheduledClasses = 0;
+
+  activeStudents.forEach(student => {
+    const groupName = student.group || '';
+    if (!groupName.trim()) return;
+
+    const group = groups.find(g => g.name === groupName);
+    if (!group || !group.schedule) return;
+
+    // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
+    const scheduleDays = parseScheduleDays(group.schedule);
+
+    if (!scheduleMap[student.id]) {
+      scheduleMap[student.id] = {
+        student: student,
+        scheduleDays: scheduleDays,
+        pricePerClass: parseFloat(student.payPerClass) || 0,
       };
-      
-      // Update frozen timestamp
-      snapshots[dateStr].frozenAt = new Date().toISOString();
-      
-      localStorage.setItem(CALENDAR_SNAPSHOT_KEY, JSON.stringify(snapshots));
     }
-    
-    // Get snapshot for a date if it exists
-    function getCalendarSnapshot(dateStr) {
-      const snapshots = loadCalendarSnapshots();
-      return snapshots[dateStr] || null;
-    }
-    
-    // Initialize balances
-    studentBalances = loadStudentBalances();
-    
-    // Helper function to get current date in LA timezone
-    function getLADate() {
-      const now = new Date();
-      const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-      return laTime;
-    }
-    
-    // Helper function to convert any date to LA timezone
-    function toLADate(date) {
-      const laTime = new Date(date.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
-      return laTime;
-    }
-    
-    function openSmartCalendar() {
-      const modal = document.getElementById('smartCalendarModal');
-      if (!modal) return;
-      
-      currentCalendarDate = getLADate();
-      renderCalendar();
-      
-      modal.style.display = 'block';
-      requestAnimationFrame(() => {
-        modal.style.opacity = '1';
-      });
-    }
-    
-    function closeSmartCalendar() {
-      const modal = document.getElementById('smartCalendarModal');
-      if (!modal) return;
-      
-      modal.style.opacity = '0';
-      setTimeout(() => {
-        modal.style.display = 'none';
-      }, 300);
-    }
-    
-    function changeCalendarMonth(delta) {
-      currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
-      renderCalendar();
-    }
-    
-    function renderCalendar() {
-      const year = currentCalendarDate.getFullYear();
-      const month = currentCalendarDate.getMonth();
-      
-      // Update header
-      const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
-                         'July', 'August', 'September', 'October', 'November', 'December'];
-      document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
-      
-      // Get calendar data
-      const calendarData = generateCalendarData(year, month);
-      
-      // Update subtitle
-      const totalClasses = calendarData.totalScheduledClasses;
-      const activeStudentCount = calendarData.activeStudents.length;
-      document.getElementById('calendarSubtitle').textContent = 
-        `${activeStudentCount} active student${activeStudentCount !== 1 ? 's' : ''} • ${totalClasses} scheduled class${totalClasses !== 1 ? 'es' : ''}`;
-      
-      // Render grid
-      renderCalendarGrid(calendarData);
-    }
-    
-    function generateCalendarData(year, month) {
-      // Get first day of month and number of days
-      const firstDay = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      
-      // Load data from Supabase cache
-      const students = window.studentsCache || window.globalData?.students || [];
-      const groups = window.groupsCache || window.globalData?.groups || [];
-      const payments = PaymentStore.getAll();
-      
-      // Filter active students
-      const activeStudents = students.filter(s => {
-        const status = (s.status || 'active').toLowerCase();
-        return status === 'active' && s.isActive !== false;
-      });
-      
-      // Map students to their schedules
-      const scheduleMap = {};
-      let totalScheduledClasses = 0;
-      
-      activeStudents.forEach(student => {
-        const groupName = student.group || '';
-        if (!groupName.trim()) return;
-        
-        const group = groups.find(g => g.name === groupName);
-        if (!group || !group.schedule) return;
-        
-        // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
-        const scheduleDays = parseScheduleDays(group.schedule);
-        
-        if (!scheduleMap[student.id]) {
-          scheduleMap[student.id] = {
-            student: student,
-            scheduleDays: scheduleDays,
-            pricePerClass: parseFloat(student.payPerClass) || 0
-          };
-        }
-      });
-      
-      // Build day data
-      const days = [];
-      for (let day = 1; day <= daysInMonth; day++) {
-        const date = new Date(year, month, day);
-        const dayOfWeek = date.getDay();
-        const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
-        
-        // Check which students have class on this day
-        const studentsWithClass = [];
-        
-        Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
-          if (scheduleDays.includes(dayName)) {
-            const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
-            studentsWithClass.push({
-              student,
-              pricePerClass,
-              ...paymentStatus
-            });
-            totalScheduledClasses++;
-          }
+  });
+
+  // Build day data
+  const days = [];
+  for (let day = 1; day <= daysInMonth; day++) {
+    const date = new Date(year, month, day);
+    const dayOfWeek = date.getDay();
+    const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][
+      dayOfWeek
+    ];
+
+    // Check which students have class on this day
+    const studentsWithClass = [];
+
+    Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
+      if (scheduleDays.includes(dayName)) {
+        const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
+        studentsWithClass.push({
+          student,
+          pricePerClass,
+          ...paymentStatus,
         });
-        
-        days.push({
-          day,
-          date,
-          dayName,
-          studentsWithClass
-        });
+        totalScheduledClasses++;
       }
-      
-      return {
-        firstDay,
-        daysInMonth,
-        days,
-        activeStudents,
-        totalScheduledClasses
-      };
+    });
+
+    days.push({
+      day,
+      date,
+      dayName,
+      studentsWithClass,
+    });
+  }
+
+  return {
+    firstDay,
+    daysInMonth,
+    days,
+    activeStudents,
+    totalScheduledClasses,
+  };
+}
+
+function parseScheduleDays(scheduleString) {
+  // Parse "Tue 8:00 PM, Thu 8:00 PM" or "Monday 8:00 PM, Wednesday 8:00 PM" → ["Tuesday", "Thursday"]
+  if (!scheduleString || !scheduleString.trim()) return [];
+
+  // Remove Markdown bold markers (* and **) that may wrap the schedule
+  const cleanedSchedule = scheduleString.replace(/\*\*/g, '').replace(/\*/g, '');
+
+  // Map abbreviated day names to full names
+  const dayMap = {
+    sun: 'Sunday',
+    mon: 'Monday',
+    tue: 'Tuesday',
+    wed: 'Wednesday',
+    thu: 'Thursday',
+    fri: 'Friday',
+    sat: 'Saturday',
+    sunday: 'Sunday',
+    monday: 'Monday',
+    tuesday: 'Tuesday',
+    wednesday: 'Wednesday',
+    thursday: 'Thursday',
+    friday: 'Friday',
+    saturday: 'Saturday',
+  };
+
+  const days = [];
+  const slots = cleanedSchedule.split(',');
+
+  slots.forEach(slot => {
+    const trimmed = slot.trim().toLowerCase();
+
+    // Try to match abbreviated or full day name at the start
+    const dayMatch = trimmed.match(
+      /^(sun|mon|tue|wed|thu|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i
+    );
+
+    if (dayMatch) {
+      const fullDayName = dayMap[dayMatch[1].toLowerCase()];
+      if (fullDayName && !days.includes(fullDayName)) {
+        days.push(fullDayName);
+      }
     }
-    
-    function parseScheduleDays(scheduleString) {
-      // Parse "Tue 8:00 PM, Thu 8:00 PM" or "Monday 8:00 PM, Wednesday 8:00 PM" → ["Tuesday", "Thursday"]
-      if (!scheduleString || !scheduleString.trim()) return [];
-      
-      // Remove Markdown bold markers (* and **) that may wrap the schedule
-      const cleanedSchedule = scheduleString.replace(/\*\*/g, '').replace(/\*/g, '');
-      
-      // Map abbreviated day names to full names
-      const dayMap = {
-        'sun': 'Sunday',
-        'mon': 'Monday',
-        'tue': 'Tuesday',
-        'wed': 'Wednesday',
-        'thu': 'Thursday',
-        'fri': 'Friday',
-        'sat': 'Saturday',
-        'sunday': 'Sunday',
-        'monday': 'Monday',
-        'tuesday': 'Tuesday',
-        'wednesday': 'Wednesday',
-        'thursday': 'Thursday',
-        'friday': 'Friday',
-        'saturday': 'Saturday'
-      };
-      
-      const days = [];
-      const slots = cleanedSchedule.split(',');
-      
-      slots.forEach(slot => {
-        const trimmed = slot.trim().toLowerCase();
-        
-        // Try to match abbreviated or full day name at the start
-        const dayMatch = trimmed.match(/^(sun|mon|tue|wed|thu|fri|sat|sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i);
-        
-        if (dayMatch) {
-          const fullDayName = dayMap[dayMatch[1].toLowerCase()];
-          if (fullDayName && !days.includes(fullDayName)) {
-            days.push(fullDayName);
-          }
-        }
-      });
-      
-      return days;
+  });
+
+  return days;
+}
+
+function checkPaymentStatus(student, classDate, pricePerClass, payments) {
+  const dateStr = formatDateYYYYMMDD(classDate);
+  const studentId = student.id;
+  const laToday = getLADate();
+  const todayStr = formatDateYYYYMMDD(laToday);
+
+  // CHECK: Is this class skipped?
+  const groupName = student.group;
+  if (
+    groupName &&
+    window.SkipClassManager &&
+    window.SkipClassManager.isClassSkipped(groupName, dateStr)
+  ) {
+    return {
+      status: 'skipped',
+      paid: false,
+      amount: 0,
+      balance: student.balance || 0,
+      message: 'Class skipped - payments roll over',
+      showActions: false,
+    };
+  }
+
+  // RULE 1: Skip dates before November 1, 2025
+  if (classDate < CALENDAR_START_DATE) {
+    return {
+      status: 'hidden',
+      paid: false,
+      amount: 0,
+      balance: 0,
+      message: 'Before calendar start date',
+    };
+  }
+
+  // RULE 2: Historical Freeze - Use snapshot for past dates
+  if (classDate < laToday) {
+    const snapshot = getCalendarSnapshot(dateStr);
+    if (snapshot && snapshot.students && snapshot.students[studentId]) {
+      // Return frozen data
+      return snapshot.students[studentId];
     }
-    
-    function checkPaymentStatus(student, classDate, pricePerClass, payments) {
-      const dateStr = formatDateYYYYMMDD(classDate);
-      const studentId = student.id;
-      const laToday = getLADate();
-      const todayStr = formatDateYYYYMMDD(laToday);
-      
-      // CHECK: Is this class skipped?
-      const groupName = student.group;
-      if (groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr)) {
-        return {
-          status: 'skipped',
-          paid: false,
-          amount: 0,
-          balance: student.balance || 0,
-          message: 'Class skipped - payments roll over',
-          showActions: false
-        };
-      }
-      
-      // RULE 1: Skip dates before November 1, 2025
-      if (classDate < CALENDAR_START_DATE) {
-        return {
-          status: 'hidden',
-          paid: false,
-          amount: 0,
-          balance: 0,
-          message: 'Before calendar start date'
-        };
-      }
-      
-      // RULE 2: Historical Freeze - Use snapshot for past dates
-      if (classDate < laToday) {
-        const snapshot = getCalendarSnapshot(dateStr);
-        if (snapshot && snapshot.students && snapshot.students[studentId]) {
-          // Return frozen data
-          return snapshot.students[studentId];
-        }
-        // If no snapshot exists for this past date, it means no class was scheduled
-        // Return as if no class (will not render)
-      }
-      
-      // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
-      const balance = student.balance || 0;
-      
-      // Find all payments for this student (by name or alias match)
-      // Check BOTH studentName AND payerName fields
-      const studentPayments = payments.filter(p => {
-        if (p.ignored) return false;
-        
-        const paymentStudentName = (p.studentName || '').toLowerCase().trim();
-        const paymentPayerName = (p.payerName || '').toLowerCase().trim();
-        const studentNameLower = (student.name || '').toLowerCase().trim();
-        
-        // Check if studentName matches
-        if (paymentStudentName === studentNameLower) return true;
-        
-        // Check if payerName matches (for cases where parent pays)
-        if (paymentPayerName === studentNameLower) return true;
-        
-        // Check if payment matches any student alias
-        if (student.aliases && Array.isArray(student.aliases)) {
-          return student.aliases.some(alias => {
-            const aliasLower = alias.toLowerCase().trim();
-            return aliasLower === paymentStudentName || aliasLower === paymentPayerName;
-          });
-        }
-        
-        return false;
+    // If no snapshot exists for this past date, it means no class was scheduled
+    // Return as if no class (will not render)
+  }
+
+  // RULE 3: Dynamic calculation for TODAY and FUTURE dates only
+  const balance = student.balance || 0;
+
+  // Find all payments for this student (by name or alias match)
+  // Check BOTH studentName AND payerName fields
+  const studentPayments = payments.filter(p => {
+    if (p.ignored) return false;
+
+    const paymentStudentName = (p.studentName || '').toLowerCase().trim();
+    const paymentPayerName = (p.payerName || '').toLowerCase().trim();
+    const studentNameLower = (student.name || '').toLowerCase().trim();
+
+    // Check if studentName matches
+    if (paymentStudentName === studentNameLower) return true;
+
+    // Check if payerName matches (for cases where parent pays)
+    if (paymentPayerName === studentNameLower) return true;
+
+    // Check if payment matches any student alias
+    if (student.aliases && Array.isArray(student.aliases)) {
+      return student.aliases.some(alias => {
+        const aliasLower = alias.toLowerCase().trim();
+        return aliasLower === paymentStudentName || aliasLower === paymentPayerName;
       });
-      
-      // Check for payment on this date OR any recent payment that can cover this class
-      // If checking a past date, allow payments from up to 7 days after the class
-      const paymentOnDate = studentPayments.find(p => {
-        const paymentTimestamp = p.emailDate || p.date || p.timestamp;
-        if (!paymentTimestamp) return false;
-        
-        const paymentDate = toLADate(new Date(paymentTimestamp));
-        const paymentDateStr = formatDateYYYYMMDD(paymentDate);
-        
-        // Exact date match
-        if (paymentDateStr === dateStr) return true;
-        
-        // For past classes: allow payment from up to 7 days after the class
-        if (dateStr < todayStr) {
-          const classDate = new Date(dateStr);
-          const payDate = new Date(paymentDateStr);
-          const daysDiff = Math.floor((payDate - classDate) / (1000 * 60 * 60 * 24));
-          
-          // Payment can be up to 7 days after the class date
-          if (daysDiff > 0 && daysDiff <= 7) return true;
-        }
-        
-        return false;
-      });
-      
-      if (paymentOnDate) {
-        const paymentAmount = parseFloat(paymentOnDate.amount) || 0;
-        
-        if (paymentAmount > pricePerClass) {
-          const remainder = paymentAmount - pricePerClass;
-          const newBalance = balance + remainder;
-          
-          // Update student balance in memory only (no auto-save during calendar render)
-          student.balance = newBalance;
-          
-          const result = {
-            status: 'paid',
-            paid: true,
-            amount: paymentAmount,
-            balance: newBalance,
-            message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`
-          };
-          
-          // Freeze today's data at end of day
-          if (dateStr === todayStr) {
-            saveCalendarSnapshot(dateStr, {
-              [studentId]: result
-            });
-          }
-          
-          return result;
-        } else {
-          const result = {
-            status: 'paid',
-            paid: true,
-            amount: paymentAmount,
-            balance: balance,
-            message: `Paid ${formatCurrency(paymentAmount, '$')}`
-          };
-          
-          if (dateStr === todayStr) {
-            saveCalendarSnapshot(dateStr, {
-              [studentId]: result
-            });
-          }
-          
-          return result;
-        }
-      }
-      
-      // Check if can deduct from balance (for TODAY and future dates only)
-      // Do NOT deduct for past dates - those should use snapshots or payment records
-      if (balance >= pricePerClass && dateStr >= todayStr) {
-        const newBalance = balance - pricePerClass;
-        
-        // Update student balance in memory only (no auto-save during calendar render)
-        student.balance = newBalance;
-        
-        const lowBalance = newBalance > 0 && newBalance < pricePerClass;
-        
-        const result = {
-          status: lowBalance ? 'low-balance' : 'deducted',
-          paid: true,
-          amount: pricePerClass,
-          balance: newBalance,
-          message: `From Balance (${formatCurrency(newBalance, '$')} remaining)`,
-          alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null
-        };
-        
-        // Save snapshot only for today
-        if (dateStr === todayStr) {
-          saveCalendarSnapshot(dateStr, {
-            [studentId]: result
-          });
-        }
-        
-        return result;
-      }
-      
-      // Check if marked absent
-      const absentKey = `absent:${studentId}:${dateStr}`;
-      const isAbsent = localStorage.getItem(absentKey) === 'true';
-      
-      if (isAbsent) {
-        const result = {
-          status: 'absent',
-          paid: false,
-          amount: 0,
-          balance: balance,
-          message: 'Marked Absent'
-        };
-        
-        if (dateStr === todayStr) {
-          saveCalendarSnapshot(dateStr, {
-            [studentId]: result
-          });
-        }
-        
-        return result;
-      }
-      
-      // Future class - show as pending if has balance
-      if (classDate > laToday && balance >= pricePerClass) {
-        return {
-          status: 'pending',
-          paid: false,
-          amount: 0,
-          balance: balance,
-          message: `Future (${formatCurrency(balance, '$')} available)`
-        };
-      }
-      
-      // CRITICAL: Red dots ONLY for CURRENT DAY (not past, not future)
+    }
+
+    return false;
+  });
+
+  // Check for payment on this date OR any recent payment that can cover this class
+  // If checking a past date, allow payments from up to 7 days after the class
+  const paymentOnDate = studentPayments.find(p => {
+    const paymentTimestamp = p.emailDate || p.date || p.timestamp;
+    if (!paymentTimestamp) return false;
+
+    const paymentDate = toLADate(new Date(paymentTimestamp));
+    const paymentDateStr = formatDateYYYYMMDD(paymentDate);
+
+    // Exact date match
+    if (paymentDateStr === dateStr) return true;
+
+    // For past classes: allow payment from up to 7 days after the class
+    if (dateStr < todayStr) {
+      const classDate = new Date(dateStr);
+      const payDate = new Date(paymentDateStr);
+      const daysDiff = Math.floor((payDate - classDate) / (1000 * 60 * 60 * 24));
+
+      // Payment can be up to 7 days after the class date
+      if (daysDiff > 0 && daysDiff <= 7) return true;
+    }
+
+    return false;
+  });
+
+  if (paymentOnDate) {
+    const paymentAmount = parseFloat(paymentOnDate.amount) || 0;
+
+    if (paymentAmount > pricePerClass) {
+      const remainder = paymentAmount - pricePerClass;
+      const newBalance = balance + remainder;
+
+      // Update student balance in memory only (no auto-save during calendar render)
+      student.balance = newBalance;
+
+      const result = {
+        status: 'paid',
+        paid: true,
+        amount: paymentAmount,
+        balance: newBalance,
+        message: `Paid ${formatCurrency(paymentAmount, '$')} (+${formatCurrency(remainder, '$')} to balance)`,
+      };
+
+      // Freeze today's data at end of day
       if (dateStr === todayStr) {
-        // Current day unpaid - show red dot
-        const result = {
-          status: 'unpaid',
-          paid: false,
-          amount: 0,
-          balance: balance,
-          message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
-          showActions: true
-        };
-        
-        // Save snapshot for today's unpaid classes
         saveCalendarSnapshot(dateStr, {
-          [studentId]: result
+          [studentId]: result,
         });
-        
-        return result;
       }
-      
-      // Future unpaid - no red dot, show as transparent/empty
-      return {
-        status: 'future',
-        paid: false,
-        amount: 0,
+
+      return result;
+    } else {
+      const result = {
+        status: 'paid',
+        paid: true,
+        amount: paymentAmount,
         balance: balance,
-        message: 'Scheduled',
-        showActions: false
+        message: `Paid ${formatCurrency(paymentAmount, '$')}`,
       };
-    }
-    
-    function formatDateYYYYMMDD(date) {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    }
-    
-    function renderCalendarGrid(calendarData) {
-      const grid = document.getElementById('calendarGrid');
-      if (!grid) return;
-      
-      let html = '';
-      
-      // Empty cells before first day
-      for (let i = 0; i < calendarData.firstDay; i++) {
-        html += '<div style="min-height: 80px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;"></div>';
-      }
-      
-      // Day cells with dot-based view
-      calendarData.days.forEach(dayData => {
-        const isToday = isDateToday(dayData.date);
-        const hasClasses = dayData.studentsWithClass.length > 0;
-        const dateStr = formatDateYYYYMMDD(dayData.date);
-        
-        // Check if any classes are skipped on this day
-        const hasSkippedClass = hasClasses && dayData.studentsWithClass.some(classInfo => {
-          const groupName = window.groupsCache?.find(g => g.name === classInfo.student.group)?.name;
-          return groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
+
+      if (dateStr === todayStr) {
+        saveCalendarSnapshot(dateStr, {
+          [studentId]: result,
         });
-        
-        // Determine cell styling based on skipped status
-        const cellBgColor = hasSkippedClass ? 'rgba(100, 100, 100, 0.12)' : 
-                            isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)';
-        const cellBorderColor = hasSkippedClass ? 'rgba(150, 150, 150, 0.3)' : 
-                                isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)';
-        
-        html += `
-          <div onclick="openDayDetails('${dateStr}', ${JSON.stringify(dayData).replace(/"/g, '&quot;')})" 
-               style="min-height: 80px; background: ${cellBgColor}; 
-                      border: 1px solid ${cellBorderColor}; 
-                      border-radius: 8px; padding: 8px; display: flex; flex-direction: column; 
-                      cursor: ${hasClasses ? 'pointer' : 'default'}; 
+      }
+
+      return result;
+    }
+  }
+
+  // Check if can deduct from balance (for TODAY and future dates only)
+  // Do NOT deduct for past dates - those should use snapshots or payment records
+  if (balance >= pricePerClass && dateStr >= todayStr) {
+    const newBalance = balance - pricePerClass;
+
+    // Update student balance in memory only (no auto-save during calendar render)
+    student.balance = newBalance;
+
+    const lowBalance = newBalance > 0 && newBalance < pricePerClass;
+
+    const result = {
+      status: lowBalance ? 'low-balance' : 'deducted',
+      paid: true,
+      amount: pricePerClass,
+      balance: newBalance,
+      message: `From Balance (${formatCurrency(newBalance, '$')} remaining)`,
+      alert: lowBalance ? `⚠️ Low balance: ${formatCurrency(newBalance, '$')}` : null,
+    };
+
+    // Save snapshot only for today
+    if (dateStr === todayStr) {
+      saveCalendarSnapshot(dateStr, {
+        [studentId]: result,
+      });
+    }
+
+    return result;
+  }
+
+  // Check if marked absent
+  const absentKey = `absent:${studentId}:${dateStr}`;
+  const isAbsent = localStorage.getItem(absentKey) === 'true';
+
+  if (isAbsent) {
+    const result = {
+      status: 'absent',
+      paid: false,
+      amount: 0,
+      balance: balance,
+      message: 'Marked Absent',
+    };
+
+    if (dateStr === todayStr) {
+      saveCalendarSnapshot(dateStr, {
+        [studentId]: result,
+      });
+    }
+
+    return result;
+  }
+
+  // Future class - show as pending if has balance
+  if (classDate > laToday && balance >= pricePerClass) {
+    return {
+      status: 'pending',
+      paid: false,
+      amount: 0,
+      balance: balance,
+      message: `Future (${formatCurrency(balance, '$')} available)`,
+    };
+  }
+
+  // CRITICAL: Red dots ONLY for CURRENT DAY (not past, not future)
+  if (dateStr === todayStr) {
+    // Current day unpaid - show red dot
+    const result = {
+      status: 'unpaid',
+      paid: false,
+      amount: 0,
+      balance: balance,
+      message: balance > 0 ? `Unpaid (${formatCurrency(balance, '$')} balance)` : 'Not Paid',
+      showActions: true,
+    };
+
+    // Save snapshot for today's unpaid classes
+    saveCalendarSnapshot(dateStr, {
+      [studentId]: result,
+    });
+
+    return result;
+  }
+
+  // Future unpaid - no red dot, show as transparent/empty
+  return {
+    status: 'future',
+    paid: false,
+    amount: 0,
+    balance: balance,
+    message: 'Scheduled',
+    showActions: false,
+  };
+}
+
+function formatDateYYYYMMDD(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function renderCalendarGrid(calendarData) {
+  const grid = document.getElementById('calendarGrid');
+  if (!grid) return;
+
+  let html = '';
+
+  // Empty cells before first day
+  for (let i = 0; i < calendarData.firstDay; i++) {
+    html +=
+      '<div style="min-height: 80px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;"></div>';
+  }
+
+  // Day cells with dot-based view
+  calendarData.days.forEach(dayData => {
+    const isToday = isDateToday(dayData.date);
+    const hasClasses = dayData.studentsWithClass.length > 0;
+    const dateStr = formatDateYYYYMMDD(dayData.date);
+
+    // Check if any classes are skipped on this day
+    const hasSkippedClass =
+      hasClasses &&
+      dayData.studentsWithClass.some(classInfo => {
+        const groupName = window.groupsCache?.find(g => g.name === classInfo.student.group)?.name;
+        return (
+          groupName &&
+          window.SkipClassManager &&
+          window.SkipClassManager.isClassSkipped(groupName, dateStr)
+        );
+      });
+
+    // Determine cell styling based on skipped status
+    const cellBgColor = hasSkippedClass
+      ? 'rgba(100, 100, 100, 0.12)'
+      : isToday
+        ? 'rgba(138,180,255,0.08)'
+        : 'rgba(255,255,255,0.02)';
+    const cellBorderColor = hasSkippedClass
+      ? 'rgba(150, 150, 150, 0.3)'
+      : isToday
+        ? 'rgba(138,180,255,0.3)'
+        : 'rgba(255,255,255,0.05)';
+
+    html += `
+          <div onclick="openDayDetails('${dateStr}', ${JSON.stringify(dayData).replace(/"/g, '&quot;')})"
+               style="min-height: 80px; background: ${cellBgColor};
+                      border: 1px solid ${cellBorderColor};
+                      border-radius: 8px; padding: 8px; display: flex; flex-direction: column;
+                      cursor: ${hasClasses ? 'pointer' : 'default'};
                       transition: all 0.2s;
                       ${hasSkippedClass ? 'opacity: 0.5;' : ''}"
                onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
@@ -9791,133 +10142,149 @@
             ${hasClasses ? `<div style="font-size: 9px; color: rgba(255,255,255,0.5); margin-top: 4px; text-align: center;">${dayData.studentsWithClass.length} class${dayData.studentsWithClass.length !== 1 ? 'es' : ''}</div>` : ''}
           </div>
         `;
-      });
-      
-      grid.innerHTML = html;
+  });
+
+  grid.innerHTML = html;
+}
+
+function renderDayDots(dayData, dateStr) {
+  let html = '';
+
+  dayData.studentsWithClass.forEach((classInfo, index) => {
+    const { student, status } = classInfo;
+
+    // Skip hidden status (before November 1, 2025)
+    if (status === 'hidden') {
+      return;
     }
-    
-    function renderDayDots(dayData, dateStr) {
-      let html = '';
-      
-      dayData.studentsWithClass.forEach((classInfo, index) => {
-        const { student, status } = classInfo;
-        
-        // Skip hidden status (before November 1, 2025)
-        if (status === 'hidden') {
-          return;
-        }
-        
-        // Check if this class is skipped
-        const groupName = window.groupsCache?.find(g => g.name === student.group)?.name;
-        const isSkipped = groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr);
-        
-        let dotColor;
-        
-        if (isSkipped) {
-          dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped classes
-        } else {
-          switch (status) {
-            case 'paid':
-            case 'deducted':
-            case 'low-balance':
-              dotColor = '#22c55e'; // Green - Paid
-              break;
-            case 'pending':
-              dotColor = '#3b82f6'; // Blue - Future class with balance
-              break;
-            case 'absent':
-              dotColor = '#94a3b8'; // Gray - Absent
-              break;
-            case 'unpaid':
-              dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
-              break;
-            case 'future':
-              dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
-              break;
-            default:
-              dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
-              break;
-          }
-        }
-        
-        const statusText = isSkipped ? 'Skipped' :
-                          status === 'paid' || status === 'deducted' ? 'Paid' : 
-                          status === 'pending' ? 'Future' :
-                          status === 'future' ? 'Scheduled' :
-                          status === 'absent' ? 'Absent' : 'Unpaid';
-        
-        html += `
-          <div class="calendar-dot" 
+
+    // Check if this class is skipped
+    const groupName = window.groupsCache?.find(g => g.name === student.group)?.name;
+    const isSkipped =
+      groupName &&
+      window.SkipClassManager &&
+      window.SkipClassManager.isClassSkipped(groupName, dateStr);
+
+    let dotColor;
+
+    if (isSkipped) {
+      dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped classes
+    } else {
+      switch (status) {
+        case 'paid':
+        case 'deducted':
+        case 'low-balance':
+          dotColor = '#22c55e'; // Green - Paid
+          break;
+        case 'pending':
+          dotColor = '#3b82f6'; // Blue - Future class with balance
+          break;
+        case 'absent':
+          dotColor = '#94a3b8'; // Gray - Absent
+          break;
+        case 'unpaid':
+          dotColor = '#ef4444'; // Red - Unpaid (CURRENT DAY ONLY)
+          break;
+        case 'future':
+          dotColor = 'rgba(255,255,255,0.15)'; // Very light transparent - Future unpaid
+          break;
+        default:
+          dotColor = 'rgba(255,255,255,0.15)'; // Default to transparent
+          break;
+      }
+    }
+
+    const statusText = isSkipped
+      ? 'Skipped'
+      : status === 'paid' || status === 'deducted'
+        ? 'Paid'
+        : status === 'pending'
+          ? 'Future'
+          : status === 'future'
+            ? 'Scheduled'
+            : status === 'absent'
+              ? 'Absent'
+              : 'Unpaid';
+
+    html += `
+          <div class="calendar-dot"
                onclick="event.stopPropagation(); showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
                data-tooltip="${escapeHtml(student.name)} — ${statusText}"
-               style="width: 8px; height: 8px; border-radius: 50%; background: ${dotColor}; 
+               style="width: 8px; height: 8px; border-radius: 50%; background: ${dotColor};
                       cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
                onmouseover="this.style.transform='scale(1.5)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.5)';"
                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.3)';"></div>
         `;
-      });
-      
-      return html;
+  });
+
+  return html;
+}
+
+function isDateToday(date) {
+  const today = getLADate();
+  return (
+    date.getDate() === today.getDate() &&
+    date.getMonth() === today.getMonth() &&
+    date.getFullYear() === today.getFullYear()
+  );
+}
+
+// Open day details panel showing all students scheduled that day
+function openDayDetails(dateStr, dayData) {
+  const dateObj = new Date(dateStr);
+  const dateDisplay = dateObj.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  if (!dayData.studentsWithClass || dayData.studentsWithClass.length === 0) {
+    return; // No classes this day
+  }
+
+  let studentsHTML = '';
+  dayData.studentsWithClass.forEach((classInfo, index) => {
+    const { student, status, message, balance, pricePerClass } = classInfo;
+
+    // Skip hidden status (before November 1, 2025)
+    if (status === 'hidden') {
+      return;
     }
-    
-    function isDateToday(date) {
-      const today = getLADate();
-      return date.getDate() === today.getDate() &&
-             date.getMonth() === today.getMonth() &&
-             date.getFullYear() === today.getFullYear();
+
+    let statusColor, statusText, statusIcon;
+    switch (status) {
+      case 'paid':
+      case 'deducted':
+      case 'low-balance':
+        statusColor = '#22c55e';
+        statusText = 'Paid';
+        statusIcon = '✅';
+        break;
+      case 'pending':
+        statusColor = '#3b82f6';
+        statusText = 'Future';
+        statusIcon = '🔵';
+        break;
+      case 'absent':
+        statusColor = '#94a3b8';
+        statusText = 'Absent';
+        statusIcon = '⚪';
+        break;
+      case 'future':
+        statusColor = 'rgba(255,255,255,0.4)';
+        statusText = 'Scheduled';
+        statusIcon = '📅';
+        break;
+      case 'unpaid':
+      default:
+        statusColor = '#ef4444';
+        statusText = 'Unpaid';
+        statusIcon = '❌';
+        break;
     }
-    
-    // Open day details panel showing all students scheduled that day
-    function openDayDetails(dateStr, dayData) {
-      const dateObj = new Date(dateStr);
-      const dateDisplay = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      
-      if (!dayData.studentsWithClass || dayData.studentsWithClass.length === 0) {
-        return; // No classes this day
-      }
-      
-      let studentsHTML = '';
-      dayData.studentsWithClass.forEach((classInfo, index) => {
-        const { student, status, message, balance, pricePerClass } = classInfo;
-        
-        // Skip hidden status (before November 1, 2025)
-        if (status === 'hidden') {
-          return;
-        }
-        
-        let statusColor, statusText, statusIcon;
-        switch (status) {
-          case 'paid':
-          case 'deducted':
-          case 'low-balance':
-            statusColor = '#22c55e';
-            statusText = 'Paid';
-            statusIcon = '✅';
-            break;
-          case 'pending':
-            statusColor = '#3b82f6';
-            statusText = 'Future';
-            statusIcon = '🔵';
-            break;
-          case 'absent':
-            statusColor = '#94a3b8';
-            statusText = 'Absent';
-            statusIcon = '⚪';
-            break;
-          case 'future':
-            statusColor = 'rgba(255,255,255,0.4)';
-            statusText = 'Scheduled';
-            statusIcon = '📅';
-            break;
-          case 'unpaid':
-          default:
-            statusColor = '#ef4444';
-            statusText = 'Unpaid';
-            statusIcon = '❌';
-            break;
-        }
-        
-        studentsHTML += `
+
+    studentsHTML += `
           <div style="padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; margin-bottom: 10px; transition: all 0.2s; cursor: pointer;"
                onclick="showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
                onmouseover="this.style.background='rgba(255,255,255,0.06)'; this.style.borderColor='rgba(138,180,255,0.3)';"
@@ -9935,9 +10302,9 @@
             ${balance > 0 ? `<div style="margin-top: 8px; font-size: 10px; color: #eab308;">💰 Balance: ${formatCurrency(balance, '$')}</div>` : ''}
           </div>
         `;
-      });
-      
-      const panelHTML = `
+  });
+
+  const panelHTML = `
         <div id="dayDetailsOverlay" onclick="closeDayDetails()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 28000; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;"></div>
         <div id="dayDetailsPanel" onclick="event.stopPropagation()" style="position: fixed; right: -500px; top: 0; bottom: 0; width: 450px; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border-left: 2px solid rgba(138,180,255,0.3); z-index: 28001; backdrop-filter: blur(20px); box-shadow: -10px 0 40px rgba(0,0,0,0.5); transition: right 0.3s ease; overflow-y: auto;">
           <div style="padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); z-index: 1;">
@@ -9954,49 +10321,54 @@
           </div>
         </div>
       `;
-      
-      document.body.insertAdjacentHTML('beforeend', panelHTML);
-      
-      // Animate in
-      requestAnimationFrame(() => {
-        document.getElementById('dayDetailsOverlay').style.opacity = '1';
-        document.getElementById('dayDetailsPanel').style.right = '0';
-      });
-    }
-    
-    function closeDayDetails() {
-      const overlay = document.getElementById('dayDetailsOverlay');
-      const panel = document.getElementById('dayDetailsPanel');
-      
-      if (overlay && panel) {
-        overlay.style.opacity = '0';
-        panel.style.right = '-500px';
-        
-        setTimeout(() => {
-          overlay.remove();
-          panel.remove();
-        }, 300);
-      }
-    }
-    
-    // Show individual student class details (when clicking a dot)
-    function showStudentClassDetails(studentId, dateStr, classInfo) {
-      // Don't close day details - keep it open for marking multiple absences
-      // closeDayDetails();
-      
-      // Show class details modal
-      showClassDetails(studentId, dateStr, classInfo);
-    }
-    
-    function showClassDetails(studentId, dateStr, classInfo) {
-      const student = classInfo.student;
-      const dateObj = new Date(dateStr);
-      const dateDisplay = dateObj.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
-      
-      let actionsHTML = '';
-      
-      if (classInfo.showActions && classInfo.status === 'unpaid') {
-        actionsHTML = `
+
+  document.body.insertAdjacentHTML('beforeend', panelHTML);
+
+  // Animate in
+  requestAnimationFrame(() => {
+    document.getElementById('dayDetailsOverlay').style.opacity = '1';
+    document.getElementById('dayDetailsPanel').style.right = '0';
+  });
+}
+
+function closeDayDetails() {
+  const overlay = document.getElementById('dayDetailsOverlay');
+  const panel = document.getElementById('dayDetailsPanel');
+
+  if (overlay && panel) {
+    overlay.style.opacity = '0';
+    panel.style.right = '-500px';
+
+    setTimeout(() => {
+      overlay.remove();
+      panel.remove();
+    }, 300);
+  }
+}
+
+// Show individual student class details (when clicking a dot)
+function showStudentClassDetails(studentId, dateStr, classInfo) {
+  // Don't close day details - keep it open for marking multiple absences
+  // closeDayDetails();
+
+  // Show class details modal
+  showClassDetails(studentId, dateStr, classInfo);
+}
+
+function showClassDetails(studentId, dateStr, classInfo) {
+  const student = classInfo.student;
+  const dateObj = new Date(dateStr);
+  const dateDisplay = dateObj.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  let actionsHTML = '';
+
+  if (classInfo.showActions && classInfo.status === 'unpaid') {
+    actionsHTML = `
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
             <div style="font-size: 12px; color: #94a3b8; margin-bottom: 12px; font-weight: 600;">Quick Actions:</div>
             <div style="display: flex; gap: 8px; flex-wrap: wrap;">
@@ -10009,27 +10381,30 @@
             </div>
           </div>
         `;
-      }
-      
-      if (classInfo.status === 'absent') {
-        actionsHTML = `
+  }
+
+  if (classInfo.status === 'absent') {
+    actionsHTML = `
           <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
             <button onclick="event.stopPropagation(); unmarkAbsent('${studentId}', '${dateStr}')" style="padding: 8px 14px; background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4); border-radius: 8px; color: #ef4444; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.3)'" onmouseout="this.style.background='rgba(239,68,68,0.2)'">
               ↩️ Unmark Absent
             </button>
           </div>
         `;
-      }
-      
-      const balanceInfo = classInfo.balance > 0 ? `
+  }
+
+  const balanceInfo =
+    classInfo.balance > 0
+      ? `
         <div style="margin-top: 12px; padding: 12px; background: rgba(234,179,8,0.1); border: 1px solid rgba(234,179,8,0.3); border-radius: 8px;">
           <div style="font-size: 11px; color: #eab308; font-weight: 700; margin-bottom: 4px;">BALANCE</div>
           <div style="font-size: 18px; color: white; font-weight: 900;">${formatCurrency(classInfo.balance, '$')}</div>
           <div style="font-size: 10px; color: rgba(255,255,255,0.6); margin-top: 4px;">≈ ${Math.floor(classInfo.balance / classInfo.pricePerClass)} class${Math.floor(classInfo.balance / classInfo.pricePerClass) !== 1 ? 'es' : ''} remaining</div>
         </div>
-      ` : '';
-      
-      const detailHTML = `
+      `
+      : '';
+
+  const detailHTML = `
         <div id="classDetailModal" onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 28000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; min-width: 400px; max-width: 500px; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
             <div>
@@ -10038,152 +10413,154 @@
             </div>
             <button onclick="document.getElementById('classDetailModal').remove(); document.getElementById('calendarDetailOverlay').remove();" style="width: 32px; height: 32px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;">×</button>
           </div>
-          
+
           <div style="padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 16px;">
             <div style="font-size: 11px; color: #8ab4ff; font-weight: 700; margin-bottom: 6px;">CLASS DATE</div>
             <div style="font-size: 14px; color: white; font-weight: 700;">${dateDisplay}</div>
           </div>
-          
+
           <div style="padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; margin-bottom: 16px;">
             <div style="font-size: 11px; color: #8ab4ff; font-weight: 700; margin-bottom: 6px;">STATUS</div>
             <div style="font-size: 14px; color: white; font-weight: 700;">${classInfo.message}</div>
           </div>
-          
+
           <div style="padding: 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 10px;">
             <div style="font-size: 11px; color: #8ab4ff; font-weight: 700; margin-bottom: 6px;">PRICE PER CLASS</div>
             <div style="font-size: 14px; color: white; font-weight: 700;">${formatCurrency(classInfo.pricePerClass, '$')}</div>
           </div>
-          
+
           ${balanceInfo}
           ${actionsHTML}
         </div>
       `;
-      
-      // Add overlay
-      const overlay = document.createElement('div');
-      overlay.id = 'calendarDetailOverlay';
-      overlay.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 27500; backdrop-filter: blur(4px);';
-      overlay.onclick = function() {
-        this.remove();
-        const modal = document.getElementById('classDetailModal');
-        if (modal) modal.remove();
-      };
-      
-      document.body.insertAdjacentHTML('beforeend', detailHTML);
-      document.body.appendChild(overlay);
-    }
-    
-    function quickAddPayment(studentId, dateStr, amount) {
-      // Close detail popup
-      const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.click();
-      
-      // Open main payment modal or create quick payment
-      const confirmed = confirm(`Add payment of ${formatCurrency(amount, '$')} for this class?`);
-      if (!confirmed) return;
-      
+
+  // Add overlay
+  const overlay = document.createElement('div');
+  overlay.id = 'calendarDetailOverlay';
+  overlay.style.cssText =
+    'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 27500; backdrop-filter: blur(4px);';
+  overlay.onclick = function () {
+    this.remove();
+    const modal = document.getElementById('classDetailModal');
+    if (modal) modal.remove();
+  };
+
+  document.body.insertAdjacentHTML('beforeend', detailHTML);
+  document.body.appendChild(overlay);
+}
+
+function quickAddPayment(studentId, dateStr, amount) {
+  // Close detail popup
+  const overlay = document.getElementById('calendarDetailOverlay');
+  if (overlay) overlay.click();
+
+  // Open main payment modal or create quick payment
+  const confirmed = confirm(`Add payment of ${formatCurrency(amount, '$')} for this class?`);
+  if (!confirmed) return;
+
   const students = getCachedStudents();
-      const student = students.find(s => s.id === studentId);
-      if (!student) return;
-      
-      const payment = {
-        id: 'cal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-        payerName: student.name,
-        studentName: student.name,
-        amount: amount.toString(),
-        timestamp: new Date(dateStr).toISOString(),
-        note: 'Added from Calendar',
-        ignored: false,
-        source: 'calendar'
-      };
-      
-      const payments = PaymentStore.getAll();
-      payments.push(payment);
-      PaymentStore.save(payments);
-      
-      showToast('✅ Payment added successfully', 'success');
-      renderCalendar();
-    }
-    
-    function markAsAbsent(studentId, dateStr) {
-      // Convert to number for consistency
-      const numericId = parseInt(studentId);
-      
-      const absentKey = `absent:${numericId}:${dateStr}`;
-      localStorage.setItem(absentKey, 'true');
-      
-      showToast('⚪ Marked as absent');
-      
-      // Close the detail modal only
-      const modal = document.getElementById('classDetailModal');
-      if (modal) modal.remove();
-      const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.remove();
-      
-      // Refresh calendar to update dot colors
-      renderCalendar();
-      
-      // Note: Day panel stays open for marking multiple absences
-    }
-    
-    function unmarkAbsent(studentId, dateStr) {
-      // Convert to number for consistency
-      const numericId = parseInt(studentId);
-      
-      const absentKey = `absent:${numericId}:${dateStr}`;
-      localStorage.removeItem(absentKey);
-      
-      showToast('↩️ Unmarked absent');
-      
-      // Close the detail modal only
-      const modal = document.getElementById('classDetailModal');
-      if (modal) modal.remove();
-      const overlay = document.getElementById('calendarDetailOverlay');
-      if (overlay) overlay.remove();
-      
-      // Refresh calendar to update dot colors
-      renderCalendar();
-      
-      // Note: Day panel stays open for marking multiple absences
-    }
-    
-    // Listen for payment/student updates to refresh calendar
-    window.addEventListener('payments:updated', () => {
-      if (document.getElementById('smartCalendarModal').style.display !== 'none') {
-        renderCalendar();
-      }
-    });
-    
-    window.addEventListener('students:updated', () => {
-      if (document.getElementById('smartCalendarModal').style.display !== 'none') {
-        renderCalendar();
-      }
-    });
-    
-    window.addEventListener('groups:updated', () => {
-      if (document.getElementById('smartCalendarModal').style.display !== 'none') {
-        renderCalendar();
-      }
-    });
-    
-    window.addEventListener('schedules:updated', () => {
-      if (document.getElementById('smartCalendarModal').style.display !== 'none') {
-        renderCalendar();
-      }
-    });
-    
-    // ============================================================================
-    // END SMART CALENDAR PAYMENT SYSTEM
-    // ============================================================================
-    
-    // ============================================================================
-    // END EARNING FORECAST SYSTEM
-    // ============================================================================
-    
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', initialize);
-    
-    console.log('✅ ARNOMA app loaded - Using Supabase cloud database [v2.1.0 - Full Sync Redesigned - Build 20251112-0230]');
-    console.log('🔧 CACHE CHECK: If you see this message, JavaScript is loading correctly.');
-    console.log('🔧 Full Sync has been redesigned with proper date range handling.');
-  
+  const student = students.find(s => s.id === studentId);
+  if (!student) return;
+
+  const payment = {
+    id: 'cal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+    payerName: student.name,
+    studentName: student.name,
+    amount: amount.toString(),
+    timestamp: new Date(dateStr).toISOString(),
+    note: 'Added from Calendar',
+    ignored: false,
+    source: 'calendar',
+  };
+
+  const payments = PaymentStore.getAll();
+  payments.push(payment);
+  PaymentStore.save(payments);
+
+  showToast('✅ Payment added successfully', 'success');
+  renderCalendar();
+}
+
+function markAsAbsent(studentId, dateStr) {
+  // Convert to number for consistency
+  const numericId = parseInt(studentId);
+
+  const absentKey = `absent:${numericId}:${dateStr}`;
+  localStorage.setItem(absentKey, 'true');
+
+  showToast('⚪ Marked as absent');
+
+  // Close the detail modal only
+  const modal = document.getElementById('classDetailModal');
+  if (modal) modal.remove();
+  const overlay = document.getElementById('calendarDetailOverlay');
+  if (overlay) overlay.remove();
+
+  // Refresh calendar to update dot colors
+  renderCalendar();
+
+  // Note: Day panel stays open for marking multiple absences
+}
+
+function unmarkAbsent(studentId, dateStr) {
+  // Convert to number for consistency
+  const numericId = parseInt(studentId);
+
+  const absentKey = `absent:${numericId}:${dateStr}`;
+  localStorage.removeItem(absentKey);
+
+  showToast('↩️ Unmarked absent');
+
+  // Close the detail modal only
+  const modal = document.getElementById('classDetailModal');
+  if (modal) modal.remove();
+  const overlay = document.getElementById('calendarDetailOverlay');
+  if (overlay) overlay.remove();
+
+  // Refresh calendar to update dot colors
+  renderCalendar();
+
+  // Note: Day panel stays open for marking multiple absences
+}
+
+// Listen for payment/student updates to refresh calendar
+window.addEventListener('payments:updated', () => {
+  if (document.getElementById('smartCalendarModal').style.display !== 'none') {
+    renderCalendar();
+  }
+});
+
+window.addEventListener('students:updated', () => {
+  if (document.getElementById('smartCalendarModal').style.display !== 'none') {
+    renderCalendar();
+  }
+});
+
+window.addEventListener('groups:updated', () => {
+  if (document.getElementById('smartCalendarModal').style.display !== 'none') {
+    renderCalendar();
+  }
+});
+
+window.addEventListener('schedules:updated', () => {
+  if (document.getElementById('smartCalendarModal').style.display !== 'none') {
+    renderCalendar();
+  }
+});
+
+// ============================================================================
+// END SMART CALENDAR PAYMENT SYSTEM
+// ============================================================================
+
+// ============================================================================
+// END EARNING FORECAST SYSTEM
+// ============================================================================
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', initialize);
+
+console.log(
+  '✅ ARNOMA app loaded - Using Supabase cloud database [v2.1.0 - Full Sync Redesigned - Build 20251112-0230]'
+);
+console.log('🔧 CACHE CHECK: If you see this message, JavaScript is loading correctly.');
+console.log('🔧 Full Sync has been redesigned with proper date range handling.');

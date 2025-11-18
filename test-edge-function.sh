@@ -86,7 +86,7 @@ if [ "$HTTP_CODE" == "200" ]; then
     echo "✓ Check $TEST_EMAIL for the test email"
     echo "✓ Edge Function is working correctly"
     echo ""
-    
+
 elif [ "$HTTP_CODE" == "401" ]; then
     echo "❌ AUTHENTICATION ERROR"
     echo ""
@@ -103,7 +103,7 @@ elif [ "$HTTP_CODE" == "401" ]; then
     echo "  2. Copy the 'anon/public' key"
     echo "  3. Update SUPABASE_ANON_KEY in this script"
     echo ""
-    
+
 elif [ "$HTTP_CODE" == "404" ]; then
     echo "❌ FUNCTION NOT FOUND"
     echo ""
@@ -121,7 +121,7 @@ elif [ "$HTTP_CODE" == "404" ]; then
     echo "     supabase functions deploy send-email"
     echo "  2. Verify function exists in Supabase Dashboard"
     echo ""
-    
+
 elif [ "$HTTP_CODE" == "500" ]; then
     echo "❌ EDGE FUNCTION ERROR"
     echo ""
@@ -141,7 +141,7 @@ elif [ "$HTTP_CODE" == "500" ]; then
     echo "     Should have: RESEND_API_KEY"
     echo "  3. Test Resend API key at: https://resend.com/api-keys"
     echo ""
-    
+
 else
     echo "❌ UNEXPECTED ERROR"
     echo ""
