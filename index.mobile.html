@@ -14503,6 +14503,211 @@
       }
     };
     
+    // Send payment reminder immediately (GLOBAL SCOPE)
+    window.sendReminderNow = async function (studentId, buttonElement, clickedDateStr) {
+      console.log('🚀 Manual send triggered for student:', studentId, 'Clicked date:', clickedDateStr);
+
+      try {
+        // Get students from cache
+        const students = getCachedStudents();
+        console.log('📋 Students in cache:', students.length);
+
+        if (!students || students.length === 0) {
+          console.error('❌ No students in cache');
+          showNotification('❌ Error: Student data not loaded', 'error');
+          return;
+        }
+
+        // Find the student
+        const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
+        if (!student) {
+          console.error('❌ Student not found with ID:', studentId);
+          console.log('Available student IDs:', students.map(s => s.id).slice(0, 10));
+          showNotification('❌ Student not found', 'error');
+          return;
+        }
+
+        console.log('👤 Student found:', student.name, 'Email:', student.email);
+
+        // Check if student has email
+        if (!student.email || student.email.trim() === '') {
+          console.warn('⚠️ Student has no email:', student.name);
+          showNotification('❌ ' + student.name + ' has no email address', 'error');
+          return;
+        }
+
+        // Find ALL unpaid classes from calendar data (not just clicked date)
+        console.log('🔍 Searching for ALL unpaid classes in calendar...');
+        const currentMonth = window.currentCalendarData || getMonthData(new Date().getFullYear(), new Date().getMonth());
+        
+        let unpaidClasses = [];
+        const today = getLADate();
+        
+        // Get student's enrollment date for filtering
+        const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
+        if (studentCreatedAt) {
+          studentCreatedAt.setHours(0, 0, 0, 0); // Normalize to start of day
+        }
+        
+        // Search through all days in current month for unpaid classes
+        currentMonth.days.forEach(dayData => {
+          const dayDate = new Date(dayData.date);
+          dayDate.setHours(0, 0, 0, 0); // Normalize to start of day
+          
+          // Skip classes before student's enrollment date
+          if (studentCreatedAt && dayDate < studentCreatedAt) {
+            return; // Don't include classes before student was added to system
+          }
+          
+          dayData.studentsWithClass.forEach(classInfo => {
+            if ((classInfo.student.id === studentId || classInfo.student.id === parseInt(studentId)) 
+                && classInfo.status === 'unpaid'
+                && dayDate <= today) { // Only count classes up to today
+              unpaidClasses.push({
+                date: dayData.date,
+                dateStr: dayData.date.toISOString().split('T')[0],
+                pricePerClass: classInfo.pricePerClass,
+                status: classInfo.status,
+                isClickedDate: dayData.date.toISOString().split('T')[0] === clickedDateStr
+              });
+            }
+          });
+        });
+        
+        console.log('💰 Total unpaid classes found:', unpaidClasses.length);
+        console.log('📅 Unpaid dates:', unpaidClasses.map(c => c.dateStr).join(', '));
+
+        if (unpaidClasses.length === 0) {
+          console.log('ℹ️ No unpaid classes for:', student.name);
+          showNotification('✅ No unpaid classes for ' + student.name, 'info');
+          return;
+        }
+
+        // Check if the clicked date is actually unpaid
+        const clickedDateIsUnpaid = unpaidClasses.some(c => c.isClickedDate);
+        if (!clickedDateIsUnpaid) {
+          console.warn('⚠️ Clicked date is not unpaid, but sending reminder for all unpaid classes');
+        }
+
+        // Show loading state
+        const originalHTML = buttonElement.innerHTML;
+        buttonElement.disabled = true;
+        buttonElement.innerHTML = '⏳';
+        buttonElement.style.opacity = '0.6';
+        buttonElement.style.cursor = 'not-allowed';
+
+        // Sort by date to use clicked date (or most recent if clicked isn't unpaid)
+        const primaryDate = clickedDateIsUnpaid 
+          ? unpaidClasses.find(c => c.isClickedDate) 
+          : unpaidClasses.sort((a, b) => new Date(b.dateStr) - new Date(a.dateStr))[0];
+        
+        console.log('📅 Primary reminder date:', primaryDate.dateStr);
+        console.log('📧 Including all unpaid classes in email');
+
+        // Send message to email iframe
+        console.log('🔍 Searching for email iframe...');
+        const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+        console.log('📍 Email iframe found?', emailFrame ? 'YES' : 'NO');
+        
+        if (emailFrame) {
+          console.log('📍 Iframe src:', emailFrame.src);
+          console.log('📍 Has contentWindow?', emailFrame.contentWindow ? 'YES' : 'NO');
+        } else {
+          // Try to find ANY iframes
+          const allIframes = document.querySelectorAll('iframe');
+          console.log('🔍 Total iframes on page:', allIframes.length);
+          allIframes.forEach((iframe, idx) => {
+            console.log(`  Iframe ${idx}:`, iframe.src || iframe.id || 'no src/id');
+          });
+        }
+        
+        if (!emailFrame || !emailFrame.contentWindow) {
+          throw new Error('Email system not available');
+        }
+
+        console.log('📧 Email iframe found, sending postMessage...');
+
+        // Create a promise that resolves when we get a response
+        const sendPromise = new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => {
+            console.error('⏱️ Email send timeout after 30 seconds');
+            reject(new Error('Email send timeout'));
+          }, 30000); // 30 second timeout
+
+          // Listen for response
+          const handleMessage = event => {
+            console.log('📩 Received message:', event.data.action);
+
+            if (event.data.action === 'emailSent' || event.data.action === 'emailError') {
+              clearTimeout(timeout);
+              window.removeEventListener('message', handleMessage);
+
+              if (event.data.action === 'emailSent') {
+                console.log('✅ Email sent successfully');
+                resolve(event.data);
+              } else {
+                console.error('❌ Email error:', event.data.error);
+                reject(new Error(event.data.error || 'Email send failed'));
+              }
+            }
+          };
+
+          window.addEventListener('message', handleMessage);
+
+          // Send the message
+          emailFrame.contentWindow.postMessage(
+            {
+              action: 'sendManualReminder',
+              student: {
+                name: student.name,
+                email: student.email,
+                payPerClass: student.payPerClass || 0,
+              },
+              classDate: primaryDate.dateStr,
+              unpaidClasses: unpaidClasses.map(c => ({
+                date: c.dateStr,
+                pricePerClass: parseFloat(c.pricePerClass || student.payPerClass || 0),
+                isClickedDate: c.isClickedDate
+              })),
+            },
+            '*'
+          );
+        });
+
+        // Wait for email to be sent
+        await sendPromise;
+
+        // Success!
+        buttonElement.innerHTML = '✅';
+        buttonElement.style.opacity = '1';
+        showNotification('✅ Payment reminder sent to ' + student.name, 'success');
+
+        // Reset button after delay
+        setTimeout(() => {
+          buttonElement.innerHTML = originalHTML;
+          buttonElement.disabled = false;
+          buttonElement.style.cursor = 'pointer';
+        }, 2000);
+
+      } catch (error) {
+        console.error('❌ Error sending manual reminder:', error);
+        
+        // Restore button
+        if (buttonElement) {
+          buttonElement.innerHTML = '❌';
+          buttonElement.disabled = false;
+          buttonElement.style.opacity = '1';
+          buttonElement.style.cursor = 'pointer';
+          
+          setTimeout(() => {
+            buttonElement.innerHTML = '→';
+          }, 2000);
+        }
+        
+        showNotification('❌ Failed to send reminder: ' + error.message, 'error');
+      }
+    };
+    
     // Open day details panel showing all students scheduled that day
     function openDayDetails(dateStr, dayData) {
       const dateObj = new Date(dateStr);
@@ -14621,6 +14826,16 @@
                             onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 2px 8px rgba(251,146,60,0.4)';"
                             onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
                       ${window.PaymentReminderManager && window.PaymentReminderManager.isPaused(student.id) ? '▶' : '⏸'}
+                    </button>
+                    <button onclick="event.stopPropagation(); sendReminderNow('${student.id}', this, '${dateStr}');"
+                            title="Send payment reminder now"
+                            style="width: 24px; height: 24px; padding: 0; background: rgba(34, 197, 94, 0.2);
+                                   border: 1px solid rgba(34, 197, 94, 0.4);
+                                   border-radius: 6px; color: #22c55e;
+                                   font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center;"
+                            onmouseover="this.style.transform='scale(1.1)'; this.style.boxShadow='0 2px 8px rgba(34,197,94,0.4)';"
+                            onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                      →
                     </button>
                   </div>
                   <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px;">${formatCurrency(pricePerClass, '$')}/class</div>
@@ -15281,7 +15496,7 @@
       }
       
       // Send payment reminder via email system
-      async function sendPaymentReminder(student, dateStr, amount) {
+      async function sendPaymentReminder(student, dateStr, amount, unpaidClassesList = []) {
         try {
           // Call the email system iframe to send payment reminder
           const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
@@ -15290,35 +15505,26 @@
             return false;
           }
           
-          // Send message to email system
+          // Send message to email system with full unpaid classes list
           emailFrame.contentWindow.postMessage({
             action: 'sendAutoReminder',
             student: {
               name: student.name,
               email: student.email,
-              balance: amount
+              balance: amount, // Keep for backwards compatibility, but email will use unpaidClasses
+              payPerClass: student.payPerClass || amount, // Include student's rate per class
             },
-            classDate: dateStr
+            classDate: dateStr,
+            unpaidClasses: unpaidClassesList.map(c => ({
+              date: c.date,
+              pricePerClass: parseFloat(c.balance || student.payPerClass || amount || 0),
+              isClickedDate: c.date === dateStr
+            })),
           }, '*');
           
           console.log('📧 [PaymentReminderManager] Sent auto-reminder for:', student.name, 'Date:', dateStr, 'Amount:', amount);
           
-          // Log to notification center
-          if (window.NotificationCenter) {
-            await window.NotificationCenter.add(
-              window.NotificationCenter.NotificationType.REMINDER,
-              'Payment Reminder Sent',
-              `Automated payment reminder sent to ${student.name} for unpaid class on ${dateStr}`,
-              {
-                studentName: student.name,
-                metadata: {
-                  amount: amount,
-                  date: dateStr,
-                  email: student.email
-                }
-              }
-            );
-          }
+          // Notification will be created when we receive the email content back from iframe
           
           return true;
         } catch (error) {
@@ -15371,11 +15577,13 @@
           let remindersSent = 0;
           let studentsChecked = 0;
           let studentsPaused = 0;
-          let studentsNoClass = 0;
+          let studentsNoUnpaid = 0;
           let studentsClassNotEnded = 0;
           let studentsAlreadySent = 0;
           let studentsPaid = 0;
+          let classesChecked = 0;
           
+          // CRITICAL FIX: Check ALL past unpaid classes, not just today
           // Check each student
           for (const studentData of calendarData.students) {
             const student = studentData.student;
@@ -15398,73 +15606,110 @@
               continue;
             }
             
-            // Skip if reminder already sent today
-            if (wasReminderSentToday(studentId, todayStr)) {
-              console.log('  ✅ Reminder already sent today - skipping');
-              studentsAlreadySent++;
-              continue;
+            // CRITICAL FIX: Find ALL unpaid classes (past and today), not just today
+            // But exclude classes before student was added to the system
+            const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
+            let studentCreationDateStr = null;
+            if (studentCreatedAt) {
+              studentCreatedAt.setHours(0, 0, 0, 0);
+              const year = studentCreatedAt.getFullYear();
+              const month = String(studentCreatedAt.getMonth() + 1).padStart(2, '0');
+              const day = String(studentCreatedAt.getDate()).padStart(2, '0');
+              studentCreationDateStr = `${year}-${month}-${day}`;
             }
             
-            // Find today's class in student's attendance
-            const todayClass = studentData.attendance.find(a => a.date === todayStr);
-            if (!todayClass) {
-              console.log('  📅 No class scheduled today - skipping');
-              studentsNoClass++;
-              continue;
-            }
-            
-            console.log('  📅 Class found | Status:', todayClass.status, '| Balance:', todayClass.balance);
-            
-            // Check if class is unpaid (has red dot)
-            if (todayClass.status !== 'unpaid') {
-              console.log('  💚 Class is not unpaid (status:', todayClass.status, ') - skipping');
-              studentsPaid++;
-              continue;
-            }
-            
-            // Check if class has ended (current time > class end time)
-            const classEndTime = getClassEndTime(student.group, todayStr);
-            if (!classEndTime) {
-              console.warn('  ❌ Could not determine class end time - skipping');
-              continue;
-            }
-            
-            // CRITICAL: Use LA timezone for current time comparison
-            const nowLA = getLADate();
-            const nowLAStr = nowLA.toLocaleString('en-US', { 
-              timeZone: 'America/Los_Angeles',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
+            const unpaidClasses = studentData.attendance.filter(a => {
+              // Only unpaid classes
+              if (a.status !== 'unpaid') return false;
+              
+              // Only classes on or before today (no future reminders)
+              if (a.date > todayStr) return false;
+              
+              // CRITICAL: Exclude classes before student was added to system
+              if (studentCreationDateStr && a.date < studentCreationDateStr) {
+                return false;
+              }
+              
+              return true;
             });
             
-            const classEndStr = classEndTime.toLocaleString('en-US', { 
-              timeZone: 'America/Los_Angeles',
-              hour: '2-digit',
-              minute: '2-digit',
-              hour12: true
-            });
-            
-            if (nowLA < classEndTime) {
-              console.log(`  ⏰ Class NOT ended yet | Current: ${nowLAStr} | Ends: ${classEndStr} - skipping`);
-              studentsClassNotEnded++;
+            if (unpaidClasses.length === 0) {
+              console.log('  ✅ No unpaid classes (past or present) - skipping');
+              studentsNoUnpaid++;
               continue;
             }
             
-            console.log(`  ✅ Class ENDED | Current: ${nowLAStr} | Ended: ${classEndStr}`);
+            console.log(`  � Found ${unpaidClasses.length} unpaid class(es) - checking each...`);
             
-            // All checks passed - send reminder
-            const amount = todayClass.balance || 0;
-            console.log(`  📧 Sending payment reminder | Amount: $${amount}`);
-            
-            const sent = await sendPaymentReminder(student, todayStr, amount);
-            
-            if (sent) {
-              markReminderSent(studentId, todayStr);
-              remindersSent++;
-              console.log(`  ✅ Reminder SENT successfully`);
-            } else {
-              console.log(`  ❌ Failed to send reminder`);
+            // Check each unpaid class
+            for (const unpaidClass of unpaidClasses) {
+              classesChecked++;
+              const dateStr = unpaidClass.date;
+              
+              console.log(`\n  📅 Class Date: ${dateStr} | Status: ${unpaidClass.status} | Balance: $${unpaidClass.balance}`);
+              
+              // Skip if reminder already sent for this date
+              if (wasReminderSentToday(studentId, dateStr)) {
+                console.log('    ✅ Reminder already sent for this date - skipping');
+                studentsAlreadySent++;
+                continue;
+              }
+              
+              // Check if we're within 30 minutes before class end (payment reminder window)
+              const classEndTime = getClassEndTime(student.group, dateStr);
+              if (!classEndTime) {
+                console.warn('    ❌ Could not determine class end time - skipping');
+                continue;
+              }
+              
+              // CRITICAL: Send reminder when there's 30 minutes left in class
+              const thirtyMinutesBeforeEnd = new Date(classEndTime.getTime() - 30 * 60 * 1000);
+              
+              // CRITICAL: Use LA timezone for current time comparison
+              const nowLA = getLADate();
+              const nowLAStr = nowLA.toLocaleString('en-US', { 
+                timeZone: 'America/Los_Angeles',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              });
+              
+              const classEndStr = classEndTime.toLocaleString('en-US', { 
+                timeZone: 'America/Los_Angeles',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              });
+              
+              const reminderWindowStr = thirtyMinutesBeforeEnd.toLocaleString('en-US', { 
+                timeZone: 'America/Los_Angeles',
+                hour: '2-digit',
+                minute: '2-digit',
+                hour12: true
+              });
+              
+              // Only send if current time is past the 30-minute reminder window
+              if (nowLA < thirtyMinutesBeforeEnd) {
+                console.log(`    ⏰ Too early for reminder | Current: ${nowLAStr} | Reminder at: ${reminderWindowStr} (30 min before ${classEndStr}) - skipping`);
+                studentsClassNotEnded++;
+                continue;
+              }
+              
+              console.log(`    ✅ REMINDER WINDOW ACTIVE | Current: ${nowLAStr} | Window started: ${reminderWindowStr} | Class ends: ${classEndStr}`);
+              
+              // All checks passed - send reminder with full unpaid classes list
+              const amount = unpaidClass.balance || 0;
+              console.log(`    📧 Sending payment reminder for ${unpaidClasses.length} unpaid class(es)`);
+              
+              const sent = await sendPaymentReminder(student, dateStr, amount, unpaidClasses);
+              
+              if (sent) {
+                markReminderSent(studentId, dateStr);
+                remindersSent++;
+                console.log(`    ✅ Reminder SENT successfully`);
+              } else {
+                console.log(`    ❌ Failed to send reminder`);
+              }
             }
           }
           
@@ -15472,10 +15717,10 @@
           console.log('[PaymentReminderManager] 📊 SUMMARY');
           console.log('  Total students checked:', studentsChecked);
           console.log('  Students with paused reminders:', studentsPaused);
-          console.log('  Students with no class today:', studentsNoClass);
-          console.log('  Students with class not ended:', studentsClassNotEnded);
-          console.log('  Students already sent today:', studentsAlreadySent);
-          console.log('  Students with paid/absent class:', studentsPaid);
+          console.log('  Students with no unpaid classes:', studentsNoUnpaid);
+          console.log('  Total unpaid classes found:', classesChecked);
+          console.log('  Classes not ended yet:', studentsClassNotEnded);
+          console.log('  Classes with reminder already sent:', studentsAlreadySent);
           console.log('  Reminders sent:', remindersSent);
           
           if (remindersSent > 0) {
