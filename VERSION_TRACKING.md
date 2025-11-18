@@ -47,6 +47,11 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 - **FIX**: Welcome email template now says "Group E" instead of just "E"
   - Changed from: "You are enrolled in {{Group}}"
   - Changed to: "You are enrolled in Group {{Group}}"
+- **FIX**: Notification email viewer now works 100% of the time
+  - Previously: Clicking email notifications showed "Email not found" if Sent Emails modal never opened
+  - Root cause: viewSentEmail() relied on window._sentEmailsCache (only populated when modal opened)
+  - Solution: Changed to async function that fetches directly from Supabase if not in cache
+  - Now works immediately from notifications without needing to open Sent Emails first
 - **EMAIL SYSTEM VERIFICATION**: All email variables validated
   - Payment Reminder: {{StudentName}}, {{UnpaidClasses}}, {{Balance}}
   - Payment Receipt: Hardcoded values (student.name, paymentAmount, paymentDate, newBalance)
