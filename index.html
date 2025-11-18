@@ -8607,6 +8607,187 @@
       }
       // ============================================================
 
+      // ============================================================
+      // SEND CREDIT ADDED EMAIL TO STUDENT
+      // ============================================================
+      async function sendCreditAddedEmail(student, creditAmount, newBalance, reason = 'Extra payment received') {
+        try {
+          console.log('[CreditEmail] 📧 Sending credit added email to:', student.name, 'Amount:', creditAmount);
+
+          const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+          if (!emailFrame) {
+            console.error('[CreditEmail] ❌ Email system iframe not found');
+            return { success: false, error: 'Email system not loaded' };
+          }
+
+          // Send message to email system iframe
+          emailFrame.contentWindow.postMessage(
+            {
+              action: 'sendCreditAddedEmail',
+              student: {
+                name: student.name,
+                email: student.email,
+                id: student.id,
+              },
+              creditAmount: creditAmount,
+              newBalance: newBalance,
+              reason: reason,
+              timestamp: new Date().toISOString(),
+            },
+            '*'
+          );
+
+          console.log('[CreditEmail] ✅ Message sent to email system iframe');
+
+          // Wait for response from email system
+          return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Email timeout'));
+            }, 30000); // 30 second timeout
+
+            const handler = (event) => {
+              if (event.data.action === 'creditAddedEmailSent') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                console.log('[CreditEmail] ✅ Received confirmation from email system');
+                resolve({ success: true, data: event.data });
+              } else if (event.data.action === 'creditAddedEmailError') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                console.error('[CreditEmail] ❌ Email error:', event.data.error);
+                resolve({ success: false, error: event.data.error });
+              }
+            };
+
+            window.addEventListener('message', handler);
+          });
+        } catch (error) {
+          console.error('[CreditEmail] ❌ Error sending credit added email:', error);
+          return { success: false, error: error.message };
+        }
+      }
+
+      // ============================================================
+      // SEND CREDIT APPLIED EMAIL TO STUDENT
+      // ============================================================
+      async function sendCreditAppliedEmail(student, classDate, amountDeducted, newBalance) {
+        try {
+          console.log('[CreditEmail] 📧 Sending credit applied email to:', student.name, 'Class:', classDate);
+
+          const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+          if (!emailFrame) {
+            console.error('[CreditEmail] ❌ Email system iframe not found');
+            return { success: false, error: 'Email system not loaded' };
+          }
+
+          // Send message to email system iframe
+          emailFrame.contentWindow.postMessage(
+            {
+              action: 'sendCreditAppliedEmail',
+              student: {
+                name: student.name,
+                email: student.email,
+                id: student.id,
+              },
+              classDate: classDate,
+              amountDeducted: amountDeducted,
+              newBalance: newBalance,
+              timestamp: new Date().toISOString(),
+            },
+            '*'
+          );
+
+          console.log('[CreditEmail] ✅ Message sent to email system iframe');
+
+          // Wait for response from email system
+          return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Email timeout'));
+            }, 30000); // 30 second timeout
+
+            const handler = (event) => {
+              if (event.data.action === 'creditAppliedEmailSent') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                console.log('[CreditEmail] ✅ Received confirmation from email system');
+                resolve({ success: true, data: event.data });
+              } else if (event.data.action === 'creditAppliedEmailError') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                console.error('[CreditEmail] ❌ Email error:', event.data.error);
+                resolve({ success: false, error: event.data.error });
+              }
+            };
+
+            window.addEventListener('message', handler);
+          });
+        } catch (error) {
+          console.error('[CreditEmail] ❌ Error sending credit applied email:', error);
+          return { success: false, error: error.message };
+        }
+      }
+
+      // ============================================================
+      // SEND MANUAL CREDIT EDIT EMAIL TO STUDENT
+      // ============================================================
+      async function sendCreditManualEditEmail(student, oldBalance, newBalance, reason = 'Manual adjustment') {
+        try {
+          console.log('[CreditEmail] 📧 Sending manual credit edit email to:', student.name);
+
+          const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+          if (!emailFrame) {
+            console.error('[CreditEmail] ❌ Email system iframe not found');
+            return { success: false, error: 'Email system not loaded' };
+          }
+
+          // Send message to email system iframe
+          emailFrame.contentWindow.postMessage(
+            {
+              action: 'sendCreditManualEditEmail',
+              student: {
+                name: student.name,
+                email: student.email,
+                id: student.id,
+              },
+              oldBalance: oldBalance,
+              newBalance: newBalance,
+              reason: reason,
+              timestamp: new Date().toISOString(),
+            },
+            '*'
+          );
+
+          console.log('[CreditEmail] ✅ Message sent to email system iframe');
+
+          // Wait for response from email system
+          return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Email timeout'));
+            }, 30000); // 30 second timeout
+
+            const handler = (event) => {
+              if (event.data.action === 'creditManualEditEmailSent') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                console.log('[CreditEmail] ✅ Received confirmation from email system');
+                resolve({ success: true, data: event.data });
+              } else if (event.data.action === 'creditManualEditEmailError') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                console.error('[CreditEmail] ❌ Email error:', event.data.error);
+                resolve({ success: false, error: event.data.error });
+              }
+            };
+
+            window.addEventListener('message', handler);
+          });
+        } catch (error) {
+          console.error('[CreditEmail] ❌ Error sending manual credit edit email:', error);
+          return { success: false, error: error.message };
+        }
+      }
+      // ============================================================
+
       async function confirmLinkStudent(studentId) {
         if (!studentId) {
           showNotification('⚠️ Please select a student', 'warning');
@@ -8715,6 +8896,88 @@
 
           PaymentStore.save(payments);
           // END CRITICAL BUG FIX
+
+          // ============================================================
+          // CHECK FOR EXTRA PAYMENT → CREATE CREDIT
+          // ============================================================
+          let creditWasAdded = false;
+          let creditAddedAmount = 0;
+
+          const paymentAmount = parseFloat(payment.amount) || 0;
+          const pricePerClass = parseFloat(student.pricePerClass) || 0;
+
+          console.log('[Credit] 💰 Payment amount:', paymentAmount, 'Price per class:', pricePerClass);
+
+          // Calculate unpaid classes for this student
+          const allClasses = (student.attendance || []).filter(a => a.attended);
+          const studentPayments = payments.filter(p => {
+            const resolution = resolvePaymentToStudent(p, students);
+            return resolution.studentId === student.id;
+          });
+
+          // Count how many classes are already paid (by payment records or credit)
+          let unpaidClassCount = 0;
+          for (const cls of allClasses) {
+            const dateStr = cls.date;
+            const isPaidByPayment = studentPayments.some(p => {
+              const pDate = new Date(p.emailDate || p.transactionDate || p.createdAt);
+              const pDateStr = pDate.toISOString().split('T')[0];
+              return pDateStr === dateStr;
+            });
+            const isPaidByCredit = window.CreditPaymentManager?.getCreditPayment(student.id, dateStr);
+            
+            if (!isPaidByPayment && !isPaidByCredit) {
+              unpaidClassCount++;
+            }
+          }
+
+          console.log('[Credit] 📊 Unpaid classes:', unpaidClassCount);
+
+          // If payment amount > price per class AND no unpaid classes, add excess to credit
+          if (paymentAmount > pricePerClass && unpaidClassCount === 0) {
+            creditAddedAmount = paymentAmount;
+            const oldBalance = parseFloat(student.balance) || 0;
+            const newBalance = oldBalance + creditAddedAmount;
+            
+            student.balance = newBalance;
+            
+            console.log('[Credit] 💳 Adding to credit:', creditAddedAmount, 'Old balance:', oldBalance, 'New balance:', newBalance);
+            
+            // Save updated balance to Supabase
+            const savedStudent = await saveStudent(student);
+            if (savedStudent) {
+              Object.assign(student, savedStudent);
+              window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
+              creditWasAdded = true;
+              
+              // Send credit added email
+              if (student.email) {
+                console.log('[Credit] 📧 Sending credit added email...');
+                const emailResult = await sendCreditAddedEmail(
+                  student,
+                  creditAddedAmount,
+                  newBalance,
+                  'Extra payment received - no unpaid classes'
+                );
+                
+                if (emailResult.success) {
+                  showNotification(`💳 $${creditAddedAmount.toFixed(2)} added to credit for ${student.name}`, 'success');
+                  showNotification(`📧 Credit notification sent to ${student.email}`, 'success');
+                  console.log('[Credit] ✅ Credit email sent successfully');
+                } else {
+                  showNotification(`💳 $${creditAddedAmount.toFixed(2)} added to credit for ${student.name}`, 'success');
+                  showNotification(`⚠️ Credit added but email failed: ${emailResult.error}`, 'warning');
+                  console.error('[Credit] ❌ Email failed:', emailResult.error);
+                }
+              } else {
+                showNotification(`💳 $${creditAddedAmount.toFixed(2)} added to credit for ${student.name}`, 'success');
+              }
+            } else {
+              showNotification('❌ Failed to save credit balance', 'error');
+              student.balance = oldBalance; // Revert
+            }
+          }
+          // ============================================================
 
           // Recompute payment resolutions
           recomputePaymentResolutions();
@@ -10842,6 +11105,10 @@
           console.log('💰 Balance changed:', student.balance, '→', balance);
         }
 
+        // Track if balance changed for manual credit edit email
+        const balanceChanged = student.balance !== balance;
+        const oldBalance = student.balance || 0;
+
         // Compare aliases arrays
         const oldAliasesArray = student.aliases || [];
         const newAliasesArray = aliases || [];
@@ -10881,6 +11148,31 @@
         console.log('   - Changes count:', changes.length);
         console.log('   - Has email:', savedRecord.email ? 'Yes' : 'No');
 
+        // If balance was changed manually, send credit manual edit email instead of profile update
+        if (balanceChanged && savedRecord.email && savedRecord.email.trim() !== '') {
+          console.log('💳 Sending credit manual edit email for balance change');
+          const emailResult = await sendCreditManualEditEmail(
+            savedRecord,
+            oldBalance,
+            balance,
+            'Manual administrative adjustment'
+          );
+          
+          if (emailResult.success) {
+            showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
+            showNotificationSimple(`📧 Email sent to ${savedRecord.email}`, 'success');
+            console.log('[Credit] ✅ Manual edit email sent successfully');
+          } else {
+            showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
+            showNotificationSimple(`⚠️ Balance updated but email failed: ${emailResult.error}`, 'warning');
+            console.error('[Credit] ❌ Email failed:', emailResult.error);
+          }
+
+          // Remove balance from changes list since we sent a specific credit email
+          changes = changes.filter(c => c.field !== 'Balance');
+        }
+
+        // Send profile update email for other changes (if any remain)
         if (changes.length > 0 && savedRecord.email && savedRecord.email.trim() !== '') {
           console.log('✅ Sending profile update email for', changes.length, 'changes');
           sendProfileUpdateEmail(savedRecord, changes);
@@ -18406,10 +18698,37 @@
             });
           }
 
-          showToast(
-            `✅ Applied ${formatCurrency(pricePerClass, '$')} from credit\nNew Balance: ${formatCurrency(newBalance, '$')}`,
-            'success'
-          );
+          // Send credit applied email notification
+          if (student.email) {
+            console.log('[Credit] 📧 Sending credit applied email...');
+            const emailResult = await sendCreditAppliedEmail(
+              student,
+              dateStr,
+              pricePerClass,
+              newBalance
+            );
+            
+            if (emailResult.success) {
+              showToast(
+                `✅ Applied ${formatCurrency(pricePerClass, '$')} from credit\nNew Balance: ${formatCurrency(newBalance, '$')}`,
+                'success'
+              );
+              showNotification(`📧 Email sent to ${student.email}`, 'success');
+              console.log('[Credit] ✅ Email sent successfully');
+            } else {
+              showToast(
+                `✅ Applied ${formatCurrency(pricePerClass, '$')} from credit\nNew Balance: ${formatCurrency(newBalance, '$')}`,
+                'success'
+              );
+              showNotification(`⚠️ Credit applied but email failed: ${emailResult.error}`, 'warning');
+              console.error('[Credit] ❌ Email failed:', emailResult.error);
+            }
+          } else {
+            showToast(
+              `✅ Applied ${formatCurrency(pricePerClass, '$')} from credit\nNew Balance: ${formatCurrency(newBalance, '$')}`,
+              'success'
+            );
+          }
 
           console.log('🔍 Checking for panels to close after credit apply...');
 
