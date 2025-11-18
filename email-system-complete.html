@@ -382,6 +382,36 @@
         <button class="btn btn-primary" onclick="openEditor()">✨ Create Template</button>
       </div>
 
+      <!-- Email Testing Section -->
+      <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 24px 32px; border-radius: 16px; margin-bottom: 32px;">
+        <h2 style="color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 32px;">🧪</span>
+          <span>Email Handler Testing</span>
+        </h2>
+        <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">Click any button to send a test email to your inbox</p>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+          <button onclick="testProfileUpdate()" class="btn" style="background: #8b5cf6; color: white;">📝 Profile Update</button>
+          <button onclick="testAliasAdded()" class="btn" style="background: #8b5cf6; color: white;">👥 Alias Added</button>
+          <button onclick="testScheduleUpdate()" class="btn" style="background: #8b5cf6; color: white;">📅 Schedule Update</button>
+          <button onclick="testGroupEnrollment()" class="btn" style="background: #8b5cf6; color: white;">🎓 Group Enrollment</button>
+          <button onclick="testCreditAdded()" class="btn" style="background: #10b981; color: white;">💰 Credit Added</button>
+          <button onclick="testCreditApplied()" class="btn" style="background: #10b981; color: white;">💳 Credit Applied</button>
+          <button onclick="testCreditEdit()" class="btn" style="background: #10b981; color: white;">✏️ Credit Edit</button>
+          <button onclick="testStatusPaused()" class="btn" style="background: #ef4444; color: white;">⏸️ Status Paused</button>
+          <button onclick="testStatusActive()" class="btn" style="background: #22c55e; color: white;">▶️ Status Active</button>
+          <button onclick="testStatusGraduated()" class="btn" style="background: #06b6d4; color: white;">🎓 Graduated</button>
+          <button onclick="testAbsence()" class="btn" style="background: #f59e0b; color: white;">❌ Absence</button>
+          <button onclick="testScheduleChange()" class="btn" style="background: #3b82f6; color: white;">🔄 Schedule Change</button>
+        </div>
+        
+        <div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+          <label style="color: white; display: block; margin-bottom: 8px;">Test Email Address:</label>
+          <input type="email" id="testEmailAddress" placeholder="your@email.com" 
+                 style="width: 100%; padding: 10px; border-radius: 6px; border: none; background: rgba(255,255,255,0.9);" />
+        </div>
+      </div>
+
       <div class="template-grid" id="templatesGrid">
         <div style="text-align: center; padding: 80px 20px; color: var(--secondary)">
           <div style="font-size: 72px; opacity: 0.3; margin-bottom: 20px">📧</div>
@@ -5643,6 +5673,191 @@ ARNOMA Team"
         document.addEventListener('DOMContentLoaded', initAutomationEngine);
       } else {
         initAutomationEngine();
+      }
+
+      // ============================================================================
+      // EMAIL TESTING FUNCTIONS
+      // ============================================================================
+
+      function getTestEmail() {
+        const input = document.getElementById('testEmailAddress');
+        return input && input.value ? input.value : 'hrachfilm@gmail.com';
+      }
+
+      function getTestStudent() {
+        if (!window.receivedStudents || window.receivedStudents.length === 0) {
+          alert('⚠️ No students loaded yet. Wait for data to sync.');
+          return null;
+        }
+        return window.receivedStudents[0];
+      }
+
+      async function testProfileUpdate() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail() },
+          changes: 'Phone number updated to (123) 456-7890',
+          emailType: 'current'
+        };
+        
+        window.postMessage({ action: 'sendProfileUpdateEmail', ...testData }, '*');
+        alert('✅ Profile Update email sent!');
+      }
+
+      async function testAliasAdded() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          mainStudent: { name: student.name, email: getTestEmail() },
+          aliasName: 'Test Alias Student'
+        };
+        
+        window.postMessage({ action: 'sendAliasAddedEmail', ...testData }, '*');
+        alert('✅ Alias Added email sent!');
+      }
+
+      async function testScheduleUpdate() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail(), group: student.group || 'Test Group' },
+          oldSchedule: 'Monday 6:00 PM',
+          newSchedule: 'Tuesday 7:00 PM'
+        };
+        
+        window.postMessage({ action: 'sendScheduleUpdateEmail', ...testData }, '*');
+        alert('✅ Schedule Update email sent!');
+      }
+
+      async function testGroupEnrollment() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail(), group: student.group || 'Test Group' },
+          groupName: student.group || 'Test Group',
+          schedule: 'Monday 6:00 PM'
+        };
+        
+        window.postMessage({ action: 'sendGroupEnrollmentEmail', ...testData }, '*');
+        alert('✅ Group Enrollment email sent!');
+      }
+
+      async function testCreditAdded() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail() },
+          creditAmount: 50,
+          reason: 'Testing credit addition',
+          newBalance: 150
+        };
+        
+        window.postMessage({ action: 'sendCreditAddedEmail', ...testData }, '*');
+        alert('✅ Credit Added email sent!');
+      }
+
+      async function testCreditApplied() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail() },
+          creditAmount: 50,
+          classDate: '2025-11-20',
+          remainingBalance: 100
+        };
+        
+        window.postMessage({ action: 'sendCreditAppliedEmail', ...testData }, '*');
+        alert('✅ Credit Applied email sent!');
+      }
+
+      async function testCreditEdit() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail() },
+          oldBalance: 100,
+          newBalance: 150,
+          reason: 'Manual adjustment for testing'
+        };
+        
+        window.postMessage({ action: 'sendCreditManualEditEmail', ...testData }, '*');
+        alert('✅ Credit Manual Edit email sent!');
+      }
+
+      async function testStatusPaused() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail() },
+          reason: 'Testing pause status'
+        };
+        
+        window.postMessage({ action: 'sendStatusChangeToPausedEmail', ...testData }, '*');
+        alert('✅ Status Changed to Paused email sent!');
+      }
+
+      async function testStatusActive() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail() }
+        };
+        
+        window.postMessage({ action: 'sendStatusChangeToActiveEmail', ...testData }, '*');
+        alert('✅ Status Changed to Active email sent!');
+      }
+
+      async function testStatusGraduated() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail() },
+          graduationDate: '2025-11-19'
+        };
+        
+        window.postMessage({ action: 'sendStatusChangeToGraduatedEmail', ...testData }, '*');
+        alert('✅ Status Changed to Graduated email sent!');
+      }
+
+      async function testAbsence() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail() },
+          classDate: '2025-11-19',
+          reason: 'Testing absence notification'
+        };
+        
+        window.postMessage({ action: 'sendAbsenceNotificationEmail', ...testData }, '*');
+        alert('✅ Absence Notification email sent!');
+      }
+
+      async function testScheduleChange() {
+        const student = getTestStudent();
+        if (!student) return;
+        
+        const testData = {
+          student: { name: student.name, email: getTestEmail(), group: student.group || 'Test Group' },
+          groupName: student.group || 'Test Group',
+          oldSchedule: 'Monday 6:00 PM',
+          newSchedule: 'Tuesday 7:00 PM',
+          effectiveDate: '2025-11-20'
+        };
+        
+        window.postMessage({ action: 'sendScheduleChangeEmail', ...testData }, '*');
+        alert('✅ Schedule Change email sent!');
       }
     </script>
   </body>
