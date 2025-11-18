@@ -2457,7 +2457,7 @@
           </div>
           <div style="display: flex; align-items: center; gap: 8px">
             <button
-              onclick="createTestNotification()"
+              onclick="clearAllNotifications()"
               style="
                 padding: 8px 14px;
                 background: rgba(34, 197, 94, 0.15);
@@ -17761,7 +17761,7 @@
           }, 300);
         }
 
-        async function createTestNotification() {
+        async function clearAllNotifications() {
           debugLog('[NotificationCenter] 🗑️ Clearing all notifications...');
 
           if (!window.NotificationCenter) {
