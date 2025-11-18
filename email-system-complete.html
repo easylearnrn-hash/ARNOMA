@@ -3180,19 +3180,28 @@ ARNOMA Team"
 
             const formattedDate = formatClassDate(classDate);
 
+            // Calculate total unpaid amount from unpaid classes list
+            let totalUnpaidAmount = 0;
+            if (hasUnpaidList && unpaidClasses.length > 0) {
+              totalUnpaidAmount = unpaidClasses.reduce((sum, c) => sum + parseFloat(c.pricePerClass || 0), 0);
+            } else {
+              // Fallback: use student balance if no unpaid list provided
+              totalUnpaidAmount = parseFloat(student.balance || 0);
+            }
+
             // Build unpaid classes list if available
             let unpaidClassesList = `<div style="background: linear-gradient(135deg, rgba(138, 180, 255, 0.08), rgba(167, 139, 250, 0.08)); border-left: 4px solid #8ab4ff; padding: 16px; border-radius: 8px; margin: 16px 0;">
               <div style="font-size: 15px; color: #333; margin-bottom: 8px;">
                 <strong>📅 ${formattedDate}</strong>
               </div>
               <div style="font-size: 18px; color: #8ab4ff; font-weight: 600;">
-                Amount Due: $${student.balance}
+                Amount Due: $${totalUnpaidAmount.toFixed(2)}
               </div>
             </div>`;
 
             if (hasUnpaidList && unpaidClasses.length > 1) {
               // Multiple unpaid classes - build detailed list with beautiful formatting
-              const totalUnpaid = unpaidClasses.reduce((sum, c) => sum + parseFloat(c.pricePerClass || 0), 0);
+              const totalUnpaid = totalUnpaidAmount;
               
               const classItems = unpaidClasses.map((c, index) => {
                 const formattedClassDate = formatClassDate(c.date);
