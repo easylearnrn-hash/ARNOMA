@@ -11518,7 +11518,7 @@
 
         // Track changes for email notification
         let changes = [];
-        console.log('🔍 Checking for profile changes (inline edit)...');
+        // Check for profile changes (inline edit)
         console.log('Old student:', JSON.parse(JSON.stringify(student))); // Deep copy for logging
 
         // Compare and track changes BEFORE modifying the student object
@@ -11586,10 +11586,6 @@
         console.log('🔄 Changes to notify:', changes);
 
         // Send profile update email if there are changes and student has email
-        console.log('🔍 Checking if should send profile update email...');
-        console.log('   - Changes count:', changes.length);
-        console.log('   - Has email:', savedRecord.email ? 'Yes' : 'No');
-
         // If balance was changed manually, send credit manual edit email instead of profile update
         if (balanceChanged && savedRecord.email && savedRecord.email.trim() !== '') {
           console.log('💳 Sending credit manual edit email for balance change');
@@ -18005,23 +18001,7 @@
           return false;
         });
 
-        // DEBUG: Log for today's students with payments
-        if (dateStr === '2025-11-14' && studentPayments.length > 0) {
-          console.log(
-            `💰 ${student.name} has ${studentPayments.length} payment(s) on ${dateStr}:`,
-            studentPayments.map(p => ({
-              date: formatDateYYYYMMDD(toLADate(new Date(p.emailDate || p.date))),
-              from: p.payerNameRaw,
-              student: p.studentName,
-              amount: p.amount,
-            }))
-          );
-        }
-
-        // DEBUG: Log filtered payments
-        if (dateStr === '2025-11-12' && student.name === 'Stella Ghazaryan') {
-          console.log('🔍 Found payments for Stella on Nov 12:', studentPayments.length);
-        }
+        // DEBUG logs removed for performance
 
         // Check for payment on this date OR any recent payment that can cover this class
         // If checking a past date, allow payments from up to 7 days after the class
@@ -18033,11 +18013,6 @@
           // So we just need to format them, NOT convert timezone again
           const paymentDate = new Date(paymentTimestamp);
           const paymentDateStr = formatDateYYYYMMDD(paymentDate);
-
-          // DEBUG: Log date comparison for today
-          if (dateStr === '2025-11-14') {
-            console.log(`   🔍 Checking payment: ${paymentDateStr} vs ${dateStr} for ${student.name}`);
-          }
 
           // Exact date match
           if (paymentDateStr === dateStr) return true;
