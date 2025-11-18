@@ -3181,16 +3181,57 @@ ARNOMA Team"
             const formattedDate = formatClassDate(classDate);
 
             // Build unpaid classes list if available
-            let unpaidClassesList = `Class on ${formattedDate} - Amount owed: $${student.balance}`;
+            let unpaidClassesList = `<div style="background: linear-gradient(135deg, rgba(138, 180, 255, 0.08), rgba(167, 139, 250, 0.08)); border-left: 4px solid #8ab4ff; padding: 16px; border-radius: 8px; margin: 16px 0;">
+              <div style="font-size: 15px; color: #333; margin-bottom: 8px;">
+                <strong>📅 ${formattedDate}</strong>
+              </div>
+              <div style="font-size: 18px; color: #8ab4ff; font-weight: 600;">
+                Amount Due: $${student.balance}
+              </div>
+            </div>`;
+
             if (hasUnpaidList && unpaidClasses.length > 1) {
-              // Multiple unpaid classes - build detailed list
+              // Multiple unpaid classes - build detailed list with beautiful formatting
               const totalUnpaid = unpaidClasses.reduce((sum, c) => sum + parseFloat(c.pricePerClass || 0), 0);
-              unpaidClassesList = unpaidClasses.map(c => {
+              
+              const classItems = unpaidClasses.map((c, index) => {
                 const formattedClassDate = formatClassDate(c.date);
-                const marker = c.isClickedDate ? '👉 ' : '   ';
-                return `${marker}Class on ${formattedClassDate} - $${c.pricePerClass}`;
-              }).join('\n');
-              unpaidClassesList += `\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTotal Amount Due: $${totalUnpaid.toFixed(2)}`;
+                const isHighlighted = c.isClickedDate;
+                const bgColor = isHighlighted ? 'rgba(138, 180, 255, 0.15)' : 'rgba(138, 180, 255, 0.05)';
+                const borderColor = isHighlighted ? '#8ab4ff' : '#e0e7ff';
+                const icon = isHighlighted ? '👉' : '📅';
+                
+                return `
+                  <div style="background: ${bgColor}; border-left: 3px solid ${borderColor}; padding: 12px 16px; border-radius: 6px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="flex: 1;">
+                      <div style="font-size: 14px; color: #666; margin-bottom: 4px;">Class ${index + 1}</div>
+                      <div style="font-size: 15px; color: #333; font-weight: 500;">
+                        ${icon} ${formattedClassDate}
+                      </div>
+                    </div>
+                    <div style="font-size: 18px; color: #8ab4ff; font-weight: 600; min-width: 80px; text-align: right;">
+                      $${parseFloat(c.pricePerClass).toFixed(2)}
+                    </div>
+                  </div>
+                `;
+              }).join('');
+
+              unpaidClassesList = `
+                <div style="background: linear-gradient(135deg, rgba(138, 180, 255, 0.08), rgba(167, 139, 250, 0.08)); border: 2px solid #8ab4ff; padding: 20px; border-radius: 12px; margin: 20px 0;">
+                  <div style="font-size: 16px; color: #555; font-weight: 600; margin-bottom: 16px; text-align: center;">
+                    💳 Outstanding Classes
+                  </div>
+                  ${classItems}
+                  <div style="border-top: 2px solid #8ab4ff; margin-top: 16px; padding-top: 16px; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 17px; color: #333; font-weight: 600;">
+                      Total Amount Due:
+                    </div>
+                    <div style="font-size: 24px; color: #8ab4ff; font-weight: 700;">
+                      $${totalUnpaid.toFixed(2)}
+                    </div>
+                  </div>
+                </div>
+              `;
             }
 
             // Replace variables in template (case-insensitive to match template)
