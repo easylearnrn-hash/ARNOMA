@@ -16930,6 +16930,21 @@
 
           Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
             if (scheduleDays.includes(dayName)) {
+              // FILTER: Only show classes on or after student's creation date
+              const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
+              const classDate = new Date(date);
+              
+              // Set both dates to start of day for accurate comparison
+              if (studentCreatedAt) {
+                studentCreatedAt.setHours(0, 0, 0, 0);
+              }
+              classDate.setHours(0, 0, 0, 0);
+              
+              // Skip if class date is before student was created
+              if (studentCreatedAt && classDate < studentCreatedAt) {
+                return; // Don't show this class
+              }
+              
               const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
               studentsWithClass.push({
                 student,
@@ -17013,6 +17028,21 @@
         const studentsWithClass = [];
         Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
           if (scheduleDays.includes(dayName)) {
+            // FILTER: Only show classes on or after student's creation date
+            const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
+            const classDate = new Date(date);
+            
+            // Set both dates to start of day for accurate comparison
+            if (studentCreatedAt) {
+              studentCreatedAt.setHours(0, 0, 0, 0);
+            }
+            classDate.setHours(0, 0, 0, 0);
+            
+            // Skip if class date is before student was created
+            if (studentCreatedAt && classDate < studentCreatedAt) {
+              return; // Don't show this class
+            }
+            
             const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
             studentsWithClass.push({
               student,
@@ -17580,13 +17610,35 @@
             return;
           }
 
-          // Check if student has balance owed
-          const balance = parseFloat(student.balance) || 0;
-          console.log('💰 Student balance:', balance);
+          // Find actual unpaid classes from calendar data
+          console.log('🔍 Searching for unpaid classes in calendar...');
+          const currentMonth = window.currentCalendarData || getMonthData(new Date().getFullYear(), new Date().getMonth());
+          
+          let unpaidClasses = [];
+          const today = getLADate();
+          
+          // Search through all days in current month for unpaid classes
+          currentMonth.days.forEach(dayData => {
+            const dayDate = new Date(dayData.date);
+            dayData.studentsWithClass.forEach(classInfo => {
+              if ((classInfo.student.id === studentId || classInfo.student.id === parseInt(studentId)) 
+                  && classInfo.status === 'unpaid'
+                  && dayDate <= today) { // Only count classes up to today
+                unpaidClasses.push({
+                  date: dayData.date,
+                  dateStr: dayData.date.toISOString().split('T')[0],
+                  pricePerClass: classInfo.pricePerClass,
+                  status: classInfo.status
+                });
+              }
+            });
+          });
+          
+          console.log('💰 Unpaid classes found:', unpaidClasses.length);
 
-          if (balance <= 0) {
-            console.log('ℹ️ No balance owed for:', student.name);
-            showNotificationSimple('✅ No balance owed by ' + student.name, 'info');
+          if (unpaidClasses.length === 0) {
+            console.log('ℹ️ No unpaid classes for:', student.name);
+            showNotificationSimple('✅ No unpaid classes for ' + student.name, 'info');
             return;
           }
 
@@ -17597,9 +17649,9 @@
           buttonElement.style.opacity = '0.6';
           buttonElement.style.cursor = 'not-allowed';
 
-          // Use current date for reminder (since we're using balance, not specific class history)
-          const today = new Date().toISOString().split('T')[0];
-          console.log('📅 Sending reminder for balance on:', today);
+          // Use the most recent unpaid class date
+          const mostRecentUnpaid = unpaidClasses.sort((a, b) => new Date(b.dateStr) - new Date(a.dateStr))[0];
+          console.log('📅 Sending reminder for class on:', mostRecentUnpaid.dateStr);
 
           // Send message to email iframe
           const emailFrame = document.getElementById('emailFrame');
@@ -17647,7 +17699,7 @@
                 email: student.email,
                 balance: student.balance || 0,
               },
-              classDate: today,
+              classDate: mostRecentUnpaid.dateStr,
               manual: true, // Flag to bypass "already sent" check
             },
             '*'
