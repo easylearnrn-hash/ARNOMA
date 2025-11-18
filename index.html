@@ -19504,6 +19504,28 @@
                 return true;
               });
 
+              // DEBUG: Log details for specific student (Mariam Gevorgyan)
+              if (student.name.toLowerCase().includes('mariam') && student.name.toLowerCase().includes('gevorgyan')) {
+                console.log('\n🔍 DEBUG: Mariam Gevorgyan Details:');
+                console.log('  Student ID:', studentId);
+                console.log('  Student Status:', student.status);
+                console.log('  Student Created At:', studentCreationDateStr);
+                console.log('  Total Attendance Records:', studentData.attendance.length);
+                console.log('  Unpaid Classes Found:', unpaidClasses.length);
+                
+                if (unpaidClasses.length > 0) {
+                  console.log('  Unpaid Classes:');
+                  unpaidClasses.forEach(c => {
+                    console.log(`    - Date: ${c.date}, Balance: $${c.balance}, Status: ${c.status}`);
+                  });
+                  
+                  console.log('\n  All Attendance Records (for verification):');
+                  studentData.attendance.forEach(a => {
+                    console.log(`    - Date: ${a.date}, Status: ${a.status}, Balance: $${a.balance || 0}`);
+                  });
+                }
+              }
+
               if (unpaidClasses.length === 0) {
                 console.log('  ✅ No unpaid classes (past or present) - skipping');
                 studentsNoUnpaid++;
