@@ -44,12 +44,15 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
   - Enhanced `addPayment()` to create notification after successful email
   - Shows "Payment Receipt Sent: $X" with student name, amount, date
   - User always sees confirmation that receipt was sent
+- **FIX**: Welcome email template now says "Group E" instead of just "E"
+  - Changed from: "You are enrolled in {{Group}}"
+  - Changed to: "You are enrolled in Group {{Group}}"
 - **EMAIL SYSTEM VERIFICATION**: All email variables validated
   - Payment Reminder: {{StudentName}}, {{UnpaidClasses}}, {{Balance}}
   - Payment Receipt: Hardcoded values (student.name, paymentAmount, paymentDate, newBalance)
   - Class Reminder: {{StudentName}}, {{GroupName}}, {{ClassTime}}, {{TimeOfDay}}, {{PaymentMessage}}, {{ClassDate}}
   - Class Starting Soon: {{StudentName}}, {{GroupName}}, {{ClassTime}}, {{ClassDate}}, {{ZoomLink}}
-  - Welcome Email: {{StudentName}}, {{Group}}, {{GroupSchedule}}
+  - Welcome Email: {{StudentName}}, Group {{Group}}, {{GroupSchedule}}
   - All variables properly mapped and replaced in handlers
 
 ### v2.1.6 (2025-11-18)
