@@ -8402,10 +8402,15 @@
             const escapedId = String(s.id).replace(/'/g, "\\'").replace(/"/g, '&quot;');
             const escapedName = String(s.name).replace(/'/g, "\\'");
             const escapedEmail = String(s.email || '').replace(/'/g, "\\'");
+            // Add aliases for search filtering
+            const aliases = Array.isArray(s.aliases) ? s.aliases : [];
+            const aliasesLower = aliases.map(a => a.toLowerCase()).join('|');
+            const aliasesDisplay = aliases.length > 0 ? `<div style="color: #94a3b8; font-size: 11px; margin-top: 2px;">Also known as: ${aliases.join(', ')}</div>` : '';
 
-            return `<div class="student-search-item" data-student-id="${escapedId}" data-student-name="${s.name.toLowerCase()}" data-student-email="${(s.email || '').toLowerCase()}" onclick="event.stopPropagation(); selectStudentFromSearch('${escapedId}')" style="padding: 12px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; border-radius: 6px; margin-bottom: 4px; pointer-events: auto;" onmouseover="this.style.background='rgba(138,180,255,0.15)'" onmouseout="this.style.background='transparent'">
+            return `<div class="student-search-item" data-student-id="${escapedId}" data-student-name="${s.name.toLowerCase()}" data-student-email="${(s.email || '').toLowerCase()}" data-student-aliases="${aliasesLower}" onclick="event.stopPropagation(); selectStudentFromSearch('${escapedId}')" style="padding: 12px 14px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: all 0.2s; border-radius: 6px; margin-bottom: 4px; pointer-events: auto;" onmouseover="this.style.background='rgba(138,180,255,0.15)'" onmouseout="this.style.background='transparent'">
           <div style="color: white; font-weight: 600; font-size: 14px;">${s.name}</div>
           ${s.email ? `<div style="color: #94a3b8; font-size: 12px; margin-top: 2px;">${s.email}</div>` : ''}
+          ${aliasesDisplay}
         </div>`;
           })
           .join('');
@@ -8420,7 +8425,7 @@
           </div>
           <p style="margin: 0 0 12px 0; color: #94a3b8; font-size: 14px;">Search and select a student to link this payment to:</p>
 
-          <input type="text" id="linkStudentSearchInput" placeholder="Search students by name..." style="width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 14px; margin-bottom: 16px; outline: none; pointer-events: auto;" oninput="debouncedFilterStudentSearch()" onkeydown="if(event.key==='Escape'){closeLinkStudentModal();}" autofocus>
+          <input type="text" id="linkStudentSearchInput" placeholder="Search by name, email, or payment alias..." style="width: 100%; padding: 12px 14px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; color: white; font-size: 14px; margin-bottom: 16px; outline: none; pointer-events: auto;" oninput="debouncedFilterStudentSearch()" onkeydown="if(event.key==='Escape'){closeLinkStudentModal();}" autofocus>
 
           <div id="studentSearchResults" style="max-height: 320px; overflow-y: auto; margin-bottom: 16px; padding: 4px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
             ${studentListHTML}
@@ -8475,7 +8480,7 @@
       }
       // END POPUP BACK & EXIT FIX
 
-      // BEGIN SEARCH FIX - Search by name AND email
+      // BEGIN SEARCH FIX - Search by name, email, AND aliases
       function filterStudentSearch() {
         const input = document.getElementById('linkStudentSearchInput');
         const filter = input ? input.value.toLowerCase().trim() : '';
@@ -8485,11 +8490,16 @@
         items.forEach(item => {
           const studentName = item.getAttribute('data-student-name') || '';
           const studentEmail = item.getAttribute('data-student-email') || '';
+          const studentAliases = item.getAttribute('data-student-aliases') || '';
           const textContent = item.textContent.toLowerCase();
 
-          // Search in name, email, or visible text
+          // Search in name, email, aliases, or visible text
           const matches =
-            !filter || studentName.includes(filter) || studentEmail.includes(filter) || textContent.includes(filter);
+            !filter || 
+            studentName.includes(filter) || 
+            studentEmail.includes(filter) || 
+            studentAliases.includes(filter) || 
+            textContent.includes(filter);
 
           if (matches) {
             item.style.display = 'block';
@@ -8537,6 +8547,65 @@
           // END POPUP BACK & EXIT FIX
         }
       }
+
+      // ============================================================
+      // SEND ALIAS ADDED EMAIL TO STUDENT
+      // ============================================================
+      async function sendAliasAddedEmail(student, aliasAdded) {
+        try {
+          console.log('[AliasEmail] 📧 Sending alias added email to:', student.name, 'Alias:', aliasAdded);
+
+          const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+          if (!emailFrame) {
+            console.error('[AliasEmail] ❌ Email system iframe not found');
+            return { success: false, error: 'Email system not loaded' };
+          }
+
+          // Send message to email system iframe
+          emailFrame.contentWindow.postMessage(
+            {
+              action: 'sendAliasAddedEmail',
+              student: {
+                name: student.name,
+                email: student.email,
+                id: student.id,
+              },
+              aliasAdded: aliasAdded,
+              timestamp: new Date().toISOString(),
+            },
+            '*'
+          );
+
+          console.log('[AliasEmail] ✅ Message sent to email system iframe');
+
+          // Wait for response from email system
+          return new Promise((resolve, reject) => {
+            const timeout = setTimeout(() => {
+              reject(new Error('Email timeout'));
+            }, 30000); // 30 second timeout
+
+            const handler = (event) => {
+              if (event.data.action === 'aliasEmailSent') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                console.log('[AliasEmail] ✅ Received confirmation from email system');
+                resolve({ success: true, data: event.data });
+              } else if (event.data.action === 'aliasEmailError') {
+                clearTimeout(timeout);
+                window.removeEventListener('message', handler);
+                console.error('[AliasEmail] ❌ Email error:', event.data.error);
+                resolve({ success: false, error: event.data.error });
+              }
+            };
+
+            window.addEventListener('message', handler);
+          });
+        } catch (error) {
+          console.error('[AliasEmail] ❌ Error sending alias email:', error);
+          return { success: false, error: error.message };
+        }
+      }
+      // ============================================================
 
       async function confirmLinkStudent(studentId) {
         if (!studentId) {
@@ -8603,6 +8672,8 @@
 
           // Add payer name to student's alias if not already there
           const payerName = payment.payerName || payment.fromName || '';
+          let aliasWasAdded = false;
+          let addedAlias = '';
 
           if (payerName && payerName.trim()) {
             const currentAliases = student.aliases || [];
@@ -8625,6 +8696,9 @@
               } else {
                 Object.assign(student, savedAliasUpdate);
                 window.dispatchEvent(new CustomEvent('students:updated', { detail: [student] }));
+                aliasWasAdded = true;
+                addedAlias = payerName.trim();
+                debugLog('✅ Alias added successfully:', addedAlias);
               }
             } else {
               debugLog('⏭️ Skipped adding alias (already exists or same as student name)');
@@ -8652,7 +8726,25 @@
             })
           );
 
-          showNotification(`✅ Payment linked to ${student.name}`, 'success');
+          // Send email and show notifications if alias was added
+          if (aliasWasAdded && addedAlias && student.email) {
+            showNotification(`✅ Alias added for ${student.name} (payer: ${addedAlias})`, 'success');
+            
+            // Send email notification to student
+            console.log('[AliasLink] 📧 Sending alias added email...');
+            const emailResult = await sendAliasAddedEmail(student, addedAlias);
+            
+            if (emailResult.success) {
+              showNotification(`📧 Email sent to ${student.email}`, 'success');
+              console.log('[AliasLink] ✅ Email sent successfully');
+            } else {
+              showNotification(`⚠️ Alias added but email failed: ${emailResult.error}`, 'warning');
+              console.error('[AliasLink] ❌ Email failed:', emailResult.error);
+            }
+          } else {
+            // No alias was added (already existed or same as student name)
+            showNotification(`✅ Payment linked to ${student.name}`, 'success');
+          }
 
           // Clear persistent storage after successful link
           savedPaymentDataForLinking = null;
