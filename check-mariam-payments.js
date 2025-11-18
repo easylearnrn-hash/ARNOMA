@@ -16,6 +16,19 @@
   console.log('   DIAGNOSTIC: Mariam Gevorgyan Payment Status Check');
   console.log('   ════════════════════════════════════════════════════════════════\n');
 
+  // Check if calendar is loaded
+  if (!window.currentCalendarData || !window.currentCalendarData.students) {
+    console.log('⏳ WAITING FOR CALENDAR DATA...');
+    console.log('   Please:');
+    console.log('   1. Click on the CALENDAR tab');
+    console.log('   2. Wait for calendar to load');
+    console.log('   3. Run this script again\n');
+    console.log('   Alternative: Run this command to load calendar:');
+    console.log('   renderCalendar(); setTimeout(() => { /* paste this script again */ }, 2000);');
+    console.log('\n   ════════════════════════════════════════════════════════════════\n');
+    return;
+  }
+
   // Find Mariam in calendar data
   let mariam = null;
   let mariamData = null;
