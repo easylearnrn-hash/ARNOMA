@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.1.1]</title>
+    <title>ARNOMA - Student Management [v2.1.2]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.1.1-performance-optimized" />
+    <meta name="version" content="2.1.2-performance-optimized" />
 
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.1.1 - Performance Optimized');
+      console.log('🔥 ARNOMA v2.1.2 - Performance Optimized (85 debug logs silenced)');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -97,13 +97,13 @@
           }
 
           if (session && session.user) {
-            console.log('✅ User authenticated:', session.user.email);
+            debugLog('✅ User authenticated:', session.user.email);
             isAuthenticated = true;
             currentUser = session.user;
             hideLoginForm();
             return true;
           } else {
-            console.log('⚠️ No active session, showing login');
+            debugLog('⚠️ No active session, showing login');
             showLoginForm();
             return false;
           }
@@ -128,7 +128,7 @@
           }
 
           if (data.session) {
-            console.log('✅ Login successful:', data.user.email);
+            debugLog('✅ Login successful:', data.user.email);
             isAuthenticated = true;
             currentUser = data.user;
             hideLoginForm();
@@ -154,7 +154,7 @@
             return;
           }
 
-          console.log('✅ Logged out successfully');
+          debugLog('✅ Logged out successfully');
           isAuthenticated = false;
           currentUser = null;
 
@@ -6020,7 +6020,7 @@
             const student = students.find(s => String(s.id) === String(payment.derivedStudentId));
 
             if (student && student.email) {
-              console.log('📧 Sending payment receipt email to:', student.name);
+              debugLog('📧 Sending payment receipt email to:', student.name);
               try {
                 await sendPaymentReceiptEmail(
                   student,
@@ -6674,8 +6674,8 @@
                 10000 // Show for 10 seconds
               );
 
-              console.log('✅ Credits applied (emails not sent):', creditsApplied);
-              console.log('📋 Students who received credit:', studentNames);
+              debugLog('✅ Credits applied (emails not sent):', creditsApplied);
+              debugLog('📋 Students who received credit:', studentNames);
             } else {
               console.log('No new overpayments to process');
             }
@@ -11760,7 +11760,7 @@
         }
 
         async function saveInlineEdit(studentId) {
-          console.log('🚀 saveInlineEdit() called for studentId:', studentId);
+          debugLog('🚀 saveInlineEdit() called for studentId:', studentId);
 
           // Convert to number for comparison (passed as string from onclick)
           const numericId = parseInt(studentId);
@@ -11833,7 +11833,7 @@
           }
           if (student.balance !== balance) {
             changes.push({ field: 'Balance', old: `$${student.balance || 0}`, new: `$${balance}` });
-            console.log('💰 Balance changed:', student.balance, '→', balance);
+            debugLog('💰 Balance changed:', student.balance, '→', balance);
           }
 
           // Track if balance changed for manual credit edit email
@@ -11871,8 +11871,8 @@
           }
 
           console.log('💾 Student saved successfully (inline):', savedRecord.name);
-          console.log('📧 Student email:', savedRecord.email);
-          console.log('🔄 Changes to notify:', changes);
+          debugLog('📧 Student email:', savedRecord.email);
+          debugLog('🔄 Changes to notify:', changes);
 
           // Send profile update email if there are changes and student has email
           // If balance was changed manually, send credit manual edit email instead of profile update
@@ -11901,7 +11901,7 @@
 
           // Send profile update email for other changes (if any remain)
           if (changes.length > 0 && savedRecord.email && savedRecord.email.trim() !== '') {
-            console.log('✅ Sending profile update email for', changes.length, 'changes');
+            debugLog('✅ Sending profile update email for', changes.length, 'changes');
             sendProfileUpdateEmail(savedRecord, changes);
           } else {
             console.log('⏭️ Skipping profile update email');
@@ -12156,7 +12156,7 @@
         }
 
         async function saveStudentFromModal() {
-          console.log('🚀 saveStudentFromModal() called');
+          debugLog('🚀 saveStudentFromModal() called');
           console.log('   - editingStudentId:', editingStudentId);
 
           const name = document.getElementById('studentName').value.trim();
@@ -12201,7 +12201,7 @@
           if (editingStudentId) {
             oldStudent = students.find(s => s.id === editingStudentId);
             if (oldStudent) {
-              console.log('🔍 Checking for profile changes...');
+              debugLog('🔍 Checking for profile changes...');
               console.log('Old student:', JSON.parse(JSON.stringify(oldStudent))); // Deep copy for logging
 
               // Compare and track changes BEFORE modifying the student object
@@ -12231,7 +12231,7 @@
               }
               if (oldStudent.balance !== balance) {
                 changes.push({ field: 'Balance', old: `$${oldStudent.balance || 0}`, new: `$${balance}` });
-                console.log('💰 Balance changed:', oldStudent.balance, '→', balance);
+                debugLog('💰 Balance changed:', oldStudent.balance, '→', balance);
               }
 
               // Compare aliases arrays
@@ -12291,8 +12291,8 @@
           }
 
           console.log('💾 Student saved successfully:', savedRecord.name);
-          console.log('📧 Student email:', savedRecord.email);
-          console.log('🔄 Changes to notify:', changes);
+          debugLog('📧 Student email:', savedRecord.email);
+          debugLog('🔄 Changes to notify:', changes);
 
           // Check if we should send welcome email
           const isNewStudent = !editingStudentId;
@@ -12306,13 +12306,13 @@
           }
 
           // Send profile update email if there are changes and student has email
-          console.log('🔍 Checking if should send profile update email...');
+          debugLog('🔍 Checking if should send profile update email...');
           console.log('   - Changes count:', changes.length);
           console.log('   - Has email:', savedRecord.email ? 'Yes' : 'No');
           console.log('   - Email not empty:', savedRecord.email && savedRecord.email.trim() !== '' ? 'Yes' : 'No');
 
           if (changes.length > 0 && savedRecord.email && savedRecord.email.trim() !== '') {
-            console.log('✅ Sending profile update email for', changes.length, 'changes');
+            debugLog('✅ Sending profile update email for', changes.length, 'changes');
             sendProfileUpdateEmail(savedRecord, changes);
           } else {
             console.log('⏭️ Skipping profile update email');
@@ -12343,7 +12343,7 @@
         // Send welcome email to new students
         async function sendWelcomeEmail(student) {
           if (!student.email) {
-            console.log('⚠️ Cannot send welcome email - student has no email address');
+            debugLog('⚠️ Cannot send welcome email - student has no email address');
             return;
           }
 
@@ -12380,7 +12380,7 @@
               '*'
             );
 
-            console.log('📧 Welcome email sent to:', student.name, student.email);
+            debugLog('📧 Welcome email sent to:', student.name, student.email);
             showNotificationSimple('📧 Welcome email sent to ' + student.name, 'success');
           } catch (error) {
             console.error('❌ Error sending welcome email:', error);
@@ -12798,12 +12798,12 @@
 
           // Load students from cache, or from Supabase if cache is empty
           let students = getCachedStudents();
-          console.log('📋 Students in cache:', students.length);
+          debugLog('📋 Students in cache:', students.length);
 
           if (!students || students.length === 0) {
             console.log('📥 Cache empty, loading students from Supabase...');
             students = await loadStudents();
-            console.log('✅ Loaded', students.length, 'students from Supabase');
+            debugLog('✅ Loaded', students.length, 'students from Supabase');
           }
 
           const student = students.find(s => s.id === numericId);
@@ -12830,7 +12830,7 @@
             }
           );
 
-          console.log('✅ User confirmation:', confirmed);
+          debugLog('✅ User confirmation:', confirmed);
 
           if (!confirmed) return;
 
@@ -13973,7 +13973,7 @@
           const newSchedule = schedule.join(', ');
           const scheduleChanged = oldSchedule !== newSchedule;
 
-          console.log('📅 Schedule Update Check:', {
+          debugLog('📅 Schedule Update Check:', {
             group: groupName,
             oldSchedule: oldSchedule,
             newSchedule: newSchedule,
@@ -13997,7 +13997,7 @@
 
           // SEND SCHEDULE UPDATE EMAILS if schedule changed
           if (scheduleChanged) {
-            console.log('📧 Schedule changed, sending update emails to all students in', groupName);
+            debugLog('📧 Schedule changed, sending update emails to all students in', groupName);
 
             // Get all students in this group
             const studentsInGroup =
@@ -14036,7 +14036,7 @@
                   '*'
                 );
 
-                console.log('✅ Schedule update email request sent to email system');
+                debugLog('✅ Schedule update email request sent to email system');
                 showNotificationSimple(
                   `📧 Schedule update emails sent to ${studentsInGroup.length} student${studentsInGroup.length !== 1 ? 's' : ''}`,
                   'success'
@@ -14386,19 +14386,19 @@
           // Send initial data to email system after iframe loads (with delay for iframe initialization)
           setTimeout(() => {
             sendGroupsDataToEmailSystem();
-            console.log('✅ Sent initial data to email system iframe');
+            debugLog('✅ Sent initial data to email system iframe');
           }, 2000);
 
           // Initialize Payment Reminder Manager (auto-send reminders for unpaid classes)
           if (window.PaymentReminderManager) {
             await window.PaymentReminderManager.initialize();
-            console.log('✅ Payment Reminder Manager initialized');
+            debugLog('✅ Payment Reminder Manager initialized');
           }
 
           // Initialize Notification Center
           if (window.NotificationCenter) {
             await window.NotificationCenter.initialize();
-            console.log('✅ Notification Center initialized');
+            debugLog('✅ Notification Center initialized');
           }
         }
 
@@ -16181,7 +16181,7 @@
                 });
               });
 
-              console.log('✅ [SkipClassManager] Loaded from localStorage + Supabase');
+              debugLog('✅ [SkipClassManager] Loaded from localStorage + Supabase');
               return merged;
             } catch (error) {
               console.error('[SkipClassManager] ❌ Exception loading skipped classes:', error);
@@ -16193,7 +16193,7 @@
           function loadSkippedClassesFromLocalStorage() {
             try {
               const data = localStorage.getItem('skipped-classes:v1');
-              console.log('📦 [SkipClassManager] Loaded from localStorage (fallback)');
+              debugLog('📦 [SkipClassManager] Loaded from localStorage (fallback)');
               return data ? JSON.parse(data) : {};
             } catch (error) {
               console.error('[SkipClassManager] ❌ Error loading from localStorage:', error);
@@ -16238,9 +16238,9 @@
                   return;
                 }
 
-                console.log('✅ [SkipClassManager] Saved', records.length, 'skipped classes to Supabase');
+                debugLog('✅ [SkipClassManager] Saved', records.length, 'skipped classes to Supabase');
               } else {
-                console.log('✅ [SkipClassManager] Cleared all skipped classes from Supabase');
+                debugLog('✅ [SkipClassManager] Cleared all skipped classes from Supabase');
               }
 
               // Also save to localStorage as backup
@@ -16255,7 +16255,7 @@
           function saveSkippedClassesToLocalStorage() {
             try {
               localStorage.setItem('skipped-classes:v1', JSON.stringify(skippedClasses));
-              console.log('📦 [SkipClassManager] Saved to localStorage (backup)');
+              debugLog('📦 [SkipClassManager] Saved to localStorage (backup)');
             } catch (error) {
               console.error('[SkipClassManager] ❌ Error saving to localStorage:', error);
             }
@@ -16645,17 +16645,17 @@
           // Initialize - attach double-click handlers to timer items
           async function init() {
             if (isInitialized) {
-              console.log('⚠️ [SkipClassManager] Already initialized, skipping');
+              debugLog('⚠️ [SkipClassManager] Already initialized, skipping');
               return;
             }
 
-            // console.log('🚀 [SkipClassManager] Initializing with Supabase cloud sync...');
+            // debugLog('🚀 [SkipClassManager] Initializing with Supabase cloud sync...');
 
             // Load skipped classes from Supabase
             skippedClasses = await loadSkippedClasses();
             isInitialized = true;
 
-            // console.log('✅ [SkipClassManager] Initialized with', Object.keys(skippedClasses).length, 'groups');
+            // debugLog('✅ [SkipClassManager] Initialized with', Object.keys(skippedClasses).length, 'groups');
 
             // Attach button event listeners
             const cancelBtn = document.getElementById('skipDialogCancelBtn');
@@ -16751,9 +16751,9 @@
             findNextActiveClassDate,
             getSkippedClasses: () => ({ ...skippedClasses }),
             reloadFromSupabase: async () => {
-              console.log('🔄 [SkipClassManager] Reloading from Supabase...');
+              debugLog('🔄 [SkipClassManager] Reloading from Supabase...');
               skippedClasses = await loadSkippedClasses();
-              console.log('✅ [SkipClassManager] Reloaded', Object.keys(skippedClasses).length, 'groups');
+              debugLog('✅ [SkipClassManager] Reloaded', Object.keys(skippedClasses).length, 'groups');
 
               // Refresh UI if calendar or timer is visible
               if (typeof renderCalendar === 'function') {
@@ -16801,7 +16801,7 @@
           // Load absences from Supabase
           async function loadAbsences() {
             try {
-              console.log('☁️ Loading absences from Supabase...');
+              debugLog('☁️ Loading absences from Supabase...');
               const { data, error } = await supabase.from('student_absences').select('*');
 
               if (error) {
@@ -16810,7 +16810,7 @@
                 return;
               }
 
-              // console.log('✅ Loaded absences from Supabase:', data);
+              // debugLog('✅ Loaded absences from Supabase:', data);
 
               // Convert array to nested object: { studentId: { 'YYYY-MM-DD': true } }
               absences = {};
@@ -16834,7 +16834,7 @@
           // Save absences to Supabase
           async function saveAbsences() {
             try {
-              console.log('☁️ Saving absences to Supabase...');
+              debugLog('☁️ Saving absences to Supabase...');
 
               // Convert nested object to array of records
               const records = [];
@@ -16869,7 +16869,7 @@
                 }
               }
 
-              console.log('✅ Saved absences to Supabase:', records.length, 'records');
+              debugLog('✅ Saved absences to Supabase:', records.length, 'records');
               saveAbsencesToLocalStorage(); // Keep localStorage as backup
             } catch (err) {
               console.error('❌ Exception saving absences:', err);
@@ -16879,7 +16879,7 @@
 
           // Fallback: Load from localStorage
           function loadAbsencesFromLocalStorage() {
-            console.log('📦 Loading absences from localStorage (fallback)...');
+            debugLog('📦 Loading absences from localStorage (fallback)...');
             // Migrate from old format: absent:studentId:dateStr
             absences = {};
             for (let i = 0; i < localStorage.length; i++) {
@@ -16894,12 +16894,12 @@
                 }
               }
             }
-            console.log('📦 Loaded absences from localStorage:', absences);
+            debugLog('📦 Loaded absences from localStorage:', absences);
           }
 
           // Fallback: Save to localStorage
           function saveAbsencesToLocalStorage() {
-            console.log('📦 Saving absences to localStorage (fallback)...');
+            debugLog('📦 Saving absences to localStorage (fallback)...');
             // Clear old absence keys
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
@@ -16924,7 +16924,7 @@
           // Initialize: Load from Supabase
           async function init() {
             if (isInitialized) return;
-            // console.log('🚀 Initializing AbsentManager...');
+            // debugLog('🚀 Initializing AbsentManager...');
             await loadAbsences();
             isInitialized = true;
           }
@@ -16951,7 +16951,7 @@
               const student = students.find(s => String(s.id) === String(studentId));
 
               if (student && student.email) {
-                console.log('📧 Sending absence notification email to:', student.name);
+                debugLog('📧 Sending absence notification email to:', student.name);
                 try {
                   // Get group name from student
                   const groupName = student.group || 'your class';
@@ -16976,7 +16976,7 @@
 
             // Reload from Supabase (for manual sync)
             async reloadFromSupabase() {
-              console.log('🔄 Reloading absences from Supabase...');
+              debugLog('🔄 Reloading absences from Supabase...');
               await loadAbsences();
             },
           };
@@ -17010,7 +17010,7 @@
           // Load credit payments from Supabase
           async function loadCreditPayments() {
             try {
-              console.log('☁️ Loading credit payments from Supabase...');
+              debugLog('☁️ Loading credit payments from Supabase...');
               const { data, error } = await supabase.from('credit_payments').select('*');
 
               if (error) {
@@ -17019,7 +17019,7 @@
                 return;
               }
 
-              // console.log('✅ Loaded credit payments from Supabase:', data);
+              // debugLog('✅ Loaded credit payments from Supabase:', data);
 
               // Convert array to nested object
               creditPayments = {};
@@ -17046,7 +17046,7 @@
           // Save credit payments to Supabase
           async function saveCreditPayments() {
             try {
-              console.log('☁️ Saving credit payments to Supabase...');
+              debugLog('☁️ Saving credit payments to Supabase...');
 
               // Convert nested object to array of records
               const records = [];
@@ -17082,7 +17082,7 @@
                 }
               }
 
-              console.log('✅ Saved credit payments to Supabase:', records.length, 'records');
+              debugLog('✅ Saved credit payments to Supabase:', records.length, 'records');
               saveCreditPaymentsToLocalStorage(); // Keep localStorage as backup
             } catch (err) {
               console.error('❌ Exception saving credit payments:', err);
@@ -17092,7 +17092,7 @@
 
           // Fallback: Load from localStorage
           function loadCreditPaymentsFromLocalStorage() {
-            console.log('📦 Loading credit payments from localStorage (fallback)...');
+            debugLog('📦 Loading credit payments from localStorage (fallback)...');
             creditPayments = {};
             for (let i = 0; i < localStorage.length; i++) {
               const key = localStorage.key(i);
@@ -17115,12 +17115,12 @@
                 }
               }
             }
-            console.log('📦 Loaded credit payments from localStorage:', creditPayments);
+            debugLog('📦 Loaded credit payments from localStorage:', creditPayments);
           }
 
           // Fallback: Save to localStorage
           function saveCreditPaymentsToLocalStorage() {
-            console.log('📦 Saving credit payments to localStorage (fallback)...');
+            debugLog('📦 Saving credit payments to localStorage (fallback)...');
             // Clear old credit payment keys
             const keysToRemove = [];
             for (let i = 0; i < localStorage.length; i++) {
@@ -17144,7 +17144,7 @@
           // Initialize: Load from Supabase
           async function init() {
             if (isInitialized) return;
-            // console.log('🚀 Initializing CreditPaymentManager...');
+            // debugLog('🚀 Initializing CreditPaymentManager...');
             await loadCreditPayments();
             isInitialized = true;
           }
@@ -17180,7 +17180,7 @@
 
             // Reload from Supabase (for manual sync)
             async reloadFromSupabase() {
-              console.log('🔄 Reloading credit payments from Supabase...');
+              debugLog('🔄 Reloading credit payments from Supabase...');
               await loadCreditPayments();
             },
           };
@@ -18978,12 +18978,12 @@
 
         // Send payment reminder immediately (GLOBAL SCOPE)
         window.sendReminderNow = async function (studentId, buttonElement, clickedDateStr) {
-          console.log('🚀 Manual send triggered for student:', studentId, 'Clicked date:', clickedDateStr);
+          debugLog('🚀 Manual send triggered for student:', studentId, 'Clicked date:', clickedDateStr);
 
           try {
             // Get students from cache
             const students = getCachedStudents();
-            console.log('📋 Students in cache:', students.length);
+            debugLog('📋 Students in cache:', students.length);
 
             if (!students || students.length === 0) {
               console.error('❌ No students in cache');
@@ -19010,7 +19010,7 @@
             }
 
             // Find ALL unpaid classes from calendar data (not just clicked date)
-            console.log('🔍 Searching for ALL unpaid classes in calendar...');
+            debugLog('🔍 Searching for ALL unpaid classes in calendar...');
             const currentMonth =
               window.currentCalendarData || getMonthData(new Date().getFullYear(), new Date().getMonth());
 
@@ -19051,8 +19051,8 @@
               });
             });
 
-            console.log('💰 Total unpaid classes found:', unpaidClasses.length);
-            console.log('📅 Unpaid dates:', unpaidClasses.map(c => c.dateStr).join(', '));
+            debugLog('💰 Total unpaid classes found:', unpaidClasses.length);
+            debugLog('📅 Unpaid dates:', unpaidClasses.map(c => c.dateStr).join(', '));
 
             if (unpaidClasses.length === 0) {
               console.log('ℹ️ No unpaid classes for:', student.name);
@@ -19078,11 +19078,11 @@
               ? unpaidClasses.find(c => c.isClickedDate)
               : unpaidClasses.sort((a, b) => new Date(b.dateStr) - new Date(a.dateStr))[0];
 
-            console.log('📅 Primary reminder date:', primaryDate.dateStr);
-            console.log('📧 Including all unpaid classes in email');
+            debugLog('📅 Primary reminder date:', primaryDate.dateStr);
+            debugLog('📧 Including all unpaid classes in email');
 
             // Send message to email iframe
-            console.log('🔍 Searching for email iframe...');
+            debugLog('🔍 Searching for email iframe...');
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
             console.log('📍 Email iframe found?', emailFrame ? 'YES' : 'NO');
 
@@ -19092,7 +19092,7 @@
             } else {
               // Try to find ANY iframes
               const allIframes = document.querySelectorAll('iframe');
-              console.log('🔍 Total iframes on page:', allIframes.length);
+              debugLog('🔍 Total iframes on page:', allIframes.length);
               allIframes.forEach((iframe, idx) => {
                 console.log(`  Iframe ${idx}:`, iframe.src || iframe.id || 'no src/id');
               });
@@ -19102,7 +19102,7 @@
               throw new Error('Email system not available');
             }
 
-            console.log('📧 Email iframe found, sending postMessage...');
+            debugLog('📧 Email iframe found, sending postMessage...');
 
             // Create a promise that resolves when we get a response
             const sendPromise = new Promise((resolve, reject) => {
@@ -19120,7 +19120,7 @@
                   window.removeEventListener('message', handleMessage);
 
                   if (event.data.action === 'emailSent') {
-                    console.log('✅ Email sent successfully');
+                    debugLog('✅ Email sent successfully');
                     resolve(event.data);
                   } else {
                     console.error('❌ Email error:', event.data.error);
@@ -19153,7 +19153,7 @@
               '*'
             );
 
-            console.log('📧 Sent manual reminder request to email system');
+            debugLog('📧 Sent manual reminder request to email system');
 
             // Wait for response
             const response = await sendPromise;
@@ -19463,7 +19463,7 @@
             const contentDiv = existingPanel.querySelector('[data-panel-content]');
             if (contentDiv) {
               contentDiv.innerHTML = studentsHTML;
-              console.log('✅ Sidebar panel updated');
+              debugLog('✅ Sidebar panel updated');
             }
 
             return; // Don't create a new panel
@@ -19804,7 +19804,7 @@
               );
             }
 
-            console.log('🔍 Checking for panels to close after credit apply...');
+            debugLog('🔍 Checking for panels to close after credit apply...');
 
             // Close the detail modal only (not the sidebar)
             const modal = document.getElementById('classDetailModal');
@@ -19818,22 +19818,22 @@
               overlay.remove();
             }
 
-            console.log('🔄 Calling renderCalendar after credit apply...');
+            debugLog('🔄 Calling renderCalendar after credit apply...');
             // Refresh calendar to update dot colors
             renderCalendar();
 
-            console.log('📋 Checking for sidebar panel after credit apply...');
+            debugLog('📋 Checking for sidebar panel after credit apply...');
             // Update the day details sidebar immediately if it's open
             const dayPanel = document.getElementById('dayDetailsPanel');
             if (dayPanel) {
-              console.log('✅ Sidebar panel found, updating after credit apply...');
+              debugLog('✅ Sidebar panel found, updating after credit apply...');
               // Re-fetch the day data with updated status and update content
               const dayData = getDayData(dateStr);
               if (dayData) {
                 openDayDetails(dateStr, dayData);
               }
             } else {
-              console.log('⚠️ No sidebar panel found after credit apply');
+              debugLog('⚠️ No sidebar panel found after credit apply');
             }
           } catch (error) {
             console.error('Failed to apply credit:', error);
@@ -19999,7 +19999,7 @@
                 });
               }
 
-              // console.log('✅ [PaymentReminderManager] Loaded', Object.keys(pausedStudents).length, 'paused states from Supabase');
+              // debugLog('✅ [PaymentReminderManager] Loaded', Object.keys(pausedStudents).length, 'paused states from Supabase');
             } catch (error) {
               console.error('[PaymentReminderManager] ❌ Exception loading paused students:', error);
             }
@@ -20025,7 +20025,7 @@
               }
 
               pausedStudents[studentId] = paused;
-              console.log('✅ [PaymentReminderManager] Saved paused state for student:', studentId, paused);
+              debugLog('✅ [PaymentReminderManager] Saved paused state for student:', studentId, paused);
               return true;
             } catch (error) {
               console.error('[PaymentReminderManager] ❌ Exception saving paused state:', error);
@@ -20488,9 +20488,9 @@
               console.log('  Reminders sent:', remindersSent);
 
               if (remindersSent > 0) {
-                console.log('✅ [PaymentReminderManager] Successfully sent', remindersSent, 'auto-reminder(s)');
+                debugLog('✅ [PaymentReminderManager] Successfully sent', remindersSent, 'auto-reminder(s)');
               } else {
-                console.log('✅ [PaymentReminderManager] No reminders needed today');
+                debugLog('✅ [PaymentReminderManager] No reminders needed today');
               }
               console.log('═══════════════════════════════════════════════════════\n');
             } catch (error) {
