@@ -2938,114 +2938,41 @@ ARNOMA Team"></textarea>
           if (!welcomeTemplate) {
             console.warn('⚠️ No active Welcome Email template found, using default');
             
-            // Use default welcome email matching automation template style
+            // Use default welcome email with template function
             subject = `Welcome to ARNOMA NCLEX-RN`;
-            body = `
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              </head>
-              <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
-                  <tr>
-                    <td align="center">
-                      <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                        
-                        <!-- Header with Logo -->
-                        <tr>
-                          <td align="center" style="padding: 30px 30px 20px 30px; background-color: #ffffff;">
-                            <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/richyfesta-logo.png" alt="ARNOMA Logo" style="max-width: 200px; height: auto; display: block; margin: 0 auto;" />
-                            <h1 style="margin: 20px 0 0 0; color: #333333; font-size: 24px; font-weight: 600;">Welcome to ARNOMA</h1>
-                          </td>
-                        </tr>
-                        
-                        <!-- Body -->
-                        <tr>
-                          <td style="padding: 40px 30px;">
-                            <p style="margin: 0 0 20px 0; color: #333333; font-size: 16px; line-height: 1.5;">
-                              Dear <strong>${student.name}</strong>,
-                            </p>
-                            
-                            <!-- Purple Border Box -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
-                              <tr>
-                                <td style="border-left: 4px solid #9333ea; padding: 20px; background-color: #faf5ff; border-radius: 4px;">
-                                  <p style="margin: 0 0 8px 0; color: #7e22ce; font-size: 14px; font-weight: 600;">
-                                    Group: ${student.group || 'Not assigned yet'}
-                                  </p>
-                                  <p style="margin: 0; color: #7e22ce; font-size: 14px; font-weight: 600;">
-                                    Schedule: ${student.groupSchedule || 'To be determined'}
-                                  </p>
-                                </td>
-                              </tr>
-                            </table>
-                            
-                            <p style="margin: 20px 0; color: #333333; font-size: 16px; line-height: 1.5;">
-                              Welcome to your all-in-one nursing classroom! You are enrolled in <strong>${student.group || 'your group'}</strong>, and your group schedule is <strong>${student.groupSchedule || 'to be determined'}</strong>.
-                            </p>
-                            
-                            <p style="margin: 20px 0; color: #333333; font-size: 16px; line-height: 1.5;">
-                              Please make sure to complete your payment before class so that all your notes and materials will be accessible once the class ends.
-                            </p>
-                            
-                            <!-- Zelle Payment Section -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin: 30px 0;">
-                              <tr>
-                                <td align="center" style="padding: 30px; background-color: #f9fafb; border-radius: 8px; border: 1px solid #e5e7eb;">
-                                  <p style="margin: 0 0 15px 0; color: #4b5563; font-size: 18px; font-weight: 600;">
-                                    Send Money with Zelle®
-                                  </p>
-                                  <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 14px;">
-                                    Scan in your banking app to pay.
-                                  </p>
-                                  <p style="margin: 0 0 15px 0; color: #111827; font-size: 16px; font-weight: 600;">
-                                    Arnoma
-                                  </p>
-                                  <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 14px;">
-                                    909-300-5155
-                                  </p>
-                                  <div style="margin: 0; padding: 20px; background-color: white; display: inline-block; border-radius: 8px;">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=909-300-5155" alt="Zelle QR Code" style="display: block; width: 150px; height: 150px;" />
-                                  </div>
-                                </td>
-                              </tr>
-                            </table>
-                            
-                            <p style="margin: 20px 0 0 0; color: #6b7280; font-size: 14px; line-height: 1.5;">
-                              If you have any questions, please don't hesitate to reach out.
-                            </p>
-                          </td>
-                        </tr>
-                        
-                        <!-- Footer with Logo -->
-                        <tr>
-                          <td align="center" style="padding: 30px; background-color: #f9fafb; border-top: 1px solid #e5e7eb;">
-                            <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/richyfesta-logo.png" alt="ARNOMA Logo" style="max-width: 150px; height: auto; display: block; margin: 0 auto 15px auto;" />
-                            <p style="margin: 0 0 5px 0; color: #333333; font-size: 14px; font-weight: 600; text-align: center;">
-                              ARNOMA – NCLEX RN
-                            </p>
-                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; text-align: center;">
-                              Professional NCLEX Preparation & Medical Education
-                            </p>
-                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; text-align: center;">
-                              nclex.rn@arnoma.us | richy@arnoma.us<br>
-                              909-808-1818
-                            </p>
-                            <p style="margin: 0; color: #9ca3af; font-size: 11px; text-align: center;">
-                              © 2025 ARNOMA. All rights reserved.
-                            </p>
-                          </td>
-                        </tr>
-                        
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </body>
-              </html>
+            
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+              
+              <div class="info-box" style="background-color: #faf5ff; border-left-color: #9333ea;">
+                <p style="margin: 4px 0; color: #7e22ce;"><strong>Group:</strong> ${student.group || 'Not assigned yet'}</p>
+                <p style="margin: 4px 0; color: #7e22ce;"><strong>Schedule:</strong> ${student.groupSchedule || 'To be determined'}</p>
+              </div>
+              
+              <p>Welcome to your all-in-one nursing classroom! You are enrolled in <strong>${student.group || 'your group'}</strong>, and your group schedule is <strong>${student.groupSchedule || 'to be determined'}</strong>.</p>
+              
+              <p>Please make sure to complete your payment before class so that all your notes and materials will be accessible once the class ends.</p>
+              
+              <div class="payment-frame">
+                <p style="margin: 0 0 15px 0; color: #4b5563; font-size: 18px; font-weight: 600;">
+                  Send Money with Zelle®
+                </p>
+                <p style="margin: 0 0 20px 0; color: #6b7280; font-size: 14px;">
+                  Scan in your banking app to pay.
+                </p>
+                <p style="margin: 0 0 15px 0; color: #111827; font-size: 16px; font-weight: 600;">
+                  Arnoma
+                </p>
+                <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 14px;">
+                  909-300-5155
+                </p>
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=909-300-5155" alt="Zelle QR Code" style="width: 150px; height: 150px;" />
+              </div>
+              
+              <p style="color: #6b7280; font-size: 14px;">If you have any questions, please don't hesitate to reach out.</p>
             `;
+            
+            body = generateEmailHTML('Welcome to ARNOMA', bodyContent);
           } else {
             // Replace variables in template
             subject = welcomeTemplate.subject
@@ -3142,164 +3069,50 @@ ARNOMA Team"></textarea>
           let changesHTML = '';
           changes.forEach(change => {
             changesHTML += `
-              <tr>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">
-                  <strong style="color: #4f46e5;">${change.field}</strong>
-                </td>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #6b7280;">
-                  ${change.old}
-                </td>
-                <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; color: #059669;">
-                  ${change.new}
-                </td>
-              </tr>
+              <p style="margin: 8px 0; padding: 10px; background-color: #f6f8fe; border-left: 3px solid #3b82f6; border-radius: 6px;">
+                <strong style="color: #4f46e5;">${change.field}:</strong> 
+                <span style="color: #6b7280;">${change.old}</span> 
+                <span style="color: #059669;">→ ${change.new}</span>
+              </p>
             `;
           });
           
           // Add special message for old email notification
           const specialNotice = specialMessage ? `
-            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
-              <tr>
-                <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 6px;">
-                  <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
-                    <strong>⚠️ Important:</strong> ${specialMessage}
-                  </p>
-                </td>
-              </tr>
-            </table>
+            <div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+              <p style="margin: 0; color: #92400e;">
+                <strong>⚠️ Important:</strong> ${specialMessage}
+              </p>
+            </div>
           ` : '';
           
-          const subject = `Profile Updated - ARNOMA NCLEX-RN`;
-          
-          const body = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-              <meta charset="UTF-8">
-              <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6;">
-              <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
-                <tr>
-                  <td align="center">
-                    <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                      
-                      <!-- Logo -->
-                      <tr>
-                        <td align="center" style="padding: 30px 30px 0 30px;">
-                          <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/richyfesta-logo.png" alt="ARNOMA Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto;" />
-                        </td>
-                      </tr>
-                      
-                      <!-- Header -->
-                      <tr>
-                        <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px 30px; text-align: center;">
-                          <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                            Profile Updated
-                          </h1>
-                          <p style="margin: 10px 0 0 0; color: #e0e7ff; font-size: 16px;">
-                            Your information has been updated
-                          </p>
-                        </td>
-                      </tr>
-                      
-                      <!-- Body -->
-                      <tr>
-                        <td style="padding: 40px 30px;">
-                          <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.6;">
-                            Hi <strong>${student.name}</strong>,
-                          </p>
-                          
-                          ${specialNotice}
-                          
-                          <p style="margin: 0 0 30px 0; color: #374151; font-size: 16px; line-height: 1.6;">
-                            We wanted to let you know that your profile information has been updated. Here are the changes:
-                          </p>
-                          
-                          <!-- Changes Table -->
-                          <table width="100%" cellpadding="0" cellspacing="0" style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 30px;">
-                            <thead>
-                              <tr style="background-color: #f9fafb;">
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb;">
-                                  Field
-                                </th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb;">
-                                  Previous
-                                </th>
-                                <th style="padding: 12px; text-align: left; font-weight: 600; color: #374151; border-bottom: 2px solid #e5e7eb;">
-                                  Updated
-                                </th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              ${changesHTML}
-                            </tbody>
-                          </table>
-                          
-                          <!-- Current Profile Box -->
-                          <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
-                            <tr>
-                              <td style="background-color: #eff6ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 6px;">
-                                <p style="margin: 0 0 8px 0; color: #1e40af; font-size: 14px; font-weight: 600;">
-                                  📋 Current Profile:
-                                </p>
-                                <table width="100%" cellpadding="2" cellspacing="0">
-                                  <tr>
-                                    <td style="color: #1e40af; font-size: 14px; font-weight: 600; padding: 2px 8px 2px 0;">Group:</td>
-                                    <td style="color: #1e40af; font-size: 14px; padding: 2px 0;">${student.group}</td>
-                                  </tr>
-                                  <tr>
-                                    <td style="color: #1e40af; font-size: 14px; font-weight: 600; padding: 2px 8px 2px 0;">Schedule:</td>
-                                    <td style="color: #1e40af; font-size: 14px; padding: 2px 0;">${student.groupSchedule}</td>
-                                  </tr>
-                                  ${student.phone !== 'Not set' ? `
-                                  <tr>
-                                    <td style="color: #1e40af; font-size: 14px; font-weight: 600; padding: 2px 8px 2px 0;">Phone:</td>
-                                    <td style="color: #1e40af; font-size: 14px; padding: 2px 0;">${student.phone}</td>
-                                  </tr>` : ''}
-                                  ${student.aliases !== 'None' ? `
-                                  <tr>
-                                    <td style="color: #1e40af; font-size: 14px; font-weight: 600; padding: 2px 8px 2px 0;">Aliases:</td>
-                                    <td style="color: #1e40af; font-size: 14px; padding: 2px 0;">${student.aliases}</td>
-                                  </tr>` : ''}
-                                </table>
-                              </td>
-                            </tr>
-                          </table>
-                          
-                          <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                            If you have any questions about these changes, please contact us.
-                          </p>
-                        </td>
-                      </tr>
-                      
-                      <!-- Footer with Logo -->
-                      <tr>
-                        <td align="center" style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 12px 12px;">
-                          <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/richyfesta-logo.png" alt="ARNOMA Logo" style="max-width: 150px; height: auto; display: block; margin: 0 auto 15px auto;" />
-                          <p style="margin: 0 0 5px 0; color: #333333; font-size: 14px; font-weight: 600; text-align: center;">
-                            ARNOMA – NCLEX RN
-                          </p>
-                          <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; text-align: center;">
-                            Professional NCLEX Preparation & Medical Education
-                          </p>
-                          <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; text-align: center;">
-                            nclex.rn@arnoma.us | richy@arnoma.us<br>
-                            909-808-1818
-                          </p>
-                          <p style="margin: 0; color: #9ca3af; font-size: 11px; text-align: center;">
-                            © 2025 ARNOMA. All rights reserved.
-                          </p>
-                        </td>
-                      </tr>
-                      
-                    </table>
-                  </td>
-                </tr>
-              </table>
-            </body>
-            </html>
+          // Build current profile info
+          const profileInfo = `
+            <div class="info-box">
+              <p style="margin: 0 0 8px 0;"><strong>📋 Current Profile:</strong></p>
+              <p style="margin: 4px 0;"><strong>Group:</strong> ${student.group}</p>
+              <p style="margin: 4px 0;"><strong>Schedule:</strong> ${student.groupSchedule}</p>
+              ${student.phone !== 'Not set' ? `<p style="margin: 4px 0;"><strong>Phone:</strong> ${student.phone}</p>` : ''}
+              ${student.aliases !== 'None' ? `<p style="margin: 4px 0;"><strong>Aliases:</strong> ${student.aliases}</p>` : ''}
+            </div>
           `;
+          
+          const bodyContent = `
+            <p>Hi <strong>${student.name}</strong>,</p>
+            
+            ${specialNotice}
+            
+            <p>We wanted to let you know that your profile information has been updated. Here are the changes:</p>
+            
+            ${changesHTML}
+            
+            ${profileInfo}
+            
+            <p style="color: #6b7280; font-size: 14px;">If you have any questions about these changes, please contact us.</p>
+          `;
+          
+          const subject = `Profile Updated - ARNOMA NCLEX-RN`;
+          const body = generateEmailHTML('Profile Updated', bodyContent);
           
           // Send email via Supabase Edge Function
           const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
@@ -3373,120 +3186,35 @@ ARNOMA Team"></textarea>
             
             const subject = `Class Schedule Updated - ARNOMA NCLEX-RN`;
             
-            const body = `
-              <!DOCTYPE html>
-              <html>
-              <head>
-                <meta charset="UTF-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-              </head>
-              <body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f3f4f6;">
-                <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f3f4f6; padding: 40px 20px;">
-                  <tr>
-                    <td align="center">
-                      <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                        
-                        <!-- Logo -->
-                        <tr>
-                          <td align="center" style="padding: 30px 30px 0 30px;">
-                            <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/richyfesta-logo.png" alt="ARNOMA Logo" style="max-width: 180px; height: auto; display: block; margin: 0 auto;" />
-                          </td>
-                        </tr>
-                        
-                        <!-- Header -->
-                        <tr>
-                          <td style="background: linear-gradient(135deg, #06b6d4 0%, #0284c7 100%); padding: 30px 30px; text-align: center;">
-                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
-                              📅 Schedule Updated
-                            </h1>
-                            <p style="margin: 10px 0 0 0; color: #e0f2fe; font-size: 16px;">
-                              Your class schedule has been changed
-                            </p>
-                          </td>
-                        </tr>
-                        
-                        <!-- Body -->
-                        <tr>
-                          <td style="padding: 40px 30px;">
-                            <p style="margin: 0 0 20px 0; color: #374151; font-size: 16px; line-height: 1.6;">
-                              Hi <strong>${student.name}</strong>,
-                            </p>
-                            
-                            <p style="margin: 0 0 30px 0; color: #374151; font-size: 16px; line-height: 1.6;">
-                              We wanted to let you know that the schedule for <strong>${groupName}</strong> has been updated.
-                            </p>
-                            
-                            <!-- Schedule Comparison -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
-                              ${oldSchedule !== 'Not set' && oldSchedule !== newSchedule ? `
-                              <tr>
-                                <td style="padding: 16px; background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 6px; margin-bottom: 12px;">
-                                  <p style="margin: 0 0 8px 0; color: #991b1b; font-size: 14px; font-weight: 600;">
-                                    ❌ Previous Schedule:
-                                  </p>
-                                  <p style="margin: 0; color: #991b1b; font-size: 16px; font-weight: 500; text-decoration: line-through;">
-                                    ${oldSchedule}
-                                  </p>
-                                </td>
-                              </tr>
-                              <tr><td style="height: 12px;"></td></tr>
-                              ` : ''}
-                              <tr>
-                                <td style="padding: 16px; background-color: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 6px;">
-                                  <p style="margin: 0 0 8px 0; color: #166534; font-size: 14px; font-weight: 600;">
-                                    ✅ New Schedule:
-                                  </p>
-                                  <p style="margin: 0; color: #166534; font-size: 18px; font-weight: 600;">
-                                    ${newSchedule}
-                                  </p>
-                                </td>
-                              </tr>
-                            </table>
-                            
-                            <!-- Important Note -->
-                            <table width="100%" cellpadding="0" cellspacing="0" style="margin-bottom: 30px;">
-                              <tr>
-                                <td style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 6px;">
-                                  <p style="margin: 0; color: #92400e; font-size: 14px; line-height: 1.6;">
-                                    <strong>⚠️ Important:</strong> Please make sure to update your calendar and plan accordingly. If you have any conflicts with the new schedule, please contact us immediately.
-                                  </p>
-                                </td>
-                              </tr>
-                            </table>
-                            
-                            <p style="margin: 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
-                              If you have any questions about this change, please don't hesitate to reach out.
-                            </p>
-                          </td>
-                        </tr>
-                        
-                        <!-- Footer with Logo -->
-                        <tr>
-                          <td align="center" style="padding: 30px; background-color: #f9fafb; border-radius: 0 0 12px 12px;">
-                            <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/richyfesta-logo.png" alt="ARNOMA Logo" style="max-width: 150px; height: auto; display: block; margin: 0 auto 15px auto;" />
-                            <p style="margin: 0 0 5px 0; color: #333333; font-size: 14px; font-weight: 600; text-align: center;">
-                              ARNOMA – NCLEX RN
-                            </p>
-                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; text-align: center;">
-                              Professional NCLEX Preparation & Medical Education
-                            </p>
-                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; text-align: center;">
-                              nclex.rn@arnoma.us | richy@arnoma.us<br>
-                              909-808-1818
-                            </p>
-                            <p style="margin: 0; color: #9ca3af; font-size: 11px; text-align: center;">
-                              © 2025 ARNOMA. All rights reserved.
-                            </p>
-                          </td>
-                        </tr>
-                        
-                      </table>
-                    </td>
-                  </tr>
-                </table>
-              </body>
-              </html>
+            const scheduleComparison = oldSchedule !== 'Not set' && oldSchedule !== newSchedule ? `
+              <p style="margin: 8px 0; padding: 12px; background-color: #fef2f2; border-left: 4px solid #ef4444; border-radius: 6px;">
+                <strong style="color: #991b1b;">❌ Previous Schedule:</strong><br>
+                <span style="color: #991b1b; text-decoration: line-through;">${oldSchedule}</span>
+              </p>
+            ` : '';
+            
+            const bodyContent = `
+              <p>Hi <strong>${student.name}</strong>,</p>
+              
+              <p>We wanted to let you know that the schedule for <strong>${groupName}</strong> has been updated.</p>
+              
+              ${scheduleComparison}
+              
+              <p style="margin: 8px 0; padding: 12px; background-color: #f0fdf4; border-left: 4px solid #22c55e; border-radius: 6px;">
+                <strong style="color: #166534;">✅ New Schedule:</strong><br>
+                <span style="color: #166534; font-size: 18px; font-weight: 600;">${newSchedule}</span>
+              </p>
+              
+              <div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
+                <p style="margin: 0; color: #92400e;">
+                  <strong>⚠️ Important:</strong> Please make sure to update your calendar and plan accordingly. If you have any conflicts with the new schedule, please contact us immediately.
+                </p>
+              </div>
+              
+              <p style="color: #6b7280; font-size: 14px;">If you have any questions about this change, please don't hesitate to reach out.</p>
             `;
+            
+            const body = generateEmailHTML('📅 Schedule Updated', bodyContent);
             
             // Send email via Supabase Edge Function
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
