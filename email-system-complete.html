@@ -4490,26 +4490,10 @@ ARNOMA Team"
       // Check if automation should trigger
       async function checkAutomations() {
         try {
-          console.log('[AutomationEngine] ========================================');
-          console.log('[AutomationEngine] 🔄 Running automation check...');
-
-          console.log(`[AutomationEngine] 📋 Total automations: ${automationSystem._automations.length}`);
-          console.log(
-            '[AutomationEngine] 🔍 All automations:',
-            automationSystem._automations.map(a => ({
-              id: a.id,
-              name: a.name,
-              frequency: a.frequency,
-              active: a.active,
-            }))
-          );
-
+          // Silent check - only log when emails are actually sent
           const automations = automationSystem._automations.filter(a => a.active && a.frequency === 'before_class');
 
-          console.log(`[AutomationEngine] ✅ Active 'before_class' automations: ${automations.length}`);
-
           if (automations.length === 0) {
-            console.log('[AutomationEngine] ⚠️ No active before_class automations found - skipping');
             return;
           }
 
@@ -4519,42 +4503,22 @@ ARNOMA Team"
           ];
           const currentMinutes = laTime.getHours() * 60 + laTime.getMinutes();
 
-          // DEBUG: Check window.studentsData right before using it
-          console.log(`[AutomationEngine] 🔍 DEBUG: window.studentsData type: ${typeof window.studentsData}`);
-          console.log(
-            `[AutomationEngine] 🔍 DEBUG: window.studentsData isArray: ${Array.isArray(window.studentsData)}`
-          );
-          console.log(`[AutomationEngine] 🔍 DEBUG: window.studentsData value:`, window.studentsData);
-
-          console.log(
-            `[AutomationEngine] 🕐 Current LA Time: ${currentDay} ${laTime.getHours()}:${String(laTime.getMinutes()).padStart(2, '0')}`
-          );
-          console.log(`[AutomationEngine] 📊 Groups available: ${window.groupsData?.length || 0}`);
-          console.log(`[AutomationEngine] 👥 Students available: ${window.studentsData?.length || 0}`);
-
           let totalEmailsSent = 0;
           let totalEmailsFailed = 0;
 
           // Check each automation
           for (const automation of automations) {
-            console.log(`[AutomationEngine] 🎯 Checking automation: "${automation.name}"`);
-
             const selectedGroups = automation.groups || automation.selectedGroups || [];
             const triggerMinutes = parseInt(automation.beforeClassTime);
-
-            console.log(`[AutomationEngine]    ├─ Selected groups: ${selectedGroups.join(', ') || 'none'}`);
-            console.log(`[AutomationEngine]    ├─ Trigger: ${triggerMinutes} minutes before class`);
 
             // Check only the selected groups for this automation
             for (const groupName of selectedGroups) {
               const group = window.groupsData.find(g => g.name === groupName);
               if (!group || !group.schedule) {
-                console.log(`[AutomationEngine]    ├─ ⚠️ Group "${groupName}" not found or has no schedule`);
                 continue;
               }
 
               const sessions = parseScheduleString(group.schedule);
-              console.log(`[AutomationEngine]    ├─ Group "${groupName}" has ${sessions.length} sessions`);
 
               for (const session of sessions) {
                 if (session.day !== currentDay) continue;
@@ -4564,21 +4528,16 @@ ARNOMA Team"
 
                 const minutesUntilClass = classMinutes - currentMinutes;
 
-                console.log(
-                  `[AutomationEngine]    ├─ Session: ${session.day} ${session.time} (${minutesUntilClass} min until class)`
-                );
-
                 // Trigger window: within 2 minutes of the target time to account for check intervals
                 if (Math.abs(minutesUntilClass - triggerMinutes) <= 2) {
                   const reminderKey = `${automation.id}_${group.name}_${session.day}_${session.time}_${triggerMinutes}`;
 
                   // Check if already sent today
                   if (sentReminders.has(reminderKey)) {
-                    console.log(`[AutomationEngine]    ├─ ⏭️ Already sent today: ${reminderKey}`);
                     continue;
                   }
 
-                  console.log(`[AutomationEngine]    ├─ 🚀 TRIGGER MATCHED! Sending emails...`);
+                  console.log(`[AutomationEngine] 🚀 SENDING: "${automation.name}" for Group ${group.name} (${minutesUntilClass} min until class)`);
 
                   // Collect all recipients from multiple sources
                   let recipients = [];
@@ -4628,11 +4587,9 @@ ARNOMA Team"
                   }
                   recipients = uniqueRecipients;
 
-                  console.log(`[AutomationEngine]    ├─ 📧 Recipients collected: ${recipients.length}`);
-                  recipients.forEach(r => console.log(`[AutomationEngine]    │  ├─ ${r.name} <${r.email}>`));
+                  console.log(`[AutomationEngine]    ├─ 📧 Recipients: ${recipients.length}`);
 
                   if (recipients.length === 0) {
-                    console.log(`[AutomationEngine]    ├─ ⚠️ No recipients for ${group.name} - skipping`);
                     continue;
                   }
 
@@ -4643,8 +4600,6 @@ ARNOMA Team"
                     totalEmailsFailed++;
                     continue;
                   }
-
-                  console.log(`[AutomationEngine]    ├─ 📄 Using template: "${template.name}"`);
 
                   // Send to each recipient
                   let successCount = 0;
@@ -4661,14 +4616,10 @@ ARNOMA Team"
                     }
                   }
 
-                  console.log(`[AutomationEngine]    ├─ ✅ Successfully sent: ${successCount} emails`);
-                  if (failCount > 0) {
-                    console.log(`[AutomationEngine]    ├─ ❌ Failed to send: ${failCount} emails`);
-                  }
+                  console.log(`[AutomationEngine]    ├─ ✅ Sent: ${successCount}, ❌ Failed: ${failCount}`);
 
                   // Notify parent window to add notification
                   if (successCount > 0 && window.parent && window.parent !== window) {
-                    console.log(`[AutomationEngine]    ├─ 🔔 Sending notification to parent window...`);
 
                     // Ensure fields don't exceed Supabase constraints (50 chars each)
                     const titleText =
@@ -4702,18 +4653,17 @@ ARNOMA Team"
 
                   // Mark as sent
                   sentReminders.add(reminderKey);
-                  console.log(`[AutomationEngine]    └─ 🔒 Marked as sent for today: ${reminderKey}`);
                 }
               }
             }
           }
 
-          console.log('[AutomationEngine] ========================================');
-          console.log(`[AutomationEngine] 📊 SUMMARY: Sent ${totalEmailsSent} emails, Failed ${totalEmailsFailed}`);
-          console.log('[AutomationEngine] ========================================');
+          // Only log summary if emails were actually sent
+          if (totalEmailsSent > 0 || totalEmailsFailed > 0) {
+            console.log(`[AutomationEngine] 📊 Sent ${totalEmailsSent} emails, Failed ${totalEmailsFailed}`);
+          }
         } catch (error) {
-          console.error('[AutomationEngine] ❌ CRITICAL ERROR:', error);
-          console.error('[AutomationEngine] Stack trace:', error.stack);
+          console.error('[AutomationEngine] ❌ ERROR:', error);
         }
       }
 
@@ -4787,59 +4737,37 @@ ARNOMA Team"
 
       // Initialize automation engine
       function initAutomationEngine() {
-        console.log('[AutomationEngine] ========================================');
-        console.log('[AutomationEngine] ⚡ Initializing Automation Engine...');
-        console.log('[AutomationEngine] 📍 Location: email-system-complete.html (iframe)');
-        console.log('[AutomationEngine] ========================================');
+        console.log('[AutomationEngine] ⚡ Initialized');
 
         // Load automations from localStorage
         automationSystem.loadAutomations();
-        console.log(
-          '[AutomationEngine] 📋 Loaded automations from localStorage:',
-          automationSystem._automations.length
-        );
 
         // Request data from parent immediately
         requestDataFromParent();
-        console.log('[AutomationEngine] 📡 Requested groups/students data from parent window');
 
         // Request data every 30 seconds
         setInterval(requestDataFromParent, 30000);
-        console.log('[AutomationEngine] ⏰ Scheduled data refresh every 30 seconds');
 
-        // Check automations every minute
+        // Check automations every 60 seconds
         setInterval(checkAutomations, 60000);
-        console.log('[AutomationEngine] ⏰ Scheduled automation checks every 60 seconds');
 
         // Run first check after data is received (max wait: 30 seconds)
         let firstCheckAttempts = 0;
         const waitForDataAndCheck = () => {
           firstCheckAttempts++;
           if (window.dataReceived || firstCheckAttempts >= 30) {
-            if (window.dataReceived) {
-              console.log('[AutomationEngine] 🔄 Running FIRST automation check (data received)...');
-              console.log('[AutomationEngine] 👥 Students available:', window.studentsData?.length || 0);
-            } else {
-              console.log('[AutomationEngine] ⚠️ Running FIRST automation check (timeout after 30s - NO DATA!)...');
-              console.warn(
-                '[AutomationEngine] 🚨 Students data never received! Emails will use template placeholders!'
-              );
+            if (!window.dataReceived) {
+              console.warn('[AutomationEngine] ⚠️ No data received after 30s');
             }
             checkAutomations();
           } else {
-            console.log(`[AutomationEngine] ⏳ Waiting for data... (attempt ${firstCheckAttempts}/30)`);
             setTimeout(waitForDataAndCheck, 1000);
           }
         };
-        setTimeout(waitForDataAndCheck, 1000); // Start checking after 1 second
+        setTimeout(waitForDataAndCheck, 1000);
 
         // Setup midnight reset
         resetDailyReminders();
-        console.log('[AutomationEngine] 🌙 Configured midnight reminder reset');
-
-        console.log('[AutomationEngine] ========================================');
-        console.log('[AutomationEngine] ✅ Automation Engine fully initialized');
-        console.log('[AutomationEngine] ========================================');
       }
 
       // Start engine when page loads

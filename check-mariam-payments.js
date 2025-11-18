@@ -11,13 +11,14 @@
  * 4. Why each class is marked paid/unpaid
  */
 
-console.log('\n🔍 ════════════════════════════════════════════════════════════════');
-console.log('   DIAGNOSTIC: Mariam Gevorgyan Payment Status Check');
-console.log('   ════════════════════════════════════════════════════════════════\n');
+(function() {
+  console.log('\n🔍 ════════════════════════════════════════════════════════════════');
+  console.log('   DIAGNOSTIC: Mariam Gevorgyan Payment Status Check');
+  console.log('   ════════════════════════════════════════════════════════════════\n');
 
-// Find Mariam in calendar data
-let mariam = null;
-let mariamData = null;
+  // Find Mariam in calendar data
+  let mariam = null;
+  let mariamData = null;
 
 if (window.currentCalendarData && window.currentCalendarData.students) {
   for (const studentData of window.currentCalendarData.students) {
@@ -199,3 +200,4 @@ console.log('\n🔍 ════════════════════
 console.log('   END DIAGNOSTIC');
 console.log('   ════════════════════════════════════════════════════════════════\n');
 }
+})();
