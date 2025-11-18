@@ -11937,6 +11937,18 @@
           );
         }
 
+        // Send status change email (MANUAL CONFIRMATION REQUIRED)
+        if (student.email && student.group) {
+          // Determine which email to send based on transition
+          if (oldStatus === STUDENT_STATUSES.ACTIVE && newStatus === STUDENT_STATUSES.PAUSED) {
+            await sendStatusChangeToPausedEmail(student, student.group);
+          } else if (oldStatus === STUDENT_STATUSES.PAUSED && newStatus === STUDENT_STATUSES.ACTIVE) {
+            await sendStatusChangeToActiveEmail(student, student.group);
+          } else if (newStatus === STUDENT_STATUSES.GRADUATED) {
+            await sendStatusChangeToGraduatedEmail(student, student.group);
+          }
+        }
+
         // Trigger forecast update if forecast modal is open
         const forecastModal = document.getElementById('earningsForecastModal');
         if (forecastModal && forecastModal.style.opacity === '1') {
