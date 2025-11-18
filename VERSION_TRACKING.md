@@ -36,6 +36,14 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
   - **RESULT**: Email previews now open in main window, fully visible and functional
   - **TESTING**: Modal confirmed working with display:flex, z-index:1001 in logs
   - This was a **MAJOR BUG** - users clicking email notifications saw nothing because modal was hidden in off-screen iframe
+- **CRITICAL FIX**: Mobile version (index.mobile.html) completely rebuilt
+  - **ROOT CAUSE**: Mobile version stuck on v2.1.0, missing 2,427 lines of code
+  - **MISSING FEATURES**: ClassReminderManager, ClassStartingSoonManager, email preview modal, all v2.1.6-v2.2.0 improvements
+  - **SOLUTION**: Replaced mobile version with full desktop codebase
+  - **RESULT**: Mobile now has 100% feature parity with desktop
+  - All buttons working, all data loading, all automations running
+  - Mobile-optimized viewport settings maintained
+  - Desktop version already fully responsive - no separate mobile code needed
 
 ### v2.1.9 (2025-11-18)
 - **FIX**: Enhanced email notification viewer debugging
