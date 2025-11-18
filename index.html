@@ -18294,10 +18294,11 @@
           
           // Add notification with email content if available
           if (window.NotificationCenter) {
+            const emailSubject = response.emailContent?.subject || 'Payment Reminder';
             await window.NotificationCenter.add(
               window.NotificationCenter.NotificationType.EMAIL,
-              'Payment Reminder Sent',
-              `Sent to ${student.name} for ${unpaidClasses.length} unpaid class${unpaidClasses.length !== 1 ? 'es' : ''}`,
+              `Email Sent: ${emailSubject}`,
+              `Sent to ${student.name} (${student.email}) - ${unpaidClasses.length} unpaid class${unpaidClasses.length !== 1 ? 'es' : ''}`,
               {
                 studentName: student.name,
                 metadata: {
@@ -18306,7 +18307,7 @@
                   unpaidClassCount: unpaidClasses.length,
                   emailType: 'payment_reminder',
                   emailBody: response.emailContent?.body,
-                  emailSubject: response.emailContent?.subject
+                  emailSubject: emailSubject
                 }
               }
             );
@@ -19630,17 +19631,18 @@
               // Update the notification with email content
               if (window.NotificationCenter && emailContent) {
                 console.log('[PaymentReminderManager] Creating notification with email content...');
+                const emailSubject = emailContent.subject || 'Payment Reminder';
                 await window.NotificationCenter.add(
                   window.NotificationCenter.NotificationType.REMINDER,
-                  'Payment Reminder Sent',
-                  `Automated payment reminder sent to ${student.name} for unpaid class on ${classDate}`,
+                  `Auto Email Sent: ${emailSubject}`,
+                  `Sent to ${student.name} (${student.email}) - unpaid class on ${classDate}`,
                   {
                     studentName: student.name,
                     metadata: {
                       amount: student.balance,
                       date: classDate,
                       email: student.email,
-                      emailSubject: emailContent.subject,
+                      emailSubject: emailSubject,
                       emailBody: emailContent.body,
                     },
                   }
