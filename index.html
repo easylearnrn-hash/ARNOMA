@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.1.7]</title>
+    <title>ARNOMA - Student Management [v2.1.8]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
-    <meta http-equiv="Pragma" content="no-cache" />
+    <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.1.7-email-automation-fixes" />
+    <meta name="version" content="2.1.8-automation-manager" />
 
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.1.7 - Email Automation Fixes: Duplicate Reminders Fixed + 30-Min Starting Soon + Payment Receipt Automation');
+      console.log('🔥 ARNOMA v2.1.8 - Automation Manager: View & Control All Email Automations');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -4844,7 +4844,7 @@
 
       <div class="container">
         <div class="header">
-          <h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.1.7</span></h1>
+          <h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.1.8</span></h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
             <option value="matched">Matched Only</option>
@@ -20272,8 +20272,17 @@
           // Main function: Check and send reminders
           async function checkAndSendReminders() {
             try {
+              // Check if automation is paused
+              if (localStorage.getItem('automation_system_payment_reminder_paused') === 'true') {
+                console.log('[PaymentReminderManager] ⏸️ PAUSED - Skipping reminder check');
+                return;
+              }
+
               const today = getLADate();
               const todayStr = formatDateYYYYMMDD(today);
+              
+              // Update last check time
+              localStorage.setItem('payment_reminder_last_check', new Date().toISOString());
 
               debugLog('═══════════════════════════════════════════════════════');
               debugLog('[PaymentReminderManager] 🔍 STARTING DAILY REMINDER CHECK');
@@ -20777,8 +20786,17 @@
           // Main check function - runs every hour
           async function checkAndSendReminders() {
             try {
+              // Check if automation is paused
+              if (localStorage.getItem('automation_system_class_reminder_12h_paused') === 'true') {
+                console.log('[ClassReminderManager] ⏸️ PAUSED - Skipping reminder check');
+                return;
+              }
+
               const nowLA = getLADate();
               const todayStr = formatDateYYYYMMDD(nowLA);
+              
+              // Update last check time
+              localStorage.setItem('class_reminder_last_check', new Date().toISOString());
 
               console.log('\n═══════════════════════════════════════════════════════');
               console.log('[ClassReminderManager] 🔍 STARTING CLASS REMINDER CHECK');
@@ -21052,8 +21070,17 @@
 
           async function checkAndSendReminders() {
             try {
+              // Check if automation is paused
+              if (localStorage.getItem('automation_system_class_starting_soon_paused') === 'true') {
+                console.log('[ClassStartingSoonManager] ⏸️ PAUSED - Skipping reminder check');
+                return;
+              }
+
               const nowLA = getLADate();
               const todayStr = formatDateYYYYMMDD(nowLA);
+              
+              // Update last check time
+              localStorage.setItem('class_starting_soon_last_check', new Date().toISOString());
 
               console.log('\n═══════════════════════════════════════════════════════');
               console.log('[ClassStartingSoonManager] 🔍 CHECKING 30-MIN REMINDERS');

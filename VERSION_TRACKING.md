@@ -1,6 +1,6 @@
 # ARNOMA Version Tracking
 
-## Current Version: v2.1.7
+## Current Version: v2.1.8
 
 ## Version Update Checklist (Before Every Push)
 When making changes, update the version in **3 places** in `index.html`:
@@ -22,6 +22,30 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 ```
 
 ## Version History
+
+### v2.1.8 (2025-01-20)
+- **NEW FEATURE**: Complete Automation Manager in Email System
+  - View ALL active automations in one place (⚙️ Automations button)
+  - System Automations section shows 3 built-in automations:
+    - Payment Reminder (Auto) - Every 24 hours
+    - Class Reminder (12 Hours Before)
+    - Class Starting Soon (30 Minutes Before)
+  - Each automation shows: description, template, check interval, trigger, and managing system
+  - **Pause/Resume Controls**: Click ⏸️/▶️ to pause or resume any automation
+  - Pause state persists in localStorage and respected by automation managers
+  - Custom Automations section ready for future user-created automations
+- **TECHNICAL**: Added pause checks in all automation managers
+  - ClassReminderManager: Checks `automation_system_class_reminder_12h_paused`
+  - ClassStartingSoonManager: Checks `automation_system_class_starting_soon_paused`
+  - PaymentReminderManager: Checks `automation_system_payment_reminder_paused`
+  - All managers update `last_check` timestamp in localStorage
+  - Managers log "⏸️ PAUSED - Skipping reminder check" when paused
+- **UI/UX**: Beautiful automation cards with color-coded status
+  - Green border = Active system automation
+  - Orange border = Paused system automation
+  - Purple "SYSTEM" badge distinguishes built-in automations
+  - Shows template name, check frequency, trigger conditions, and managing code
+  - Monospace font for technical details (managed by which file/manager)
 
 ### v2.1.7 (2025-01-20)
 - **CRITICAL FIX**: Fixed duplicate class reminder emails
