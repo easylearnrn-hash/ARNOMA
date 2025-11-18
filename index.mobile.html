@@ -13401,9 +13401,34 @@
       return new Date(year, month - 1, day, hour, minute, second);
     }
     
-    function openSmartCalendar() {
+    async function openSmartCalendar() {
       const modal = document.getElementById('smartCalendarModal');
       if (!modal) return;
+      
+      // Check if data is loaded
+      const students = window.studentsCache || [];
+      const groups = window.groupsCache || [];
+      
+      console.log('[Calendar] 📊 Opening calendar. Students:', students.length, 'Groups:', groups.length);
+      
+      // If no data, load from Supabase first
+      if (students.length === 0 || groups.length === 0) {
+        console.log('[Calendar] ⏳ No data found, loading from Supabase...');
+        showNotification('⏳ Loading data from Supabase...', 'info');
+        
+        try {
+          await Promise.all([
+            loadStudents(),
+            loadGroups()
+          ]);
+          console.log('[Calendar] ✅ Data loaded successfully');
+          showNotification('✅ Data loaded!', 'success');
+        } catch (error) {
+          console.error('[Calendar] ❌ Error loading data:', error);
+          showNotification('❌ Failed to load data from Supabase. Please check your connection.', 'error');
+          return;
+        }
+      }
       
       currentCalendarDate = getLADate();
       renderCalendar();
