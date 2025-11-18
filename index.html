@@ -11678,34 +11678,37 @@
           const oldEmail = emailChange ? emailChange.old : null;
           const newEmail = student.email;
 
-          // If email changed, send to BOTH old and new email
+          // Determine which emails to send to
           const emailsToNotify = [];
 
-          if (emailChange && oldEmail && oldEmail !== 'Not set') {
-            // Send to old email with special message
-            emailsToNotify.push({
-              email: oldEmail,
-              type: 'old',
-              message: 'Your email address has been updated. This is a confirmation to your previous email address.',
-            });
-          }
+          if (emailChange) {
+            // Email was changed - send to both old and new
+            if (oldEmail && oldEmail !== 'Not set') {
+              // Send to old email with special message
+              emailsToNotify.push({
+                email: oldEmail,
+                type: 'old',
+                message: 'Your email address has been updated. This is a confirmation to your previous email address.',
+              });
+            }
 
-          if (newEmail && newEmail.trim() !== '') {
-            // Send to new email
-            emailsToNotify.push({
-              email: newEmail,
-              type: 'new',
-              message: null,
-            });
-          }
-
-          // If no email change, just send to current email
-          if (!emailChange && newEmail && newEmail.trim() !== '') {
-            emailsToNotify.push({
-              email: newEmail,
-              type: 'current',
-              message: null,
-            });
+            if (newEmail && newEmail.trim() !== '') {
+              // Send to new email
+              emailsToNotify.push({
+                email: newEmail,
+                type: 'new',
+                message: null,
+              });
+            }
+          } else {
+            // Email was NOT changed - send only to current email (ONCE)
+            if (newEmail && newEmail.trim() !== '') {
+              emailsToNotify.push({
+                email: newEmail,
+                type: 'current',
+                message: null,
+              });
+            }
           }
 
           // Send emails
