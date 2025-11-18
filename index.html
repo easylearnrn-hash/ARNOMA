@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.1.3]</title>
+    <title>ARNOMA - Student Management [v2.1.4]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.1.3-performance-optimized" />
+    <meta name="version" content="2.1.4-performance-optimized" />
 
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.1.3 - Performance Optimized (133 debug logs silenced)');
+      console.log('🔥 ARNOMA v2.1.4 - Performance Optimized (163 debug logs silenced)');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -11905,8 +11905,8 @@
             sendProfileUpdateEmail(savedRecord, changes);
           } else {
             console.log('⏭️ Skipping profile update email');
-            if (changes.length === 0) console.log('   Reason: No changes detected');
-            if (!savedRecord.email) console.log('   Reason: No email address');
+            if (changes.length === 0) debugLog('   Reason: No changes detected');
+            if (!savedRecord.email) debugLog('   Reason: No email address');
           }
 
           // No longer need localStorage for balance - it's in Supabase now
@@ -12157,7 +12157,7 @@
 
         async function saveStudentFromModal() {
           debugLog('🚀 saveStudentFromModal() called');
-          console.log('   - editingStudentId:', editingStudentId);
+          debugLog('   - editingStudentId:', editingStudentId);
 
           const name = document.getElementById('studentName').value.trim();
           const payPerClass = parseFloat(document.getElementById('studentPay').value) || 0;
@@ -12307,17 +12307,17 @@
 
           // Send profile update email if there are changes and student has email
           debugLog('🔍 Checking if should send profile update email...');
-          console.log('   - Changes count:', changes.length);
-          console.log('   - Has email:', savedRecord.email ? 'Yes' : 'No');
-          console.log('   - Email not empty:', savedRecord.email && savedRecord.email.trim() !== '' ? 'Yes' : 'No');
+          debugLog('   - Changes count:', changes.length);
+          debugLog('   - Has email:', savedRecord.email ? 'Yes' : 'No');
+          debugLog('   - Email not empty:', savedRecord.email && savedRecord.email.trim() !== '' ? 'Yes' : 'No');
 
           if (changes.length > 0 && savedRecord.email && savedRecord.email.trim() !== '') {
             debugLog('✅ Sending profile update email for', changes.length, 'changes');
             sendProfileUpdateEmail(savedRecord, changes);
           } else {
             console.log('⏭️ Skipping profile update email');
-            if (changes.length === 0) console.log('   Reason: No changes detected');
-            if (!savedRecord.email) console.log('   Reason: No email address');
+            if (changes.length === 0) debugLog('   Reason: No changes detected');
+            if (!savedRecord.email) debugLog('   Reason: No email address');
           }
 
           // No longer need to save balance to localStorage - it's in Supabase now
@@ -19094,7 +19094,7 @@
               const allIframes = document.querySelectorAll('iframe');
               debugLog('🔍 Total iframes on page:', allIframes.length);
               allIframes.forEach((iframe, idx) => {
-                console.log(`  Iframe ${idx}:`, iframe.src || iframe.id || 'no src/id');
+                debugLog(`  Iframe ${idx}:`, iframe.src || iframe.id || 'no src/id');
               });
             }
 
@@ -20226,7 +20226,7 @@
               const today = getLADate();
               const todayStr = formatDateYYYYMMDD(today);
 
-              console.log('═══════════════════════════════════════════════════════');
+              debugLog('═══════════════════════════════════════════════════════');
               debugLog('[PaymentReminderManager] 🔍 STARTING DAILY REMINDER CHECK');
               debugLog('[PaymentReminderManager] 📅 LA Date:', todayStr);
               console.log(
@@ -20243,7 +20243,7 @@
               // Only check once per day (but only if calendar data is available)
               if (lastCheckDate === todayStr) {
                 debugLog('[PaymentReminderManager] ⏭️  Already checked today - skipping');
-                console.log('═══════════════════════════════════════════════════════');
+                debugLog('═══════════════════════════════════════════════════════');
                 return;
               }
 
@@ -20259,7 +20259,7 @@
                 } else {
                   debugLog('[PaymentReminderManager] ❌ renderCalendar function not available');
                   debugLog('[PaymentReminderManager] 🔄 Will retry on next interval');
-                  console.log('═══════════════════════════════════════════════════════');
+                  debugLog('═══════════════════════════════════════════════════════');
                   return;
                 }
 
@@ -20267,7 +20267,7 @@
                 if (!window.currentCalendarData) {
                   debugLog('[PaymentReminderManager] ❌ Calendar still not initialized after render attempt');
                   debugLog('[PaymentReminderManager] 🔄 Will retry on next interval');
-                  console.log('═══════════════════════════════════════════════════════');
+                  debugLog('═══════════════════════════════════════════════════════');
                   return;
                 }
               }
@@ -20278,7 +20278,7 @@
               const calendarData = window.currentCalendarData;
               if (!calendarData || !calendarData.days) {
                 console.warn('[PaymentReminderManager] ❌ No calendar data available');
-                console.log('═══════════════════════════════════════════════════════');
+                debugLog('═══════════════════════════════════════════════════════');
                 return;
               }
 
@@ -20330,14 +20330,14 @@
 
                 // Skip if student is not active
                 if (student.status && student.status !== 'active') {
-                  console.log(`  ⏭️  Student status is '${student.status}' (not active) - skipping`);
+                  debugLog(`  ⏭️  Student status is '${student.status}' (not active) - skipping`);
                   studentsPaused++;
                   continue;
                 }
 
                 // Skip if paused
                 if (isPaused(studentId)) {
-                  console.log('  ⏸️  Auto-reminders PAUSED for this student - skipping');
+                  debugLog('  ⏸️  Auto-reminders PAUSED for this student - skipping');
                   studentsPaused++;
                   continue;
                 }
@@ -20371,33 +20371,33 @@
 
                 // DEBUG: Log details for specific student (Mariam Gevorgyan)
                 if (student.name.toLowerCase().includes('mariam') && student.name.toLowerCase().includes('gevorgyan')) {
-                  console.log('\n🔍 DEBUG: Mariam Gevorgyan Details:');
-                  console.log('  Student ID:', studentId);
-                  console.log('  Student Status:', student.status);
-                  console.log('  Student Created At:', studentCreationDateStr);
-                  console.log('  Total Attendance Records:', studentData.attendance.length);
-                  console.log('  Unpaid Classes Found:', unpaidClasses.length);
+                  debugLog('\n🔍 DEBUG: Mariam Gevorgyan Details:');
+                  debugLog('  Student ID:', studentId);
+                  debugLog('  Student Status:', student.status);
+                  debugLog('  Student Created At:', studentCreationDateStr);
+                  debugLog('  Total Attendance Records:', studentData.attendance.length);
+                  debugLog('  Unpaid Classes Found:', unpaidClasses.length);
 
                   if (unpaidClasses.length > 0) {
-                    console.log('  Unpaid Classes:');
+                    debugLog('  Unpaid Classes:');
                     unpaidClasses.forEach(c => {
-                      console.log(`    - Date: ${c.date}, Balance: $${c.balance}, Status: ${c.status}`);
+                      debugLog(`    - Date: ${c.date}, Balance: $${c.balance}, Status: ${c.status}`);
                     });
 
-                    console.log('\n  All Attendance Records (for verification):');
+                    debugLog('\n  All Attendance Records (for verification):');
                     studentData.attendance.forEach(a => {
-                      console.log(`    - Date: ${a.date}, Status: ${a.status}, Balance: $${a.balance || 0}`);
+                      debugLog(`    - Date: ${a.date}, Status: ${a.status}, Balance: $${a.balance || 0}`);
                     });
                   }
                 }
 
                 if (unpaidClasses.length === 0) {
-                  console.log('  ✅ No unpaid classes (past or present) - skipping');
+                  debugLog('  ✅ No unpaid classes (past or present) - skipping');
                   studentsNoUnpaid++;
                   continue;
                 }
 
-                console.log(`  � Found ${unpaidClasses.length} unpaid class(es) - checking each...`);
+                debugLog(`  � Found ${unpaidClasses.length} unpaid class(es) - checking each...`);
 
                 // Check each unpaid class
                 for (const unpaidClass of unpaidClasses) {
@@ -20410,7 +20410,7 @@
 
                   // Skip if reminder already sent for this date
                   if (wasReminderSentToday(studentId, dateStr)) {
-                    console.log('    ✅ Reminder already sent for this date - skipping');
+                    debugLog('    ✅ Reminder already sent for this date - skipping');
                     studentsAlreadySent++;
                     continue;
                   }
@@ -20457,7 +20457,7 @@
                     continue;
                   }
 
-                  console.log(
+                  debugLog(
                     `    ✅ REMINDER WINDOW ACTIVE | Current: ${nowLAStr} | Window started: ${reminderWindowStr} | Class ends: ${classEndStr}`
                   );
 
@@ -20478,7 +20478,7 @@
               }
 
               console.log('\n═══════════════════════════════════════════════════════');
-              debugLog('[PaymentReminderManager] 📊 SUMMARY');
+              console.log('[PaymentReminderManager] 📊 SUMMARY');
               console.log('  Total students checked:', studentsChecked);
               console.log('  Students with paused reminders:', studentsPaused);
               console.log('  Students with no unpaid classes:', studentsNoUnpaid);
@@ -20492,7 +20492,7 @@
               } else {
                 debugLog('✅ [PaymentReminderManager] No reminders needed today');
               }
-              console.log('═══════════════════════════════════════════════════════\n');
+              debugLog('═══════════════════════════════════════════════════════\n');
             } catch (error) {
               console.error('[PaymentReminderManager] ❌ ERROR in checkAndSendReminders:', error);
               console.error('Stack trace:', error.stack);
