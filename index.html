@@ -55,12 +55,9 @@
 
       // Create debounced wrapper for inline oninput handlers
       const debouncedFilterStudentSearch = debounce(() => {
-        const searchTerm = document.getElementById('linkStudentSearchInput').value.toLowerCase();
-        const studentItems = document.querySelectorAll('.link-student-item');
-        studentItems.forEach(item => {
-          const studentName = item.textContent.toLowerCase();
-          item.style.display = studentName.includes(searchTerm) ? 'block' : 'none';
-        });
+        if (typeof filterStudentSearch === 'function') {
+          filterStudentSearch();
+        }
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
@@ -5982,6 +5979,28 @@
           return null;
         }
 
+        // AUTO-SEND: Payment Receipt Email
+        if (data && data[0]) {
+          const payment = data[0];
+          const students = getCachedStudents();
+          const student = students.find(s => String(s.id) === String(payment.derivedStudentId));
+          
+          if (student && student.email) {
+            console.log('📧 Sending payment receipt email to:', student.name);
+            try {
+              await sendPaymentReceiptEmail(
+                student,
+                payment.amount,
+                payment.date || new Date().toISOString().split('T')[0],
+                student.balance
+              );
+            } catch (emailError) {
+              console.error('⚠️ Payment receipt email failed:', emailError);
+              // Don't block payment - email failure is non-critical
+            }
+          }
+        }
+
         return data[0];
       }
 
@@ -6076,6 +6095,16 @@
         // Check if this is an update (has a numeric Supabase ID) or insert
         const isUpdate = studentData.id && typeof studentData.id === 'number';
 
+        // Track old groups for enrollment email
+        let oldGroups = [];
+        if (isUpdate) {
+          const students = getCachedStudents();
+          const existingStudent = students.find(s => s.id === studentData.id);
+          if (existingStudent && existingStudent.group) {
+            oldGroups = existingStudent.group.split(',').map(g => g.trim()).filter(Boolean);
+          }
+        }
+
         // Prepare payload - map local field names to Supabase columns
         const payload = {
           name: studentData.name,
@@ -6129,6 +6158,30 @@
           }
 
           const mappedRecord = mapSupabaseStudent(data?.[0]);
+          
+          // AUTO-SEND: Group Enrollment Email (only for newly added groups)
+          if (mappedRecord && mappedRecord.email && mappedRecord.group) {
+            const newGroups = mappedRecord.group.split(',').map(g => g.trim()).filter(Boolean);
+            const addedGroups = newGroups.filter(g => !oldGroups.includes(g));
+            
+            if (addedGroups.length > 0) {
+              console.log(`📧 Sending enrollment emails for ${addedGroups.length} new group(s):`, addedGroups);
+              
+              // Send enrollment email for each newly added group
+              for (const groupName of addedGroups) {
+                try {
+                  const group = window.groupsCache?.find(g => g.name === groupName);
+                  const groupSchedule = group?.schedule || 'Schedule TBD';
+                  
+                  await sendGroupEnrollmentEmail(mappedRecord, groupName, groupSchedule);
+                } catch (emailError) {
+                  console.error(`⚠️ Enrollment email failed for group ${groupName}:`, emailError);
+                  // Continue to next group - don't block on email failure
+                }
+              }
+            }
+          }
+          
           return mappedRecord;
         } catch (err) {
           console.error('❌ Exception saving student:', err);
@@ -6198,6 +6251,13 @@
           color: groupData.color,
         };
 
+        // Track old schedule for email notification
+        let oldSchedule = null;
+        if (groupData.id && window.groupsCache) {
+          const existingGroup = window.groupsCache.find(g => g.id === groupData.id);
+          oldSchedule = existingGroup?.schedule;
+        }
+
         let data, error;
 
         if (groupData.id) {
@@ -6227,6 +6287,34 @@
         if (error) {
           console.error('❌ Error saving group:', error);
           return null;
+        }
+
+        // AUTO-SEND: Schedule Change Email (only if schedule actually changed)
+        if (data && data[0] && oldSchedule && oldSchedule !== payload.schedule) {
+          const groupName = payload.group_name;
+          const newSchedule = payload.schedule;
+          
+          console.log(`📧 Schedule changed for ${groupName}: "${oldSchedule}" → "${newSchedule}"`);
+          
+          // Get all active students in this group
+          const students = getCachedStudents();
+          const groupStudents = students.filter(s => 
+            s.group && s.group.includes(groupName) && s.status === 'active'
+          );
+          
+          console.log(`📧 Sending schedule change emails to ${groupStudents.length} students`);
+          
+          // Send email to each active student
+          for (const student of groupStudents) {
+            if (student.email) {
+              try {
+                await sendScheduleChangeEmail(student, groupName, oldSchedule, newSchedule);
+              } catch (emailError) {
+                console.error(`⚠️ Schedule change email failed for ${student.name}:`, emailError);
+                // Continue to next student - don't block on email failure
+              }
+            }
+          }
         }
 
         return data[0];
@@ -16730,6 +16818,22 @@
             }
             absences[studentId][dateStr] = true;
             await saveAbsences();
+            
+            // AUTO-SEND: Absence Notification Email
+            const students = getCachedStudents();
+            const student = students.find(s => String(s.id) === String(studentId));
+            
+            if (student && student.email) {
+              console.log('📧 Sending absence notification email to:', student.name);
+              try {
+                // Get group name from student
+                const groupName = student.group || 'your class';
+                await sendAbsenceNotificationEmail(student, groupName, dateStr);
+              } catch (emailError) {
+                console.error('⚠️ Absence notification email failed:', emailError);
+                // Don't block absence marking - email failure is non-critical
+              }
+            }
           },
 
           // Remove absent mark
