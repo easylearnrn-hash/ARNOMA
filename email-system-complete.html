@@ -1881,6 +1881,13 @@ ARNOMA Team"
         
         console.log('✅ Content written, adding active class...');
         modal.classList.add('active');
+        
+        // DEBUG: Check if modal is actually visible
+        const computedStyle = window.getComputedStyle(modal);
+        console.log('🔍 Modal display style:', computedStyle.display);
+        console.log('🔍 Modal z-index:', computedStyle.zIndex);
+        console.log('🔍 Modal has active class:', modal.classList.contains('active'));
+        
         console.log('✅ Modal should now be visible with active class');
       }
 
