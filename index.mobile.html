@@ -2977,7 +2977,12 @@
             <p style="margin: 2px 0 0 0; font-size: 10px; color: #94a3b8;">Track scheduled classes, payments, and balances</p>
           </div>
         </div>
-        <button onclick="closeSmartCalendar()" style="width: 28px; height: 28px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'; this.style.borderColor='rgba(239,68,68,0.4)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)';">×</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button onclick="reloadCalendarData()" style="padding: 6px 12px; background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.3); border-radius: 8px; color: #22c55e; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 4px;" title="Reload data from Supabase">
+            🔄 Reload
+          </button>
+          <button onclick="closeSmartCalendar()" style="width: 28px; height: 28px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.2)'; this.style.borderColor='rgba(239,68,68,0.4)';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.borderColor='rgba(255,255,255,0.1)';">×</button>
+        </div>
       </div>
 
       <!-- Calendar Navigation -->
@@ -13447,6 +13452,37 @@
       setTimeout(() => {
         modal.style.display = 'none';
       }, 300);
+    }
+    
+    // Reload calendar data from Supabase
+    async function reloadCalendarData() {
+      console.log('[Calendar] 🔄 Manually reloading data from Supabase...');
+      showNotification('⏳ Loading data from Supabase...', 'info');
+      
+      try {
+        // Clear caches
+        window.studentsCache = [];
+        window.groupsCache = [];
+        
+        // Reload from Supabase
+        await Promise.all([
+          loadStudents(),
+          loadGroups()
+        ]);
+        
+        const students = window.studentsCache || [];
+        const groups = window.groupsCache || [];
+        
+        console.log('[Calendar] ✅ Data reloaded. Students:', students.length, 'Groups:', groups.length);
+        showNotification(`✅ Loaded ${students.length} students and ${groups.length} groups!`, 'success');
+        
+        // Re-render calendar with new data
+        renderCalendar();
+        
+      } catch (error) {
+        console.error('[Calendar] ❌ Error reloading data:', error);
+        showNotification('❌ Failed to reload data. Please check your Supabase connection.', 'error');
+      }
     }
     
     // ============================================================================
