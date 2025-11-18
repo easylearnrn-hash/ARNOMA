@@ -2602,13 +2602,17 @@ ARNOMA Team"
           return;
         }
 
-        console.log('✅ Opening preview modal with HTML content');
+        console.log('✅ Sending email preview to parent window via postMessage');
         try {
-          // Open preview modal with the exact HTML that was sent
-          openPreviewModal(email.html_content);
-          console.log('✅ openPreviewModal completed successfully');
+          // Send to parent window to open preview
+          window.parent.postMessage({
+            action: 'openEmailPreview',
+            htmlContent: email.html_content,
+            subject: email.subject
+          }, '*');
+          console.log('✅ Posted message to parent window');
         } catch (error) {
-          console.error('❌ Error opening preview modal:', error);
+          console.error('❌ Error posting message to parent:', error);
           showNotification('Error opening email preview', 'error');
         }
       }

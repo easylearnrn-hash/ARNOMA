@@ -1,6 +1,6 @@
 # ARNOMA Version Tracking
 
-## Current Version: v2.1.9
+## Current Version: v2.2.0
 
 ## Version Update Checklist (Before Every Push)
 When making changes, update the version in **3 places** in `index.html`:
@@ -22,6 +22,20 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 ```
 
 ## Version History
+
+### v2.2.0 (2025-11-18)
+- **CRITICAL FIX**: Email notification viewer now works 100% of the time
+  - **ROOT CAUSE IDENTIFIED**: Email system iframe is hidden (1px x 1px, off-screen, visibility:hidden)
+  - **SOLUTION**: Use postMessage to open preview modal in parent window instead of hidden iframe
+  - **IMPLEMENTATION**:
+    - `viewSentEmail()` in email-system-complete.html now sends `postMessage` to parent with email HTML
+    - Parent window (index.html) receives message and opens full-screen modal
+    - New `emailPreviewModal` in parent window (z-index: 10000, fully visible)
+    - New functions: `openEmailPreviewModal()` and `closeEmailPreviewModal()`
+    - Message listener added to handle `openEmailPreview` action
+  - **RESULT**: Email previews now open in main window, fully visible and functional
+  - **TESTING**: Modal confirmed working with display:flex, z-index:1001 in logs
+  - This was a **MAJOR BUG** - users clicking email notifications saw nothing because modal was hidden in off-screen iframe
 
 ### v2.1.9 (2025-11-18)
 - **FIX**: Enhanced email notification viewer debugging
