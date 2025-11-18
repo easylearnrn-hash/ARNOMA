@@ -2426,13 +2426,34 @@ ARNOMA Team"
       }
 
       // View exact email that was sent
-      function viewSentEmail(emailId) {
+      async function viewSentEmail(emailId) {
         console.log('👁️ viewSentEmail called with emailId:', emailId);
 
-        const emails = window._sentEmailsCache || [];
-        console.log('📧 Available emails:', emails.length);
+        // Try cache first
+        let emails = window._sentEmailsCache || [];
+        console.log('📧 Cached emails:', emails.length);
 
-        const email = emails.find(e => e.id == emailId);
+        let email = emails.find(e => e.id == emailId);
+
+        // If not in cache, fetch directly from Supabase
+        if (!email) {
+          console.log('📥 Email not in cache, fetching from Supabase...');
+          try {
+            const { data, error } = await supabase
+              .from('sent_emails')
+              .select('*')
+              .eq('id', emailId)
+              .single();
+
+            if (error) throw error;
+            email = data;
+            console.log('✅ Fetched email from Supabase:', email);
+          } catch (error) {
+            console.error('❌ Error fetching email from Supabase:', error);
+            showNotification('Email not found', 'error');
+            return;
+          }
+        }
 
         if (!email) {
           console.error('❌ Email not found with id:', emailId);
