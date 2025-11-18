@@ -1,6 +1,6 @@
 # ARNOMA Version Tracking
 
-## Current Version: v2.2.0
+## Current Version: v2.2.1
 
 ## Version Update Checklist (Before Every Push)
 When making changes, update the version in **3 places** in `index.html`:
@@ -22,6 +22,21 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 ```
 
 ## Version History
+
+### v2.2.1 (2025-11-18)
+- **FIX**: Email preview modal z-index corrected
+  - Changed from `z-index: 10000` to `z-index: 100005`
+  - Email preview now appears ABOVE notification center (z-index: 100004)
+  - Modal now visible when clicking email notifications
+  - Applied to both desktop (index.html) and mobile (index.mobile.html)
+- **DOCUMENTATION**: Gmail token auto-refresh implementation guide created
+  - Created `GMAIL_TOKEN_REFRESH_SETUP.sql` - Supabase table for storing refresh tokens
+  - Created `GMAIL_TOKEN_REFRESH_IMPLEMENTATION.md` - Complete implementation guide
+  - Includes Edge Function code for token refresh
+  - Includes OAuth callback handler
+  - Includes updated client-side code
+  - **NOTE**: Implementation pending - requires Supabase Edge Functions deployment
+  - **BENEFIT**: Will eliminate hourly Gmail reconnection requirement
 
 ### v2.2.0 (2025-11-18)
 - **CRITICAL FIX**: Email notification viewer now works 100% of the time
