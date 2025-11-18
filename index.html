@@ -6489,8 +6489,8 @@
                 // Generate system notification
                 await window.NotificationCenter.add(
                   window.NotificationCenter.NotificationType.CREDIT,
-                  'Credit Added',
-                  `${student.name} paid $${paymentAmount.toFixed(2)} — $${excess.toFixed(2)} has been added as credit.`,
+                  'Credit Added (Auto)',
+                  `${student.name} paid $${paymentAmount.toFixed(2)} — $${excess.toFixed(2)} added as credit. Email NOT sent automatically.`,
                   {
                     studentId: student.id,
                     amount: excess,
@@ -6498,15 +6498,15 @@
                   }
                 );
 
-                // Send credit confirmation email
-                const emailSent = await sendCreditAddedEmail(student, excess, student.balance);
-                console.log(`📧 Credit email ${emailSent ? 'sent' : 'failed'} to ${student.name}`);
+                // DON'T send email automatically - only notify
+                console.log(`� Credit added to ${student.name}: $${excess.toFixed(2)} (email not sent)`);
 
                 creditsApplied.push({
                   student: student.name,
                   payment: paymentAmount,
                   credit: excess,
-                  newBalance: student.balance
+                  newBalance: student.balance,
+                  email: student.email
                 });
 
               } catch (error) {
@@ -6521,12 +6521,16 @@
             window.dispatchEvent(new CustomEvent('students:updated'));
 
             const totalCredit = creditsApplied.reduce((sum, c) => sum + c.credit, 0);
+            const studentNames = creditsApplied.map(c => c.student).join(', ');
+            
             showNotification(
-              `💰 Applied $${totalCredit.toFixed(2)} in credits to ${creditsApplied.length} student(s)`,
-              'success'
+              `💰 Applied $${totalCredit.toFixed(2)} in credits to ${creditsApplied.length} student(s). Emails NOT sent - review and send manually if needed.`,
+              'success',
+              10000 // Show for 10 seconds
             );
 
-            console.log('✅ Credits applied:', creditsApplied);
+            console.log('✅ Credits applied (emails not sent):', creditsApplied);
+            console.log('📋 Students who received credit:', studentNames);
           } else {
             console.log('No new overpayments to process');
           }
@@ -6644,6 +6648,38 @@
           return false;
         }
       }
+
+      // Helper: Send credit emails to multiple students (use after reviewing auto-applied credits)
+      async function sendCreditEmailsToStudents(studentIds) {
+        const students = getCachedStudents();
+        const results = [];
+        
+        for (const studentId of studentIds) {
+          const student = students.find(s => String(s.id) === String(studentId));
+          if (!student) {
+            console.warn(`Student ID ${studentId} not found`);
+            continue;
+          }
+          
+          if (!student.balance || student.balance <= 0) {
+            console.log(`${student.name} has no credit balance, skipping email`);
+            continue;
+          }
+          
+          const emailSent = await sendCreditAddedEmail(student, student.balance, student.balance);
+          results.push({
+            student: student.name,
+            email: student.email,
+            sent: emailSent
+          });
+        }
+        
+        console.log('Email results:', results);
+        const successCount = results.filter(r => r.sent).length;
+        showNotification(`✅ Sent ${successCount} of ${results.length} credit emails`, 'success');
+        return results;
+      }
+
 
       // Show payment context menu
       function showPaymentContextMenu(event, paymentId) {
@@ -7951,8 +7987,8 @@
             // Recompute resolutions to populate group information
             await recomputePaymentResolutions();
 
-            // DISABLED: Auto-processing caused unintended credits - must be manually triggered
-            // await processOverpayments();
+            // Auto-process overpayments (adds credit, NO email sent automatically)
+            await processOverpayments();
 
             // Log success per developer command
 
@@ -8077,8 +8113,8 @@
             await PaymentStore.save(allPayments);
             await recomputePaymentResolutions();
 
-            // DISABLED: Auto-processing caused unintended credits - must be manually triggered
-            // await processOverpayments();
+            // Auto-process overpayments (adds credit, NO email sent automatically)
+            await processOverpayments();
 
             showNotification(`✅ Added ${payments.length} new payment${payments.length > 1 ? 's' : ''}!`, 'success');
             renderPaymentEmailsView();
