@@ -17558,9 +17558,22 @@
           let unpaidClasses = [];
           const today = getLADate();
           
+          // Get student's enrollment date for filtering
+          const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
+          if (studentCreatedAt) {
+            studentCreatedAt.setHours(0, 0, 0, 0); // Normalize to start of day
+          }
+          
           // Search through all days in current month for unpaid classes
           currentMonth.days.forEach(dayData => {
             const dayDate = new Date(dayData.date);
+            dayDate.setHours(0, 0, 0, 0); // Normalize to start of day
+            
+            // Skip classes before student's enrollment date
+            if (studentCreatedAt && dayDate < studentCreatedAt) {
+              return; // Don't include classes before student was added to system
+            }
+            
             dayData.studentsWithClass.forEach(classInfo => {
               if ((classInfo.student.id === studentId || classInfo.student.id === parseInt(studentId)) 
                   && classInfo.status === 'unpaid'
@@ -18839,12 +18852,28 @@
               }
 
               // CRITICAL FIX: Find ALL unpaid classes (past and today), not just today
+              // But exclude classes before student was added to the system
+              const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
+              let studentCreationDateStr = null;
+              if (studentCreatedAt) {
+                studentCreatedAt.setHours(0, 0, 0, 0);
+                const year = studentCreatedAt.getFullYear();
+                const month = String(studentCreatedAt.getMonth() + 1).padStart(2, '0');
+                const day = String(studentCreatedAt.getDate()).padStart(2, '0');
+                studentCreationDateStr = `${year}-${month}-${day}`;
+              }
+
               const unpaidClasses = studentData.attendance.filter(a => {
                 // Only unpaid classes
                 if (a.status !== 'unpaid') return false;
 
                 // Only classes on or before today (no future reminders)
                 if (a.date > todayStr) return false;
+
+                // CRITICAL: Exclude classes before student was added to system
+                if (studentCreationDateStr && a.date < studentCreationDateStr) {
+                  return false;
+                }
 
                 return true;
               });
