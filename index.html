@@ -17319,12 +17319,29 @@
             window.NotificationCenter.markAsRead(notification.id);
           }
 
+          // If notification has emailId (sent emails), open in email system
+          if (notification.metadata && notification.metadata.emailId) {
+            console.log('[NotificationClick] Opening sent email ID:', notification.metadata.emailId);
+            const emailIframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+            if (emailIframe && emailIframe.contentWindow && emailIframe.contentWindow.viewSentEmail) {
+              // Switch to EMAIL tab first
+              const emailTabButton = document.querySelector('[data-tab="EMAIL"]');
+              if (emailTabButton) emailTabButton.click();
+              
+              // Open the email in the iframe
+              setTimeout(() => {
+                emailIframe.contentWindow.viewSentEmail(notification.metadata.emailId);
+              }, 100);
+            } else {
+              console.warn('[NotificationClick] Email system iframe not found or viewSentEmail not available');
+            }
+          }
           // Show email content if available (for payment reminders)
-          if (notification.metadata && notification.metadata.emailBody) {
+          else if (notification.metadata && notification.metadata.emailBody) {
             console.log('[NotificationClick] Opening email preview...');
             showEmailPreview(notification);
           } else {
-            console.log('[NotificationClick] No email body found in notification metadata');
+            console.log('[NotificationClick] No email body or emailId found in notification metadata');
           }
 
           renderNotifications();
