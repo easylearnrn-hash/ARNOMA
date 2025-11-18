@@ -1,6 +1,6 @@
 # ARNOMA Version Tracking
 
-## Current Version: v2.1.5
+## Current Version: v2.1.6
 
 ## Version Update Checklist (Before Every Push)
 When making changes, update the version in **3 places** in `index.html`:
@@ -22,6 +22,18 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 ```
 
 ## Version History
+
+### v2.1.6 (2025-11-18)
+- **NEW FEATURE**: Automated Class Reminder System
+  - Sends reminders 12 hours before each class
+  - "tomorrow" for morning classes (7-10 AM), "today" for evening classes
+  - Smart payment status logic:
+    - Paid: Simple reminder only
+    - Unpaid (no credit): Payment reminder with Zelle QR code
+    - Unpaid (has credit): Shows credit application and remaining balance
+  - Includes class details: Group name, time, date
+  - Automatic hourly checks
+  - Creates notifications with email preview
 
 ### v2.1.5 (2025-11-18)
 - Added version number display in Payment Records header

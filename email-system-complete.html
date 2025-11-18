@@ -1537,35 +1537,23 @@ ARNOMA Team"
             },
             {
               id: `${timestamp}_classreminder`,
-              name: 'Class Reminder',
-              subject: 'Class Starting Soon - ARNOMA NCLEX-RN',
+              name: 'Class Reminder (Automated)',
+              subject: 'Reminder: Your {{GroupName}} Class {{TimeOfDay}} at {{ClassTime}}',
               body: generateEmailHTML(
                 'Class Reminder',
-                `<p>Dear <strong>{{StudentName}}</strong>,</p>
-              <p>This is a friendly reminder for your <strong>Group {{GroupName}}</strong> class:</p>
+                `<p>Hello <strong>{{StudentName}}</strong>,</p>
+              <p>This is a friendly reminder that you have a class <strong>{{TimeOfDay}}</strong>:</p>
               <div class="info-box">
-                <p><strong>{{ClassTime}}</strong></p>
+                <p style="margin: 4px 0;"><strong>Group:</strong> {{GroupName}}</p>
+                <p style="margin: 4px 0;"><strong>Time:</strong> {{ClassTime}}</p>
+                <p style="margin: 4px 0;"><strong>Date:</strong> {{ClassDate}}</p>
               </div>
-              <p>The link to the class will be emailed to you in about <strong>30 minutes</strong>. Please be ready.</p>
-              <div class="payment-frame">
-                <p style="margin: 0 0 8px 0; font-size: 16px; color: #4b5563;">
-                  <strong>Send Money with <span style="color: #764ba2;">Zelle®</span></strong>
-                </p>
-                <p style="margin: 0 0 12px 0; font-size: 14px; color: #6b7280;">
-                  Scan in your banking app to pay.
-                </p>
-                <div style="margin: 12px 0;">
-                  <p style="margin: 0 0 4px 0; font-size: 16px; font-weight: 600; color: #1f2937;">Arnoma</p>
-                  <p style="margin: 0 0 12px 0; font-size: 14px; color: #4b5563;">909-300-5155</p>
-                </div>
-                <img src="https://raw.githubusercontent.com/easylearnrn-hash/ARNOMA/main/Arnoma%20Zelle.JPG" alt="Zelle QR Code" style="max-width:180px;height:auto;border:0;display:block;margin:0 auto" />
-                <p style="margin: 12px 0 0 0; font-size: 16px; color: #9ca3af;">
-                  <strong style="color: #764ba2;">Zelle</strong>
-                </p>
-              </div>
-              <p>Best regards,<br><strong>ARNOMA NCLEX-RN</strong></p>`
+              {{PaymentMessage}}
+              <p>The Zoom link will be emailed to you approximately <strong>30 minutes before class starts</strong>. Please be ready!</p>
+              <p>We look forward to seeing you in class!</p>
+              <p>Best regards,<br><strong>ARNOMA Team</strong></p>`
               ),
-              trigger: 'manual',
+              trigger: 'automatic',
               active: true,
             },
             {
@@ -3319,6 +3307,130 @@ ARNOMA Team"
             window.parent.postMessage(
               {
                 action: 'emailError',
+                error: error.message,
+                student: student,
+              },
+              '*'
+            );
+          }
+        }
+
+        // Handle class reminder requests
+        if (action === 'sendClassReminder') {
+          console.log('📧 Received class reminder request:', student?.name, classDate);
+
+          try {
+            console.log('🔍 Looking for Class Reminder template...');
+
+            // Find Class Reminder template
+            const templates = emailSystem._templates || [];
+            const reminderTemplate = templates.find(
+              t => t.name.toLowerCase().includes('class') && t.name.toLowerCase().includes('reminder') && t.active
+            );
+
+            if (!reminderTemplate) {
+              console.error('❌ No active Class Reminder template found');
+              console.log(
+                'Available templates:',
+                templates.map(t => t.name)
+              );
+              window.parent.postMessage(
+                {
+                  action: 'classReminderError',
+                  error: 'No active Class Reminder template found',
+                },
+                '*'
+              );
+              return;
+            }
+
+            console.log('✅ Found template:', reminderTemplate.name);
+
+            if (!student.email) {
+              console.error('❌ Student has no email address:', student?.name);
+              window.parent.postMessage(
+                {
+                  action: 'classReminderError',
+                  error: 'Student has no email address',
+                },
+                '*'
+              );
+              return;
+            }
+
+            console.log('📧 Student email:', student.email);
+
+            // Replace variables in template
+            let subject = reminderTemplate.subject
+              .replace(/\{\{StudentName\}\}/gi, student.name)
+              .replace(/\{\{GroupName\}\}/gi, groupName)
+              .replace(/\{\{ClassTime\}\}/gi, classTime)
+              .replace(/\{\{TimeOfDay\}\}/gi, timeOfDay);
+
+            let body = reminderTemplate.body
+              .replace(/\{\{StudentName\}\}/gi, student.name)
+              .replace(/\{\{GroupName\}\}/gi, groupName)
+              .replace(/\{\{ClassTime\}\}/gi, classTime)
+              .replace(/\{\{ClassDate\}\}/gi, classDate)
+              .replace(/\{\{TimeOfDay\}\}/gi, timeOfDay)
+              .replace(/\{\{PaymentMessage\}\}/gi, paymentMessage);
+
+            // Send email via Supabase Edge Function
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              },
+              body: JSON.stringify({
+                to: student.email,
+                subject: subject,
+                html: body,
+                emailType: 'class_reminder',
+              }),
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+              console.error('❌ Error from Supabase:', result.error);
+              window.parent.postMessage(
+                {
+                  action: 'classReminderError',
+                  error: result.error,
+                  student: student,
+                },
+                '*'
+              );
+              return;
+            }
+
+            // Track sent email
+            await trackSentEmail(student.email, subject, 'Class Reminder (Automated)', body);
+
+            // Send success message back to parent with email content
+            window.parent.postMessage(
+              {
+                action: 'classReminderSent',
+                success: true,
+                student: student,
+                classDate: classDate,
+                emailContent: {
+                  subject: subject,
+                  body: body,
+                },
+              },
+              '*'
+            );
+
+            console.log('✅ Class reminder sent successfully to:', student.name);
+          } catch (error) {
+            console.error('❌ Error sending class reminder:', error);
+
+            // Send error message back to parent
+            window.parent.postMessage(
+              {
+                action: 'classReminderError',
                 error: error.message,
                 student: student,
               },
