@@ -1,6 +1,6 @@
 # ARNOMA Version Tracking
 
-## Current Version: v2.1.6
+## Current Version: v2.1.7
 
 ## Version Update Checklist (Before Every Push)
 When making changes, update the version in **3 places** in `index.html`:
@@ -22,6 +22,35 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 ```
 
 ## Version History
+
+### v2.1.7 (2025-01-20)
+- **CRITICAL FIX**: Fixed duplicate class reminder emails
+  - Root cause: `forEach` with `async/await` doesn't properly wait for promises
+  - Solution: Replaced all `forEach` with `for...of` loops in reminder managers
+  - Changed `return` to `continue` for proper loop flow control
+- **NEW FEATURE**: 30-Minute "Class Starting Soon" Reminder System
+  - Complete `ClassStartingSoonManager` module (248 lines)
+  - Sends Zoom link email 30 minutes before class
+  - Checks every 10 minutes, sends in 25-35 minute window
+  - localStorage deduplication: `class_starting_soon_sent`
+  - Added template to email-system-complete.html with {{ZoomLink}} variable
+  - Includes email handler for `sendClassStartingSoon` action
+- **CRITICAL FIX**: Payment receipt emails now auto-send 100% of the time
+  - Fixed `quickAddPayment()` - was bypassing `addPayment()` and directly saving to PaymentStore
+  - Complete rewrite: Now calls `await addPayment()` properly
+  - Triggers Supabase insert → auto-sends receipt email → creates notification
+  - Ensures calendar quick-add payments get receipts like manual payments
+- **NEW FEATURE**: Payment receipt notifications
+  - Enhanced `addPayment()` to create notification after successful email
+  - Shows "Payment Receipt Sent: $X" with student name, amount, date
+  - User always sees confirmation that receipt was sent
+- **EMAIL SYSTEM VERIFICATION**: All email variables validated
+  - Payment Reminder: {{StudentName}}, {{UnpaidClasses}}, {{Balance}}
+  - Payment Receipt: Hardcoded values (student.name, paymentAmount, paymentDate, newBalance)
+  - Class Reminder: {{StudentName}}, {{GroupName}}, {{ClassTime}}, {{TimeOfDay}}, {{PaymentMessage}}, {{ClassDate}}
+  - Class Starting Soon: {{StudentName}}, {{GroupName}}, {{ClassTime}}, {{ClassDate}}, {{ZoomLink}}
+  - Welcome Email: {{StudentName}}, {{Group}}, {{GroupSchedule}}
+  - All variables properly mapped and replaced in handlers
 
 ### v2.1.6 (2025-11-18)
 - **NEW FEATURE**: Automated Class Reminder System

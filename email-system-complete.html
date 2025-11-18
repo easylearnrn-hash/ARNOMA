@@ -1557,6 +1557,31 @@ ARNOMA Team"
               active: true,
             },
             {
+              id: `${timestamp}_startingsoon`,
+              name: 'Class Starting Soon (Automated)',
+              subject: 'Class Starting Soon - {{GroupName}} at {{ClassTime}}',
+              body: generateEmailHTML(
+                'Class Starting Soon',
+                `<p>Hello <strong>{{StudentName}}</strong>,</p>
+              <p>Your class is starting in approximately <strong>30 minutes</strong>!</p>
+              <div class="info-box">
+                <p style="margin: 4px 0;"><strong>Group:</strong> {{GroupName}}</p>
+                <p style="margin: 4px 0;"><strong>Time:</strong> {{ClassTime}}</p>
+                <p style="margin: 4px 0;"><strong>Date:</strong> {{ClassDate}}</p>
+              </div>
+              <p style="text-align: center; margin: 24px 0;">
+                <a href="{{ZoomLink}}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px;">
+                  Join Zoom Meeting
+                </a>
+              </p>
+              <p style="font-size: 13px; color: #6b7280; text-align: center;">Click the button above or use this link:<br><a href="{{ZoomLink}}" style="color: #764ba2;">{{ZoomLink}}</a></p>
+              <p>Please join on time and be ready to participate. See you soon!</p>
+              <p>Best regards,<br><strong>ARNOMA Team</strong></p>`
+              ),
+              trigger: 'automatic',
+              active: true,
+            },
+            {
               id: `${timestamp}_welcome`,
               name: 'Welcome Email',
               subject: 'Welcome to ARNOMA NCLEX-RN',
@@ -3431,6 +3456,128 @@ ARNOMA Team"
             window.parent.postMessage(
               {
                 action: 'classReminderError',
+                error: error.message,
+                student: student,
+              },
+              '*'
+            );
+          }
+        }
+
+        // Handle class starting soon requests
+        if (action === 'sendClassStartingSoon') {
+          console.log('📧 Received class starting soon request:', student?.name, classDate);
+
+          try {
+            console.log('🔍 Looking for Class Starting Soon template...');
+
+            // Find Class Starting Soon template
+            const templates = emailSystem._templates || [];
+            const startingSoonTemplate = templates.find(
+              t => t.name.toLowerCase().includes('starting') && t.name.toLowerCase().includes('soon') && t.active
+            );
+
+            if (!startingSoonTemplate) {
+              console.error('❌ No active Class Starting Soon template found');
+              console.log(
+                'Available templates:',
+                templates.map(t => t.name)
+              );
+              window.parent.postMessage(
+                {
+                  action: 'classStartingSoonError',
+                  error: 'No active Class Starting Soon template found',
+                },
+                '*'
+              );
+              return;
+            }
+
+            console.log('✅ Found template:', startingSoonTemplate.name);
+
+            if (!student.email) {
+              console.error('❌ Student has no email address:', student?.name);
+              window.parent.postMessage(
+                {
+                  action: 'classStartingSoonError',
+                  error: 'Student has no email address',
+                },
+                '*'
+              );
+              return;
+            }
+
+            console.log('📧 Student email:', student.email);
+
+            // Replace variables in template
+            let subject = startingSoonTemplate.subject
+              .replace(/\{\{StudentName\}\}/gi, student.name)
+              .replace(/\{\{GroupName\}\}/gi, groupName)
+              .replace(/\{\{ClassTime\}\}/gi, classTime);
+
+            let body = startingSoonTemplate.body
+              .replace(/\{\{StudentName\}\}/gi, student.name)
+              .replace(/\{\{GroupName\}\}/gi, groupName)
+              .replace(/\{\{ClassTime\}\}/gi, classTime)
+              .replace(/\{\{ClassDate\}\}/gi, classDate)
+              .replace(/\{\{ZoomLink\}\}/gi, zoomLink || 'https://zoom.us/j/YOUR_MEETING_ID');
+
+            // Send email via Supabase Edge Function
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              },
+              body: JSON.stringify({
+                to: student.email,
+                subject: subject,
+                html: body,
+                emailType: 'class_starting_soon',
+              }),
+            });
+
+            const result = await response.json();
+
+            if (result.error) {
+              console.error('❌ Error from Supabase:', result.error);
+              window.parent.postMessage(
+                {
+                  action: 'classStartingSoonError',
+                  error: result.error,
+                  student: student,
+                },
+                '*'
+              );
+              return;
+            }
+
+            // Track sent email
+            await trackSentEmail(student.email, subject, 'Class Starting Soon (Automated)', body);
+
+            // Send success message back to parent with email content
+            window.parent.postMessage(
+              {
+                action: 'classStartingSoonSent',
+                success: true,
+                student: student,
+                classDate: classDate,
+                emailContent: {
+                  subject: subject,
+                  body: body,
+                },
+              },
+              '*'
+            );
+
+            console.log('✅ Class starting soon email sent successfully to:', student.name);
+          } catch (error) {
+            console.error('❌ Error sending class starting soon email:', error);
+
+            // Send error message back to parent
+            window.parent.postMessage(
+              {
+                action: 'classStartingSoonError',
                 error: error.message,
                 student: student,
               },

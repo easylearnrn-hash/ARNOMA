@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.1.6]</title>
+    <title>ARNOMA - Student Management [v2.1.7]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.1.6-class-reminder-automation" />
+    <meta name="version" content="2.1.7-email-automation-fixes" />
 
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.1.6 - Automated Class Reminder System Added');
+      console.log('🔥 ARNOMA v2.1.7 - Email Automation Fixes: Duplicate Reminders Fixed + 30-Min Starting Soon + Payment Receipt Automation');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -4844,7 +4844,7 @@
 
       <div class="container">
         <div class="header">
-          <h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.1.6</span></h1>
+          <h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.1.7</span></h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
             <option value="matched">Matched Only</option>
@@ -6020,14 +6020,36 @@
             const student = students.find(s => String(s.id) === String(payment.derivedStudentId));
 
             if (student && student.email) {
-              debugLog('📧 Sending payment receipt email to:', student.name);
+              console.log('📧 Auto-sending payment receipt email to:', student.name);
               try {
-                await sendPaymentReceiptEmail(
+                const emailResult = await sendPaymentReceiptEmail(
                   student,
                   payment.amount,
                   payment.date || new Date().toISOString().split('T')[0],
                   student.balance
                 );
+                
+                if (emailResult.success) {
+                  console.log('✅ Payment receipt email sent successfully');
+                  // Create notification
+                  if (window.NotificationCenter) {
+                    await window.NotificationCenter.add(
+                      window.NotificationCenter.NotificationType.SUCCESS,
+                      `Payment Receipt Sent: $${payment.amount}`,
+                      `Confirmation email sent to ${student.name} (${student.email})`,
+                      {
+                        studentName: student.name,
+                        metadata: {
+                          amount: payment.amount,
+                          date: payment.date,
+                          email: student.email,
+                        },
+                      }
+                    );
+                  }
+                } else {
+                  console.error('⚠️ Payment receipt email failed:', emailResult.error);
+                }
               } catch (emailError) {
                 console.error('⚠️ Payment receipt email failed:', emailError);
                 // Don't block payment - email failure is non-critical
@@ -14401,6 +14423,12 @@
             debugLog('✅ Class Reminder Manager initialized');
           }
 
+          // Initialize Class Starting Soon Manager (auto-send 30-minute reminders)
+          if (window.ClassStartingSoonManager) {
+            await window.ClassStartingSoonManager.initialize();
+            debugLog('✅ Class Starting Soon Manager initialized');
+          }
+
           // Initialize Notification Center
           if (window.NotificationCenter) {
             await window.NotificationCenter.initialize();
@@ -19694,7 +19722,7 @@
           document.body.appendChild(overlay);
         }
 
-        function quickAddPayment(studentId, dateStr, amount) {
+        async function quickAddPayment(studentId, dateStr, amount) {
           // Close detail popup
           const overlay = document.getElementById('calendarDetailOverlay');
           if (overlay) overlay.click();
@@ -19705,25 +19733,40 @@
 
           const students = getCachedStudents();
           const student = students.find(s => s.id === studentId);
-          if (!student) return;
+          if (!student) {
+            showToast('❌ Student not found', 'error');
+            return;
+          }
 
-          const payment = {
-            id: 'cal_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-            payerName: student.name,
-            studentName: student.name,
-            amount: amount.toString(),
-            timestamp: new Date(dateStr).toISOString(),
-            note: 'Added from Calendar',
+          // CRITICAL FIX: Use addPayment() to trigger receipt email automatically
+          const paymentData = {
+            payer_name: student.name,
+            amount: amount,
+            payment_date: dateStr,
+            note: 'Added from Calendar Quick Payment',
             ignored: false,
-            source: 'calendar',
+            source: 'calendar_quick',
+            derivedStudentId: studentId,
+            matched_student_id: studentId,
           };
 
-          const payments = PaymentStore.getAll();
-          payments.push(payment);
-          PaymentStore.save(payments);
-
-          showToast('✅ Payment added successfully', 'success');
-          renderCalendar();
+          try {
+            console.log('💳 Creating quick payment via addPayment()...');
+            const result = await addPayment(paymentData);
+            
+            if (result) {
+              showToast('✅ Payment added & receipt sent!', 'success');
+              renderCalendar();
+              
+              // Reload payments to update UI
+              await window.PaymentStore.load();
+            } else {
+              showToast('❌ Failed to add payment', 'error');
+            }
+          } catch (error) {
+            console.error('❌ Quick payment error:', error);
+            showToast('❌ Payment failed: ' + error.message, 'error');
+          }
         }
 
         async function applyFromCredit(studentId, dateStr, pricePerClass) {
@@ -20769,17 +20812,18 @@
               let remindersSent = 0;
               let classesChecked = 0;
 
-              calendarData.days.forEach(dayData => {
+              // CRITICAL FIX: Use for...of instead of forEach to properly handle async/await
+              for (const dayData of calendarData.days) {
                 const dateStr = formatDateYYYYMMDD(dayData.date);
                 const classDateObj = new Date(dateStr + 'T00:00:00-08:00');
                 
                 // Calculate hours until class
-                dayData.studentsWithClass.forEach(async classData => {
+                for (const classData of dayData.studentsWithClass) {
                   classesChecked++;
                   const student = classData.student;
                   const group = groups.find(g => g.name === student.group);
                   
-                  if (!group || !group.schedule) return;
+                  if (!group || !group.schedule) continue;
 
                   // Parse class time
                   const scheduleSlots = parseSchedule(group.schedule);
@@ -20789,7 +20833,7 @@
                   });
                   const todaySlot = scheduleSlots.find(slot => slot.day === dayName);
                   
-                  if (!todaySlot) return;
+                  if (!todaySlot) continue;
 
                   // Calculate exact class start time in LA
                   const classStartTime = new Date(classDateObj);
@@ -20803,7 +20847,7 @@
                     // Check if already sent
                     if (wasReminderSent(student.id, dateStr)) {
                       debugLog(`[ClassReminderManager] ⏭️ Already sent reminder to ${student.name} for ${dateStr}`);
-                      return;
+                      continue;
                     }
 
                     // Format class time
@@ -20836,8 +20880,8 @@
                       console.log(`[ClassReminderManager] ✅ Reminder sent to ${student.name}`);
                     }
                   }
-                });
-              });
+                }
+              }
 
               console.log('\n[ClassReminderManager] 📊 SUMMARY');
               console.log('  Classes checked:', classesChecked);
@@ -20910,6 +20954,254 @@
           }
 
           // Public API
+          return {
+            initialize,
+            checkAndSendReminders,
+          };
+        })();
+
+        // ============================================================================
+        // CLASS STARTING SOON MANAGER (30-minute reminder)
+        // Sends "Class Starting Soon" reminder 30 minutes before class starts
+        // ============================================================================
+        window.ClassStartingSoonManager = (function () {
+          let sentReminders = {}; // {studentId: {date: timestamp}}
+
+          function getLADate() {
+            return new Date(
+              new Date().toLocaleString('en-US', {
+                timeZone: 'America/Los_Angeles',
+              })
+            );
+          }
+
+          function formatDateYYYYMMDD(date) {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          }
+
+          function parseSchedule(scheduleStr) {
+            if (!scheduleStr) return [];
+            const parts = scheduleStr.split(',').map(p => p.trim());
+            const slots = [];
+            parts.forEach(part => {
+              const match = part.match(/^([A-Za-z]+)\s+(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+              if (match) {
+                const [, day, hour, minute, period] = match;
+                let hour24 = parseInt(hour);
+                if (period.toUpperCase() === 'PM' && hour24 !== 12) hour24 += 12;
+                if (period.toUpperCase() === 'AM' && hour24 === 12) hour24 = 0;
+                slots.push({ day, hour: hour24, minute: parseInt(minute) });
+              }
+            });
+            return slots;
+          }
+
+          function wasReminderSent(studentId, dateStr) {
+            return sentReminders[studentId]?.[dateStr] ? true : false;
+          }
+
+          function markReminderSent(studentId, dateStr) {
+            if (!sentReminders[studentId]) {
+              sentReminders[studentId] = {};
+            }
+            sentReminders[studentId][dateStr] = Date.now();
+            localStorage.setItem('class_starting_soon_sent', JSON.stringify(sentReminders));
+          }
+
+          function loadSentReminders() {
+            try {
+              const stored = localStorage.getItem('class_starting_soon_sent');
+              if (stored) {
+                sentReminders = JSON.parse(stored);
+              }
+            } catch (e) {
+              console.error('[ClassStartingSoonManager] Error loading sent reminders:', e);
+            }
+          }
+
+          async function sendStartingSoonReminder(student, classTime, groupName, classDate) {
+            const iframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+            if (!iframe || !iframe.contentWindow) {
+              console.error('[ClassStartingSoonManager] Email system iframe not found');
+              return false;
+            }
+
+            const classDateFormatted = new Date(classDate + 'T00:00:00-08:00').toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+
+            iframe.contentWindow.postMessage(
+              {
+                action: 'sendClassStartingSoon',
+                student: student,
+                classDate: classDateFormatted,
+                classTime: classTime,
+                groupName: groupName,
+              },
+              '*'
+            );
+
+            return true;
+          }
+
+          async function checkAndSendReminders() {
+            try {
+              const nowLA = getLADate();
+              const todayStr = formatDateYYYYMMDD(nowLA);
+
+              console.log('\n═══════════════════════════════════════════════════════');
+              console.log('[ClassStartingSoonManager] 🔍 CHECKING 30-MIN REMINDERS');
+              console.log('[ClassStartingSoonManager] 📅 LA Date:', todayStr);
+              console.log(
+                '[ClassStartingSoonManager] 🕐 LA Time:',
+                nowLA.toLocaleString('en-US', {
+                  timeZone: 'America/Los_Angeles',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                  hour12: true,
+                })
+              );
+
+              if (!window.currentCalendarData) {
+                debugLog('[ClassStartingSoonManager] ⏳ Calendar not initialized yet');
+                console.log('═══════════════════════════════════════════════════════\n');
+                return;
+              }
+
+              const calendarData = window.currentCalendarData;
+              if (!calendarData || !calendarData.days) {
+                console.warn('[ClassStartingSoonManager] ❌ No calendar data available');
+                console.log('═══════════════════════════════════════════════════════\n');
+                return;
+              }
+
+              let remindersSent = 0;
+              let classesChecked = 0;
+
+              for (const dayData of calendarData.days) {
+                const dateStr = formatDateYYYYMMDD(dayData.date);
+                const classDateObj = new Date(dateStr + 'T00:00:00-08:00');
+
+                for (const classData of dayData.studentsWithClass) {
+                  classesChecked++;
+                  const student = classData.student;
+                  const group = groups.find(g => g.name === student.group);
+
+                  if (!group || !group.schedule) continue;
+
+                  const scheduleSlots = parseSchedule(group.schedule);
+                  const dayName = classDateObj.toLocaleString('en-US', {
+                    timeZone: 'America/Los_Angeles',
+                    weekday: 'long',
+                  });
+                  const todaySlot = scheduleSlots.find(slot => slot.day === dayName);
+
+                  if (!todaySlot) continue;
+
+                  const classStartTime = new Date(classDateObj);
+                  classStartTime.setHours(todaySlot.hour, todaySlot.minute, 0, 0);
+
+                  // Calculate minutes until class
+                  const minutesUntilClass = (classStartTime - nowLA) / (1000 * 60);
+
+                  // Send if between 25 and 35 minutes before (10-minute window)
+                  if (minutesUntilClass >= 25 && minutesUntilClass <= 35) {
+                    if (wasReminderSent(student.id, dateStr)) {
+                      debugLog(`[ClassStartingSoonManager] ⏭️ Already sent to ${student.name} for ${dateStr}`);
+                      continue;
+                    }
+
+                    const classTimeFormatted = classStartTime.toLocaleString('en-US', {
+                      hour: 'numeric',
+                      minute: '2-digit',
+                      hour12: true,
+                    });
+
+                    console.log(`[ClassStartingSoonManager] 📧 Sending to ${student.name}`);
+                    console.log(`[ClassStartingSoonManager]    Class: ${student.group} at ${classTimeFormatted}`);
+                    console.log(`[ClassStartingSoonManager]    Minutes until class: ${minutesUntilClass.toFixed(1)}`);
+
+                    const sent = await sendStartingSoonReminder(
+                      student,
+                      classTimeFormatted,
+                      student.group,
+                      dateStr
+                    );
+
+                    if (sent) {
+                      markReminderSent(student.id, dateStr);
+                      remindersSent++;
+                      console.log(`[ClassStartingSoonManager] ✅ Reminder sent to ${student.name}`);
+                    }
+                  }
+                }
+              }
+
+              console.log('\n[ClassStartingSoonManager] 📊 SUMMARY');
+              console.log('  Classes checked:', classesChecked);
+              console.log('  Reminders sent:', remindersSent);
+              console.log('═══════════════════════════════════════════════════════\n');
+
+            } catch (error) {
+              console.error('[ClassStartingSoonManager] ❌ Error:', error);
+            }
+          }
+
+          async function initialize() {
+            loadSentReminders();
+            console.log('[ClassStartingSoonManager] 🚀 30-minute reminder system initialized');
+
+            // Listen for email responses
+            window.addEventListener('message', async event => {
+              if (event.data.action === 'classStartingSoonSent' && event.data.success) {
+                const { student, classDate, emailContent } = event.data;
+                console.log('[ClassStartingSoonManager] ✅ Email sent to', student.name);
+
+                if (window.NotificationCenter && emailContent) {
+                  await window.NotificationCenter.add(
+                    window.NotificationCenter.NotificationType.INFO,
+                    `Class Starting Soon Email Sent`,
+                    `Sent to ${student.name} (${student.email}) - Class in 30 minutes`,
+                    {
+                      studentName: student.name,
+                      metadata: {
+                        date: classDate,
+                        email: student.email,
+                        emailSubject: emailContent.subject,
+                        emailBody: emailContent.body,
+                      },
+                    }
+                  );
+                }
+              }
+            });
+
+            // Listen for calendar initialization
+            window.addEventListener('calendar:initialized', () => {
+              setTimeout(() => {
+                checkAndSendReminders();
+              }, 15000);
+            });
+
+            if (window.currentCalendarData) {
+              setTimeout(() => {
+                checkAndSendReminders();
+              }, 15000);
+            }
+
+            // Check every 10 minutes (more frequent than 12h reminder)
+            setInterval(() => {
+              checkAndSendReminders();
+            }, 10 * 60 * 1000);
+          }
+
           return {
             initialize,
             checkAndSendReminders,
