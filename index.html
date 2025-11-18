@@ -6435,8 +6435,10 @@
               continue;
             }
 
-            const student = students.find(s => s.id === payment.derivedStudentId);
+            // Find student (handle both string and number IDs)
+            const student = students.find(s => String(s.id) === String(payment.derivedStudentId));
             if (!student) {
+              console.log(`⚠️ Student ID ${payment.derivedStudentId} not found for payment ${payment.id}`);
               continue;
             }
 
