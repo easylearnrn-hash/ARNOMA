@@ -5899,6 +5899,7 @@
           balance: studentData.balance ?? 0,
           status: normalizeStudentStatusValue(studentData.status),
           status_changed_date: studentData.statusChangedDate ?? null,
+          created_at: studentData.created_at || new Date().toISOString(), // Always set creation timestamp
         };
 
         // Add optional fields only if they exist in the Supabase schema
@@ -17572,9 +17573,14 @@
           console.log('📚 Class history records:', history.length);
 
           // Find unpaid classes
-          const unpaidClasses = history.filter(
-            (ch) => (ch.student_id === studentId || ch.student_id === parseInt(studentId)) && ch.payment_status !== 'paid'
-          );
+          const unpaidClasses = history.filter((ch) => {
+            // Normalize student ID comparison
+            const chId = String(ch.student_id).trim();
+            const sId = String(studentId).trim();
+            // Normalize payment status comparison
+            const status = (ch.payment_status || '').toLowerCase().trim();
+            return (chId === sId) && (status !== 'paid');
+          });
 
           console.log('💰 Unpaid classes found:', unpaidClasses.length);
 
