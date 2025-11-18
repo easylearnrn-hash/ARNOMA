@@ -6414,6 +6414,235 @@
         }
       }
 
+      // Process overpayments and convert to credit
+      async function processOverpayments() {
+        try {
+          const payments = PaymentStore.getAll();
+          const students = getCachedStudents();
+          const processedOverpayments = JSON.parse(localStorage.getItem('processedOverpayments') || '{}');
+          const creditsApplied = [];
+
+          console.log('💰 Processing overpayments for', payments.length, 'payments...');
+
+          for (const payment of payments) {
+            // Skip if already processed
+            if (processedOverpayments[payment.id]) {
+              continue;
+            }
+
+            // Skip if payment isn't resolved to a student
+            if (!payment.derivedStudentId) {
+              continue;
+            }
+
+            const student = students.find(s => s.id === payment.derivedStudentId);
+            if (!student) {
+              continue;
+            }
+
+            const studentPrice = parseFloat(student.payPerClass || student.price_per_class || 0);
+            const paymentAmount = parseFloat(payment.amount || 0);
+
+            // Check if overpayment
+            if (paymentAmount > studentPrice && studentPrice > 0) {
+              const excess = paymentAmount - studentPrice;
+
+              console.log(`💰 OVERPAYMENT DETECTED: ${student.name} paid $${paymentAmount}, price is $${studentPrice}, excess: $${excess}`);
+
+              try {
+                // Update credit balance via RPC (atomic SQL)
+                const { data, error } = await supabase.rpc('increment_credit_balance', {
+                  student_id: student.id,
+                  amount: excess
+                });
+
+                if (error) {
+                  console.warn('RPC increment_credit_balance failed, using fallback UPDATE:', error);
+                  // Fallback: manual update if RPC doesn't exist
+                  const newBalance = parseFloat(student.balance || 0) + excess;
+                  const { error: updateError } = await supabase
+                    .from('students')
+                    .update({ balance: newBalance })
+                    .eq('id', student.id);
+
+                  if (updateError) {
+                    console.error('Failed to update student balance:', updateError);
+                    continue;
+                  }
+
+                  student.balance = newBalance;
+                } else {
+                  // Update local cache
+                  student.balance = parseFloat(student.balance || 0) + excess;
+                }
+
+                // Mark as processed
+                processedOverpayments[payment.id] = {
+                  processedAt: new Date().toISOString(),
+                  excess: excess,
+                  studentId: student.id
+                };
+                localStorage.setItem('processedOverpayments', JSON.stringify(processedOverpayments));
+
+                // Generate system notification
+                await window.NotificationCenter.add(
+                  window.NotificationCenter.NotificationType.CREDIT,
+                  'Credit Added',
+                  `${student.name} paid $${paymentAmount.toFixed(2)} — $${excess.toFixed(2)} has been added as credit.`,
+                  {
+                    studentId: student.id,
+                    amount: excess,
+                    paymentId: payment.id
+                  }
+                );
+
+                // Send credit confirmation email
+                const emailSent = await sendCreditAddedEmail(student, excess, student.balance);
+                console.log(`📧 Credit email ${emailSent ? 'sent' : 'failed'} to ${student.name}`);
+
+                creditsApplied.push({
+                  student: student.name,
+                  payment: paymentAmount,
+                  credit: excess,
+                  newBalance: student.balance
+                });
+
+              } catch (error) {
+                console.error(`Failed to process overpayment for ${student.name}:`, error);
+              }
+            }
+          }
+
+          // Refresh UI if credits were applied
+          if (creditsApplied.length > 0) {
+            await loadStudents();
+            window.dispatchEvent(new CustomEvent('students:updated'));
+
+            const totalCredit = creditsApplied.reduce((sum, c) => sum + c.credit, 0);
+            showNotification(
+              `💰 Applied $${totalCredit.toFixed(2)} in credits to ${creditsApplied.length} student(s)`,
+              'success'
+            );
+
+            console.log('✅ Credits applied:', creditsApplied);
+          } else {
+            console.log('No new overpayments to process');
+          }
+
+          return creditsApplied;
+
+        } catch (error) {
+          console.error('Error processing overpayments:', error);
+          showNotification('❌ Error processing overpayments', 'error');
+          return [];
+        }
+      }
+
+      // Send credit added confirmation email to student
+      async function sendCreditAddedEmail(student, creditAmount, newBalance) {
+        try {
+          if (!student.email) {
+            console.log(`No email for ${student.name}, skipping credit email`);
+            return false;
+          }
+
+          const emailSubject = 'Credit Added to Your Account - ARNOMA NCLEX-RN';
+          const emailBody = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+              <meta charset="UTF-8">
+              <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <style>
+                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; }
+                .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+                .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+                .header h1 { margin: 0; font-size: 24px; }
+                .content { background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 10px 10px; }
+                .credit-amount { font-size: 42px; font-weight: 700; color: #10b981; text-align: center; margin: 20px 0; }
+                .balance-box { background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%); border-left: 4px solid #667eea; padding: 20px; margin: 20px 0; border-radius: 8px; }
+                .balance-box strong { color: #667eea; font-size: 18px; }
+                .info-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin: 20px 0; border-radius: 8px; }
+                .footer { text-align: center; color: #6b7280; font-size: 14px; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+              </style>
+            </head>
+            <body>
+              <div class="container">
+                <div class="header">
+                  <h1>💰 Credit Added!</h1>
+                </div>
+                <div class="content">
+                  <p style="font-size: 16px;">Hello <strong>${escapeHtml(student.name)}</strong>,</p>
+                  
+                  <p style="font-size: 16px;">Great news!</p>
+                  
+                  <div class="credit-amount">$${creditAmount.toFixed(2)}</div>
+                  <p style="text-align: center; color: #6b7280; margin-top: -10px;">has been added as credit to your account</p>
+                  
+                  <div class="balance-box">
+                    <strong>Your Current Credit Balance:</strong>
+                    <div style="font-size: 28px; color: #667eea; font-weight: 700; margin-top: 8px;">$${newBalance.toFixed(2)}</div>
+                  </div>
+                  
+                  <div class="info-box">
+                    <strong style="color: #f59e0b;">💡 How to use your credit:</strong>
+                    <p style="margin: 8px 0 0 0; color: #78350f;">Your credit will be automatically applied to your next class payment. No action needed!</p>
+                  </div>
+                  
+                  <p style="font-size: 14px; color: #6b7280; margin-top: 30px;">
+                    If you have any questions about your credit balance, please don't hesitate to contact us.
+                  </p>
+                </div>
+                <div class="footer">
+                  <p>ARNOMA NCLEX-RN Preparation</p>
+                  <p>This is an automated notification about your account credit.</p>
+                </div>
+              </div>
+            </body>
+            </html>
+          `;
+
+          const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+            },
+            body: JSON.stringify({
+              to: student.email,
+              subject: emailSubject,
+              html: emailBody
+            })
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error('Failed to send credit email:', errorText);
+            return false;
+          }
+
+          // Track sent email
+          await window.trackSentEmail(
+            student.email,
+            emailSubject,
+            'Credit Notification',
+            emailBody,
+            {
+              recipientName: student.name,
+              creditAmount: creditAmount,
+              newBalance: newBalance
+            }
+          );
+
+          console.log(`✅ Credit email sent to ${student.name}`);
+          return true;
+
+        } catch (error) {
+          console.error('Error sending credit email:', error);
+          return false;
+        }
+      }
+
       // Show payment context menu
       function showPaymentContextMenu(event, paymentId) {
         try {
