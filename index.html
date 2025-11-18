@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.1.2]</title>
+    <title>ARNOMA - Student Management [v2.1.3]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <meta http-equiv="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.1.2-performance-optimized" />
+    <meta name="version" content="2.1.3-performance-optimized" />
 
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.1.2 - Performance Optimized (85 debug logs silenced)');
+      console.log('🔥 ARNOMA v2.1.3 - Performance Optimized (133 debug logs silenced)');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -14445,7 +14445,7 @@
                     metadata: notif.metadata || {},
                   }
                 );
-                console.log('[NotificationCenter] ✅ Notification added from iframe');
+                debugLog('[NotificationCenter] ✅ Notification added from iframe');
               }
             }
           });
@@ -17725,12 +17725,12 @@
           const panel = document.getElementById('notificationCenterPanel');
           if (!overlay || !panel) return;
 
-          console.log('[NotificationCenter] 🔔 Opening notification center...');
+          debugLog('[NotificationCenter] 🔔 Opening notification center...');
 
           // Reload notifications from Supabase to get latest
           if (window.NotificationCenter) {
             window.NotificationCenter.initialize().then(() => {
-              console.log('[NotificationCenter] 🔄 Reloaded notifications from Supabase');
+              debugLog('[NotificationCenter] 🔄 Reloaded notifications from Supabase');
               renderNotifications();
             });
           } else {
@@ -17762,7 +17762,7 @@
         }
 
         async function createTestNotification() {
-          console.log('[NotificationCenter] 🗑️ Clearing all notifications...');
+          debugLog('[NotificationCenter] 🗑️ Clearing all notifications...');
 
           if (!window.NotificationCenter) {
             console.error('[NotificationCenter] ❌ NotificationCenter not initialized');
@@ -17777,7 +17777,7 @@
             await window.NotificationCenter.delete(notif.id);
           }
 
-          console.log('[NotificationCenter] ✅ All notifications cleared');
+          debugLog('[NotificationCenter] ✅ All notifications cleared');
 
           // Reload the notifications view
           await window.NotificationCenter.initialize();
@@ -18270,7 +18270,7 @@
           // Dispatch calendar initialized event for automation engine
           if (!window._calendarInitializedDispatched) {
             window._calendarInitializedDispatched = true;
-            console.log('[Calendar] 📊 Dispatching calendar:initialized event for automation engine');
+            debugLog('[Calendar] 📊 Dispatching calendar:initialized event for automation engine');
             window.dispatchEvent(new CustomEvent('calendar:initialized', { detail: calendarData }));
           }
 
@@ -20227,8 +20227,8 @@
               const todayStr = formatDateYYYYMMDD(today);
 
               console.log('═══════════════════════════════════════════════════════');
-              console.log('[PaymentReminderManager] 🔍 STARTING DAILY REMINDER CHECK');
-              console.log('[PaymentReminderManager] 📅 LA Date:', todayStr);
+              debugLog('[PaymentReminderManager] 🔍 STARTING DAILY REMINDER CHECK');
+              debugLog('[PaymentReminderManager] 📅 LA Date:', todayStr);
               console.log(
                 '[PaymentReminderManager] 🕐 LA Time:',
                 today.toLocaleString('en-US', {
@@ -20242,31 +20242,31 @@
 
               // Only check once per day (but only if calendar data is available)
               if (lastCheckDate === todayStr) {
-                console.log('[PaymentReminderManager] ⏭️  Already checked today - skipping');
+                debugLog('[PaymentReminderManager] ⏭️  Already checked today - skipping');
                 console.log('═══════════════════════════════════════════════════════');
                 return;
               }
 
               // IMPORTANT: Wait for calendar data to be available
               if (!window.currentCalendarData) {
-                console.log('[PaymentReminderManager] ⏳ Calendar not initialized yet');
+                debugLog('[PaymentReminderManager] ⏳ Calendar not initialized yet');
 
                 // Try to render calendar now if function exists
                 if (typeof renderCalendar === 'function') {
-                  console.log('[PaymentReminderManager] � Manually rendering calendar...');
+                  debugLog('[PaymentReminderManager] � Manually rendering calendar...');
                   renderCalendar();
-                  console.log('[PaymentReminderManager] ✅ Calendar rendered!');
+                  debugLog('[PaymentReminderManager] ✅ Calendar rendered!');
                 } else {
-                  console.log('[PaymentReminderManager] ❌ renderCalendar function not available');
-                  console.log('[PaymentReminderManager] 🔄 Will retry on next interval');
+                  debugLog('[PaymentReminderManager] ❌ renderCalendar function not available');
+                  debugLog('[PaymentReminderManager] 🔄 Will retry on next interval');
                   console.log('═══════════════════════════════════════════════════════');
                   return;
                 }
 
                 // Check again after render
                 if (!window.currentCalendarData) {
-                  console.log('[PaymentReminderManager] ❌ Calendar still not initialized after render attempt');
-                  console.log('[PaymentReminderManager] 🔄 Will retry on next interval');
+                  debugLog('[PaymentReminderManager] ❌ Calendar still not initialized after render attempt');
+                  debugLog('[PaymentReminderManager] 🔄 Will retry on next interval');
                   console.log('═══════════════════════════════════════════════════════');
                   return;
                 }
@@ -20308,7 +20308,7 @@
               });
 
               const studentsArray = Object.values(studentAttendanceMap);
-              console.log('[PaymentReminderManager] 📊 Checking', studentsArray.length, 'students for unpaid classes');
+              debugLog('[PaymentReminderManager] 📊 Checking', studentsArray.length, 'students for unpaid classes');
 
               let remindersSent = 0;
               let studentsChecked = 0;
@@ -20478,7 +20478,7 @@
               }
 
               console.log('\n═══════════════════════════════════════════════════════');
-              console.log('[PaymentReminderManager] 📊 SUMMARY');
+              debugLog('[PaymentReminderManager] 📊 SUMMARY');
               console.log('  Total students checked:', studentsChecked);
               console.log('  Students with paused reminders:', studentsPaused);
               console.log('  Students with no unpaid classes:', studentsNoUnpaid);
@@ -20504,24 +20504,24 @@
             await loadPausedFromSupabase();
             loadSentReminders();
 
-            console.log('[PaymentReminderManager] 🚀 Automation engine initialized');
-            console.log('[PaymentReminderManager] 📅 Using LA Timezone for ALL date/time calculations');
+            debugLog('[PaymentReminderManager] 🚀 Automation engine initialized');
+            debugLog('[PaymentReminderManager] 📅 Using LA Timezone for ALL date/time calculations');
 
             // Listen for email content messages from iframe
             window.addEventListener('message', async event => {
-              console.log('[PaymentReminderManager] Received message:', event.data);
+              debugLog('[PaymentReminderManager] Received message:', event.data);
 
               if (event.data.action === 'autoReminderSent' && event.data.success) {
                 const { student, classDate, emailContent } = event.data;
 
-                console.log('[PaymentReminderManager] ✅ Auto-reminder sent successfully!');
-                console.log('[PaymentReminderManager] Student:', student.name);
-                console.log('[PaymentReminderManager] Email content received:', !!emailContent);
-                console.log('[PaymentReminderManager] Email subject:', emailContent?.subject);
+                debugLog('[PaymentReminderManager] ✅ Auto-reminder sent successfully!');
+                debugLog('[PaymentReminderManager] Student:', student.name);
+                debugLog('[PaymentReminderManager] Email content received:', !!emailContent);
+                debugLog('[PaymentReminderManager] Email subject:', emailContent?.subject);
 
                 // Update the notification with email content
                 if (window.NotificationCenter && emailContent) {
-                  console.log('[PaymentReminderManager] Creating notification with email content...');
+                  debugLog('[PaymentReminderManager] Creating notification with email content...');
                   const emailSubject = emailContent.subject || 'Payment Reminder';
                   await window.NotificationCenter.add(
                     window.NotificationCenter.NotificationType.REMINDER,
@@ -20538,16 +20538,16 @@
                       },
                     }
                   );
-                  console.log('[PaymentReminderManager] ✅ Notification created with email content');
+                  debugLog('[PaymentReminderManager] ✅ Notification created with email content');
                 }
               }
             });
 
             // Listen for calendar initialization event
             window.addEventListener('calendar:initialized', () => {
-              console.log('[PaymentReminderManager] 📊 Calendar initialized - scheduling first check in 5 seconds...');
+              debugLog('[PaymentReminderManager] 📊 Calendar initialized - scheduling first check in 5 seconds...');
               setTimeout(() => {
-                console.log('[PaymentReminderManager] 🔄 Running first automated reminder check...');
+                debugLog('[PaymentReminderManager] 🔄 Running first automated reminder check...');
                 checkAndSendReminders();
               }, 5000);
             });
@@ -20558,16 +20558,16 @@
                 '[PaymentReminderManager] 📊 Calendar already initialized - scheduling check in 5 seconds...'
               );
               setTimeout(() => {
-                console.log('[PaymentReminderManager] 🔄 Running first automated reminder check...');
+                debugLog('[PaymentReminderManager] 🔄 Running first automated reminder check...');
                 checkAndSendReminders();
               }, 5000);
             }
 
             // Run checks every hour
-            console.log('[PaymentReminderManager] ⏰ Scheduling hourly checks (every 60 minutes)');
+            debugLog('[PaymentReminderManager] ⏰ Scheduling hourly checks (every 60 minutes)');
             setInterval(
               () => {
-                console.log('[PaymentReminderManager] 🔄 Running hourly automated check...');
+                debugLog('[PaymentReminderManager] 🔄 Running hourly automated check...');
                 checkAndSendReminders();
               },
               60 * 60 * 1000
@@ -20764,7 +20764,7 @@
                 updateBellIcon();
               }
 
-              console.log('[NotificationCenter] ✅ Loaded', notifications.length, 'notifications');
+              debugLog('[NotificationCenter] ✅ Loaded', notifications.length, 'notifications');
             } catch (error) {
               console.error('[NotificationCenter] ❌ Exception loading notifications:', error);
             }
@@ -20781,7 +20781,7 @@
               };
 
               // Log what we're about to save for debugging
-              console.log('[NotificationCenter] 💾 Saving notification:', {
+              debugLog('[NotificationCenter] 💾 Saving notification:', {
                 title: notification.title,
                 titleLength: notification.title?.length,
                 description: notification.description,
@@ -20801,7 +20801,7 @@
                 read: false,
               };
 
-              console.log('[NotificationCenter] 📦 Payload after truncation:', {
+              debugLog('[NotificationCenter] 📦 Payload after truncation:', {
                 title: payload.title,
                 titleLen: payload.title?.length,
                 description: payload.description,
@@ -20869,7 +20869,7 @@
               unreadCount++;
               updateBellIcon();
 
-              console.log('[NotificationCenter] 🔔 New notification:', notification.title);
+              debugLog('[NotificationCenter] 🔔 New notification:', notification.title);
             }
 
             return notification;
@@ -21000,15 +21000,15 @@
 
           // Initialize
           async function initialize() {
-            console.log('[NotificationCenter] 🔄 Initializing...');
+            debugLog('[NotificationCenter] 🔄 Initializing...');
             await loadFromSupabase();
-            console.log('[NotificationCenter] 🔔 Notification Center initialized');
-            console.log('[NotificationCenter] 📊 Loaded', notifications.length, 'notifications');
-            console.log('[NotificationCenter] 📬 Unread count:', unreadCount);
+            debugLog('[NotificationCenter] 🔔 Notification Center initialized');
+            debugLog('[NotificationCenter] 📊 Loaded', notifications.length, 'notifications');
+            debugLog('[NotificationCenter] 📬 Unread count:', unreadCount);
 
             // Add a test notification on first load (only if no notifications exist)
             if (notifications.length === 0) {
-              console.log('[NotificationCenter] 🧪 Adding test notification (first load)...');
+              debugLog('[NotificationCenter] 🧪 Adding test notification (first load)...');
               await add(
                 NotificationType.SYSTEM,
                 'Welcome to ARNOMA',
@@ -21040,31 +21040,31 @@
 
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('[ARNOMA] 🚀 Initializing application...');
+          debugLog('[ARNOMA] 🚀 Initializing application...');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
 
           if (!authenticated) {
-            console.log('[ARNOMA] ⏸️  Waiting for login...');
+            debugLog('[ARNOMA] ⏸️  Waiting for login...');
             return; // Stop initialization until user logs in
           }
 
           // Initialize Notification Center first
           if (window.NotificationCenter) {
-            console.log('[ARNOMA] 🔔 Initializing Notification Center...');
+            debugLog('[ARNOMA] 🔔 Initializing Notification Center...');
             await window.NotificationCenter.initialize();
           }
 
           // Then initialize the main app
           await initializeApp();
 
-          console.log('[ARNOMA] ✅ Application fully initialized');
+          debugLog('[ARNOMA] ✅ Application fully initialized');
         });
 
         // Separate initialization function that can be called after login
         async function initializeApp() {
-          console.log('[ARNOMA] 📦 Loading application data...');
+          debugLog('[ARNOMA] 📦 Loading application data...');
 
           // Initialize the main app
           await initialize();
@@ -21072,9 +21072,9 @@
           // CRITICAL: Render calendar to populate window.currentCalendarData
           // This MUST happen after initialize() so renderCalendar function is available
           if (typeof renderCalendar === 'function') {
-            console.log('[ARNOMA] 📅 Rendering calendar for Payment Reminder Manager...');
+            debugLog('[ARNOMA] 📅 Rendering calendar for Payment Reminder Manager...');
             renderCalendar();
-            console.log('[ARNOMA] ✅ Calendar rendered - window.currentCalendarData initialized');
+            debugLog('[ARNOMA] ✅ Calendar rendered - window.currentCalendarData initialized');
           } else {
             console.error('[ARNOMA] ❌ renderCalendar function not found!');
           }
