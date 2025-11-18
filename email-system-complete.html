@@ -1860,13 +1860,28 @@ ARNOMA Team"
       }
 
       function openPreviewModal(htmlContent) {
+        console.log('🔵 openPreviewModal called');
         const modal = document.getElementById('previewModal');
         const iframe = document.getElementById('previewFrame');
+        
+        if (!modal) {
+          console.error('❌ previewModal element not found!');
+          return;
+        }
+        if (!iframe) {
+          console.error('❌ previewFrame element not found!');
+          return;
+        }
+        
+        console.log('✅ Modal and iframe found, writing content...');
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         iframeDoc.open();
         iframeDoc.write(htmlContent);
         iframeDoc.close();
+        
+        console.log('✅ Content written, adding active class...');
         modal.classList.add('active');
+        console.log('✅ Modal should now be visible with active class');
       }
 
       function closePreviewModal() {
@@ -2581,8 +2596,14 @@ ARNOMA Team"
         }
 
         console.log('✅ Opening preview modal with HTML content');
-        // Open preview modal with the exact HTML that was sent
-        openPreviewModal(email.html_content);
+        try {
+          // Open preview modal with the exact HTML that was sent
+          openPreviewModal(email.html_content);
+          console.log('✅ openPreviewModal completed successfully');
+        } catch (error) {
+          console.error('❌ Error opening preview modal:', error);
+          showNotification('Error opening email preview', 'error');
+        }
       }
 
       async function renderSentEmails() {

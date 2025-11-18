@@ -1,6 +1,6 @@
 # ARNOMA Version Tracking
 
-## Current Version: v2.1.8
+## Current Version: v2.1.9
 
 ## Version Update Checklist (Before Every Push)
 When making changes, update the version in **3 places** in `index.html`:
@@ -22,6 +22,16 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 ```
 
 ## Version History
+
+### v2.1.9 (2025-11-18)
+- **FIX**: Enhanced email notification viewer debugging
+  - Added comprehensive error logging to `openPreviewModal()` function
+  - Checks if modal and iframe elements exist before attempting to open
+  - Logs each step: element found, content written, active class added
+  - Added try-catch around `openPreviewModal()` call in `viewSentEmail()`
+  - Better error messages to identify exact failure point
+  - Helps diagnose why email preview modal may not be opening from notifications
+- **PURPOSE**: Identify and fix notification email viewer issues once and for all
 
 ### v2.1.8 (2025-01-20)
 - **NEW FEATURE**: Complete Automation Manager in Email System
@@ -129,10 +139,22 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 
 ## Versioning Rules
 
+**⚠️ CRITICAL RULE: EVERY UPDATE MUST CHANGE THE VERSION NUMBER**
+
+Even for tiny updates (template fixes, single-line changes, typos), you MUST:
+- Increment version number (e.g., v2.1.8 → v2.1.9), OR
+- Add "S" suffix (e.g., v2.1.8 → v2.1.8S for small update)
+
+### Version Increments:
 - **Major.Minor.Patch** (e.g., 2.1.5)
-- **Patch** (+0.0.1): Bug fixes, minor tweaks, console log cleanup
+- **Patch** (+0.0.1): Bug fixes, minor tweaks, console log cleanup, template updates
 - **Minor** (+0.1.0): New features, significant improvements
 - **Major** (+1.0.0): Breaking changes, major overhauls
+
+### Alternative for Small Updates:
+- Add "S" suffix to current version (e.g., v2.1.8 → v2.1.8S)
+- Use for: Single-line fixes, typos, minor template changes
+- Commit message format: `🔥 v2.1.8S: Brief description (update)`
 
 ## Quick Commands
 
