@@ -4354,6 +4354,416 @@ ARNOMA Team"
           }
         }
         // ============================================================
+
+        // ============================================================
+        // NEW STATUS CHANGE & NOTIFICATION EMAIL HANDLERS
+        // ============================================================
+
+        // HANDLER 1: Status Change - Active → Paused
+        if (action === 'sendStatusChangeToPausedEmail') {
+          try {
+            const student = event.data.student;
+            const groupName = event.data.groupName;
+
+            const subject = 'Update to Your ARNOMA Class Status';
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1)); border-left: 4px solid #fbbf24; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  ⏸️ Status Updated: Active → Paused
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 8px;">
+                  Your class status for <strong>Group ${groupName}</strong> has been updated from <strong>Active</strong> to <strong>Paused</strong>.
+                </div>
+              </div>
+
+              <div style="background: rgba(249, 115, 22, 0.05); border: 1px solid rgba(249, 115, 22, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #9a3412; font-weight: 600; margin-bottom: 12px;">
+                  While Paused:
+                </div>
+                <ul style="margin: 0; padding-left: 20px; color: #7c2d12;">
+                  <li style="margin-bottom: 8px;">You will not appear in the active roster</li>
+                  <li style="margin-bottom: 8px;">You will not be counted toward sessions</li>
+                  <li style="margin-bottom: 8px;">You will not receive email notifications, notes, reminders, or class communication</li>
+                  <li>Your profile remains inactive until you return</li>
+                </ul>
+              </div>
+
+              <p style="font-size: 14px; color: #666;">
+                If this was done intentionally, no action is needed. If this is unexpected, please reply and we will assist you.
+              </p>
+
+              <p style="margin-top: 24px;">Thank you,<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('Status Update', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+            });
+
+            if (!response.ok) throw new Error('Failed to send email');
+
+            await trackSentEmail(student.email, subject, 'Status Change', body, { recipientName: student.name, groupName: groupName });
+
+            window.parent.postMessage({ action: 'statusChangeToPausedEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'statusChangeToPausedEmailError', error: error.message }, '*');
+          }
+        }
+
+        // HANDLER 2: Status Change - Paused → Active
+        if (action === 'sendStatusChangeToActiveEmail') {
+          try {
+            const student = event.data.student;
+            const groupName = event.data.groupName;
+
+            const subject = 'Welcome Back to ARNOMA!';
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1)); border-left: 4px solid #22c55e; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  ✅ Status Updated: Paused → Active
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 8px;">
+                  Your class status for <strong>Group ${groupName}</strong> has been updated from <strong>Paused</strong> to <strong>Active</strong>.
+                </div>
+              </div>
+
+              <div style="background: rgba(34, 197, 94, 0.05); border: 1px solid rgba(34, 197, 94, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #166534; font-weight: 600; margin-bottom: 8px;">
+                  🎉 You're Back!
+                </div>
+                <div style="font-size: 13px; color: #15803d;">
+                  You are now fully reactivated and will receive reminders, notes, and class notifications again.
+                </div>
+              </div>
+
+              <p style="margin-top: 24px;">Thank you,<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('Welcome Back', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+            });
+
+            if (!response.ok) throw new Error('Failed to send email');
+
+            await trackSentEmail(student.email, subject, 'Status Change', body, { recipientName: student.name, groupName: groupName });
+
+            window.parent.postMessage({ action: 'statusChangeToActiveEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'statusChangeToActiveEmailError', error: error.message }, '*');
+          }
+        }
+
+        // HANDLER 3: Status Change - Active → Graduated
+        if (action === 'sendStatusChangeToGraduatedEmail') {
+          try {
+            const student = event.data.student;
+            const groupName = event.data.groupName;
+
+            const subject = 'Congratulations on Completing Your ARNOMA Course!';
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(147, 51, 234, 0.1)); border-left: 4px solid #a855f7; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  🎓 Status Updated: Active → Graduated
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 8px;">
+                  Your ARNOMA class status for <strong>Group ${groupName}</strong> has been updated from <strong>Active</strong> to <strong>Graduated</strong>.
+                </div>
+              </div>
+
+              <div style="background: rgba(168, 85, 247, 0.05); border: 1px solid rgba(168, 85, 247, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0; text-align: center;">
+                <div style="font-size: 24px; margin-bottom: 12px;">🎉</div>
+                <div style="font-size: 16px; color: #7e22ce; font-weight: 700; margin-bottom: 8px;">
+                  Congratulations!
+                </div>
+                <div style="font-size: 14px; color: #6b21a8;">
+                  You have successfully completed your ARNOMA course.
+                </div>
+              </div>
+
+              <p style="font-size: 14px; color: #666;">
+                You will no longer appear in active rosters or receive class notifications.
+              </p>
+
+              <p style="margin-top: 24px;">Thank you for being part of ARNOMA!<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('Congratulations', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+            });
+
+            if (!response.ok) throw new Error('Failed to send email');
+
+            await trackSentEmail(student.email, subject, 'Status Change', body, { recipientName: student.name, groupName: groupName });
+
+            window.parent.postMessage({ action: 'statusChangeToGraduatedEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'statusChangeToGraduatedEmailError', error: error.message }, '*');
+          }
+        }
+
+        // HANDLER 4: Absence Notification
+        if (action === 'sendAbsenceNotificationEmail') {
+          try {
+            const student = event.data.student;
+            const groupName = event.data.groupName;
+            const classDate = event.data.classDate;
+
+            const subject = 'You Were Marked Absent Today';
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.1)); border-left: 4px solid #ef4444; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  🚫 Marked Absent
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 8px;">
+                  You were marked <strong>Absent</strong> from today's <strong>Group ${groupName}</strong> class.
+                </div>
+                <div style="font-size: 14px; color: #666; margin-top: 12px;">
+                  <strong>Date:</strong> ${classDate}
+                </div>
+              </div>
+
+              <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #1e40af; font-weight: 600; margin-bottom: 8px;">
+                  📚 Access Class Notes
+                </div>
+                <div style="font-size: 13px; color: #1e3a8a;">
+                  To unlock today's notes, simply make your class payment — notes will appear automatically once payment is received.
+                </div>
+              </div>
+
+              <p style="font-size: 14px; color: #666;">
+                If this was a mistake, please reply and we will correct it.
+              </p>
+
+              <p style="margin-top: 24px;">Thank you,<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('Absence Notice', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+            });
+
+            if (!response.ok) throw new Error('Failed to send email');
+
+            await trackSentEmail(student.email, subject, 'Absence Notification', body, { recipientName: student.name, groupName: groupName, classDate: classDate });
+
+            window.parent.postMessage({ action: 'absenceNotificationEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'absenceNotificationEmailError', error: error.message }, '*');
+          }
+        }
+
+        // HANDLER 5: Schedule Change
+        if (action === 'sendScheduleChangeEmail') {
+          try {
+            const student = event.data.student;
+            const groupName = event.data.groupName;
+            const oldSchedule = event.data.oldSchedule;
+            const newSchedule = event.data.newSchedule;
+
+            const subject = 'Update to Your Class Schedule';
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.1)); border-left: 4px solid #3b82f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  📅 Schedule Updated
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 12px;">
+                  Your class schedule for <strong>Group ${groupName}</strong> has been updated.
+                </div>
+                
+                <div style="background: rgba(255, 255, 255, 0.7); padding: 16px; border-radius: 6px; margin: 12px 0;">
+                  <div style="margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Previous Schedule:</div>
+                    <div style="font-size: 14px; color: #ef4444; font-weight: 600; text-decoration: line-through;">${oldSchedule}</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">New Schedule:</div>
+                    <div style="font-size: 16px; color: #22c55e; font-weight: 700;">${newSchedule}</div>
+                  </div>
+                </div>
+              </div>
+
+              <p style="font-size: 14px; color: #666;">
+                If this change affects your availability, please reply and we'll work with you.
+              </p>
+
+              <p style="margin-top: 24px;">Thank you,<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('Schedule Update', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+            });
+
+            if (!response.ok) throw new Error('Failed to send email');
+
+            await trackSentEmail(student.email, subject, 'Schedule Change', body, { recipientName: student.name, groupName: groupName, oldSchedule, newSchedule });
+
+            window.parent.postMessage({ action: 'scheduleChangeEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'scheduleChangeEmailError', error: error.message }, '*');
+          }
+        }
+
+        // HANDLER 6: Group Enrollment
+        if (action === 'sendGroupEnrollmentEmail') {
+          try {
+            const student = event.data.student;
+            const groupName = event.data.groupName;
+            const groupSchedule = event.data.groupSchedule;
+
+            const subject = 'Welcome to Your New ARNOMA Group!';
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1)); border-left: 4px solid #22c55e; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  🎉 Successfully Enrolled!
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 8px;">
+                  You have been successfully enrolled in <strong>Group ${groupName}</strong>.
+                </div>
+              </div>
+
+              <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #1e40af; font-weight: 600; margin-bottom: 12px;">
+                  What This Means:
+                </div>
+                <ul style="margin: 0; padding-left: 20px; color: #1e3a8a; font-size: 13px;">
+                  <li style="margin-bottom: 8px;">You will appear in the active roster</li>
+                  <li style="margin-bottom: 8px;">You will receive class notifications</li>
+                  <li>You will get notes after each class once payment is made</li>
+                </ul>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(0, 0, 0, 0.1); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">
+                  📅 Your Class Schedule:
+                </div>
+                <div style="font-size: 15px; color: #555; font-weight: 600;">
+                  ${groupSchedule}
+                </div>
+              </div>
+
+              <p style="margin-top: 24px;">Thank you,<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('Welcome', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+            });
+
+            if (!response.ok) throw new Error('Failed to send email');
+
+            await trackSentEmail(student.email, subject, 'Group Enrollment', body, { recipientName: student.name, groupName: groupName, groupSchedule });
+
+            window.parent.postMessage({ action: 'groupEnrollmentEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'groupEnrollmentEmailError', error: error.message }, '*');
+          }
+        }
+
+        // HANDLER 7: Payment Receipt (AUTO-SEND)
+        if (action === 'sendPaymentReceiptEmail') {
+          try {
+            const student = event.data.student;
+            const paymentAmount = event.data.paymentAmount;
+            const paymentDate = event.data.paymentDate;
+            const newBalance = event.data.newBalance;
+
+            const subject = 'Payment Received - Thank You!';
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.1)); border-left: 4px solid #22c55e; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  ✅ Payment Confirmed
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 8px;">
+                  We have successfully received your payment.
+                </div>
+              </div>
+
+              <div style="background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(0, 0, 0, 0.1); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <table style="width: 100%; border-collapse: collapse;">
+                  <tr>
+                    <td style="padding: 8px 0; font-size: 14px; color: #666;">Payment Amount:</td>
+                    <td style="padding: 8px 0; font-size: 16px; color: #333; font-weight: 700; text-align: right;">$${paymentAmount.toFixed(2)}</td>
+                  </tr>
+                  <tr>
+                    <td style="padding: 8px 0; font-size: 14px; color: #666;">Date:</td>
+                    <td style="padding: 8px 0; font-size: 14px; color: #333; font-weight: 600; text-align: right;">${paymentDate}</td>
+                  </tr>
+                  <tr style="border-top: 2px solid #22c55e;">
+                    <td style="padding: 12px 0 8px; font-size: 14px; color: #666; font-weight: 600;">Current Balance:</td>
+                    <td style="padding: 12px 0 8px; font-size: 18px; color: #22c55e; font-weight: 700; text-align: right;">$${newBalance.toFixed(2)}</td>
+                  </tr>
+                </table>
+              </div>
+
+              <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #1e40af; font-weight: 600; margin-bottom: 8px;">
+                  📚 Class Notes Available
+                </div>
+                <div style="font-size: 13px; color: #1e3a8a;">
+                  Your class notes for this session will be available shortly after your class ends.
+                </div>
+              </div>
+
+              <p style="margin-top: 24px;">Thank you for your payment!<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('Payment Received', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+            });
+
+            if (!response.ok) throw new Error('Failed to send email');
+
+            await trackSentEmail(student.email, subject, 'Payment Receipt', body, { recipientName: student.name, paymentAmount, paymentDate, newBalance });
+
+            window.parent.postMessage({ action: 'paymentReceiptEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'paymentReceiptEmailError', error: error.message }, '*');
+          }
+        }
+
+        // ============================================================
+        // END NEW EMAIL HANDLERS
+        // ============================================================
       });
 
       // ============================================
