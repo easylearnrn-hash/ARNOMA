@@ -4709,7 +4709,7 @@ ARNOMA Team"
           await trackSentEmail(recipient.email, subject, 'Class Reminder (Auto)', body, {
             recipientName: recipientName,
             recipientType: recipient.type || 'Unknown',
-            groupName: groupName,
+            groupName: group.name,
             automationName: automation.name,
           });
           console.log(`[AutomationEngine] ✅ Email sent successfully to ${recipientName}`);
