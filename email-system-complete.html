@@ -3008,7 +3008,7 @@ ARNOMA Team"
       // Track sent emails in Supabase with full HTML content
       async function trackSentEmail(recipient, subject, template_name, htmlContent = null, metadata = {}) {
         try {
-          const { error } = await supabase.from('sent_emails').insert([
+          const { data, error } = await supabase.from('sent_emails').insert([
             {
               recipient_email: recipient,
               subject: subject,
@@ -3016,7 +3016,7 @@ ARNOMA Team"
               html_content: htmlContent,
               sent_at: new Date().toISOString(),
             },
-          ]);
+          ]).select();
 
           if (error) throw error;
           console.log(
@@ -3024,8 +3024,12 @@ ARNOMA Team"
             recipient,
             metadata.recipientName ? `(${metadata.recipientName})` : ''
           );
+          
+          // Return the inserted email record (includes id)
+          return data && data[0] ? data[0] : null;
         } catch (error) {
           console.error('❌ Error tracking sent email:', error);
+          return null;
         }
       }
 
@@ -3431,7 +3435,7 @@ ARNOMA Team"
             }
 
             // Track sent email with full HTML content
-            await trackSentEmail(student.email, subject, 'Welcome Email', body);
+            const emailRecord = await trackSentEmail(student.email, subject, 'Welcome Email', body);
 
             console.log('✅ Welcome email sent successfully to:', student.name);
 
@@ -3448,6 +3452,7 @@ ARNOMA Team"
                     recipientName: student.name,
                     recipientEmail: student.email,
                     emailType: 'welcome',
+                    emailId: emailRecord?.id,
                   },
                 },
               },
@@ -3587,7 +3592,7 @@ ARNOMA Team"
             }
 
             // Track sent email with metadata
-            await trackSentEmail(student.email, subject, 'Profile Update', body, {
+            const emailRecord = await trackSentEmail(student.email, subject, 'Profile Update', body, {
               recipientName: student.name,
               recipientType: 'student',
               changesCount: changes.length,
@@ -3607,6 +3612,7 @@ ARNOMA Team"
                   groupName: student.group || 'No group',
                   metadata: {
                     recipientName: student.name,
+                    emailId: emailRecord?.id,
                     recipientEmail: student.email,
                     changesCount: changes.length,
                     emailType: 'profile_update',
@@ -3694,7 +3700,7 @@ ARNOMA Team"
               }
 
               // Track sent email
-              await trackSentEmail(student.email, subject, 'Schedule Update', body, {
+              const emailRecord = await trackSentEmail(student.email, subject, 'Schedule Update', body, {
                 recipientName: student.name,
                 recipientType: 'student',
                 groupName: groupName,
@@ -3834,7 +3840,7 @@ ARNOMA Team"
             }
 
             // Track sent email
-            await trackSentEmail(student.email, subject, 'Alias Added Notification', body);
+            const emailRecord = await trackSentEmail(student.email, subject, 'Alias Added Notification', body);
 
             console.log('[AliasEmail] ✅ Alias email sent successfully to:', student.name);
 
@@ -3862,6 +3868,7 @@ ARNOMA Team"
                     recipientEmail: student.email,
                     emailType: 'alias_added',
                     aliasAdded: aliasAdded,
+                    emailId: emailRecord?.id,
                   },
                 },
               },
@@ -3987,7 +3994,7 @@ ARNOMA Team"
             }
 
             // Track sent email
-            await trackSentEmail(student.email, subject, 'Credit Added', body);
+            const emailRecord = await trackSentEmail(student.email, subject, 'Credit Added', body);
 
             console.log('[CreditEmail] ✅ Credit added email sent successfully to:', student.name);
 
@@ -4015,6 +4022,7 @@ ARNOMA Team"
                     recipientEmail: student.email,
                     emailType: 'credit_added',
                     creditAmount: creditAmount,
+                    emailId: emailRecord?.id, // Add emailId for opening email on click
                   },
                 },
               },
@@ -4148,7 +4156,7 @@ ARNOMA Team"
             }
 
             // Track sent email
-            await trackSentEmail(student.email, subject, 'Credit Applied', body);
+            const emailRecord = await trackSentEmail(student.email, subject, 'Credit Applied', body);
 
             console.log('[CreditEmail] ✅ Credit applied email sent successfully to:', student.name);
 
@@ -4176,6 +4184,7 @@ ARNOMA Team"
                     recipientEmail: student.email,
                     emailType: 'credit_applied',
                     classDate: classDate,
+                    emailId: emailRecord?.id,
                   },
                 },
               },
@@ -4304,7 +4313,7 @@ ARNOMA Team"
             }
 
             // Track sent email
-            await trackSentEmail(student.email, subject, 'Credit Balance Updated', body);
+            const emailRecord = await trackSentEmail(student.email, subject, 'Credit Balance Updated', body);
 
             console.log('[CreditEmail] ✅ Manual credit edit email sent successfully to:', student.name);
 
@@ -4333,6 +4342,7 @@ ARNOMA Team"
                     recipientEmail: student.email,
                     emailType: 'credit_manual_edit',
                     oldBalance: oldBalance,
+                    emailId: emailRecord?.id,
                     newBalance: newBalance,
                   },
                 },
