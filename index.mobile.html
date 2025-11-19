@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.6.2-suppress-auth-errors" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
+    <meta name="version" content="2.6.3-fix-button-clipping" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
     <script>
       (function () {
         // 🚨 CRITICAL: This is index.mobile.html - NEVER redirect from here
@@ -1557,6 +1557,9 @@
         transition: all 0.2s;
         display: flex;
         flex-direction: column;
+        position: relative;
+        z-index: 1;
+        overflow: visible !important;
       }
 
       .student-card:hover,
@@ -1573,10 +1576,12 @@
 
       .student-view {
         cursor: pointer;
+        overflow: visible !important;
       }
 
       .student-edit {
         display: none;
+        overflow: visible !important;
       }
 
       .student-item.editing .student-view {
@@ -1613,11 +1618,11 @@
         justify-content: center;
         margin: 12px 0;
         flex-wrap: nowrap;
-        overflow-x: hidden;
+        overflow: visible !important;
         scrollbar-width: none;
         -ms-overflow-style: none;
         position: relative;
-        z-index: 10;
+        z-index: 50;
       }
 
       .group-buttons::-webkit-scrollbar {
@@ -1642,7 +1647,7 @@
         border: none;
         padding: 0;
         flex-shrink: 0;
-        z-index: 10;
+        z-index: 50;
         font-size: 14px;
         font-weight: 700;
         color: transparent;
@@ -1932,6 +1937,7 @@
         margin-bottom: 16px;
         padding-bottom: 12px;
         border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: visible !important;
       }
 
       .student-info {
@@ -1939,6 +1945,7 @@
         display: flex;
         flex-direction: column;
         gap: 10px;
+        overflow: visible !important;
       }
 
       .info-row {
