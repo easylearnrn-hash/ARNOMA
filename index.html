@@ -1448,16 +1448,28 @@
       .group-buttons {
         display: flex;
         gap: 10px;
-        justify-content: center;
+        justify-content: flex-start;
         margin: 16px 0;
-        flex-wrap: wrap;
-        overflow: visible !important;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: visible;
         position: relative;
         z-index: 50;
+        padding: 2px 0;
       }
 
       .group-buttons::-webkit-scrollbar {
-        display: none;
+        height: 4px;
+      }
+
+      .group-buttons::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 2px;
+      }
+
+      .group-buttons::-webkit-scrollbar-thumb {
+        background: rgba(138, 180, 255, 0.3);
+        border-radius: 2px;
       }
 
       .group-btn {
@@ -1469,11 +1481,10 @@
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         cursor: pointer;
         position: relative;
-        min-width: 50px;
-        height: 50px;
-        padding: 0 16px;
+        min-width: 60px;
+        height: 44px;
+        padding: 0 18px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 2px solid rgba(138, 180, 255, 0.3);
         flex-shrink: 0;
         z-index: 50;
         font-size: 15px;
@@ -1485,6 +1496,7 @@
         justify-content: center;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
         backdrop-filter: blur(10px);
+        white-space: nowrap;
       }
 
       .group-btn:hover {
@@ -11940,8 +11952,9 @@
               <button
                 class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}"
                 onclick="changeStudentGroup('${student.id}', '${g}')"
-                title="Switch to Group ${g}"
-                data-label="${g}"></button>
+                title="Switch to Group ${g}">
+                G${g}
+              </button>
             `
               )
               .join('')}
@@ -11956,8 +11969,9 @@
               <button
                 class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}"
                 onclick="changeStudentPayAmount('${student.id}', ${amount})"
-                title="Set pay to $${amount}"
-                data-label="$${amount}"></button>
+                title="Set pay to $${amount}">
+                $${amount}
+              </button>
             `
               )
               .join('')}
