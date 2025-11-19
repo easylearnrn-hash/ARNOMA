@@ -32,8 +32,8 @@
       })();
     </script>
 
-    <!-- Supabase Configuration - ASYNC LOADING FOR PERFORMANCE -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1" async></script>
+    <!-- Supabase Configuration -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
     <script>
       // PERFORMANCE CONFIG - Set to false to disable verbose logging
       const DEBUG_MODE = false;
@@ -78,11 +78,16 @@
       // VERSION CHECK - This should appear FIRST in console
       console.log('🔥 ARNOMA Mobile v2.4.0 - Performance Optimized (70% faster load)');
 
-      // Supabase Client Initialization
-      const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
-      const SUPABASE_ANON_KEY =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
-      const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      // Supabase Client Initialization (safe check for async loading)
+      let supabase;
+      if (window.supabase && window.supabase.createClient) {
+        const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
+        const SUPABASE_ANON_KEY =
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inpsdm54dnJ6b3RhbWhwZXpxZWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjI4MTEzMTcsImV4cCI6MjA3ODM4NzMxN30.-IoSqKhDrA9NuG4j3GufIbfmodWqCoppEklE1nTmw38';
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      } else {
+        console.error('❌ Supabase library not loaded yet - initialization deferred');
+      }
 
       // ============================================================================
       // AUTHENTICATION SYSTEM
