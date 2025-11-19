@@ -10721,15 +10721,32 @@
 
         // Update toggle visual styling
         function updateToggleStyle(toggleElement, isActive) {
-          if (!toggleElement) return;
-          const slider = toggleElement.nextElementSibling;
-          const knob = slider ? slider.nextElementSibling : null;
+          if (!toggleElement) {
+            console.warn('⚠️ updateToggleStyle: toggleElement is null');
+            return;
+          }
+          
+          const label = toggleElement.parentElement;
+          const slider = label ? label.querySelector('.toggle-slider') : null;
+          const knob = label ? label.querySelector('.toggle-knob') : null;
+
+          console.log('🎨 Updating toggle style:', { 
+            toggleId: toggleElement.id, 
+            isActive, 
+            hasSlider: !!slider, 
+            hasKnob: !!knob 
+          });
 
           if (slider) {
             slider.style.background = isActive ? 'rgba(34, 197, 94, 0.6)' : 'rgba(100,116,139,0.4)';
+          } else {
+            console.warn('⚠️ Slider not found for', toggleElement.id);
           }
+          
           if (knob) {
             knob.style.transform = isActive ? 'translateX(20px)' : 'translateX(0)';
+          } else {
+            console.warn('⚠️ Knob not found for', toggleElement.id);
           }
         }
 
@@ -10745,6 +10762,27 @@
           }
 
           return adjustedDate;
+        }
+
+        // Update settings button color based on timezone offset status
+        function updateSettingsButtonColor() {
+          const settingsBtn = document.getElementById('settingsBtn');
+          if (!settingsBtn) return;
+
+          const settings = getLAOffsetSettingsSync();
+          const isActive = settings.offset12 || settings.offset11;
+
+          if (isActive) {
+            // Green tint when timezone offset is active
+            settingsBtn.style.background = 'rgba(34, 197, 94, 0.15)';
+            settingsBtn.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+            settingsBtn.style.color = '#22c55e';
+          } else {
+            // Default gray
+            settingsBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+            settingsBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            settingsBtn.style.color = 'white';
+          }
         }
 
         // Initialize toggle states on page load - NOW LOADS FROM CLOUD
@@ -10772,6 +10810,9 @@
             updateToggleStyle(toggle12, enable12);
             updateToggleStyle(toggle11, enable11);
             
+            // Update settings button color
+            updateSettingsButtonColor();
+            
             isUpdatingLAOffset = false;
 
             // Add event listeners
@@ -10779,6 +10820,7 @@
               if (isUpdatingLAOffset) return;
               isUpdatingLAOffset = true;
               await setLAOffset(12, event.target.checked);
+              updateSettingsButtonColor(); // Update settings button color
               isUpdatingLAOffset = false;
             });
 
@@ -10786,6 +10828,7 @@
               if (isUpdatingLAOffset) return;
               isUpdatingLAOffset = true;
               await setLAOffset(11, event.target.checked);
+              updateSettingsButtonColor(); // Update settings button color
               isUpdatingLAOffset = false;
             });
 
@@ -10830,6 +10873,9 @@
                     
                     updateToggleStyle(toggle12, winter);
                     updateToggleStyle(toggle11, summer);
+                    
+                    // Update settings button color
+                    updateSettingsButtonColor();
                     
                     isUpdatingLAOffset = false;
                     

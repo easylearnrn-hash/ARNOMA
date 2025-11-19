@@ -2349,17 +2349,80 @@
   </head>
   <body>
     <!-- Email Preview Modal -->
-    <div id="emailPreviewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 100005; align-items: center; justify-content: center; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border: 2px solid rgba(165, 180, 252, 0.4); border-radius: 20px; width: 800px; height: 85vh; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px 32px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-          <h2 style="display: flex; align-items: center; gap: 12px; margin: 0; font-size: 24px; font-weight: 700; color: #a5b4fc;">
+    <div
+      id="emailPreviewModal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        z-index: 100005;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        style="
+          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          border: 2px solid rgba(165, 180, 252, 0.4);
+          border-radius: 20px;
+          width: 800px;
+          height: 85vh;
+          overflow: hidden;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          "
+        >
+          <h2
+            style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin: 0;
+              font-size: 24px;
+              font-weight: 700;
+              color: #a5b4fc;
+            "
+          >
             <span>👁️</span>
             <span>Email Preview</span>
           </h2>
-          <span onclick="closeEmailPreviewModal()" style="font-size: 36px; color: rgba(255, 255, 255, 0.6); cursor: pointer; transition: all 0.2s ease; line-height: 1; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">&times;</span>
+          <span
+            onclick="closeEmailPreviewModal()"
+            style="
+              font-size: 36px;
+              color: rgba(255, 255, 255, 0.6);
+              cursor: pointer;
+              transition: all 0.2s ease;
+              line-height: 1;
+              width: 36px;
+              height: 36px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            &times;
+          </span>
         </div>
-        <div style="padding: 0; height: calc(100% - 81px);">
-          <iframe id="emailPreviewFrame" style="width: 100%; height: 100%; border: none; border-radius: 0 0 16px 16px;"></iframe>
+        <div style="padding: 0; height: calc(100% - 81px)">
+          <iframe
+            id="emailPreviewFrame"
+            style="width: 100%; height: 100%; border: none; border-radius: 0 0 16px 16px"
+          ></iframe>
         </div>
       </div>
     </div>
@@ -4865,7 +4928,10 @@
 
       <div class="container">
         <div class="header">
-          <h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.3.0</span></h1>
+          <h1>
+            Payment Records
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.0</span>
+          </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
             <option value="matched">Matched Only</option>
@@ -5742,7 +5808,13 @@
             <!-- Calendar Cells -->
             <div
               id="calendarGrid"
-              style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; min-height: 400px; overflow: visible;"
+              style="
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 8px;
+                min-height: 400px;
+                overflow: visible;
+              "
             >
               <!-- Generated dynamically -->
             </div>
@@ -6049,7 +6121,7 @@
                   payment.date || new Date().toISOString().split('T')[0],
                   student.balance
                 );
-                
+
                 if (emailResult.success) {
                   console.log('✅ Payment receipt email sent successfully');
                   // Create notification
@@ -6344,13 +6416,14 @@
             if (!seen.has(key)) {
               deduped.push(g);
               seen.add(key);
+            }
           }
-        }
 
-        window.groupsCache = deduped;
-        window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
-        return window.groupsCache;
-      }        async function saveGroup(groupData) {
+          window.groupsCache = deduped;
+          window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
+          return window.groupsCache;
+        }
+        async function saveGroup(groupData) {
           // Map 'name' to 'group_name' for Supabase
           const payload = {
             group_name: groupData.name || groupData.group_name,
@@ -7980,7 +8053,7 @@
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
                 },
                 body: JSON.stringify({
                   userId: 'admin', // Replace with actual user ID if using auth
@@ -7992,18 +8065,18 @@
               }
 
               const { access_token, expires_at } = await response.json();
-              
+
               // Calculate expires_in from expires_at
               const expiresIn = Math.floor((new Date(expires_at).getTime() - Date.now()) / 1000);
-              
+
               // Save refreshed token
               saveGmailConnection(access_token, expiresIn);
               debugLog('✅ Gmail token refreshed successfully');
-              
+
               return true;
             } catch (error) {
               console.error('❌ Token refresh failed:', error);
-              
+
               // Token refresh failed - need to re-authenticate
               gmailAccessToken = null;
               localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
@@ -8082,13 +8155,13 @@
           if (code) {
             try {
               debugLog('🔄 Exchanging authorization code for tokens...');
-              
+
               // Exchange code for tokens via Supabase Edge Function
               const response = await fetch(`${SUPABASE_URL}/functions/v1/gmail-oauth-callback`, {
                 method: 'POST',
                 headers: {
                   'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                  Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
                 },
                 body: JSON.stringify({
                   code: code,
@@ -8102,7 +8175,7 @@
               }
 
               const { access_token, expires_at } = await response.json();
-              
+
               // Calculate expires_in from expires_at
               const expiresIn = Math.floor((new Date(expires_at).getTime() - Date.now()) / 1000);
 
@@ -10393,17 +10466,15 @@
         // Load user preferences from Supabase (cloud-synced)
         async function loadUserPreferences() {
           try {
-            const { data: { user } } = await supabase.auth.getUser();
+            const {
+              data: { user },
+            } = await supabase.auth.getUser();
             if (!user) {
               console.warn('⚠️ No authenticated user - cannot load preferences');
               return null;
             }
 
-            const { data, error } = await supabase
-              .from('user_preferences')
-              .select('*')
-              .eq('user_id', user.id)
-              .single();
+            const { data, error } = await supabase.from('user_preferences').select('*').eq('user_id', user.id).single();
 
             if (error && error.code !== 'PGRST116') {
               // PGRST116 = no rows found (first time user)
@@ -10418,7 +10489,7 @@
                 .insert({
                   user_id: user.id,
                   timezone_offset_winter: false,
-                  timezone_offset_summer: false
+                  timezone_offset_summer: false,
                 })
                 .select()
                 .single();
@@ -10444,7 +10515,9 @@
         // Save timezone preference to Supabase (syncs across all devices)
         async function saveTimezonePreference(winter, summer) {
           try {
-            const { data: { user } } = await supabase.auth.getUser();
+            const {
+              data: { user },
+            } = await supabase.auth.getUser();
             if (!user) {
               console.warn('⚠️ No authenticated user - cannot save preferences');
               return false;
@@ -10452,14 +10525,17 @@
 
             const { data, error } = await supabase
               .from('user_preferences')
-              .upsert({
-                user_id: user.id,
-                timezone_offset_winter: winter,
-                timezone_offset_summer: summer,
-                updated_at: new Date().toISOString()
-              }, {
-                onConflict: 'user_id'
-              })
+              .upsert(
+                {
+                  user_id: user.id,
+                  timezone_offset_winter: winter,
+                  timezone_offset_summer: summer,
+                  updated_at: new Date().toISOString(),
+                },
+                {
+                  onConflict: 'user_id',
+                }
+              )
               .select()
               .single();
 
@@ -10470,11 +10546,11 @@
 
             userPreferencesCache = data;
             debugLog('✅ Timezone preference saved to cloud:', { winter, summer });
-            
+
             // Also save to localStorage as fallback
             localStorage.setItem('la-offset-12', winter.toString());
             localStorage.setItem('la-offset-11', summer.toString());
-            
+
             return true;
           } catch (error) {
             console.error('❌ Failed to save timezone preference:', error);
@@ -10489,7 +10565,7 @@
           if (prefs) {
             return {
               offset12: prefs.timezone_offset_winter || false,
-              offset11: prefs.timezone_offset_summer || false
+              offset11: prefs.timezone_offset_summer || false,
             };
           }
 
@@ -10504,7 +10580,7 @@
           if (userPreferencesCache) {
             return {
               offset12: userPreferencesCache.timezone_offset_winter || false,
-              offset11: userPreferencesCache.timezone_offset_summer || false
+              offset11: userPreferencesCache.timezone_offset_summer || false,
             };
           }
 
@@ -10533,8 +10609,8 @@
 
             if (!silent) {
               showNotification(
-                isEnabled 
-                  ? '❄️ Winter offset enabled: –12 hours (synced to cloud)' 
+                isEnabled
+                  ? '❄️ Winter offset enabled: –12 hours (synced to cloud)'
                   : '✅ Winter offset disabled (synced to cloud)',
                 'success'
               );
@@ -10553,8 +10629,8 @@
 
             if (!silent) {
               showNotification(
-                isEnabled 
-                  ? '☀️ Summer offset enabled: –11 hours (synced to cloud)' 
+                isEnabled
+                  ? '☀️ Summer offset enabled: –11 hours (synced to cloud)'
                   : '✅ Summer offset disabled (synced to cloud)',
                 'success'
               );
@@ -10564,15 +10640,32 @@
 
         // Update toggle visual styling
         function updateToggleStyle(toggleElement, isActive) {
-          if (!toggleElement) return;
-          const slider = toggleElement.nextElementSibling;
-          const knob = slider ? slider.nextElementSibling : null;
+          if (!toggleElement) {
+            console.warn('⚠️ updateToggleStyle: toggleElement is null');
+            return;
+          }
+
+          const label = toggleElement.parentElement;
+          const slider = label ? label.querySelector('.toggle-slider') : null;
+          const knob = label ? label.querySelector('.toggle-knob') : null;
+
+          console.log('🎨 Updating toggle style:', {
+            toggleId: toggleElement.id,
+            isActive,
+            hasSlider: !!slider,
+            hasKnob: !!knob,
+          });
 
           if (slider) {
             slider.style.background = isActive ? 'rgba(34, 197, 94, 0.6)' : 'rgba(100,116,139,0.4)';
+          } else {
+            console.warn('⚠️ Slider not found for', toggleElement.id);
           }
+
           if (knob) {
             knob.style.transform = isActive ? 'translateX(20px)' : 'translateX(0)';
+          } else {
+            console.warn('⚠️ Knob not found for', toggleElement.id);
           }
         }
 
@@ -10588,6 +10681,27 @@
           }
 
           return adjustedDate;
+        }
+
+        // Update settings button color based on timezone offset status
+        function updateSettingsButtonColor() {
+          const settingsBtn = document.getElementById('settingsBtn');
+          if (!settingsBtn) return;
+
+          const settings = getLAOffsetSettingsSync();
+          const isActive = settings.offset12 || settings.offset11;
+
+          if (isActive) {
+            // Green tint when timezone offset is active
+            settingsBtn.style.background = 'rgba(34, 197, 94, 0.15)';
+            settingsBtn.style.borderColor = 'rgba(34, 197, 94, 0.3)';
+            settingsBtn.style.color = '#22c55e';
+          } else {
+            // Default gray
+            settingsBtn.style.background = 'rgba(255, 255, 255, 0.05)';
+            settingsBtn.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+            settingsBtn.style.color = 'white';
+          }
         }
 
         // Initialize toggle states on page load - NOW LOADS FROM CLOUD
@@ -10608,13 +10722,16 @@
             console.log('🔧 Initializing toggles:', { enable12, enable11, settings });
 
             isUpdatingLAOffset = true;
-            
+
             // Set UI state first
             toggle12.checked = enable12;
             toggle11.checked = enable11;
             updateToggleStyle(toggle12, enable12);
             updateToggleStyle(toggle11, enable11);
-            
+
+            // Update settings button color
+            updateSettingsButtonColor();
+
             isUpdatingLAOffset = false;
 
             // Add event listeners
@@ -10622,6 +10739,7 @@
               if (isUpdatingLAOffset) return;
               isUpdatingLAOffset = true;
               await setLAOffset(12, event.target.checked);
+              updateSettingsButtonColor(); // Update settings button color
               isUpdatingLAOffset = false;
             });
 
@@ -10629,6 +10747,7 @@
               if (isUpdatingLAOffset) return;
               isUpdatingLAOffset = true;
               await setLAOffset(11, event.target.checked);
+              updateSettingsButtonColor(); // Update settings button color
               isUpdatingLAOffset = false;
             });
 
@@ -10647,35 +10766,38 @@
               {
                 event: '*', // Listen to INSERT, UPDATE, DELETE
                 schema: 'public',
-                table: 'user_preferences'
+                table: 'user_preferences',
               },
-              async (payload) => {
+              async payload => {
                 debugLog('🔔 Real-time preference update received:', payload);
-                
+
                 if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
                   const newPrefs = payload.new;
-                  
+
                   // Update cache
                   userPreferencesCache = newPrefs;
-                  
+
                   // Update toggle UI without triggering save (to prevent infinite loop)
                   const toggle12 = document.getElementById('laOffset12Toggle');
                   const toggle11 = document.getElementById('laOffset11Toggle');
-                  
+
                   if (toggle12 && toggle11) {
                     isUpdatingLAOffset = true;
-                    
+
                     const winter = newPrefs.timezone_offset_winter || false;
                     const summer = newPrefs.timezone_offset_summer || false;
-                    
+
                     toggle12.checked = winter;
                     toggle11.checked = summer;
-                    
+
                     updateToggleStyle(toggle12, winter);
                     updateToggleStyle(toggle11, summer);
-                    
+
+                    // Update settings button color
+                    updateSettingsButtonColor();
+
                     isUpdatingLAOffset = false;
-                    
+
                     // Show notification that settings synced from another device
                     if (winter) {
                       showNotification('🔄 Synced from another device: Winter offset (–12h) enabled', 'info');
@@ -10688,7 +10810,7 @@
                 }
               }
             )
-            .subscribe((status) => {
+            .subscribe(status => {
               if (status === 'SUBSCRIBED') {
                 debugLog('✅ Subscribed to real-time preference sync');
               } else if (status === 'CHANNEL_ERROR') {
@@ -11296,7 +11418,7 @@
           group: '',
           status: '',
           payment: '',
-          sort: ''
+          sort: '',
         };
 
         // Initialize students from Supabase when page loads
@@ -11569,7 +11691,13 @@
           if (sortPriceEl) sortPriceEl.value = currentFilters.sort;
 
           // Reapply filters if any are active
-          if (currentFilters.search || currentFilters.group || currentFilters.status || currentFilters.payment || currentFilters.sort) {
+          if (
+            currentFilters.search ||
+            currentFilters.group ||
+            currentFilters.status ||
+            currentFilters.payment ||
+            currentFilters.sort
+          ) {
             filterStudents();
           }
         }
@@ -12225,17 +12353,15 @@
           // If balance was changed manually, ask user if they want to send an email
           if (balanceChanged && savedRecord.email && savedRecord.email.trim() !== '') {
             console.log('💳 Credit balance changed - asking user about email notification');
-            
+
             // Ask user if they want to send the email
-            const sendEmail = confirm(`Do you want to send the credit change email to this student?\n\nStudent: ${savedRecord.name}\nEmail: ${savedRecord.email}\n\nPrevious Balance: $${oldBalance.toFixed(2)}\nNew Balance: $${balance.toFixed(2)}`);
-            
+            const sendEmail = confirm(
+              `Do you want to send the credit change email to this student?\n\nStudent: ${savedRecord.name}\nEmail: ${savedRecord.email}\n\nPrevious Balance: $${oldBalance.toFixed(2)}\nNew Balance: $${balance.toFixed(2)}`
+            );
+
             if (sendEmail) {
               console.log('💳 User confirmed - sending credit manual edit email');
-              const emailResult = await sendCreditManualEditEmail(
-                savedRecord,
-                oldBalance,
-                balance
-              );
+              const emailResult = await sendCreditManualEditEmail(savedRecord, oldBalance, balance);
 
               if (emailResult.success) {
                 showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
@@ -14723,7 +14849,7 @@
 
           // Initialize LA offset toggles (loads from cloud)
           await initializeLAOffsetToggles();
-          
+
           // Subscribe to real-time preference changes (syncs across devices)
           subscribeToPreferenceChanges();
 
@@ -14796,7 +14922,7 @@
           // Listen for data requests from automation engine (ONLY ONCE)
           if (!window._emailSystemMessageListenerAttached) {
             window._emailSystemMessageListenerAttached = true;
-            
+
             window.addEventListener('message', async function (event) {
               if (event.data.action === 'requestGroupsData') {
                 sendGroupsDataToEmailSystem();
@@ -14831,7 +14957,7 @@
                 }
               }
             });
-            
+
             debugLog('✅ Email system message listener attached');
           }
 
@@ -14846,17 +14972,17 @@
           console.log('[EmailPreview] 🔵 Opening email preview modal in parent window');
           const modal = document.getElementById('emailPreviewModal');
           const iframe = document.getElementById('emailPreviewFrame');
-          
+
           if (!modal || !iframe) {
             console.error('[EmailPreview] ❌ Modal or iframe not found!');
             return;
           }
-          
+
           const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
           iframeDoc.open();
           iframeDoc.write(htmlContent);
           iframeDoc.close();
-          
+
           modal.style.display = 'flex';
           console.log('[EmailPreview] ✅ Modal opened successfully');
         }
@@ -18766,14 +18892,21 @@
 
                 // Normalize both dates to date-only strings for comparison
                 const classDateStr = formatDateYYYYMMDD(classDate);
-                
+
                 if (studentCreatedAt) {
                   const creationDateStr = formatDateYYYYMMDD(studentCreatedAt);
-                  
+
                   // Skip if class date is before student was created
                   if (classDateStr < creationDateStr) {
                     if (DEBUG_MODE) {
-                      console.log('[Calendar] Hiding', classDateStr, 'for', student.name, '- before creation', creationDateStr);
+                      console.log(
+                        '[Calendar] Hiding',
+                        classDateStr,
+                        'for',
+                        student.name,
+                        '- before creation',
+                        creationDateStr
+                      );
                     }
                     return; // Don't show this class
                   }
@@ -18877,14 +19010,21 @@
 
               // Normalize both dates to date-only strings for comparison
               const classDateStr = formatDateYYYYMMDD(classDate);
-              
+
               if (studentCreatedAt) {
                 const creationDateStr = formatDateYYYYMMDD(studentCreatedAt);
-                
+
                 // Skip if class date is before student was created
                 if (classDateStr < creationDateStr) {
                   if (DEBUG_MODE) {
-                    console.log('[DayData] Hiding', classDateStr, 'for', student.name, '- before creation', creationDateStr);
+                    console.log(
+                      '[DayData] Hiding',
+                      classDateStr,
+                      'for',
+                      student.name,
+                      '- before creation',
+                      creationDateStr
+                    );
                   }
                   return; // Don't show this class
                 }
@@ -19046,7 +19186,7 @@
             // This prevents existing students from having retroactive unpaid classes
             debugLog(`[RedDot] Student ${student.name} has no created_at - using calendar start date as fallback`);
             const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
-            
+
             if (dateStr < calendarStartStr) {
               // Class date is before calendar start - hide it
               debugLog(`[RedDot] Hiding ${dateStr} - before calendar start (${calendarStartStr})`);
@@ -20176,11 +20316,11 @@
           try {
             console.log('💳 Creating quick payment via addPayment()...');
             const result = await addPayment(paymentData);
-            
+
             if (result) {
               showToast('✅ Payment added & receipt sent!', 'success');
               renderCalendar();
-              
+
               // Reload payments to update UI
               await window.PaymentStore.load();
             } else {
@@ -20703,7 +20843,7 @@
 
               const today = getLADate();
               const todayStr = formatDateYYYYMMDD(today);
-              
+
               // Update last check time
               localStorage.setItem('payment_reminder_last_check', new Date().toISOString());
 
@@ -21153,7 +21293,8 @@
             // Generate payment message based on status
             let paymentMessage = '';
             if (paymentStatus === 'paid') {
-              paymentMessage = '<p style="color: #10b981; font-weight: 600;">✅ Your payment for this class is confirmed!</p>';
+              paymentMessage =
+                '<p style="color: #10b981; font-weight: 600;">✅ Your payment for this class is confirmed!</p>';
             } else if (creditBalance > 0) {
               const studentPrice = student.payPerClass || student.pricePerClass || 50;
               const remainingCredit = creditBalance - studentPrice;
@@ -21219,7 +21360,7 @@
 
               const nowLA = getLADate();
               const todayStr = formatDateYYYYMMDD(nowLA);
-              
+
               // Update last check time
               localStorage.setItem('class_reminder_last_check', new Date().toISOString());
 
@@ -21259,13 +21400,13 @@
               for (const dayData of calendarData.days) {
                 const dateStr = formatDateYYYYMMDD(dayData.date);
                 const classDateObj = new Date(dateStr + 'T00:00:00-08:00');
-                
+
                 // Calculate hours until class
                 for (const classData of dayData.studentsWithClass) {
                   classesChecked++;
                   const student = classData.student;
                   const group = groups.find(g => g.name === student.group);
-                  
+
                   if (!group || !group.schedule) continue;
 
                   // Parse class time
@@ -21275,7 +21416,7 @@
                     weekday: 'long',
                   });
                   const todaySlot = scheduleSlots.find(slot => slot.day === dayName);
-                  
+
                   if (!todaySlot) continue;
 
                   // Calculate exact class start time in LA
@@ -21284,7 +21425,7 @@
 
                   // Check if we're 12 hours before class
                   const hoursUntilClass = (classStartTime - nowLA) / (1000 * 60 * 60);
-                  
+
                   // Send if between 11.5 and 12.5 hours before (1-hour window)
                   if (hoursUntilClass >= 11.5 && hoursUntilClass <= 12.5) {
                     // Check if already sent
@@ -21301,7 +21442,9 @@
                     });
 
                     console.log(`[ClassReminderManager] 📧 Sending class reminder to ${student.name}`);
-                    console.log(`[ClassReminderManager]    Class: ${student.group} on ${dateStr} at ${classTimeFormatted}`);
+                    console.log(
+                      `[ClassReminderManager]    Class: ${student.group} on ${dateStr} at ${classTimeFormatted}`
+                    );
                     console.log(`[ClassReminderManager]    Hours until class: ${hoursUntilClass.toFixed(1)}`);
 
                     // Determine payment status
@@ -21330,7 +21473,6 @@
               console.log('  Classes checked:', classesChecked);
               console.log('  Reminders sent:', remindersSent);
               console.log('═══════════════════════════════════════════════════════\n');
-
             } catch (error) {
               console.error('[ClassReminderManager] ❌ Error checking reminders:', error);
             }
@@ -21391,9 +21533,12 @@
             }
 
             // Run checks every hour
-            setInterval(() => {
-              checkAndSendReminders();
-            }, 60 * 60 * 1000);
+            setInterval(
+              () => {
+                checkAndSendReminders();
+              },
+              60 * 60 * 1000
+            );
           }
 
           // Public API
@@ -21503,7 +21648,7 @@
 
               const nowLA = getLADate();
               const todayStr = formatDateYYYYMMDD(nowLA);
-              
+
               // Update last check time
               localStorage.setItem('class_starting_soon_last_check', new Date().toISOString());
 
@@ -21580,12 +21725,7 @@
                     console.log(`[ClassStartingSoonManager]    Class: ${student.group} at ${classTimeFormatted}`);
                     console.log(`[ClassStartingSoonManager]    Minutes until class: ${minutesUntilClass.toFixed(1)}`);
 
-                    const sent = await sendStartingSoonReminder(
-                      student,
-                      classTimeFormatted,
-                      student.group,
-                      dateStr
-                    );
+                    const sent = await sendStartingSoonReminder(student, classTimeFormatted, student.group, dateStr);
 
                     if (sent) {
                       markReminderSent(student.id, dateStr);
@@ -21600,7 +21740,6 @@
               console.log('  Classes checked:', classesChecked);
               console.log('  Reminders sent:', remindersSent);
               console.log('═══════════════════════════════════════════════════════\n');
-
             } catch (error) {
               console.error('[ClassStartingSoonManager] ❌ Error:', error);
             }
@@ -21649,9 +21788,12 @@
             }
 
             // Check every 10 minutes (more frequent than 12h reminder)
-            setInterval(() => {
-              checkAndSendReminders();
-            }, 10 * 60 * 1000);
+            setInterval(
+              () => {
+                checkAndSendReminders();
+              },
+              10 * 60 * 1000
+            );
           }
 
           return {
