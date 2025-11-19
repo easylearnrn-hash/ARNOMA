@@ -8038,18 +8038,47 @@
           const fiveMinutes = 5 * 60 * 1000;
 
           if (expiry && expiry - now < fiveMinutes) {
-            debugLog('Gmail token expiring soon, attempting silent refresh...');
+            debugLog('🔄 Gmail token expiring soon, refreshing via Supabase...');
 
-            // Token expired or expiring - need to re-authenticate
-            // Note: Google OAuth2 implicit flow doesn't support refresh tokens
-            // User must re-authenticate when token expires
-            gmailAccessToken = null;
-            localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
-            localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
-            updateGmailButtonState(false);
+            try {
+              // Call refresh token Edge Function
+              const response = await fetch(`${SUPABASE_URL}/functions/v1/gmail-refresh-token`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                },
+                body: JSON.stringify({
+                  userId: 'admin', // Replace with actual user ID if using auth
+                }),
+              });
 
-            showNotification('⚠️ Gmail connection expired. Please reconnect.', 'warning');
-            return false;
+              if (!response.ok) {
+                throw new Error('Token refresh failed');
+              }
+
+              const { access_token, expires_at } = await response.json();
+              
+              // Calculate expires_in from expires_at
+              const expiresIn = Math.floor((new Date(expires_at).getTime() - Date.now()) / 1000);
+              
+              // Save refreshed token
+              saveGmailConnection(access_token, expiresIn);
+              debugLog('✅ Gmail token refreshed successfully');
+              
+              return true;
+            } catch (error) {
+              console.error('❌ Token refresh failed:', error);
+              
+              // Token refresh failed - need to re-authenticate
+              gmailAccessToken = null;
+              localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
+              localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
+              updateGmailButtonState(false);
+
+              showNotification('⚠️ Gmail connection expired. Please reconnect.', 'warning');
+              return false;
+            }
           }
 
           return true;
@@ -8096,51 +8125,77 @@
           // Use the exact current origin to match what's in Google Cloud Console
           const redirectUri = window.location.origin;
 
-          // Implicit OAuth flow for browser-based apps
+          // Authorization code flow (supports refresh tokens)
           const authUrl =
             `https://accounts.google.com/o/oauth2/v2/auth?` +
             `client_id=${GMAIL_CLIENT_ID}&` +
             `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-            `response_type=token&` +
+            `response_type=code&` + // Changed from 'token' to 'code'
             `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
-            `prompt=select_account`; // Allow account selection
+            `access_type=offline&` + // Request refresh token
+            `prompt=consent`; // Force consent to get refresh token
 
           debugLog('⚠️ IMPORTANT: Make sure this redirect URI is authorized in Google Cloud Console:');
+          debugLog('🔄 Using authorization code flow with refresh token support');
           window.location.href = authUrl;
         }
 
-        function handleOAuthCallback() {
-          const hash = window.location.hash;
-          debugLog('🔍 Checking for OAuth callback - hash:', hash ? 'Found' : 'None');
+        async function handleOAuthCallback() {
+          const urlParams = new URLSearchParams(window.location.search);
+          const code = urlParams.get('code');
+          debugLog('🔍 Checking for OAuth callback - code:', code ? 'Found' : 'None');
 
-          if (hash && hash.includes('access_token')) {
-            const params = new URLSearchParams(hash.substring(1));
-            const token = params.get('access_token');
-            const expiresIn = parseInt(params.get('expires_in') || '3600');
+          if (code) {
+            try {
+              debugLog('🔄 Exchanging authorization code for tokens...');
+              
+              // Exchange code for tokens via Supabase Edge Function
+              const response = await fetch(`${SUPABASE_URL}/functions/v1/gmail-oauth-callback`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                },
+                body: JSON.stringify({
+                  code: code,
+                  userId: 'admin', // Replace with actual user ID if using auth
+                }),
+              });
 
-            if (token) {
-              // Save using enhanced connection storage
-              saveGmailConnection(token, expiresIn);
+              if (!response.ok) {
+                const error = await response.text();
+                throw new Error(`Token exchange failed: ${error}`);
+              }
 
+              const { access_token, expires_at } = await response.json();
+              
+              // Calculate expires_in from expires_at
+              const expiresIn = Math.floor((new Date(expires_at).getTime() - Date.now()) / 1000);
+
+              // Save token
+              saveGmailConnection(access_token, expiresIn);
               updateGmailButtonState(true);
-              showNotification('✅ Gmail connected successfully! Token valid for 1 hour.', 'success');
+              showNotification('✅ Gmail connected with refresh token! Auto-renewal enabled.', 'success');
 
-              // Clear hash from URL
+              // Clear code from URL
               window.history.replaceState(null, '', window.location.pathname);
 
-              // Auto-fetch payments after connection
+              // Auto-fetch payments
               debugLog('📥 Auto-fetching payments after connection...');
               setTimeout(() => refreshPayments(), 1000);
+            } catch (error) {
+              console.error('❌ OAuth callback error:', error);
+              showNotification('❌ Failed to connect Gmail: ' + error.message, 'error');
+              window.history.replaceState(null, '', window.location.pathname);
             }
-          } else if (hash && hash.includes('error')) {
+          } else if (urlParams.get('error')) {
             // Handle OAuth errors
-            const params = new URLSearchParams(hash.substring(1));
-            const error = params.get('error');
-            const errorDesc = params.get('error_description');
+            const error = urlParams.get('error');
+            const errorDesc = urlParams.get('error_description');
             console.error('❌ OAuth error:', error, errorDesc);
             showNotification(`Gmail connection failed: ${errorDesc || error}`, 'error');
 
-            // Clear hash from URL
+            // Clear URL
             window.history.replaceState(null, '', window.location.pathname);
           }
         }
