@@ -618,7 +618,7 @@
       }
 
       .container {
-        max-width: 1540px;
+        max-width: 100%;
         margin: 0 auto;
         background: transparent;
         border: 1px solid rgba(255, 255, 255, 0.1);
@@ -7128,7 +7128,7 @@
 
           modal.appendChild(modalContent);
           document.body.appendChild(modal);
-          document.body.style.overflow = 'hidden';
+          // Removed: document.body.style.overflow = 'hidden'; to allow mobile scrolling
 
           // Add event listeners
           const searchInput = document.getElementById('studentSearchInput');
@@ -9219,7 +9219,7 @@
 
           const modalHTML = `
         <div id="linkStudentModalBackdrop" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 10000; backdrop-filter: blur(6px); cursor: pointer;" onclick="closeLinkStudentModal()"></div>
-        <div id="linkStudentModal" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 24px; min-width: 400px; max-width: 500px; z-index: 10001; box-shadow: 0 20px 60px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.25s ease;">
+        <div id="linkStudentModal" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%); border: 2px solid rgba(138,180,255,.3); border-radius: 16px; padding: 24px; width: 90vw; max-width: 500px; z-index: 10001; box-shadow: 0 20px 60px rgba(0,0,0,0.8); opacity: 0; transition: opacity 0.25s ease; max-height: 85vh; overflow-y: auto;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: relative;">
             <button onclick="closeLinkStudentModal()" style="background: none; border: none; color: #94a3b8; opacity: 0.8; font-size: 14px; font-weight: 600; cursor: pointer; padding: 8px 12px; margin-right: auto; transition: all 0.2s ease; pointer-events: auto; position: absolute; left: 0; top: 0;" onmouseover="this.style.opacity='1'; this.style.textShadow='0 0 8px rgba(148,163,184,0.6)'" onmouseout="this.style.opacity='0.8'; this.style.textShadow='none'">← Back</button>
             <h3 style="margin: 0; color: white; font-size: 18px; font-weight: 700; flex: 1; text-align: center;">Link to Student</h3>
@@ -9466,7 +9466,7 @@
           `;
 
             document.body.appendChild(modal);
-            document.body.style.overflow = 'hidden';
+            // Removed: document.body.style.overflow = 'hidden'; to allow mobile scrolling
 
             const cancelBtn = document.getElementById('cancelEmailBtn');
             const sendBtn = document.getElementById('sendEmailBtn');
@@ -9485,14 +9485,12 @@
 
             cancelBtn.onclick = () => {
               modal.remove();
-              document.body.style.overflow = 'auto';
               console.log('[EmailConfirmation] ❌ User cancelled email send');
               resolve(false);
             };
 
             sendBtn.onclick = () => {
               modal.remove();
-              document.body.style.overflow = 'auto';
               console.log('[EmailConfirmation] ✅ User confirmed email send');
               resolve(true);
             };
@@ -19758,7 +19756,7 @@
           console.log('🆕 Creating new sidebar panel');
           const panelHTML = `
         <div id="dayDetailsOverlay" onclick="closeDayDetails()" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 28000; backdrop-filter: blur(10px); opacity: 0; transition: opacity 0.3s;"></div>
-        <div id="dayDetailsPanel" onclick="event.stopPropagation()" style="position: fixed; right: -500px; top: 0; bottom: 0; width: 450px; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border-left: 2px solid rgba(138,180,255,0.3); z-index: 28001; backdrop-filter: blur(20px); box-shadow: -10px 0 40px rgba(0,0,0,0.5); transition: right 0.3s ease; overflow-y: auto;">
+        <div id="dayDetailsPanel" onclick="event.stopPropagation()" style="position: fixed; right: -100%; top: 0; bottom: 0; width: 90vw; max-width: 450px; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border-left: 2px solid rgba(138,180,255,0.3); z-index: 28001; backdrop-filter: blur(20px); box-shadow: -10px 0 40px rgba(0,0,0,0.5); transition: right 0.3s ease; overflow-y: auto;">
           <div data-panel-header style="padding: 24px; border-bottom: 1px solid rgba(255,255,255,0.1); position: sticky; top: 0; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); z-index: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
               <div>
@@ -19858,7 +19856,7 @@
 
           if (overlay && panel) {
             overlay.style.opacity = '0';
-            panel.style.right = '-500px';
+            panel.style.right = '-100%';
 
             setTimeout(() => {
               overlay.remove();
@@ -19929,7 +19927,7 @@
               : '';
 
           const detailHTML = `
-        <div id="classDetailModal" onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 28000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; min-width: 400px; max-width: 500px; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
+        <div id="classDetailModal" onclick="event.stopPropagation()" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 28000; background: linear-gradient(135deg, rgba(30,30,46,0.98) 0%, rgba(42,42,62,0.98) 100%); border: 2px solid rgba(138,180,255,0.3); border-radius: 16px; padding: 24px; width: 90vw; max-width: 500px; max-height: 85vh; overflow-y: auto; backdrop-filter: blur(20px); box-shadow: 0 20px 60px rgba(0,0,0,0.7);">
           <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 20px;">
             <div>
               <h3 style="margin: 0 0 4px 0; font-size: 20px; font-weight: 900; color: white;">${escapeHtml(student.name)}</h3>
