@@ -14499,7 +14499,9 @@
         // Initialize hidden email system iframe
         function initializeEmailSystemIframe() {
           // Check if iframe already exists
-          if (document.querySelector('iframe[src*="email-system-complete.html"]')) {
+          const existingIframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+          if (existingIframe) {
+            debugLog('⚠️ Email system iframe already exists, skipping initialization');
             return;
           }
 
@@ -14514,41 +14516,47 @@
 
           debugLog('✅ Hidden email system iframe initialized');
 
-          // Listen for data requests from automation engine
-          window.addEventListener('message', async function (event) {
-            if (event.data.action === 'requestGroupsData') {
-              sendGroupsDataToEmailSystem();
-            }
-
-            // Handle email preview requests from email system iframe
-            if (event.data.action === 'openEmailPreview') {
-              console.log('[EmailPreview] 📧 Received email preview request from iframe');
-              openEmailPreviewModal(event.data.htmlContent, event.data.subject);
-            }
-
-            // Handle notification requests from email automation iframe
-            if (event.data.action === 'addNotification') {
-              console.log(
-                '[NotificationCenter] 📬 Received notification request from iframe:',
-                event.data.notification
-              );
-
-              if (window.NotificationCenter && event.data.notification) {
-                const notif = event.data.notification;
-                await window.NotificationCenter.add(
-                  notif.type || window.NotificationCenter.NotificationType.EMAIL,
-                  notif.title,
-                  notif.description,
-                  {
-                    groupName: notif.groupName,
-                    studentName: notif.studentName,
-                    metadata: notif.metadata || {},
-                  }
-                );
-                debugLog('[NotificationCenter] ✅ Notification added from iframe');
+          // Listen for data requests from automation engine (ONLY ONCE)
+          if (!window._emailSystemMessageListenerAttached) {
+            window._emailSystemMessageListenerAttached = true;
+            
+            window.addEventListener('message', async function (event) {
+              if (event.data.action === 'requestGroupsData') {
+                sendGroupsDataToEmailSystem();
               }
-            }
-          });
+
+              // Handle email preview requests from email system iframe
+              if (event.data.action === 'openEmailPreview') {
+                console.log('[EmailPreview] 📧 Received email preview request from iframe');
+                openEmailPreviewModal(event.data.htmlContent, event.data.subject);
+              }
+
+              // Handle notification requests from email automation iframe
+              if (event.data.action === 'addNotification') {
+                console.log(
+                  '[NotificationCenter] 📬 Received notification request from iframe:',
+                  event.data.notification
+                );
+
+                if (window.NotificationCenter && event.data.notification) {
+                  const notif = event.data.notification;
+                  await window.NotificationCenter.add(
+                    notif.type || window.NotificationCenter.NotificationType.EMAIL,
+                    notif.title,
+                    notif.description,
+                    {
+                      groupName: notif.groupName,
+                      studentName: notif.studentName,
+                      metadata: notif.metadata || {},
+                    }
+                  );
+                  debugLog('[NotificationCenter] ✅ Notification added from iframe');
+                }
+              }
+            });
+            
+            debugLog('✅ Email system message listener attached');
+          }
 
           // Send initial data after iframe loads
           iframe.addEventListener('load', function () {
