@@ -6627,8 +6627,9 @@
               const studentPrice = parseFloat(student.payPerClass || student.price_per_class || 0);
               const paymentAmount = parseFloat(payment.amount || 0);
 
+              // DISABLED: Auto-credit feature removed per user request
               // Check if overpayment
-              if (paymentAmount > studentPrice && studentPrice > 0) {
+              if (false && paymentAmount > studentPrice && studentPrice > 0) {
                 const excess = paymentAmount - studentPrice;
 
                 debugLog(
@@ -9683,8 +9684,9 @@
 
             console.log('[Credit] 📊 Unpaid classes:', unpaidClassCount);
 
+            // DISABLED: Auto-credit feature removed per user request
             // If payment amount > price per class AND no unpaid classes, add excess to credit
-            if (paymentAmount > pricePerClass && unpaidClassCount === 0) {
+            if (false && paymentAmount > pricePerClass && unpaidClassCount === 0) {
               creditAddedAmount = paymentAmount;
               const oldBalance = parseFloat(student.balance) || 0;
               const newBalance = oldBalance + creditAddedAmount;
