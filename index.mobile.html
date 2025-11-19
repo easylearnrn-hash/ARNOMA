@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.6.1-perfect-circles" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
+    <meta name="version" content="2.6.2-suppress-auth-errors" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
     <script>
       (function () {
         // 🚨 CRITICAL: This is index.mobile.html - NEVER redirect from here
@@ -22493,6 +22493,12 @@
 
           // Load notifications from Supabase
           async function loadFromSupabase() {
+            // Skip if not authenticated
+            if (!isAuthenticated || !currentUser) {
+              debugLog('[NotificationCenter] ⏭️ Skipping load - not authenticated');
+              return;
+            }
+
             try {
               const { data, error } = await supabase
                 .from('notifications')
@@ -22501,6 +22507,11 @@
                 .limit(MAX_NOTIFICATIONS);
 
               if (error) {
+                // Silently fail if authentication/permission error
+                if (error.code === 'PGRST301' || error.message.includes('JWT') || error.message.includes('Load failed')) {
+                  debugLog('[NotificationCenter] ⏭️ Skipping - auth required');
+                  return;
+                }
                 console.error('[NotificationCenter] ❌ Error loading notifications:', error);
                 return;
               }
@@ -22536,6 +22547,12 @@
 
           // Save notification to Supabase
           async function saveToSupabase(notification) {
+            // Skip if not authenticated
+            if (!isAuthenticated || !currentUser) {
+              debugLog('[NotificationCenter] ⏭️ Skipping save - not authenticated');
+              return null;
+            }
+
             try {
               // CRITICAL: Ensure all text fields respect 50-char Supabase limit
               const truncate = (str, maxLen = 50) => {
@@ -22577,12 +22594,22 @@
               const { data, error } = await supabase.from('notifications').insert(payload).select().single();
 
               if (error) {
+                // Silently fail if authentication/permission error
+                if (error.code === 'PGRST301' || error.message.includes('JWT') || error.message.includes('Load failed')) {
+                  debugLog('[NotificationCenter] ⏭️ Skipping save - auth required');
+                  return null;
+                }
                 console.error('[NotificationCenter] ❌ Error saving notification:', error);
                 return null;
               }
 
               return data;
             } catch (error) {
+              // Silently fail on network errors when not authenticated
+              if (error.message?.includes('Load failed') || error.message?.includes('NetworkError')) {
+                debugLog('[NotificationCenter] ⏭️ Skipping save - network/auth error');
+                return null;
+              }
               console.error('[NotificationCenter] ❌ Exception saving notification:', error);
               return null;
             }
