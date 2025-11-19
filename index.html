@@ -20570,7 +20570,8 @@
                   );
 
                   // All checks passed - send reminder with full unpaid classes list
-                  const amount = unpaidClass.balance || 0;
+                  // FIX: Use student's payPerClass rate, not cumulative balance
+                  const amount = student.payPerClass || 50;
                   console.log(`    📧 Sending payment reminder for ${unpaidClasses.length} unpaid class(es)`);
 
                   const sent = await sendPaymentReminder(student, dateStr, amount, unpaidClasses);
