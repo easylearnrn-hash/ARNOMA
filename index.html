@@ -21002,7 +21002,7 @@
                 const studentId = student.id;
                 studentsChecked++;
 
-                console.log(`\n[Student ${studentsChecked}/${studentsArray.length}] ${student.name}`);
+                verboseLog(`\n[Student ${studentsChecked}/${studentsArray.length}] ${student.name}`);
 
                 // ONLY send payment reminders to students with 'paused' status (red dont)
                 if (student.status !== 'paused') {

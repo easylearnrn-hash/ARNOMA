@@ -21195,7 +21195,7 @@
                 const studentId = student.id;
                 studentsChecked++;
 
-                console.log(`\n[Student ${studentsChecked}/${studentsArray.length}] ${student.name}`);
+                verboseLog(`\n[Student ${studentsChecked}/${studentsArray.length}] ${student.name}`);
 
                 // Skip if student is not active
                 if (student.status && student.status !== 'active') {
