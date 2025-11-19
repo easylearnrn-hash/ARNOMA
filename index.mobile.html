@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>ARNOMA - Mobile [v2.3.2]</title>
+    <title>ARNOMA - Mobile [v2.3.3]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA Mobile v2.3.2 - Full Mobile Responsive Layout Fix');
+      console.log('🔥 ARNOMA Mobile v2.3.3 - Student Manager & Table Scrolling Fix');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -791,7 +791,19 @@
         background: transparent;
         border: none;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
         width: 100%;
+      }
+
+      .payment-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        margin-bottom: 32px;
+      }
+
+      .payment-table-inner {
+        min-width: 900px;
       }
 
       .table-header {
@@ -3195,7 +3207,8 @@
             backdrop-filter: blur(24px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 20px;
-            overflow: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
             box-shadow: 0 24px 80px rgba(0, 0, 0, 0.8);
           "
         >
@@ -3438,8 +3451,6 @@
             id="studentGrid"
             style="
               padding: 24px;
-              overflow-y: auto;
-              max-height: calc(90vh - 200px);
               display: grid;
               grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
               gap: 20px;
@@ -4945,7 +4956,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.2 - Full Mobile Responsive Layout Fix</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.3 - Student Manager & Table Scrolling Fix</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
@@ -7897,24 +7908,26 @@
               });
 
               chunkHtml += `
-            <div style="margin-bottom: 32px;">
-              <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)); border-left: 4px solid #3b82f6; border-radius: 8px; margin-bottom: 12px;">
-                <span style="font-size: 16px; font-weight: 700; color: white;">${dateKey}</span>
-                <span style="margin-left: auto; font-size: 14px; font-weight: 700; color: #e5e7eb;">
-                  Total: <span style="color: #3b82f6; font-weight: 700;">${formatCurrency(dateData.total, '$')}</span> <span style="color: #94a3b8; font-size: 12.7px;">— ${formatCurrency(Math.round(dateData.total * 387.5), '֏')}</span>
-                </span>
-              </div>
-              <div style="background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 28px rgba(0,0,0,0.35); overflow: hidden; transition: 0.25s ease-in-out;" onmouseover="this.style.borderColor='rgba(255,255,255,0.25)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';">
-                <div style="display: grid; grid-template-columns: 110px 200px 200px 80px 180px 1fr 40px; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; font-weight: 700; color: #94a3b8;">
-                  <div>DATE</div>
-                  <div>PAYER NAME</div>
-                  <div>STUDENT NAME</div>
-                  <div style="text-align:center;">GROUP</div>
-                  <div>AMOUNT (USD — AMD)</div>
-                  <div>MESSAGE</div>
-                  <div style="text-align: center;">⋮</div>
+            <div class="payment-table-wrapper">
+              <div class="payment-table-inner">
+                <div style="display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)); border-left: 4px solid #3b82f6; border-radius: 8px; margin-bottom: 12px;">
+                  <span style="font-size: 16px; font-weight: 700; color: white;">${dateKey}</span>
+                  <span style="margin-left: auto; font-size: 14px; font-weight: 700; color: #e5e7eb;">
+                    Total: <span style="color: #3b82f6; font-weight: 700;">${formatCurrency(dateData.total, '$')}</span> <span style="color: #94a3b8; font-size: 12.7px;">— ${formatCurrency(Math.round(dateData.total * 387.5), '֏')}</span>
+                  </span>
                 </div>
-                ${rowsHtml}
+                <div style="background: transparent; border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 8px 28px rgba(0,0,0,0.35); overflow: hidden; transition: 0.25s ease-in-out;" onmouseover="this.style.borderColor='rgba(255,255,255,0.25)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';">
+                  <div style="display: grid; grid-template-columns: 110px 200px 200px 80px 180px 1fr 40px; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.1); font-size: 12px; font-weight: 700; color: #94a3b8;">
+                    <div>DATE</div>
+                    <div>PAYER NAME</div>
+                    <div>STUDENT NAME</div>
+                    <div style="text-align:center;">GROUP</div>
+                    <div>AMOUNT (USD — AMD)</div>
+                    <div>MESSAGE</div>
+                    <div style="text-align: center;">⋮</div>
+                  </div>
+                  ${rowsHtml}
+                </div>
               </div>
             </div>
           `;
