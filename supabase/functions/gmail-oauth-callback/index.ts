@@ -49,15 +49,21 @@ serve(async (req) => {
     // Store tokens in Supabase
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    const { error: dbError } = await supabase.from('gmail_credentials').upsert({
-      user_id: userId,
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-      client_id: GMAIL_CLIENT_ID,
-      client_secret: GMAIL_CLIENT_SECRET,
-      expires_at: expiresAt.toISOString(),
-      scopes: tokenData.scope,
-    });
+    // UPSERT: Insert new record or UPDATE existing one on user_id conflict
+    const { error: dbError } = await supabase
+      .from('gmail_credentials')
+      .upsert(
+        {
+          user_id: userId,
+          access_token: tokenData.access_token,
+          refresh_token: tokenData.refresh_token,
+          client_id: GMAIL_CLIENT_ID,
+          client_secret: GMAIL_CLIENT_SECRET,
+          expires_at: expiresAt.toISOString(),
+          scopes: tokenData.scope,
+        },
+        { onConflict: 'user_id' }
+      );
 
     if (dbError) throw dbError;
 
