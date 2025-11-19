@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.4.6 ⚡]</title>
+  <title>ARNOMA - Student Management [v2.4.7 ⚡]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.4.5-performance-optimized" />
+  <meta name="version" content="2.4.7-smart-calendar-recovery" />
 
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -91,7 +91,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-  console.log('🔥 ARNOMA v2.4.6');
+  console.log('🔥 ARNOMA v2.4.7 - Smart Calendar Recovery');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -4979,7 +4979,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.4.6 - Automation Guard Hotfix</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.4.7 - Smart Calendar Recovery</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
@@ -18772,11 +18772,6 @@
         }
 
         function renderCalendar() {
-          // ⚡ PERFORMANCE: Lazy load calendar on first render
-          if (typeof lazyLoadCalendar === 'function') {
-            lazyLoadCalendar();
-          }
-
           const year = currentCalendarDate.getFullYear();
           const month = currentCalendarDate.getMonth();
 
@@ -22274,7 +22269,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('⚡ ARNOMA v2.4.6 - Automation Guard Hotfix');
+          console.log('⚡ ARNOMA v2.4.7 - Smart Calendar Recovery');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
@@ -22427,11 +22422,7 @@
         // Lazy load Calendar when tab is opened
         function lazyLoadCalendar() {
           if (initializationState.calendar) return;
-          
-          if (typeof renderCalendar === 'function') {
-            renderCalendar();
-            initializationState.calendar = true;
-          }
+          initializationState.calendar = true;
         }
 
         // Lazy load Quick View timers

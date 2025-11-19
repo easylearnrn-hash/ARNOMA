@@ -43,7 +43,7 @@ const wait = ms => new Promise(resolve => setTimeout(resolve, ms));
 async function getTestStudent() {
   // Try both window.students and global students variable
   const studentsList = window.students || students;
-  
+
   if (!studentsList || studentsList.length === 0) {
     throw new Error('No students available for testing');
   }

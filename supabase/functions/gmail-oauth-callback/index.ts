@@ -6,7 +6,7 @@ const GMAIL_CLIENT_SECRET = Deno.env.get('GMAIL_CLIENT_SECRET')!;
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 
-serve(async (req) => {
+serve(async req => {
   const corsHeaders = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
@@ -50,20 +50,18 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
     // UPSERT: Insert new record or UPDATE existing one on user_id conflict
-    const { error: dbError } = await supabase
-      .from('gmail_credentials')
-      .upsert(
-        {
-          user_id: userId,
-          access_token: tokenData.access_token,
-          refresh_token: tokenData.refresh_token,
-          client_id: GMAIL_CLIENT_ID,
-          client_secret: GMAIL_CLIENT_SECRET,
-          expires_at: expiresAt.toISOString(),
-          scopes: tokenData.scope,
-        },
-        { onConflict: 'user_id' }
-      );
+    const { error: dbError } = await supabase.from('gmail_credentials').upsert(
+      {
+        user_id: userId,
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token,
+        client_id: GMAIL_CLIENT_ID,
+        client_secret: GMAIL_CLIENT_SECRET,
+        expires_at: expiresAt.toISOString(),
+        scopes: tokenData.scope,
+      },
+      { onConflict: 'user_id' }
+    );
 
     if (dbError) throw dbError;
 

@@ -1,18 +1,25 @@
 # Automated Class Reminder System
 
 ## Overview
-The system automatically sends class reminders to students **12 hours before their scheduled class time**.
+
+The system automatically sends class reminders to students **12 hours before
+their scheduled class time**.
 
 ## Features
 
 ### ⏰ Timing Logic
-- **Morning Classes (7 AM, 8 AM, 9 AM, 10 AM)**: Reminder sent night before → Email says "**tomorrow**"
-- **Evening Classes (7 PM, 8 PM, 9 PM, 10 PM)**: Reminder sent morning of same day → Email says "**today**"
+
+- **Morning Classes (7 AM, 8 AM, 9 AM, 10 AM)**: Reminder sent night before →
+  Email says "**tomorrow**"
+- **Evening Classes (7 PM, 8 PM, 9 PM, 10 PM)**: Reminder sent morning of same
+  day → Email says "**today**"
 - Checks run **every hour** automatically
 - 1-hour window (11.5-12.5 hours before class) to catch the right timing
 
 ### 📧 Email Content
+
 The reminder email includes:
+
 - **Student name**
 - **Group name** (e.g., "Group A")
 - **Class time** (e.g., "8:00 PM")
@@ -22,20 +29,24 @@ The reminder email includes:
 ### 💳 Smart Payment Status Logic
 
 #### ✅ If Student PAID
+
 ```
 ✅ Your payment for this class is confirmed!
 ```
+
 Simple reminder only, no payment mention beyond confirmation.
 
 #### ⚠️ If Student UNPAID (No Credit)
+
 ```
-⚠️ Payment Reminder: Please make your payment before class starts 
+⚠️ Payment Reminder: Please make your payment before class starts
 to avoid delays in notes being uploaded to Google Classroom.
 
 [Zelle QR Code and payment instructions shown]
 ```
 
 #### 💳 If Student UNPAID (Has Credit Balance)
+
 ```
 💳 Credit Available: Your credit balance of $150 will be applied to this class.
 Remaining Credit: $50 after this class
@@ -53,7 +64,8 @@ Remaining Credit: $50 after this class
 2. **Email Template** (email-system-complete.html)
    - Updated existing "Class Reminder" template
    - Now automated (was manual before)
-   - Uses placeholders: `{{StudentName}}`, `{{GroupName}}`, `{{ClassTime}}`, `{{TimeOfDay}}`, `{{PaymentMessage}}`
+   - Uses placeholders: `{{StudentName}}`, `{{GroupName}}`, `{{ClassTime}}`,
+     `{{TimeOfDay}}`, `{{PaymentMessage}}`
 
 3. **Message Handler** (email-system-complete.html)
    - Action: `sendClassReminder`
@@ -83,6 +95,7 @@ Remaining Credit: $50 after this class
 ```
 
 ### Calendar Data Structure
+
 ```javascript
 {
   days: [
@@ -104,6 +117,7 @@ Remaining Credit: $50 after this class
 ## Monitoring & Debugging
 
 ### Console Logs (when reminders run)
+
 ```
 ═══════════════════════════════════════════════════════
 [ClassReminderManager] 🔍 STARTING CLASS REMINDER CHECK
@@ -122,11 +136,13 @@ Remaining Credit: $50 after this class
 ```
 
 ### Notifications
+
 - **Title**: "Class Reminder Sent: [Subject]"
 - **Body**: "Sent to [Name] ([Email]) for class on [Date]"
 - **Click notification** to see full email preview (like payment reminders)
 
 ### LocalStorage Tracking
+
 ```javascript
 // Key: 'class_reminders_sent'
 // Value: { studentId: { "2025-11-18": timestamp, ... }, ... }
@@ -135,20 +151,23 @@ Remaining Credit: $50 after this class
 ## Testing
 
 ### Manual Test
+
 Open browser console and run:
+
 ```javascript
-window.ClassReminderManager.checkAndSendReminders()
+window.ClassReminderManager.checkAndSendReminders();
 ```
 
 ### Check What Would Be Sent
+
 ```javascript
 // See calendar data
-console.log(window.currentCalendarData)
+console.log(window.currentCalendarData);
 
 // See upcoming classes
 window.currentCalendarData.days.forEach(day => {
-  console.log(day.date, day.studentsWithClass.length, 'students')
-})
+  console.log(day.date, day.studentsWithClass.length, 'students');
+});
 ```
 
 ## Important Notes
@@ -172,10 +191,12 @@ window.currentCalendarData.days.forEach(day => {
 ## Files Modified
 
 - `index.html` - Added ClassReminderManager, initialization
-- `email-system-complete.html` - Updated template, added sendClassReminder handler
+- `email-system-complete.html` - Updated template, added sendClassReminder
+  handler
 - `VERSION_TRACKING.md` - Documented v2.1.6 changes
 
 ## Version
+
 - **Added in**: v2.1.6 (2025-11-18)
 - **Status**: ✅ Active and running
 - **Next Review**: After first week of operation to verify timing and delivery

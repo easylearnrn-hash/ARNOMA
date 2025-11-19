@@ -1,27 +1,34 @@
 # 🔐 Gmail OAuth - Mobile Support Setup
 
 ## Current Issue
-Your Google OAuth app is configured for **desktop only**. Mobile users cannot connect to Gmail.
+
+Your Google OAuth app is configured for **desktop only**. Mobile users cannot
+connect to Gmail.
 
 ## ✅ What You Need to Add
 
 Go to your Google Cloud Console OAuth configuration and add these URLs:
 
 ### Authorized JavaScript Origins
+
 ```
 https://www.richyfesta.com
 https://richyfesta.com
 ```
+
 ✅ Already configured
 
 ### Authorized Redirect URIs
+
 **ADD THESE TWO:**
+
 ```
 https://www.richyfesta.com/index.mobile.html
 https://richyfesta.com/index.mobile.html
 ```
 
 Your current redirect URIs only have the desktop versions:
+
 - ✅ https://www.richyfesta.com (desktop)
 - ✅ https://richyfesta.com (desktop)
 
@@ -59,5 +66,5 @@ Your current redirect URIs only have the desktop versions:
 
 ---
 
-**Current Status:** Mobile OAuth URLs NOT configured yet
-**Action Required:** Add the 2 mobile redirect URIs listed above
+**Current Status:** Mobile OAuth URLs NOT configured yet **Action Required:**
+Add the 2 mobile redirect URIs listed above

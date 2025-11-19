@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>ARNOMA - Mobile [v2.4.6 ⚡]</title>
+  <title>ARNOMA - Mobile [v2.4.7 ⚡]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.4.5-performance-optimized" />
+  <meta name="version" content="2.4.7-smart-calendar-recovery" />
 
     <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
     <script>
@@ -92,7 +92,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-  console.log('🔥 ARNOMA v2.4.6');
+  console.log('🔥 ARNOMA v2.4.7 - Smart Calendar Recovery');
 
       // Supabase Client Initialization (safe check for async loading)
       let supabase;
@@ -218,6 +218,10 @@
           window.paymentsCache = [];
           window.studentsCache = [];
           window.groupsCache = [];
+
+          resetInitializationFlags();
+          lazyBootstrapReady = false;
+          coreWarmupScheduled = false;
 
           // Allow the next authenticated session to push fresh automation data once
           window.__automationDataSent = false;
@@ -5258,7 +5262,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.4.6 - Automation Guard Hotfix</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.4.7 - Smart Calendar Recovery</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
@@ -5288,10 +5292,10 @@
               id="autoRefreshToggle"
               class="control-btn"
               onclick="toggleAutoRefresh()"
-              title="Toggle 30-second auto-refresh (currently OFF)"
+              title="Toggle 2-minute auto-refresh (currently OFF)"
               style="font-size: 11px; font-weight: 700"
             >
-              30s
+              2m
             </button>
             <button
               id="earningsForecastBtn"
@@ -6234,7 +6238,7 @@
         // Timing constants
         const TIMING = {
           NEW_PAYMENT_INDICATOR: 60000, // 60 seconds
-          AUTO_REFRESH_INTERVAL: 30000, // 30 seconds
+          AUTO_REFRESH_INTERVAL: 120000, // 2 minutes – throttled for mobile battery
           API_DELAY: 100, // 100ms between API calls
           FULL_SYNC_API_DELAY: 150, // 150ms to respect Gmail rate limits during full sync
         };
@@ -6246,7 +6250,9 @@
         // SUPABASE DATA OPERATIONS - Replace localStorage with cloud database
         // ============================================================================
 
-        const PaymentStore = {
+  let paymentsFetchPromise = null;
+
+  const PaymentStore = {
           getAll: function () {
             return window.paymentsCache || [];
           },
@@ -6259,67 +6265,80 @@
               return window.paymentsCache;
             }
 
-            try {
-              const { data, error } = await supabase.from('payments').select('*').order('date', { ascending: false });
+            if (paymentsFetchPromise) {
+              debugLog('⏳ Waiting on in-flight payments fetch');
+              return paymentsFetchPromise;
+            }
 
-              if (error) {
-                console.error('❌ Error loading payments from Supabase:', error);
+            paymentsFetchPromise = (async () => {
+              try {
+                const { data, error } = await supabase.from('payments').select('*').order('date', { ascending: false });
+
+                if (error) {
+                  console.error('❌ Error loading payments from Supabase:', error);
+                  return window.paymentsCache || [];
+                }
+
+                // CRITICAL FIX: Convert snake_case from Supabase back to camelCase for JavaScript
+                const paymentsFromSupabase = (data || []).map(p => ({
+                  // Core payment data
+                  id: p.id,
+                  gmailId: p.gmail_id,
+                  amount: p.amount,
+                  date: p.date,
+
+                  // Raw immutable data from email
+                  payerNameRaw: p.payer_name_raw,
+                  payerEmailRaw: p.payer_email_raw,
+                  memo: p.memo,
+                  message: p.message,
+
+                  // Display fields (computed/resolved)
+                  payerName: p.payer_name,
+                  senderName: p.sender_name,
+                  studentName: p.student_name,
+                  studentEmail: p.student_email,
+                  groupId: p.group_id,
+
+                  // Manual linking (highest priority - user override)
+                  linkedStudentId: p.linked_student_id,
+                  manuallyLinked: p.manually_linked,
+
+                  // Automatic resolution metadata
+                  derivedStudentId: p.derived_student_id,
+                  resolvedStudentName: p.resolved_student_name,
+                  derivedStudentGroup: p.derived_student_group,
+                  resolutionSource: p.resolution_source,
+
+                  // Legacy/compatibility field
+                  studentId: p.student_id,
+
+                  // Status tracking
+                  status: p.status,
+                  viewed: p.viewed,
+                  ignoredOnce: p.ignored_once,
+                  ignorePermanently: p.ignore_permanently,
+
+                  // Timestamps
+                  emailDate: p.email_date,
+                  createdAt: p.created_at,
+                  linkedAt: p.linked_at,
+                  dateModifiedAt: p.date_modified_at,
+                }));
+
+                window.paymentsCache = paymentsFromSupabase;
+                window.paymentsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
+                return window.paymentsCache;
+              } catch (err) {
+                console.error('❌ Exception loading payments:', err);
                 return window.paymentsCache || [];
               }
+            })();
 
-              // CRITICAL FIX: Convert snake_case from Supabase back to camelCase for JavaScript
-              const paymentsFromSupabase = (data || []).map(p => ({
-                // Core payment data
-                id: p.id,
-                gmailId: p.gmail_id,
-                amount: p.amount,
-                date: p.date,
-
-                // Raw immutable data from email
-                payerNameRaw: p.payer_name_raw,
-                payerEmailRaw: p.payer_email_raw,
-                memo: p.memo,
-                message: p.message,
-
-                // Display fields (computed/resolved)
-                payerName: p.payer_name,
-                senderName: p.sender_name,
-                studentName: p.student_name,
-                studentEmail: p.student_email,
-                groupId: p.group_id,
-
-                // Manual linking (highest priority - user override)
-                linkedStudentId: p.linked_student_id,
-                manuallyLinked: p.manually_linked,
-
-                // Automatic resolution metadata
-                derivedStudentId: p.derived_student_id,
-                resolvedStudentName: p.resolved_student_name,
-                derivedStudentGroup: p.derived_student_group,
-                resolutionSource: p.resolution_source,
-
-                // Legacy/compatibility field
-                studentId: p.student_id,
-
-                // Status tracking
-                status: p.status,
-                viewed: p.viewed,
-                ignoredOnce: p.ignored_once,
-                ignorePermanently: p.ignore_permanently,
-
-                // Timestamps
-                emailDate: p.email_date,
-                createdAt: p.created_at,
-                linkedAt: p.linked_at,
-                dateModifiedAt: p.date_modified_at,
-              }));
-
-              window.paymentsCache = paymentsFromSupabase;
-              window.paymentsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
-              return window.paymentsCache;
-            } catch (err) {
-              console.error('❌ Exception loading payments:', err);
-              return window.paymentsCache || [];
+            try {
+              return await paymentsFetchPromise;
+            } finally {
+              paymentsFetchPromise = null;
             }
           },
           save: async function (payments) {
@@ -6528,7 +6547,8 @@
           return true;
         }
 
-        window.studentsCache = Array.isArray(window.studentsCache) ? window.studentsCache : [];
+  window.studentsCache = Array.isArray(window.studentsCache) ? window.studentsCache : [];
+  let studentsLoadPromise = null;
 
         function getCachedStudents() {
           return Array.isArray(window.studentsCache) ? window.studentsCache : [];
@@ -6587,19 +6607,32 @@
             return window.studentsCache;
           }
 
-          const { data, error } = await supabase.from('students').select('*').order('name', { ascending: true });
-
-          if (error) {
-            console.error('❌ Error loading students:', error);
-            return window.studentsCache || [];
+          if (studentsLoadPromise) {
+            debugLog('⏳ Waiting on in-flight student load');
+            return studentsLoadPromise;
           }
 
-          // Map Supabase column names to local property names
-          const mappedData = (data || []).map(mapSupabaseStudent).filter(Boolean);
+          studentsLoadPromise = (async () => {
+            const { data, error } = await supabase.from('students').select('*').order('name', { ascending: true });
 
-          window.studentsCache = mappedData;
-          window.studentsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
-          return mappedData;
+            if (error) {
+              console.error('❌ Error loading students:', error);
+              return window.studentsCache || [];
+            }
+
+            // Map Supabase column names to local property names
+            const mappedData = (data || []).map(mapSupabaseStudent).filter(Boolean);
+
+            window.studentsCache = mappedData;
+            window.studentsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
+            return mappedData;
+          })();
+
+          try {
+            return await studentsLoadPromise;
+          } finally {
+            studentsLoadPromise = null;
+          }
         }
 
         async function saveStudent(studentData) {
@@ -6738,43 +6771,56 @@
             return window.groupsCache;
           }
 
-          const { data, error } = await supabase.from('groups').select('*').order('updated_at', { ascending: false });
-
-          if (error) {
-            console.error('❌ Error loading groups:', error);
-            return window.groupsCache || [];
+          if (groupsLoadPromise) {
+            debugLog('⏳ Waiting on in-flight group load');
+            return groupsLoadPromise;
           }
 
-          // Map group_name back to name for app compatibility
-          const mappedData = (data || []).map(group => ({
-            id: group.id,
-            name: group.group_name,
-            schedule: group.schedule,
-            color: group.color,
-            created_at: group.created_at,
-            updated_at: group.updated_at,
-          }));
+          groupsLoadPromise = (async () => {
+            const { data, error } = await supabase.from('groups').select('*').order('updated_at', { ascending: false });
 
-          // De-duplicate by name, keeping the most recently updated/created row
-          const deduped = [];
-          const seen = new Set();
-          const sorted = [...mappedData].sort((a, b) => {
-            const aTime = new Date(a.updated_at || a.created_at || 0).getTime();
-            const bTime = new Date(b.updated_at || b.created_at || 0).getTime();
-            return bTime - aTime; // newest first
-          });
-          for (const g of sorted) {
-            if (!g.name) continue;
-            const key = String(g.name).trim().toUpperCase();
-            if (!seen.has(key)) {
-              deduped.push(g);
-              seen.add(key);
+            if (error) {
+              console.error('❌ Error loading groups:', error);
+              return window.groupsCache || [];
             }
-          }
 
-          window.groupsCache = deduped;
-          window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
-          return window.groupsCache;
+            // Map group_name back to name for app compatibility
+            const mappedData = (data || []).map(group => ({
+              id: group.id,
+              name: group.group_name,
+              schedule: group.schedule,
+              color: group.color,
+              created_at: group.created_at,
+              updated_at: group.updated_at,
+            }));
+
+            // De-duplicate by name, keeping the most recently updated/created row
+            const deduped = [];
+            const seen = new Set();
+            const sorted = [...mappedData].sort((a, b) => {
+              const aTime = new Date(a.updated_at || a.created_at || 0).getTime();
+              const bTime = new Date(b.updated_at || b.created_at || 0).getTime();
+              return bTime - aTime; // newest first
+            });
+            for (const g of sorted) {
+              if (!g.name) continue;
+              const key = String(g.name).trim().toUpperCase();
+              if (!seen.has(key)) {
+                deduped.push(g);
+                seen.add(key);
+              }
+            }
+
+            window.groupsCache = deduped;
+            window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
+            return window.groupsCache;
+          })();
+
+          try {
+            return await groupsLoadPromise;
+          } finally {
+            groupsLoadPromise = null;
+          }
         }
         async function saveGroup(groupData) {
           // Map 'name' to 'group_name' for Supabase
@@ -8458,6 +8504,8 @@
         // END PAYMENT RECORDS ORDER & HIGHLIGHT FIX
 
         async function toggleGmailConnection() {
+          await ensureGmailSystemsReady();
+
           if (gmailAccessToken) {
             // Disconnect
             const confirmed = await customConfirm(
@@ -8580,6 +8628,8 @@
         }
 
         async function refreshPayments() {
+          await ensureGmailSystemsReady();
+
           // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
           // Check token validity before attempting sync
           const isValid = await ensureGmailTokenValid();
@@ -8702,6 +8752,8 @@
         }
 
         async function fetchTodaysEmails() {
+          await ensureGmailSystemsReady();
+
           // Check token validity before attempting sync
           const isValid = await ensureGmailTokenValid();
           if (!isValid || !gmailAccessToken) {
@@ -10336,7 +10388,9 @@
         // FULL SYNC FUNCTIONALITY
         // ============================================================================
 
-        function openFullSyncDatePicker() {
+        async function openFullSyncDatePicker() {
+          await ensureGmailSystemsReady();
+
           const modal = document.getElementById('fullSyncModal');
           if (!modal) {
             console.error('fullSyncModal element not found');
@@ -10672,7 +10726,9 @@
         let autoRefreshInterval = null;
         let autoRefreshEnabled = localStorage.getItem('paymentEmailAutoRefresh') === 'true';
 
-        function toggleAutoRefresh() {
+        async function toggleAutoRefresh() {
+          await ensureGmailSystemsReady();
+
           autoRefreshEnabled = !autoRefreshEnabled;
           localStorage.setItem('paymentEmailAutoRefresh', autoRefreshEnabled.toString());
 
@@ -10684,9 +10740,9 @@
 
           if (autoRefreshEnabled) {
             toggleBtn.classList.add('auto-refresh-active');
-            toggleBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
+            toggleBtn.title = 'Auto-refresh ON (every 2 minutes) - Click to disable';
             startAutoRefresh();
-            showNotification('✅ Auto-refresh enabled (every 30 seconds)', 'success');
+            showNotification('✅ Auto-refresh enabled (every 2 minutes)', 'success');
           } else {
             toggleBtn.classList.remove('auto-refresh-active');
             toggleBtn.title = 'Auto-refresh OFF - Click to enable';
@@ -10745,7 +10801,9 @@
         });
 
         // Open Email System in modal
-        function openEmailSystem() {
+        async function openEmailSystem() {
+          await LazyModules.load('email-system');
+
           // Close settings menu
           const menu = document.getElementById('settingsMenu');
           if (menu) menu.style.display = 'none';
@@ -11896,7 +11954,9 @@
         }
 
         // ===== OPEN/CLOSE STUDENT MANAGER =====
-        function openStudentManager() {
+        async function openStudentManager() {
+          await LazyModules.load('student-manager');
+
           const menu = document.getElementById('settingsMenu');
           if (menu) menu.style.display = 'none';
 
@@ -11999,19 +12059,37 @@
             return;
           }
 
-          const fragment = document.createDocumentFragment();
-          activeStudents.forEach(student => {
-            try {
-              fragment.appendChild(createStudentCard(student));
-            } catch (error) {
-              console.error('Error creating card for student:', student.name, error);
+          const BATCH_SIZE = 28;
+          let renderedCount = 0;
+          grid.setAttribute('data-rendering', 'true');
+
+          const schedule = window.requestIdleCallback || (cb => setTimeout(cb, 16));
+
+          const renderBatch = () => {
+            const fragment = document.createDocumentFragment();
+            const slice = activeStudents.slice(renderedCount, renderedCount + BATCH_SIZE);
+
+            slice.forEach(student => {
+              try {
+                fragment.appendChild(createStudentCard(student));
+              } catch (error) {
+                console.error('Error creating card for student:', student.name, error);
+              }
+            });
+
+            grid.appendChild(fragment);
+            renderedCount += slice.length;
+
+            if (renderedCount < activeStudents.length) {
+              schedule(renderBatch);
+            } else {
+              grid.removeAttribute('data-rendering');
+              // Add click-outside-to-cancel-edit listener
+              setupClickOutsideEditListener();
             }
-          });
+          };
 
-          grid.appendChild(fragment);
-
-          // Add click-outside-to-cancel-edit listener
-          setupClickOutsideEditListener();
+          renderBatch();
         }
 
         // ===== CLICK OUTSIDE TO CANCEL EDIT =====
@@ -14452,13 +14530,16 @@
         // ============================================================================
 
         // Groups will be loaded from Supabase on initialization
-        let groups = [];
+  let groups = [];
+  let groupsLoadPromise = null;
         let countdownTimer;
 
         // Groups are populated during the shared core initialization flow.
 
         // ===== OPEN/CLOSE GROUP MANAGER =====
-        function openGroupManager() {
+        async function openGroupManager() {
+          await LazyModules.load('core-data');
+
           const modal = document.getElementById('groupManagerModal');
           document.getElementById('settingsMenu').style.display = 'none';
 
@@ -15185,9 +15266,17 @@
               if (event.data.action === 'requestGroupsData') {
                 if (window.__automationDataSent) {
                   verboseLog('[EmailAutomation] Ignoring iframe requestGroupsData - automation payload already sent');
+                  event?.source?.postMessage(
+                    { action: 'automationDataAck', status: 'already-delivered' },
+                    '*'
+                  );
                   return;
                 }
                 queueEmailDataSend('iframe-request');
+                event?.source?.postMessage(
+                  { action: 'automationDataAck', status: 'queued' },
+                  '*'
+                );
               }
 
               // Handle email preview requests from email system iframe
@@ -15318,7 +15407,9 @@
         let currentQuickViewTab = 'byGroup';
 
         // Open Quick View modal
-        function openQuickView() {
+        async function openQuickView() {
+          await LazyModules.load('quick-view');
+
           const modal = document.getElementById('quickViewModal');
           if (!modal) return;
 
@@ -18480,6 +18571,40 @@
         // Initialize balances
         studentBalances = loadStudentBalances();
 
+        function setCalendarStatus(state, message = 'Loading Smart Calendar...') {
+          const subtitleEl = document.getElementById('calendarSubtitle');
+          const gridEl = document.getElementById('calendarGrid');
+
+          if (!subtitleEl || !gridEl) {
+            return;
+          }
+
+          const palette = {
+            loading: '#8ab4ff',
+            warning: '#fbbf24',
+            error: '#f87171',
+          };
+
+          const color = palette[state] || '#94a3b8';
+
+          subtitleEl.innerHTML = `<span style="color:${color}; font-weight:600;">${message}</span>`;
+          gridEl.innerHTML = `
+        <div style="grid-column: span 7; text-align: center; padding: 32px 0; color: ${color}; font-size: 12px; line-height: 1.6;">
+          ${message}
+        </div>`;
+        }
+
+        function safeRenderCalendar(context = 'direct') {
+          try {
+            const data = renderCalendar();
+            return !!data;
+          } catch (error) {
+            console.error('[Calendar] Failed to render during ' + context + ':', error);
+            setCalendarStatus('error', 'Smart Calendar failed to render. Close and try again.');
+            return false;
+          }
+        }
+
         // Helper function to get current date in LA timezone
         function getLADate() {
           const now = new Date();
@@ -18514,17 +18639,38 @@
           return new Date(year, month - 1, day, hour, minute, second);
         }
 
-        function openSmartCalendar() {
+        async function openSmartCalendar() {
           const modal = document.getElementById('smartCalendarModal');
           if (!modal) return;
-
-          currentCalendarDate = getLADate();
-          renderCalendar();
 
           modal.style.display = 'block';
           requestAnimationFrame(() => {
             modal.style.opacity = '1';
           });
+
+          setCalendarStatus('loading', 'Loading Smart Calendar…');
+
+          let calendarBootstrapped = true;
+          if (window.LazyModules && typeof LazyModules.load === 'function') {
+            try {
+              await LazyModules.load('calendar');
+            } catch (error) {
+              calendarBootstrapped = false;
+              console.error('[Calendar] Lazy load failed:', error);
+            }
+          } else {
+            calendarBootstrapped = false;
+            console.warn('[Calendar] LazyModules not ready; attempting direct render.');
+          }
+
+          if (!calendarBootstrapped) {
+            setCalendarStatus('warning', 'Calendar data is still syncing… showing cached data.');
+          }
+
+          currentCalendarDate = getLADate();
+          if (!safeRenderCalendar('openSmartCalendar')) {
+            setCalendarStatus('error', 'Unable to render Smart Calendar. Close and try again.');
+          }
         }
 
         function closeSmartCalendar() {
@@ -18541,7 +18687,9 @@
         // NOTIFICATION CENTER UI FUNCTIONS
         // ============================================================================
 
-        function openNotificationCenter() {
+        async function openNotificationCenter() {
+          await LazyModules.load('notification-center');
+
           const overlay = document.getElementById('notificationCenterOverlay');
           const panel = document.getElementById('notificationCenterPanel');
           if (!overlay || !panel) return;
@@ -19057,10 +19205,18 @@
 
         function changeCalendarMonth(delta) {
           currentCalendarDate.setMonth(currentCalendarDate.getMonth() + delta);
-          renderCalendar();
+          safeRenderCalendar('change-month');
         }
 
         function renderCalendar() {
+          const monthYearEl = document.getElementById('calendarMonthYear');
+          const subtitleEl = document.getElementById('calendarSubtitle');
+
+          if (!monthYearEl || !subtitleEl) {
+            console.warn('[Calendar] Calendar container not ready, skipping render');
+            return null;
+          }
+
           const year = currentCalendarDate.getFullYear();
           const month = currentCalendarDate.getMonth();
 
@@ -19079,7 +19235,7 @@
             'November',
             'December',
           ];
-          document.getElementById('calendarMonthYear').textContent = `${monthNames[month]} ${year}`;
+          monthYearEl.textContent = `${monthNames[month]} ${year}`;
 
           // Get calendar data
           const calendarData = generateCalendarData(year, month);
@@ -19100,7 +19256,7 @@
           const monthPaid = calendarData.monthTotalPaid || 0;
           const monthUnpaid = calendarData.monthTotalUnpaid || 0;
 
-          document.getElementById('calendarSubtitle').innerHTML = `
+          subtitleEl.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: center; gap: 12px;">
           <span>${activeStudentCount} active student${activeStudentCount !== 1 ? 's' : ''} • ${totalClasses} scheduled class${totalClasses !== 1 ? 'es' : ''}</span>
           <span style="color: rgba(255,255,255,0.3);">|</span>
@@ -19112,6 +19268,8 @@
 
           // Render grid
           renderCalendarGrid(calendarData);
+
+          return calendarData;
         }
 
         function generateCalendarData(year, month) {
@@ -19820,6 +19978,8 @@
 
         // Toggle auto-reminder pause/resume for a student (GLOBAL SCOPE)
         window.toggleAutoReminder = async function (studentId, buttonElement) {
+          await LazyModules.load('automation-managers');
+
           if (!window.PaymentReminderManager) {
             showNotification('❌ Payment Reminder Manager not available', 'error');
             return;
@@ -19842,6 +20002,8 @@
 
         // Send payment reminder immediately (GLOBAL SCOPE)
         window.sendReminderNow = async function (studentId, buttonElement, clickedDateStr) {
+          await LazyModules.load('automation-managers');
+
           debugLog('🚀 Manual send triggered for student:', studentId, 'Clicked date:', clickedDateStr);
 
           try {
@@ -22541,67 +22703,211 @@
           preferenceSync: false,
         };
 
-        document.addEventListener('DOMContentLoaded', async function () {
-          console.log('⚡ ARNOMA Mobile v2.4.6 - Automation Guard Hotfix');
+        function resetInitializationFlags() {
+          Object.keys(initializationState).forEach(key => {
+            initializationState[key] = false;
+          });
+        }
 
-          // Check authentication FIRST
+        document.addEventListener('DOMContentLoaded', async () => {
+          console.log('⚡ ARNOMA Mobile v2.4.7 - Smart Calendar Recovery');
+
           const authenticated = await checkAuthentication();
-
           if (!authenticated) {
-            return; // Stop initialization until user logs in
+            return;
           }
 
-          // ⚡ CRITICAL: Only load CORE data immediately
-          await initializeCoreData();
-          console.log('✅ Core data loaded');
-
-          // ⚡ Defer non-critical systems using requestIdleCallback
-          deferredInitialization();
-
-          // ⚡ HIDE LOADING SCREEN - App is ready!
-          const loadingScreen = document.getElementById('appLoadingScreen');
-          if (loadingScreen) {
-            loadingScreen.classList.add('fade-out');
-            setTimeout(() => {
-              loadingScreen.style.display = 'none';
-            }, 500);
-          }
+          await initializeApp();
         });
 
-        // PHASE 1: Load ONLY critical data (students, groups, payments)
-        async function initializeCoreData() {
-          if (initializationState.core) return;
-
-          // Initialize the main app (loads students, groups, payments into cache)
-          await initialize();
-
-          initializationState.core = true;
+        function hideLoadingScreen() {
+          const loadingScreen = document.getElementById('appLoadingScreen');
+          if (!loadingScreen) return;
+          loadingScreen.classList.add('fade-out');
+          setTimeout(() => {
+            loadingScreen.style.display = 'none';
+          }, 400);
         }
 
-        // PHASE 2: Defer everything else to idle time
-        function deferredInitialization() {
-          const scheduleWork = window.requestIdleCallback || (cb => setTimeout(cb, 120));
+        let coreDataPromise = null;
+        async function initializeCoreData(force = false) {
+          if (initializationState.core && !force) return window.globalData;
+          if (!force && coreDataPromise) return coreDataPromise;
 
-          const runTask = fn => {
-            scheduleWork(() => {
-              try {
-                const result = fn();
-                if (result && typeof result.then === 'function') {
-                  result.catch(error => console.error('⚠️ Deferred task failed:', error));
-                }
-              } catch (error) {
-                console.error('⚠️ Deferred task failed:', error);
-              }
+          coreDataPromise = (async () => {
+            await initialize();
+            initializationState.core = true;
+            return window.globalData;
+          })();
+
+          try {
+            return await coreDataPromise;
+          } finally {
+            coreDataPromise = null;
+          }
+        }
+
+        const LazyModules = (() => {
+          const registry = new Map();
+
+          function register(name, config) {
+            if (!config || typeof config.init !== 'function') {
+              throw new Error(`Lazy module "${name}" must provide an init function`);
+            }
+            registry.set(name, {
+              ...config,
+              initialized: false,
+              promise: null,
             });
+          }
+
+          async function load(name) {
+            const entry = registry.get(name);
+            if (!entry) {
+              throw new Error(`Lazy module "${name}" is not registered`);
+            }
+
+            if (entry.initialized) {
+              return entry.result;
+            }
+
+            if (entry.promise) {
+              return entry.promise;
+            }
+
+            entry.promise = (async () => {
+              if (Array.isArray(entry.deps)) {
+                for (const dep of entry.deps) {
+                  await load(dep);
+                }
+              }
+              entry.result = await entry.init();
+              entry.initialized = true;
+              return entry.result;
+            })().finally(() => {
+              entry.promise = null;
+            });
+
+            return entry.promise;
+          }
+
+          function isLoaded(name) {
+            return registry.get(name)?.initialized || false;
+          }
+
+          return { register, load, isLoaded };
+        })();
+
+        window.LazyModules = LazyModules;
+
+        let lazyBootstrapReady = false;
+        let coreWarmupScheduled = false;
+
+        function scheduleCoreDataWarmup(delay = 1800) {
+          if (coreWarmupScheduled) return;
+          coreWarmupScheduled = true;
+          setTimeout(() => {
+            LazyModules.load('core-data').catch(err => console.error('Core data warmup failed:', err));
+          }, delay);
+        }
+
+        function setupLazyInteractionBootstrap() {
+          if (lazyBootstrapReady) return;
+          lazyBootstrapReady = true;
+
+          const firstInteractionEvents = ['pointerdown', 'touchstart', 'keydown'];
+
+          const startDefaultModules = () => {
+            LazyModules.load('core-data');
+            LazyModules.load('payment-records');
+            LazyModules.load('notification-center');
+            setTimeout(() => {
+              if (!LazyModules.isLoaded('automation-managers')) {
+                LazyModules.load('automation-managers');
+              }
+            }, 8000);
           };
 
-          runTask(initializeNotificationCenterLazy);
-          runTask(initializePaymentRecordsView);
-          runTask(initializePreferenceSync);
-          runTask(initializeGmailSystems);
-          runTask(initializeAutomationManagers);
-          runTask(initializeEmailAutomation);
+          firstInteractionEvents.forEach(evt =>
+            window.addEventListener(evt, startDefaultModules, { once: true, passive: true })
+          );
+
+          // Fallback: warm up critical data after idle period even without interaction
+          setTimeout(() => {
+            if (!LazyModules.isLoaded('core-data')) {
+              LazyModules.load('core-data');
+            }
+          }, 4000);
+
+          scheduleCoreDataWarmup(3000);
         }
+
+        // Register lazy modules and their dependencies
+        LazyModules.register('core-data', {
+          init: () => initializeCoreData(),
+        });
+
+        LazyModules.register('notification-center', {
+          deps: ['core-data'],
+          init: () => initializeNotificationCenterLazy(),
+        });
+
+        LazyModules.register('payment-records', {
+          deps: ['core-data'],
+          init: async () => {
+            initializePaymentRecordsView();
+            initializePreferenceSync();
+            return true;
+          },
+        });
+
+        LazyModules.register('gmail-systems', {
+          deps: ['payment-records'],
+          init: async () => {
+            initializeGmailSystems();
+            return true;
+          },
+        });
+
+        LazyModules.register('email-system', {
+          deps: ['core-data'],
+          init: async () => {
+            initializeEmailAutomation();
+            return true;
+          },
+        });
+
+        LazyModules.register('calendar', {
+          deps: ['core-data'],
+          init: async () => {
+            await lazyLoadCalendar();
+            return true;
+          },
+        });
+
+        LazyModules.register('quick-view', {
+          deps: ['calendar'],
+          init: async () => {
+            lazyLoadQuickView();
+            return true;
+          },
+        });
+
+        LazyModules.register('student-manager', {
+          deps: ['core-data'],
+          init: async () => {
+            lazyLoadStudentManager();
+            return true;
+          },
+        });
+
+        LazyModules.register('automation-managers', {
+          deps: ['core-data', 'calendar', 'email-system'],
+          init: async () => {
+            await initializeAutomationManagers();
+            return true;
+          },
+        });
 
         async function initializeNotificationCenterLazy() {
           if (initializationState.notifications || !window.NotificationCenter) return;
@@ -22653,7 +22959,7 @@
           const autoRefreshBtn = document.getElementById('autoRefreshToggle');
           if (autoRefreshEnabled && autoRefreshBtn) {
             autoRefreshBtn.classList.add('auto-refresh-active');
-            autoRefreshBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
+            autoRefreshBtn.title = 'Auto-refresh ON (every 2 minutes) - Click to disable';
             startAutoRefresh();
           }
 
@@ -22690,6 +22996,14 @@
           initializationState.emailSystem = true;
         }
 
+        async function ensurePaymentRecordsReady() {
+          await LazyModules.load('payment-records');
+        }
+
+        async function ensureGmailSystemsReady() {
+          await LazyModules.load('gmail-systems');
+        }
+
         // Lazy load Student Manager when tab is opened
         function lazyLoadStudentManager() {
           if (initializationState.studentManager) return;
@@ -22698,12 +23012,17 @@
 
         // Lazy load Calendar when tab is opened
         function lazyLoadCalendar() {
-          if (initializationState.calendar) return;
+          if (initializationState.calendar) return true;
 
-          if (typeof renderCalendar === 'function') {
-            renderCalendar();
-            initializationState.calendar = true;
+          if (typeof safeRenderCalendar === 'function') {
+            const rendered = safeRenderCalendar('lazy-load');
+            if (rendered) {
+              initializationState.calendar = true;
+            }
+            return rendered;
           }
+
+          return false;
         }
 
         // Lazy load Quick View timers
@@ -22713,12 +23032,20 @@
         }
 
         // Separate initialization function that can be called after login
-        async function initializeApp() {
-          // Re-initialize core data after login
-          await initializeCoreData();
+        let appBootstrapped = false;
+        async function initializeApp(options = {}) {
+          if (appBootstrapped && lazyBootstrapReady) {
+            if (options.forceCoreReload) {
+              await initializeCoreData(true);
+            }
+            hideLoadingScreen();
+            return;
+          }
 
-          // Start deferred initialization
-          deferredInitialization();
+          setupLazyInteractionBootstrap();
+          hideLoadingScreen();
+          scheduleCoreDataWarmup();
+          appBootstrapped = true;
         }
 
         console.log('⚡ ARNOMA Mobile Performance Mode - Lazy loading enabled');

@@ -6,20 +6,20 @@
 CREATE TABLE IF NOT EXISTS user_preferences (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
-  
+
   -- Gmail Timezone Fix Settings
   timezone_offset_winter BOOLEAN DEFAULT false,  -- Winter: -12 hours
   timezone_offset_summer BOOLEAN DEFAULT false,  -- Summer: -11 hours (DST)
-  
+
   -- Future: Add more user preferences here
   -- auto_refresh_enabled BOOLEAN DEFAULT false,
   -- default_view TEXT DEFAULT 'calendar',
   -- theme TEXT DEFAULT 'dark',
-  
+
   -- Timestamps
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  
+
   -- Ensure one preference row per user
   CONSTRAINT one_preference_per_user UNIQUE(user_id)
 );

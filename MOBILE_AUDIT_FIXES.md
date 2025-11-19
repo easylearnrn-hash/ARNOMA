@@ -1,14 +1,13 @@
 # ARNOMA Mobile - Comprehensive Audit & Fixes
 
-**Date**: November 19, 2025  
-**Version**: v2.4.0  
-**Status**: In Progress
+**Date**: November 19, 2025 **Version**: v2.4.0 **Status**: In Progress
 
 ---
 
 ## 🎯 AUDIT SCOPE
 
 Complete mobile optimization across:
+
 - ✅ Scrolling (vertical & horizontal)
 - ✅ Touch targets (buttons, links, interactive elements)
 - ✅ Popup/Modal consistency
@@ -21,6 +20,7 @@ Complete mobile optimization across:
 ## 1️⃣ PAGE SCROLLING AUDIT
 
 ### ✅ ALREADY FIXED:
+
 ```css
 body {
   overflow-y: auto !important;
@@ -32,6 +32,7 @@ body {
 ### ⚠️ ISSUES FOUND:
 
 **Multiple `overflow: hidden` instances** that may block scrolling:
+
 - Line 777: `.date-section { overflow: hidden; }`
 - Line 983: `.month-total-section { overflow: hidden; }`
 - Line 1010: (Unknown element)
@@ -41,6 +42,7 @@ body {
 - Line 3208: (Unknown element)
 
 **ACTION REQUIRED:**
+
 - Audit each `overflow: hidden` - only keep if necessary for design
 - Add `overflow-y: auto` to scrollable containers
 - Test scroll on: Dashboard, Payment Records, Calendar, Modals
@@ -52,6 +54,7 @@ body {
 ### ❌ CRITICAL: Buttons Too Small
 
 **Current Size:**
+
 ```css
 .control-btn {
   width: 36px;
@@ -60,10 +63,12 @@ body {
 ```
 
 **Apple/Google Guidelines:**
+
 - Minimum: 44px × 44px
 - Recommended: 48px × 48px
 
 **AFFECTED BUTTONS:**
+
 - ⚙️ Settings button
 - 🔄 Full Sync button
 - 📧 Gmail Sync button
@@ -74,8 +79,8 @@ body {
 
 ```css
 .control-btn {
-  width: 44px;   /* Increased from 36px */
-  height: 44px;  /* Increased from 36px */
+  width: 44px; /* Increased from 36px */
+  height: 44px; /* Increased from 36px */
   min-width: 44px;
   min-height: 44px;
 }
@@ -85,8 +90,13 @@ body {
 button,
 .clickable,
 [onclick] {
-  touch-action: manipulation;  /* Prevent double-tap zoom */
-  -webkit-tap-highlight-color: rgba(138, 180, 255, 0.2);  /* Visible tap feedback */
+  touch-action: manipulation; /* Prevent double-tap zoom */
+  -webkit-tap-highlight-color: rgba(
+    138,
+    180,
+    255,
+    0.2
+  ); /* Visible tap feedback */
 }
 ```
 
@@ -97,6 +107,7 @@ button,
 ### ✅ Payment Records Table
 
 **Current Implementation:**
+
 - Grid layout with fixed columns
 - Needs horizontal scroll wrapper
 
@@ -111,12 +122,13 @@ button,
 }
 
 .payment-records-table {
-  min-width: 800px;  /* Force horizontal scroll on narrow screens */
+  min-width: 800px; /* Force horizontal scroll on narrow screens */
   width: 100%;
 }
 ```
 
 **HTML Structure:**
+
 ```html
 <div class="payment-records-table-wrapper">
   <!-- Existing payment table grid -->
@@ -142,13 +154,13 @@ button,
   max-height: 90vh !important;
   overflow-y: auto !important;
   -webkit-overflow-scrolling: touch !important;
-  
+
   /* Center positioning */
   position: fixed !important;
   top: 50% !important;
   left: 50% !important;
   transform: translate(-50%, -50%) !important;
-  
+
   /* Prevent body scroll when open */
   z-index: 10000;
 }
@@ -192,11 +204,12 @@ body.modal-open {
 ### ⚠️ Common Mobile Issues to Check:
 
 **Clipped Content:**
+
 ```css
 /* Ensure nothing is cut off */
 .container,
 .content-wrapper {
-  padding: 12px;  /* Safe area for notch/home indicator */
+  padding: 12px; /* Safe area for notch/home indicator */
   box-sizing: border-box;
 }
 
@@ -211,18 +224,22 @@ body.modal-open {
 ```
 
 **Text Readability:**
+
 ```css
 /* Minimum font sizes */
 body {
-  font-size: 16px;  /* Prevents zoom on iOS input focus */
+  font-size: 16px; /* Prevents zoom on iOS input focus */
 }
 
-input, textarea, select {
-  font-size: 16px !important;  /* Critical for iOS */
+input,
+textarea,
+select {
+  font-size: 16px !important; /* Critical for iOS */
 }
 
 /* Line height for mobile */
-p, div {
+p,
+div {
   line-height: 1.5;
 }
 ```
@@ -234,6 +251,7 @@ p, div {
 ### ✅ Test Each Feature:
 
 **Student Management:**
+
 - [ ] Open Student Manager
 - [ ] Search students
 - [ ] Filter by group
@@ -242,6 +260,7 @@ p, div {
 - [ ] Delete student
 
 **Payments:**
+
 - [ ] View payment records
 - [ ] Scroll horizontally (table)
 - [ ] Filter payments (matched/unmatched/ignored)
@@ -250,6 +269,7 @@ p, div {
 - [ ] Ignore payment
 
 **Calendar:**
+
 - [ ] View calendar
 - [ ] Click on date/class
 - [ ] Quick View opens
@@ -258,6 +278,7 @@ p, div {
 - [ ] Mark attendance
 
 **Email & Notifications:**
+
 - [ ] Send manual email
 - [ ] Auto-sync toggle (30s)
 - [ ] Gmail sync
@@ -266,6 +287,7 @@ p, div {
 - [ ] Mark as read
 
 **Sync & Auth:**
+
 - [ ] Full sync button
 - [ ] Data syncs to Supabase
 - [ ] Login/Logout
@@ -279,17 +301,20 @@ p, div {
 ### 📱 Test Devices:
 
 **iPhone (Safari):**
+
 - iPhone 13/14/15 series
 - iOS 16+
 - Test in portrait & landscape
 - Check notch/Dynamic Island overlap
 
 **iPhone (Chrome):**
+
 - Same devices
 - Chrome for iOS
 - Verify scroll behavior matches Safari
 
 **Android (Chrome):**
+
 - Samsung Galaxy S21+
 - Google Pixel 6+
 - OnePlus 9+
@@ -349,6 +374,7 @@ p, div {
 ### Files to Modify:
 
 **`index.mobile.html`:**
+
 - [ ] Line 667-682: Update `.control-btn` size to 44px
 - [ ] Add universal button touch styles
 - [ ] Add payment table scroll wrapper
@@ -356,6 +382,7 @@ p, div {
 - [ ] Add safe-area-inset support
 
 **Testing:**
+
 - [ ] Create `MOBILE_TEST_CHECKLIST.md`
 - [ ] Document real device results
 - [ ] Take screenshots of issues
@@ -372,7 +399,6 @@ p, div {
 
 ---
 
-**Status**: Audit complete, fixes pending implementation
-**Estimated Time**: 2-3 hours for all fixes + testing
-**Risk Level**: Low (CSS-only changes, no logic modifications)
-
+**Status**: Audit complete, fixes pending implementation **Estimated Time**: 2-3
+hours for all fixes + testing **Risk Level**: Low (CSS-only changes, no logic
+modifications)

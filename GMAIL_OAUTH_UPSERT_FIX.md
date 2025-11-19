@@ -3,11 +3,13 @@
 ## The Problem
 
 **Error Message:**
+
 ```
 duplicate key value violates unique constraint "gmail_credentials_user_id_key"
 ```
 
 **What Was Happening:**
+
 - Users trying to re-authenticate with Gmail OAuth got HTTP 500 errors
 - The Edge Function tried to INSERT a new record even when one existed
 - The `gmail_credentials` table has `UNIQUE(user_id)` constraint
@@ -16,6 +18,7 @@ duplicate key value violates unique constraint "gmail_credentials_user_id_key"
 ## The Root Cause
 
 **Edge Function Code (BEFORE):**
+
 ```typescript
 const { error: dbError } = await supabase.from('gmail_credentials').upsert({
   user_id: userId,
@@ -26,6 +29,7 @@ const { error: dbError } = await supabase.from('gmail_credentials').upsert({
 ```
 
 **Problem:**
+
 - `.upsert()` without `onConflict` parameter
 - Supabase couldn't determine which column to use for conflict detection
 - Defaulted to INSERT behavior → duplicate key error
@@ -33,24 +37,24 @@ const { error: dbError } = await supabase.from('gmail_credentials').upsert({
 ## The Fix
 
 **Edge Function Code (AFTER):**
+
 ```typescript
-const { error: dbError } = await supabase
-  .from('gmail_credentials')
-  .upsert(
-    {
-      user_id: userId,
-      access_token: tokenData.access_token,
-      refresh_token: tokenData.refresh_token,
-      client_id: GMAIL_CLIENT_ID,
-      client_secret: GMAIL_CLIENT_SECRET,
-      expires_at: expiresAt.toISOString(),
-      scopes: tokenData.scope,
-    },
-    { onConflict: 'user_id' }  // ✅ CRITICAL: Explicit conflict column
-  );
+const { error: dbError } = await supabase.from('gmail_credentials').upsert(
+  {
+    user_id: userId,
+    access_token: tokenData.access_token,
+    refresh_token: tokenData.refresh_token,
+    client_id: GMAIL_CLIENT_ID,
+    client_secret: GMAIL_CLIENT_SECRET,
+    expires_at: expiresAt.toISOString(),
+    scopes: tokenData.scope,
+  },
+  { onConflict: 'user_id' } // ✅ CRITICAL: Explicit conflict column
+);
 ```
 
 **What Changed:**
+
 - Added `{ onConflict: 'user_id' }` as second parameter
 - Now Supabase knows to UPDATE on `user_id` conflict instead of failing
 - Matches the table's `UNIQUE(user_id)` constraint
@@ -73,12 +77,14 @@ const { error: dbError } = await supabase
 ## Testing
 
 **Before Fix:**
+
 ```javascript
 // First OAuth: ✅ Success
 // Second OAuth: ❌ Error 500 "duplicate key value violates unique constraint"
 ```
 
 **After Fix:**
+
 ```javascript
 // First OAuth: ✅ Success (INSERT)
 // Second OAuth: ✅ Success (UPDATE)
@@ -89,7 +95,8 @@ const { error: dbError } = await supabase
 ## Deployment Status
 
 - ✅ **Code Fixed**: `supabase/functions/gmail-oauth-callback/index.ts`
-- ✅ **Deployed to Supabase**: `npx supabase functions deploy gmail-oauth-callback`
+- ✅ **Deployed to Supabase**:
+  `npx supabase functions deploy gmail-oauth-callback`
 - ✅ **Committed to Git**: Commit `ba51310`
 - ✅ **Ready for Production**: Immediate effect
 
@@ -100,9 +107,9 @@ If you were writing raw SQL, it would look like this:
 ```sql
 -- UPSERT in raw SQL
 INSERT INTO gmail_credentials (
-  user_id, 
-  access_token, 
-  refresh_token, 
+  user_id,
+  access_token,
+  refresh_token,
   expires_at,
   client_id,
   client_secret,
@@ -123,11 +130,13 @@ DO UPDATE SET
 ## Impact
 
 **Before:**
+
 - 🔴 Re-authentication broken
 - 🔴 Users stuck with expired tokens
 - 🔴 Gmail integration unusable after first auth
 
 **After:**
+
 - 🟢 Re-authentication works perfectly
 - 🟢 Token refresh seamless
 - 🟢 Gmail integration reliable
@@ -152,13 +161,12 @@ DO UPDATE SET
 ```
 
 **Why?**
+
 - Database might have multiple UNIQUE constraints
 - Supabase needs to know which one to use for conflict detection
 - Explicit is always better than implicit
 
 ---
 
-**Status**: ✅ FIXED AND DEPLOYED  
-**Date**: November 19, 2025  
-**Deployed By**: GitHub Copilot Agent  
-**Tested**: Ready for user testing  
+**Status**: ✅ FIXED AND DEPLOYED **Date**: November 19, 2025 **Deployed By**:
+GitHub Copilot Agent **Tested**: Ready for user testing

@@ -1,59 +1,90 @@
 # ARNOMA Version Tracking
 
-## Current Version: v2.2.1
+## Current Version: v2.4.7
 
 ## Version Update Checklist (Before Every Push)
+
 When making changes, update the version in **3 places** in `index.html`:
 
 ### 1. Meta Tags (Line ~6)
+
 ```html
 <title>ARNOMA - Student Management [v2.1.X]</title>
 <meta name="version" content="2.1.X-description" />
 ```
 
 ### 2. Console Version Log (Line ~71)
+
 ```javascript
 console.log('🔥 ARNOMA v2.1.X - Description of changes');
 ```
 
 ### 3. Payment Records Header (Line ~4847)
+
 ```html
-<h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.1.X</span></h1>
+<h1>
+  Payment Records
+  <span
+    style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;"
+    >🔥 ARNOMA v2.1.X</span
+  >
+</h1>
 ```
 
 ## Version History
 
+### v2.4.7 (2025-11-19)
+
+- **FIX**: Smart Calendar Recovery on mobile
+  - Added guard rails around lazy module loading so the modal always opens
+  - New loading/warning/error status banner keeps users informed while data syncs
+  - `renderCalendar()` now safely handles missing DOM nodes and returns data to callers
+  - Introduced `safeRenderCalendar()` wrapper used by month navigation, lazy load, and modal open
+  - Fallback messaging appears if LazyModules are unavailable or throw during initialization
+- **VERSION**: Updated desktop and mobile builds (title, header, console log, meta tag) to `v2.4.7 - Smart Calendar Recovery`
+
 ### v2.2.1 (2025-11-18)
+
 - **FIX**: Email preview modal z-index corrected
   - Changed from `z-index: 10000` to `z-index: 100005`
   - Email preview now appears ABOVE notification center (z-index: 100004)
   - Modal now visible when clicking email notifications
   - Applied to both desktop (index.html) and mobile (index.mobile.html)
 - **DOCUMENTATION**: Gmail token auto-refresh implementation guide created
-  - Created `GMAIL_TOKEN_REFRESH_SETUP.sql` - Supabase table for storing refresh tokens
-  - Created `GMAIL_TOKEN_REFRESH_IMPLEMENTATION.md` - Complete implementation guide
+  - Created `GMAIL_TOKEN_REFRESH_SETUP.sql` - Supabase table for storing refresh
+    tokens
+  - Created `GMAIL_TOKEN_REFRESH_IMPLEMENTATION.md` - Complete implementation
+    guide
   - Includes Edge Function code for token refresh
   - Includes OAuth callback handler
   - Includes updated client-side code
-  - **NOTE**: Implementation pending - requires Supabase Edge Functions deployment
+  - **NOTE**: Implementation pending - requires Supabase Edge Functions
+    deployment
   - **BENEFIT**: Will eliminate hourly Gmail reconnection requirement
 
 ### v2.2.0 (2025-11-18)
+
 - **CRITICAL FIX**: Email notification viewer now works 100% of the time
-  - **ROOT CAUSE IDENTIFIED**: Email system iframe is hidden (1px x 1px, off-screen, visibility:hidden)
-  - **SOLUTION**: Use postMessage to open preview modal in parent window instead of hidden iframe
+  - **ROOT CAUSE IDENTIFIED**: Email system iframe is hidden (1px x 1px,
+    off-screen, visibility:hidden)
+  - **SOLUTION**: Use postMessage to open preview modal in parent window instead
+    of hidden iframe
   - **IMPLEMENTATION**:
-    - `viewSentEmail()` in email-system-complete.html now sends `postMessage` to parent with email HTML
+    - `viewSentEmail()` in email-system-complete.html now sends `postMessage` to
+      parent with email HTML
     - Parent window (index.html) receives message and opens full-screen modal
     - New `emailPreviewModal` in parent window (z-index: 10000, fully visible)
     - New functions: `openEmailPreviewModal()` and `closeEmailPreviewModal()`
     - Message listener added to handle `openEmailPreview` action
-  - **RESULT**: Email previews now open in main window, fully visible and functional
+  - **RESULT**: Email previews now open in main window, fully visible and
+    functional
   - **TESTING**: Modal confirmed working with display:flex, z-index:1001 in logs
-  - This was a **MAJOR BUG** - users clicking email notifications saw nothing because modal was hidden in off-screen iframe
+  - This was a **MAJOR BUG** - users clicking email notifications saw nothing
+    because modal was hidden in off-screen iframe
 - **CRITICAL FIX**: Mobile version (index.mobile.html) completely rebuilt
   - **ROOT CAUSE**: Mobile version stuck on v2.1.0, missing 2,427 lines of code
-  - **MISSING FEATURES**: ClassReminderManager, ClassStartingSoonManager, email preview modal, all v2.1.6-v2.2.0 improvements
+  - **MISSING FEATURES**: ClassReminderManager, ClassStartingSoonManager, email
+    preview modal, all v2.1.6-v2.2.0 improvements
   - **SOLUTION**: Replaced mobile version with full desktop codebase
   - **RESULT**: Mobile now has 100% feature parity with desktop
   - All buttons working, all data loading, all automations running
@@ -61,6 +92,7 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
   - Desktop version already fully responsive - no separate mobile code needed
 
 ### v2.1.9 (2025-11-18)
+
 - **FIX**: Enhanced email notification viewer debugging
   - Added comprehensive error logging to `openPreviewModal()` function
   - Checks if modal and iframe elements exist before attempting to open
@@ -68,22 +100,26 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
   - Added try-catch around `openPreviewModal()` call in `viewSentEmail()`
   - Better error messages to identify exact failure point
   - Helps diagnose why email preview modal may not be opening from notifications
-- **PURPOSE**: Identify and fix notification email viewer issues once and for all
+- **PURPOSE**: Identify and fix notification email viewer issues once and for
+  all
 
 ### v2.1.8 (2025-01-20)
+
 - **NEW FEATURE**: Complete Automation Manager in Email System
   - View ALL active automations in one place (⚙️ Automations button)
   - System Automations section shows 3 built-in automations:
     - Payment Reminder (Auto) - Every 24 hours
     - Class Reminder (12 Hours Before)
     - Class Starting Soon (30 Minutes Before)
-  - Each automation shows: description, template, check interval, trigger, and managing system
+  - Each automation shows: description, template, check interval, trigger, and
+    managing system
   - **Pause/Resume Controls**: Click ⏸️/▶️ to pause or resume any automation
   - Pause state persists in localStorage and respected by automation managers
   - Custom Automations section ready for future user-created automations
 - **TECHNICAL**: Added pause checks in all automation managers
   - ClassReminderManager: Checks `automation_system_class_reminder_12h_paused`
-  - ClassStartingSoonManager: Checks `automation_system_class_starting_soon_paused`
+  - ClassStartingSoonManager: Checks
+    `automation_system_class_starting_soon_paused`
   - PaymentReminderManager: Checks `automation_system_payment_reminder_paused`
   - All managers update `last_check` timestamp in localStorage
   - Managers log "⏸️ PAUSED - Skipping reminder check" when paused
@@ -95,6 +131,7 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
   - Monospace font for technical details (managed by which file/manager)
 
 ### v2.1.7 (2025-01-20)
+
 - **CRITICAL FIX**: Fixed duplicate class reminder emails
   - Root cause: `forEach` with `async/await` doesn't properly wait for promises
   - Solution: Replaced all `forEach` with `for...of` loops in reminder managers
@@ -107,7 +144,8 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
   - Added template to email-system-complete.html with {{ZoomLink}} variable
   - Includes email handler for `sendClassStartingSoon` action
 - **CRITICAL FIX**: Payment receipt emails now auto-send 100% of the time
-  - Fixed `quickAddPayment()` - was bypassing `addPayment()` and directly saving to PaymentStore
+  - Fixed `quickAddPayment()` - was bypassing `addPayment()` and directly saving
+    to PaymentStore
   - Complete rewrite: Now calls `await addPayment()` properly
   - Triggers Supabase insert → auto-sends receipt email → creates notification
   - Ensures calendar quick-add payments get receipts like manual payments
@@ -119,19 +157,27 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
   - Changed from: "You are enrolled in {{Group}}"
   - Changed to: "You are enrolled in Group {{Group}}"
 - **FIX**: Notification email viewer now works 100% of the time
-  - Previously: Clicking email notifications showed "Email not found" if Sent Emails modal never opened
-  - Root cause: viewSentEmail() relied on window._sentEmailsCache (only populated when modal opened)
-  - Solution: Changed to async function that fetches directly from Supabase if not in cache
-  - Now works immediately from notifications without needing to open Sent Emails first
+  - Previously: Clicking email notifications showed "Email not found" if Sent
+    Emails modal never opened
+  - Root cause: viewSentEmail() relied on window.\_sentEmailsCache (only
+    populated when modal opened)
+  - Solution: Changed to async function that fetches directly from Supabase if
+    not in cache
+  - Now works immediately from notifications without needing to open Sent Emails
+    first
 - **EMAIL SYSTEM VERIFICATION**: All email variables validated
   - Payment Reminder: {{StudentName}}, {{UnpaidClasses}}, {{Balance}}
-  - Payment Receipt: Hardcoded values (student.name, paymentAmount, paymentDate, newBalance)
-  - Class Reminder: {{StudentName}}, {{GroupName}}, {{ClassTime}}, {{TimeOfDay}}, {{PaymentMessage}}, {{ClassDate}}
-  - Class Starting Soon: {{StudentName}}, {{GroupName}}, {{ClassTime}}, {{ClassDate}}, {{ZoomLink}}
+  - Payment Receipt: Hardcoded values (student.name, paymentAmount, paymentDate,
+    newBalance)
+  - Class Reminder: {{StudentName}}, {{GroupName}}, {{ClassTime}},
+    {{TimeOfDay}}, {{PaymentMessage}}, {{ClassDate}}
+  - Class Starting Soon: {{StudentName}}, {{GroupName}}, {{ClassTime}},
+    {{ClassDate}}, {{ZoomLink}}
   - Welcome Email: {{StudentName}}, Group {{Group}}, {{GroupSchedule}}
   - All variables properly mapped and replaced in handlers
 
 ### v2.1.6 (2025-11-18)
+
 - **NEW FEATURE**: Automated Class Reminder System
   - Sends reminders 12 hours before each class
   - "tomorrow" for morning classes (7-10 AM), "today" for evening classes
@@ -144,25 +190,31 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
   - Creates notifications with email preview
 
 ### v2.1.5 (2025-11-18)
+
 - Added version number display in Payment Records header
 - Version now visible next to "Payment Records" title
 
 ### v2.1.4 (2025-11-18)
+
 - Silenced 30 PaymentReminderManager verbose logs
 - Total reduction: 56% of console.log calls removed
 - Only shows summary and actual actions, not every check
 
 ### v2.1.3 (2025-11-18)
+
 - Silenced 48 initialization logs
-- Converted [ARNOMA], [NotificationCenter], [PaymentReminderManager] logs to debugLog
+- Converted [ARNOMA], [NotificationCenter], [PaymentReminderManager] logs to
+  debugLog
 - Total reduction: 46% of console.log calls removed
 
 ### v2.1.2 (2025-11-18)
+
 - Replaced 85 console.log calls with debugLog
 - Silenced emoji-prefixed and bracketed debug logs
 - 29% reduction in console overhead
 
 ### v2.1.1 (2025-11-18)
+
 - Gmail polling reduced from 2min to 30min (93% reduction)
 - Implemented 30s cache layer for Supabase reads
 - Added 300ms debouncing for search inputs
@@ -170,6 +222,7 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 - Estimated 40-50% faster initial load
 
 ### v2.1.0 (2025-11-18)
+
 - Initial performance-optimized version
 - Comprehensive performance audit completed
 - 72 performance issues documented
@@ -179,16 +232,20 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 **⚠️ CRITICAL RULE: EVERY UPDATE MUST CHANGE THE VERSION NUMBER**
 
 Even for tiny updates (template fixes, single-line changes, typos), you MUST:
+
 - Increment version number (e.g., v2.1.8 → v2.1.9), OR
 - Add "S" suffix (e.g., v2.1.8 → v2.1.8S for small update)
 
 ### Version Increments:
+
 - **Major.Minor.Patch** (e.g., 2.1.5)
-- **Patch** (+0.0.1): Bug fixes, minor tweaks, console log cleanup, template updates
+- **Patch** (+0.0.1): Bug fixes, minor tweaks, console log cleanup, template
+  updates
 - **Minor** (+0.1.0): New features, significant improvements
 - **Major** (+1.0.0): Breaking changes, major overhauls
 
 ### Alternative for Small Updates:
+
 - Add "S" suffix to current version (e.g., v2.1.8 → v2.1.8S)
 - Use for: Single-line fixes, typos, minor template changes
 - Commit message format: `🔥 v2.1.8S: Brief description (update)`
@@ -196,6 +253,7 @@ Even for tiny updates (template fixes, single-line changes, typos), you MUST:
 ## Quick Commands
 
 ### Update version and commit:
+
 ```bash
 # Update the 3 locations in index.html first, then:
 git add index.html
@@ -204,7 +262,9 @@ git push origin main
 ```
 
 ### Check current deployed version:
+
 Open www.richyfesta.com and look at:
+
 1. Browser tab title
 2. Console first log
 3. Payment Records header
