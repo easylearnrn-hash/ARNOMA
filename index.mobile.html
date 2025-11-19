@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.5.0-extreme-performance" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
+    <meta name="version" content="2.6.0-neomorphic-buttons" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
     <script>
       (function () {
         // 🚨 CRITICAL: This is index.mobile.html - NEVER redirect from here
@@ -1311,50 +1311,55 @@
 
       /* Student Manager Styles */
       .group-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 
-          8px 8px 16px rgba(0, 0, 0, 0.2),
-          -8px -8px 16px rgba(255, 255, 255, 0.8);
+        box-shadow:
+          0 0 0 0.1em hsla(223, 90%, 60%, 0.3),
+          0 0 0.2em #94a3b8 inset,
+          0 0.1em 0.1em #f1f5f9;
       }
 
-      .group-btn.active {
-        background: linear-gradient(145deg, #3b82f6, #6366f1) !important;
-        color: #ffffff !important;
-        box-shadow: 
-          inset 4px 4px 8px rgba(0, 0, 0, 0.3),
-          inset -4px -4px 8px rgba(96, 165, 250, 0.5),
-          0 0 20px rgba(99, 102, 241, 0.4) !important;
-        font-weight: 700 !important;
-      }
-
-      .group-btn.active:hover {
-        box-shadow: 
-          inset 4px 4px 8px rgba(0, 0, 0, 0.35),
-          inset -4px -4px 8px rgba(96, 165, 250, 0.6),
-          0 0 24px rgba(99, 102, 241, 0.5) !important;
-      }
-
-      /* Amount buttons get white text on dark background */
+      /* Dark version for amount buttons */
       .group-buttons:nth-child(2) .group-btn {
+        background-image: linear-gradient(#334155, #475569);
+        box-shadow:
+          0 0 0 0.1em hsla(270, 90%, 60%, 0),
+          0 0 0.2em #1e293b inset,
+          0 0.1em 0.1em #64748b;
+      }
+
+      .group-buttons:nth-child(2) .group-btn:before {
+        background-image: linear-gradient(#475569, #334155);
+        box-shadow: 0 0.5em 0.5em 0.15em rgba(0, 0, 0, 0.5);
+      }
+
+      .group-buttons:nth-child(2) .group-btn:after {
+        background-color: #334155;
+        background-image: linear-gradient(rgba(71, 85, 105, 0), #475569);
+        box-shadow:
+          0 0.05em 0 #64748b inset,
+          0 -0.05em 0 #64748b inset,
+          0 0 0 0 rgba(139, 92, 246, 0.1) inset;
         color: #ffffff;
-        background: linear-gradient(145deg, #475569, #334155);
-        box-shadow: 
-          6px 6px 12px rgba(0, 0, 0, 0.4),
-          -6px -6px 12px rgba(71, 85, 105, 0.3);
       }
 
       .group-buttons:nth-child(2) .group-btn:hover {
-        box-shadow: 
-          8px 8px 16px rgba(0, 0, 0, 0.5),
-          -8px -8px 16px rgba(71, 85, 105, 0.4);
+        box-shadow:
+          0 0 0 0.1em hsla(270, 90%, 60%, 0.3),
+          0 0 0.2em #1e293b inset,
+          0 0.1em 0.1em #64748b;
       }
 
-      .group-buttons:nth-child(2) .group-btn.active {
-        background: linear-gradient(145deg, #8b5cf6, #a855f7) !important;
-        box-shadow: 
-          inset 4px 4px 8px rgba(0, 0, 0, 0.4),
-          inset -4px -4px 8px rgba(168, 85, 247, 0.5),
-          0 0 20px rgba(139, 92, 246, 0.5) !important;
+      .group-buttons:nth-child(2) .group-btn.active:before {
+        box-shadow: 0 0.25em 0.25em 0 rgba(0, 0, 0, 0.5);
+      }
+
+      .group-buttons:nth-child(2) .group-btn.active:after {
+        background-color: #475569;
+        box-shadow:
+          0 0.05em 0 rgba(139, 92, 246, 0.5) inset,
+          0 -0.05em 0 rgba(139, 92, 246, 0.5) inset,
+          0 0 0.5em 0.15em rgba(139, 92, 246, 0.1) inset;
+        color: #a855f7;
+        text-shadow: 0 0 0.2em #a855f7;
       }
 
       /* Group Manager Styles */
@@ -1604,9 +1609,9 @@
       /* BEGIN FEATURE 2 - Instant Group Switch Buttons */
       .group-buttons {
         display: flex;
-        gap: 6px;
+        gap: 8px;
         justify-content: center;
-        margin: 10px 0;
+        margin: 12px 0;
         flex-wrap: nowrap;
         overflow-x: hidden;
         scrollbar-width: none;
@@ -1620,33 +1625,103 @@
       }
 
       .group-btn {
-        padding: 8px 15px;
-        border-radius: 12px;
-        font-size: 12px;
-        font-weight: 700;
-        letter-spacing: 0.3px;
+        background-color: transparent;
+        background-image: linear-gradient(#cbd5e1, #e2e8f0);
+        border-radius: 50%;
+        box-shadow:
+          0 0 0 0.1em hsla(223, 90%, 60%, 0),
+          0 0 0.2em #94a3b8 inset,
+          0 0.1em 0.1em #f1f5f9;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: none;
-        background: linear-gradient(145deg, #e2e8f0, #cbd5e1);
-        color: #1e293b;
-        min-width: 40px;
-        white-space: nowrap;
-        flex-shrink: 0;
-        box-shadow: 
-          6px 6px 12px rgba(0, 0, 0, 0.15),
-          -6px -6px 12px rgba(255, 255, 255, 0.7),
-          inset 0 0 0 rgba(255, 255, 255, 0);
         position: relative;
+        width: 2.8em;
+        height: 2.8em;
+        transition: box-shadow 0.3s ease-in-out;
+        border: none;
+        padding: 0;
+        flex-shrink: 0;
         z-index: 10;
       }
 
-      /* Pressed/Active effect */
-      .group-btn:active {
-        box-shadow: 
-          inset 3px 3px 6px rgba(0, 0, 0, 0.2),
-          inset -3px -3px 6px rgba(255, 255, 255, 0.5);
+      .group-btn:before,
+      .group-btn:after {
+        border-radius: inherit;
+        content: "";
+        display: block;
+        position: absolute;
+      }
+
+      .group-btn:before {
+        background-image: linear-gradient(#f1f5f9, #cbd5e1);
+        box-shadow: 0 0.5em 0.5em 0.15em rgba(0, 0, 0, 0.15);
+        top: 0.35em;
+        left: 0.35em;
+        width: 2.1em;
+        height: 2.1em;
+        transition:
+          box-shadow 0.3s cubic-bezier(0.42, -1.84, 0.42, 1.84),
+          transform 0.3s cubic-bezier(0.42, -1.84, 0.42, 1.84);
+      }
+
+      .group-btn {
+        font-size: 12px;
+        font-weight: 700;
+        color: transparent;
+        overflow: hidden;
+      }
+
+      .group-btn:after {
+        background-color: #e2e8f0;
+        background-image: linear-gradient(rgba(241, 245, 249, 0), #f1f5f9);
+        box-shadow:
+          0 0.05em 0 #f1f5f9 inset,
+          0 -0.05em 0 #f1f5f9 inset,
+          0 0 0 0 rgba(99, 102, 241, 0.1) inset;
+        top: 0.9em;
+        left: 0.9em;
+        width: 1em;
+        height: 1em;
+        transition:
+          background-color 0.3s ease-in-out,
+          box-shadow 0.3s ease-in-out,
+          transform 0.3s cubic-bezier(0.42, -1.84, 0.42, 1.84);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #1e293b;
+        content: attr(data-label);
+        font-size: inherit;
+        font-weight: inherit;
+      }
+
+      .group-btn:focus-visible {
+        box-shadow:
+          0 0 0 0.1em hsla(223, 90%, 60%, 1),
+          0 0 0.2em #94a3b8 inset,
+          0 0.1em 0.1em #f1f5f9;
+        outline: none;
+      }
+
+      /* Active/Pressed state */
+      .group-btn.active:before,
+      .group-btn.active:after {
         transform: scale(0.98);
+      }
+
+      .group-btn.active:before {
+        box-shadow: 0 0.25em 0.25em 0 rgba(0, 0, 0, 0.15);
+        transition-timing-function: cubic-bezier(0.42, 0, 0.42, 1.84);
+      }
+
+      .group-btn.active:after {
+        background-color: #f1f5f9;
+        box-shadow:
+          0 0.05em 0 rgba(99, 102, 241, 0.5) inset,
+          0 -0.05em 0 rgba(99, 102, 241, 0.5) inset,
+          0 0 0.5em 0.15em rgba(99, 102, 241, 0.1) inset;
+        transition-timing-function: ease-in-out, ease-in-out, cubic-bezier(0.42, 0, 0.42, 1.84);
+        color: #6366f1;
+        text-shadow: 0 0 0.2em #6366f1;
       }
 
       /* END FEATURE 2 */
@@ -12228,7 +12303,8 @@
               <button
                 class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}"
                 onclick="changeStudentGroup('${student.id}', '${g}')"
-                title="Switch to Group ${g}">${g}</button>
+                title="Switch to Group ${g}"
+                data-label="${g}"></button>
             `
               )
               .join('')}
@@ -12243,7 +12319,8 @@
               <button
                 class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}"
                 onclick="changeStudentPayAmount('${student.id}', ${amount})"
-                title="Set pay to $${amount}">$${amount}</button>
+                title="Set pay to $${amount}"
+                data-label="$${amount}"></button>
             `
               )
               .join('')}
