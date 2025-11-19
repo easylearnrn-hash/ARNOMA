@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.6.3-fix-button-clipping" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
+    <meta name="version" content="2.7.0-skeuomorphic-buttons" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
     <script>
       (function () {
         // 🚨 CRITICAL: This is index.mobile.html - NEVER redirect from here
@@ -1614,7 +1614,7 @@
       /* BEGIN FEATURE 2 - Instant Group Switch Buttons */
       .group-buttons {
         display: flex;
-        gap: 8px;
+        gap: 12px;
         justify-content: center;
         margin: 12px 0;
         flex-wrap: nowrap;
@@ -1630,101 +1630,116 @@
       }
 
       .group-btn {
-        background-color: transparent;
-        background-image: linear-gradient(#cbd5e1, #e2e8f0);
-        border-radius: 50%;
-        box-shadow:
-          0 0 0 0.1em hsla(223, 90%, 60%, 0),
-          0 0 0.2em #94a3b8 inset,
-          0 0.1em 0.1em #f1f5f9;
-        cursor: pointer;
+        /* Rounding factors */
+        --rf0: 1;
+        --rf1: calc(1 - var(--rf0));
+        /* Button dimensions */
+        --btn-d: 3.5em;
+        --btn-b: 0.21875em;
+        --p0: 0.3125em;
+        --b1: 0.5em;
+        --p1: 1.25em;
+        /* Actual button border-radius */
+        --r: calc(var(--rf0) * 50% + var(--rf1) * 0.875em);
+        --r1: calc(var(--r) - var(--rf1) * (var(--btn-b) + var(--p0)));
+        --r2: calc(var(--r) - var(--rf1) * (var(--btn-b) + calc(2 * var(--p0) + var(--b1) + var(--p1))));
+        --a: 0.4375;
+
+        box-sizing: border-box;
         position: relative;
-        width: 40px;
-        height: 40px;
-        min-width: 40px;
-        min-height: 40px;
-        transition: box-shadow 0.3s ease-in-out;
-        border: none;
-        padding: 0;
+        border: solid var(--btn-b) transparent;
+        width: var(--btn-d);
+        height: var(--btn-d);
+        min-width: var(--btn-d);
+        min-height: var(--btn-d);
+        border-radius: var(--r);
+        background: linear-gradient(#e2e3e7, #d4d5d9) border-box;
+        text-indent: -200vmax;
+        cursor: pointer;
         flex-shrink: 0;
         z-index: 50;
+        transition: all 0.3s;
         font-size: 14px;
         font-weight: 700;
         color: transparent;
-        overflow: hidden;
+        overflow: visible;
       }
 
       .group-btn:before,
       .group-btn:after {
-        border-radius: 50%;
-        content: "";
-        display: block;
         position: absolute;
+        transform: translateY(0);
+        transition: transform 0.3s;
+        border-radius: 50%;
       }
 
       .group-btn:before {
-        background-image: linear-gradient(#f1f5f9, #cbd5e1);
-        box-shadow: 0 6px 8px 2px rgba(0, 0, 0, 0.15);
-        top: 5px;
-        left: 5px;
-        width: 30px;
-        height: 30px;
-        transition:
-          box-shadow 0.3s cubic-bezier(0.42, -1.84, 0.42, 1.84),
-          transform 0.3s cubic-bezier(0.42, -1.84, 0.42, 1.84);
+        content: '';
+        top: var(--p0);
+        right: var(--p0);
+        bottom: var(--p0);
+        left: var(--p0);
+        border: solid var(--b1) transparent;
+        padding: var(--p1);
+        border-radius: var(--r1);
+        box-shadow: 0 3px 7px rgba(0, 0, 0, var(--a)), 0 5px 13px rgba(0, 0, 0, var(--a)),
+          inset 0 -1px 2px rgba(255, 255, 255, 0.25);
+        background: linear-gradient(#ccc, #fff) content-box, linear-gradient(#fefefe, #cbccd0) padding-box,
+          linear-gradient(#f1f1f1, #d2d5ce) border-box;
       }
 
       .group-btn:after {
-        background-color: #e2e8f0;
-        background-image: linear-gradient(rgba(241, 245, 249, 0), #f1f5f9);
-        box-shadow:
-          0 1px 0 #f1f5f9 inset,
-          0 -1px 0 #f1f5f9 inset,
-          0 0 0 0 rgba(99, 102, 241, 0.1) inset;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 24px;
-        height: 24px;
-        transition:
-          background-color 0.3s ease-in-out,
-          box-shadow 0.3s ease-in-out,
-          transform 0.3s cubic-bezier(0.42, -1.84, 0.42, 1.84);
+        content: attr(data-label);
         display: flex;
         align-items: center;
         justify-content: center;
+        top: calc(2 * var(--p0) + var(--b1) + var(--p1));
+        right: calc(2 * var(--p0) + var(--b1) + var(--p1));
+        bottom: calc(2 * var(--p0) + var(--b1) + var(--p1));
+        left: calc(2 * var(--p0) + var(--b1) + var(--p1));
+        border-radius: var(--r2);
+        background: linear-gradient(#dadada, #fff);
         color: #1e293b;
-        content: attr(data-label);
-        font-size: 13px;
+        font-size: 15px;
         font-weight: 700;
+        text-indent: 0;
         line-height: 1;
       }
 
-      .group-btn:focus-visible {
-        box-shadow:
-          0 0 0 0.1em hsla(223, 90%, 60%, 1),
-          0 0 0.2em #94a3b8 inset,
-          0 0.1em 0.1em #f1f5f9;
-        outline: none;
+      .group-btn:hover,
+      .group-btn:focus {
+        outline: solid 0 transparent;
       }
 
-      /* Active/Pressed state */
-      .group-btn.active:before {
-        transform: scale(0.98);
-        box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.15);
-        transition-timing-function: cubic-bezier(0.42, 0, 0.42, 1.84);
+      .group-btn:active:before,
+      .group-btn:active:after {
+        transform: translateY(1px);
       }
 
       .group-btn.active:after {
-        transform: translate(-50%, -50%) scale(0.98);
-        background-color: #f1f5f9;
-        box-shadow:
-          0 1px 0 rgba(99, 102, 241, 0.5) inset,
-          0 -1px 0 rgba(99, 102, 241, 0.5) inset,
-          0 0 8px 2px rgba(99, 102, 241, 0.1) inset;
-        transition-timing-function: ease-in-out, ease-in-out, cubic-bezier(0.42, 0, 0.42, 1.84);
-        color: #6366f1;
-        text-shadow: 0 0 3px #6366f1;
+        background: linear-gradient(#6366f1, #818cf8);
+        color: #fff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+      }
+
+      /* Amount buttons (second group-buttons) - Yellow/Gold theme */
+      .group-buttons:nth-child(2) .group-btn {
+        background: linear-gradient(#f0c101, #f9a123) border-box;
+      }
+
+      .group-buttons:nth-child(2) .group-btn:before {
+        background: linear-gradient(#ffd700, #ffed4e) content-box, linear-gradient(#fffacd, #fff8dc) padding-box,
+          linear-gradient(#fef3c7, #fde68a) border-box;
+      }
+
+      .group-buttons:nth-child(2) .group-btn:after {
+        background: linear-gradient(#a1c82d, #e8e681);
+        color: #1e293b;
+      }
+
+      .group-buttons:nth-child(2) .group-btn.active:after {
+        background: linear-gradient(#10b981, #34d399);
+        color: #fff;
       }
 
       /* END FEATURE 2 */
