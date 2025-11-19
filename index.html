@@ -10384,50 +10384,178 @@
         // ============================================================================
 
         let isUpdatingLAOffset = false;
+        let userPreferencesCache = null; // Cache for user preferences
 
-        // Load saved offset settings
-        function getLAOffsetSettings() {
+        // ============================================================================
+        // CLOUD-SYNCED USER PREFERENCES - Timezone settings sync across all devices
+        // ============================================================================
+
+        // Load user preferences from Supabase (cloud-synced)
+        async function loadUserPreferences() {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+              console.warn('⚠️ No authenticated user - cannot load preferences');
+              return null;
+            }
+
+            const { data, error } = await supabase
+              .from('user_preferences')
+              .select('*')
+              .eq('user_id', user.id)
+              .single();
+
+            if (error && error.code !== 'PGRST116') {
+              // PGRST116 = no rows found (first time user)
+              console.error('❌ Error loading preferences:', error);
+              return null;
+            }
+
+            if (!data) {
+              // First time user - create default preferences
+              const { data: newPrefs, error: insertError } = await supabase
+                .from('user_preferences')
+                .insert({
+                  user_id: user.id,
+                  timezone_offset_winter: false,
+                  timezone_offset_summer: false
+                })
+                .select()
+                .single();
+
+              if (insertError) {
+                console.error('❌ Error creating preferences:', insertError);
+                return null;
+              }
+
+              userPreferencesCache = newPrefs;
+              return newPrefs;
+            }
+
+            userPreferencesCache = data;
+            debugLog('✅ Loaded user preferences from cloud:', data);
+            return data;
+          } catch (error) {
+            console.error('❌ Failed to load user preferences:', error);
+            return null;
+          }
+        }
+
+        // Save timezone preference to Supabase (syncs across all devices)
+        async function saveTimezonePreference(winter, summer) {
+          try {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (!user) {
+              console.warn('⚠️ No authenticated user - cannot save preferences');
+              return false;
+            }
+
+            const { data, error } = await supabase
+              .from('user_preferences')
+              .upsert({
+                user_id: user.id,
+                timezone_offset_winter: winter,
+                timezone_offset_summer: summer,
+                updated_at: new Date().toISOString()
+              }, {
+                onConflict: 'user_id'
+              })
+              .select()
+              .single();
+
+            if (error) {
+              console.error('❌ Error saving timezone preference:', error);
+              return false;
+            }
+
+            userPreferencesCache = data;
+            debugLog('✅ Timezone preference saved to cloud:', { winter, summer });
+            
+            // Also save to localStorage as fallback
+            localStorage.setItem('la-offset-12', winter.toString());
+            localStorage.setItem('la-offset-11', summer.toString());
+            
+            return true;
+          } catch (error) {
+            console.error('❌ Failed to save timezone preference:', error);
+            return false;
+          }
+        }
+
+        // Load saved offset settings (cloud-first, localStorage fallback)
+        async function getLAOffsetSettings() {
+          // Try to load from cloud first
+          const prefs = await loadUserPreferences();
+          if (prefs) {
+            return {
+              offset12: prefs.timezone_offset_winter || false,
+              offset11: prefs.timezone_offset_summer || false
+            };
+          }
+
+          // Fallback to localStorage
           const offset12 = localStorage.getItem('la-offset-12') === 'true';
           const offset11 = localStorage.getItem('la-offset-11') === 'true';
           return { offset12, offset11 };
         }
 
-        // Toggle LA offset (only one can be active)
-        function setLAOffset(hours, isEnabled, { silent = false } = {}) {
+        // Get settings synchronously from cache (for fast access)
+        function getLAOffsetSettingsSync() {
+          if (userPreferencesCache) {
+            return {
+              offset12: userPreferencesCache.timezone_offset_winter || false,
+              offset11: userPreferencesCache.timezone_offset_summer || false
+            };
+          }
+
+          // Fallback to localStorage if cache not loaded yet
+          const offset12 = localStorage.getItem('la-offset-12') === 'true';
+          const offset11 = localStorage.getItem('la-offset-11') === 'true';
+          return { offset12, offset11 };
+        }
+
+        // Toggle LA offset (only one can be active) - NOW CLOUD-SYNCED
+        async function setLAOffset(hours, isEnabled, { silent = false } = {}) {
           const toggle12 = document.getElementById('laOffset12Toggle');
           const toggle11 = document.getElementById('laOffset11Toggle');
 
           if (hours === 12 && toggle12) {
             toggle12.checked = isEnabled;
-            localStorage.setItem('la-offset-12', isEnabled.toString());
             updateToggleStyle(toggle12, isEnabled);
 
             if (isEnabled && toggle11) {
               toggle11.checked = false;
-              localStorage.setItem('la-offset-11', 'false');
               updateToggleStyle(toggle11, false);
             }
 
+            // Save to cloud (syncs across all devices)
+            await saveTimezonePreference(isEnabled, false);
+
             if (!silent) {
               showNotification(
-                isEnabled ? '❄️ Winter offset enabled: –12 hours' : '✅ Winter offset disabled',
+                isEnabled 
+                  ? '❄️ Winter offset enabled: –12 hours (synced to cloud)' 
+                  : '✅ Winter offset disabled (synced to cloud)',
                 'success'
               );
             }
           } else if (hours === 11 && toggle11) {
             toggle11.checked = isEnabled;
-            localStorage.setItem('la-offset-11', isEnabled.toString());
             updateToggleStyle(toggle11, isEnabled);
 
             if (isEnabled && toggle12) {
               toggle12.checked = false;
-              localStorage.setItem('la-offset-12', 'false');
               updateToggleStyle(toggle12, false);
             }
 
+            // Save to cloud (syncs across all devices)
+            await saveTimezonePreference(false, isEnabled);
+
             if (!silent) {
               showNotification(
-                isEnabled ? '☀️ Summer offset enabled: –11 hours (DST)' : '✅ Summer offset disabled',
+                isEnabled 
+                  ? '☀️ Summer offset enabled: –11 hours (synced to cloud)' 
+                  : '✅ Summer offset disabled (synced to cloud)',
                 'success'
               );
             }
@@ -10450,7 +10578,7 @@
 
         // Apply LA offset to a Date object
         function applyLAOffset(date) {
-          const settings = getLAOffsetSettings();
+          const settings = getLAOffsetSettingsSync(); // Use sync version for performance
           const adjustedDate = new Date(date);
 
           if (settings.offset12) {
@@ -10462,9 +10590,9 @@
           return adjustedDate;
         }
 
-        // Initialize toggle states on page load
-        function initializeLAOffsetToggles() {
-          const settings = getLAOffsetSettings();
+        // Initialize toggle states on page load - NOW LOADS FROM CLOUD
+        async function initializeLAOffsetToggles() {
+          const settings = await getLAOffsetSettings(); // Load from cloud
           const toggle12 = document.getElementById('laOffset12Toggle');
           const toggle11 = document.getElementById('laOffset11Toggle');
 
@@ -10472,29 +10600,90 @@
           const enable11 = !enable12 && Boolean(settings.offset11);
 
           isUpdatingLAOffset = true;
-          setLAOffset(12, enable12, { silent: true });
-          setLAOffset(11, enable11, { silent: true });
+          await setLAOffset(12, enable12, { silent: true });
+          await setLAOffset(11, enable11, { silent: true });
           if (toggle12) toggle12.checked = enable12;
           if (toggle11) toggle11.checked = enable11;
           isUpdatingLAOffset = false;
 
           if (toggle12) {
-            toggle12.addEventListener('change', event => {
+            toggle12.addEventListener('change', async event => {
               if (isUpdatingLAOffset) return;
               isUpdatingLAOffset = true;
-              setLAOffset(12, event.target.checked);
+              await setLAOffset(12, event.target.checked);
               isUpdatingLAOffset = false;
             });
           }
 
           if (toggle11) {
-            toggle11.addEventListener('change', event => {
+            toggle11.addEventListener('change', async event => {
               if (isUpdatingLAOffset) return;
               isUpdatingLAOffset = true;
-              setLAOffset(11, event.target.checked);
+              await setLAOffset(11, event.target.checked);
               isUpdatingLAOffset = false;
             });
           }
+
+          debugLog('✅ LA offset toggles initialized from cloud');
+        }
+
+        // Subscribe to real-time preference changes (syncs instantly across all devices)
+        function subscribeToPreferenceChanges() {
+          supabase
+            .channel('user_preferences_changes')
+            .on(
+              'postgres_changes',
+              {
+                event: '*', // Listen to INSERT, UPDATE, DELETE
+                schema: 'public',
+                table: 'user_preferences'
+              },
+              async (payload) => {
+                debugLog('🔔 Real-time preference update received:', payload);
+                
+                if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
+                  const newPrefs = payload.new;
+                  
+                  // Update cache
+                  userPreferencesCache = newPrefs;
+                  
+                  // Update toggle UI without triggering save (to prevent infinite loop)
+                  const toggle12 = document.getElementById('laOffset12Toggle');
+                  const toggle11 = document.getElementById('laOffset11Toggle');
+                  
+                  if (toggle12 && toggle11) {
+                    isUpdatingLAOffset = true;
+                    
+                    const winter = newPrefs.timezone_offset_winter || false;
+                    const summer = newPrefs.timezone_offset_summer || false;
+                    
+                    toggle12.checked = winter;
+                    toggle11.checked = summer;
+                    
+                    updateToggleStyle(toggle12, winter);
+                    updateToggleStyle(toggle11, summer);
+                    
+                    isUpdatingLAOffset = false;
+                    
+                    // Show notification that settings synced from another device
+                    if (winter) {
+                      showNotification('🔄 Synced from another device: Winter offset (–12h) enabled', 'info');
+                    } else if (summer) {
+                      showNotification('🔄 Synced from another device: Summer offset (–11h) enabled', 'info');
+                    } else {
+                      showNotification('🔄 Synced from another device: All offsets disabled', 'info');
+                    }
+                  }
+                }
+              }
+            )
+            .subscribe((status) => {
+              if (status === 'SUBSCRIBED') {
+                debugLog('✅ Subscribed to real-time preference sync');
+              } else if (status === 'CHANNEL_ERROR') {
+                console.error('❌ Real-time preference sync error');
+              }
+            });
         }
 
         // ============================================================================
@@ -14521,8 +14710,11 @@
           // Populate month selector
           populateMonthSelector();
 
-          // Initialize LA offset toggles
-          initializeLAOffsetToggles();
+          // Initialize LA offset toggles (loads from cloud)
+          await initializeLAOffsetToggles();
+          
+          // Subscribe to real-time preference changes (syncs across devices)
+          subscribeToPreferenceChanges();
 
           // Render payments
           renderPaymentEmailsView();
