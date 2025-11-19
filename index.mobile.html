@@ -48,6 +48,22 @@
         if (VERBOSE_LOGGING) console.log(...args);
       };
 
+      // ⚡ PERFORMANCE: Suppress noisy console logs unless explicitly whitelisted
+      (function patchConsoleLog() {
+        const originalLog = console.log.bind(console);
+        const allowedPrefixes = ['🔥 ARNOMA', '⚡', '❌', '✅', '🔐', '🚪'];
+
+        console.log = (...args) => {
+          const firstArg = args[0];
+          const isAllowed =
+            typeof firstArg === 'string' && allowedPrefixes.some(prefix => firstArg.startsWith(prefix));
+
+          if (isAllowed || VERBOSE_LOGGING) {
+            originalLog(...args);
+          }
+        };
+      })();
+
       // DEBOUNCE HELPER - Prevents excessive function calls during rapid events
       const debounce = (func, wait) => {
         let timeout;
@@ -11666,20 +11682,7 @@
         let selectedStudent = null;
         let editingStudentId = null;
 
-        // Initialize students from Supabase when page loads
-        (async function initializeStudents() {
-          try {
-            students = await loadStudents();
-            // Render if student manager is open
-            const studentManager = document.getElementById('studentManagerModal');
-            if (studentManager && studentManager.style.display !== 'none') {
-              renderStudents();
-            }
-          } catch (error) {
-            console.error('Error loading students on init:', error);
-            students = [];
-          }
-        })();
+        // Student data is loaded during core initialization. Render only when student manager is opened.
 
         // ===== UTILITY FUNCTIONS =====
         function generateId() {
@@ -11917,13 +11920,16 @@
             return;
           }
 
+          const fragment = document.createDocumentFragment();
           activeStudents.forEach(student => {
             try {
-              grid.appendChild(createStudentCard(student));
+              fragment.appendChild(createStudentCard(student));
             } catch (error) {
               console.error('Error creating card for student:', student.name, error);
             }
           });
+
+          grid.appendChild(fragment);
 
           // Add click-outside-to-cancel-edit listener
           setupClickOutsideEditListener();
@@ -14370,15 +14376,7 @@
         let groups = [];
         let countdownTimer;
 
-        // Initialize groups from Supabase when page loads
-        (async function initializeGroups() {
-          try {
-            groups = await loadGroupsFromSupabase();
-          } catch (error) {
-            console.error('Error loading groups on init:', error);
-            groups = [];
-          }
-        })();
+        // Groups are populated during the shared core initialization flow.
 
         // ===== OPEN/CLOSE GROUP MANAGER =====
         function openGroupManager() {
@@ -14434,6 +14432,7 @@
         function renderGroups() {
           const grid = document.getElementById('groupGrid');
           if (!grid) return;
+          groups = window.groupsCache || groups || [];
           grid.innerHTML = '';
 
           if (groups.length === 0) {
@@ -15077,103 +15076,6 @@
 
           // Handle OAuth callback
           handleOAuthCallback();
-
-          // Restore Gmail connection state (per developer command)
-          const connection = getGmailConnection();
-          if (connection && connection.access_token) {
-            gmailAccessToken = connection.access_token;
-            gmailTokenExpiry = connection.expiry_date.toString();
-            updateGmailButtonState(true);
-
-            // Add Gmail status indicator (🟢 connected)
-            showNotification('🟢 Gmail connected', 'success');
-          } else {
-            // Clear any stale tokens
-            if (gmailAccessToken) {
-              const expiry = parseInt(gmailTokenExpiry || '0');
-              if (expiry && Date.now() < expiry) {
-                updateGmailButtonState(true);
-              } else {
-                clearGmailConnection();
-                gmailAccessToken = null;
-                updateGmailButtonState(false);
-              }
-            }
-          }
-
-          // Initialize auto-refresh state
-          const autoRefreshBtn = document.getElementById('autoRefreshToggle');
-          if (autoRefreshEnabled) {
-            autoRefreshBtn.classList.add('auto-refresh-active');
-            autoRefreshBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
-            startAutoRefresh();
-          }
-
-          // Populate month selector
-          populateMonthSelector();
-
-          // ⚡ PERFORMANCE: Defer non-critical operations to background
-          setTimeout(() => {
-            // Initialize LA offset toggles (loads from cloud) - NON-BLOCKING
-            initializeLAOffsetToggles();
-
-            // Create hidden email system iframe for postMessage communication
-            initializeEmailSystemIframe();
-
-            // Send initial data to email system after iframe loads
-            setTimeout(() => {
-              sendGroupsDataToEmailSystem();
-              debugLog('✅ Sent initial data to email system iframe');
-            }, 1000); // Reduced from 2000ms
-
-            // Initialize daily auto-backup system
-            initializeDailyAutoBackup();
-          }, 100); // Defer by 100ms to prioritize main UI
-
-          // Subscribe to real-time preference changes (syncs across devices)
-          subscribeToPreferenceChanges();
-
-          // Render payments
-          renderPaymentEmailsView();
-
-          // Add filter change listener
-          const filterDropdown = document.getElementById('paymentFilterDropdown');
-          if (filterDropdown) {
-            filterDropdown.addEventListener('change', renderPaymentEmailsView);
-          }
-
-          // Create hidden email system iframe for postMessage communication
-          initializeEmailSystemIframe();
-
-          // Send initial data to email system after iframe loads (with delay for iframe initialization)
-          setTimeout(() => {
-            sendGroupsDataToEmailSystem();
-            debugLog('✅ Sent initial data to email system iframe');
-          }, 2000);
-
-          // Initialize Payment Reminder Manager (auto-send reminders for unpaid classes)
-          if (window.PaymentReminderManager) {
-            await window.PaymentReminderManager.initialize();
-            debugLog('✅ Payment Reminder Manager initialized');
-          }
-
-          // Initialize Class Reminder Manager (auto-send class reminders 12 hours before)
-          if (window.ClassReminderManager) {
-            await window.ClassReminderManager.initialize();
-            debugLog('✅ Class Reminder Manager initialized');
-          }
-
-          // Initialize Class Starting Soon Manager (auto-send 30-minute reminders)
-          if (window.ClassStartingSoonManager) {
-            await window.ClassStartingSoonManager.initialize();
-            debugLog('✅ Class Starting Soon Manager initialized');
-          }
-
-          // Initialize Notification Center
-          if (window.NotificationCenter) {
-            await window.NotificationCenter.initialize();
-            debugLog('✅ Notification Center initialized');
-          }
         }
 
         // Initialize hidden email system iframe
@@ -15202,7 +15104,7 @@
 
             window.addEventListener('message', async function (event) {
               if (event.data.action === 'requestGroupsData') {
-                sendGroupsDataToEmailSystem();
+                queueEmailDataSend('iframe-request');
               }
 
               // Handle email preview requests from email system iframe
@@ -15240,7 +15142,7 @@
 
           // Send initial data after iframe loads
           iframe.addEventListener('load', function () {
-            setTimeout(sendGroupsDataToEmailSystem, 1000);
+            queueEmailDataSend('iframe-load');
           });
         }
 
@@ -15275,27 +15177,41 @@
         }
 
         // Send groups and students data to email system for automation
+        let lastEmailDataSentTimestamp = 0;
+        const EMAIL_DATA_THROTTLE_MS = 1000;
+        let emailDataQueueHandle = null;
+
+        function queueEmailDataSend(reason = 'manual') {
+          if (emailDataQueueHandle) return;
+          emailDataQueueHandle = setTimeout(() => {
+            emailDataQueueHandle = null;
+            sendGroupsDataToEmailSystem();
+          }, EMAIL_DATA_THROTTLE_MS);
+          verboseLog(`[EmailAutomation] Queued iframe update (${reason})`);
+        }
+
         function sendGroupsDataToEmailSystem() {
+          const now = Date.now();
+          if (now - lastEmailDataSentTimestamp < EMAIL_DATA_THROTTLE_MS) {
+            verboseLog('⚡ Throttling email iframe update (too frequent)');
+            return;
+          }
+          lastEmailDataSentTimestamp = now;
+
           const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
           if (!emailFrame) {
-            console.warn('⚠️ Email iframe not found, cannot send data');
+            verboseLog('⚠️ Email iframe not found, skipping automation data send');
             return;
           }
 
           const groups = window.groupsCache || window.globalData?.groups || [];
           const students = window.studentsCache || window.globalData?.students || [];
 
-          console.log(`📤 Sending automation data: ${groups.length} groups, ${students.length} students`);
-          console.log(
-            `📦 Students sample:`,
-            students.slice(0, 2).map(s => s.name)
-          );
-
           emailFrame.contentWindow.postMessage(
             {
               action: 'updateGroupsData',
-              groups: groups,
-              students: students,
+              groups,
+              students,
             },
             '*'
           );
@@ -15303,9 +15219,8 @@
           debugLog(`📤 Sent automation data: ${groups.length} groups, ${students.length} students`);
         }
 
-        // Call this whenever groups or students are updated
-        window.addEventListener('groups:updated', sendGroupsDataToEmailSystem);
-        window.addEventListener('students:updated', sendGroupsDataToEmailSystem);
+        window.addEventListener('groups:updated', () => queueEmailDataSend('groups'));
+        window.addEventListener('students:updated', () => queueEmailDataSend('students'));
 
         // ============================
         // BEGIN QUICK VIEW FUNCTIONS
@@ -22532,11 +22447,13 @@
           paymentRecords: false,
           quickView: false,
           emailSystem: false,
-          automationSystem: false
+          automationSystem: false,
+          gmailSystems: false,
+          preferenceSync: false,
         };
 
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('⚡ ARNOMA Mobile v2.4.0 - Performance Optimized');
+          console.log('⚡ ARNOMA Mobile v2.4.5 - Performance Optimized');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
@@ -22574,18 +22491,114 @@
 
         // PHASE 2: Defer everything else to idle time
         function deferredInitialization() {
-          // Use requestIdleCallback for non-critical work (fallback to setTimeout)
-          const scheduleWork = window.requestIdleCallback || ((cb) => setTimeout(cb, 100));
-          
-          // Initialize Notification Center (low priority)
-          scheduleWork(() => {
-            if (window.NotificationCenter && !initializationState.notifications) {
-              window.NotificationCenter.initialize();
-              initializationState.notifications = true;
-            }
-          });
+          const scheduleWork = window.requestIdleCallback || (cb => setTimeout(cb, 120));
 
-          // Calendar rendering is deferred until Calendar tab is opened
+          const runTask = fn => {
+            scheduleWork(() => {
+              try {
+                const result = fn();
+                if (result && typeof result.then === 'function') {
+                  result.catch(error => console.error('⚠️ Deferred task failed:', error));
+                }
+              } catch (error) {
+                console.error('⚠️ Deferred task failed:', error);
+              }
+            });
+          };
+
+          runTask(initializeNotificationCenterLazy);
+          runTask(initializePaymentRecordsView);
+          runTask(initializePreferenceSync);
+          runTask(initializeGmailSystems);
+          runTask(initializeAutomationManagers);
+          runTask(initializeEmailAutomation);
+        }
+
+        async function initializeNotificationCenterLazy() {
+          if (initializationState.notifications || !window.NotificationCenter) return;
+          await window.NotificationCenter.initialize();
+          initializationState.notifications = true;
+        }
+
+        function initializePaymentRecordsView() {
+          if (initializationState.paymentRecords) return;
+
+          populateMonthSelector();
+          renderPaymentEmailsView();
+          initializeDailyAutoBackup();
+
+          const filterDropdown = document.getElementById('paymentFilterDropdown');
+          if (filterDropdown && !filterDropdown.dataset.listenerAttached) {
+            filterDropdown.addEventListener('change', renderPaymentEmailsView);
+            filterDropdown.dataset.listenerAttached = 'true';
+          }
+
+          initializationState.paymentRecords = true;
+        }
+
+        function initializePreferenceSync() {
+          if (initializationState.preferenceSync) return;
+          initializeLAOffsetToggles();
+          subscribeToPreferenceChanges();
+          initializationState.preferenceSync = true;
+        }
+
+        function initializeGmailSystems() {
+          if (initializationState.gmailSystems) return;
+
+          const connection = getGmailConnection();
+          if (connection && connection.access_token) {
+            gmailAccessToken = connection.access_token;
+            gmailTokenExpiry = connection.expiry_date.toString();
+            updateGmailButtonState(true);
+            showNotification('🟢 Gmail connected', 'success');
+          } else if (gmailAccessToken) {
+            const expiry = parseInt(gmailTokenExpiry || '0');
+            if (!(expiry && Date.now() < expiry)) {
+              clearGmailConnection();
+              gmailAccessToken = null;
+              updateGmailButtonState(false);
+            }
+          }
+
+          const autoRefreshBtn = document.getElementById('autoRefreshToggle');
+          if (autoRefreshEnabled && autoRefreshBtn) {
+            autoRefreshBtn.classList.add('auto-refresh-active');
+            autoRefreshBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
+            startAutoRefresh();
+          }
+
+          initializationState.gmailSystems = true;
+        }
+
+        async function initializeAutomationManagers() {
+          if (initializationState.automationSystem) return;
+
+          if (window.PaymentReminderManager) {
+            await window.PaymentReminderManager.initialize();
+            debugLog('✅ Payment Reminder Manager initialized');
+          }
+
+          if (window.ClassReminderManager) {
+            await window.ClassReminderManager.initialize();
+            debugLog('✅ Class Reminder Manager initialized');
+          }
+
+          if (window.ClassStartingSoonManager) {
+            await window.ClassStartingSoonManager.initialize();
+            debugLog('✅ Class Starting Soon Manager initialized');
+          }
+
+          initializationState.automationSystem = true;
+        }
+
+        function initializeEmailAutomation() {
+          if (initializationState.emailSystem) return;
+
+          initializeEmailSystemIframe();
+          queueEmailDataSend('initial');
+
+          initializationState.emailSystem = true;
         }
 
         // Lazy load Student Manager when tab is opened
