@@ -20784,7 +20784,8 @@
             if (paymentStatus === 'paid') {
               paymentMessage = '<p style="color: #10b981; font-weight: 600;">✅ Your payment for this class is confirmed!</p>';
             } else if (creditBalance > 0) {
-              const remainingCredit = creditBalance - (student.pricePerClass || 100);
+              const studentPrice = student.payPerClass || student.pricePerClass || 50;
+              const remainingCredit = creditBalance - studentPrice;
               paymentMessage = `<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
                 <p style="margin: 4px 0;"><strong>💳 Credit Available:</strong> Your credit balance of $${creditBalance} will be applied to this class.</p>
                 <p style="margin: 4px 0;"><strong>Remaining Credit:</strong> $${remainingCredit} after this class</p>

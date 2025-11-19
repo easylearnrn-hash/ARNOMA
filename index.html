@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.2.2]</title>
+    <title>ARNOMA - Student Management [v2.2.3]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.2.2 - Payment Reminders (Paused Only) + Filter Persistence + Email Modal Standardization');
+      console.log('🔥 ARNOMA v2.2.3 - Mobile Email Modals + Credit Calculation Fix');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -4860,7 +4860,7 @@
 
       <div class="container">
         <div class="header">
-          <h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.2.2</span></h1>
+          <h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.2.3</span></h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
             <option value="matched">Matched Only</option>
@@ -20825,7 +20825,8 @@
             if (paymentStatus === 'paid') {
               paymentMessage = '<p style="color: #10b981; font-weight: 600;">✅ Your payment for this class is confirmed!</p>';
             } else if (creditBalance > 0) {
-              const remainingCredit = creditBalance - (student.pricePerClass || 100);
+              const studentPrice = student.payPerClass || student.pricePerClass || 50;
+              const remainingCredit = creditBalance - studentPrice;
               paymentMessage = `<div class="info-box" style="background-color: #fef3c7; border-left-color: #f59e0b;">
                 <p style="margin: 4px 0;"><strong>💳 Credit Available:</strong> Your credit balance of $${creditBalance} will be applied to this class.</p>
                 <p style="margin: 4px 0;"><strong>Remaining Credit:</strong> $${remainingCredit} after this class</p>
