@@ -542,6 +542,11 @@
       /* Calendar dot tooltip */
       .calendar-dot {
         position: relative;
+        z-index: 1;
+      }
+
+      .calendar-dot:hover {
+        z-index: 9998;
       }
 
       .calendar-dot::after {
@@ -560,7 +565,7 @@
         font-size: 11px;
         font-weight: 600;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-        z-index: 1000;
+        z-index: 9999;
         transition: all 0.2s ease;
         border: 1px solid rgba(255, 255, 255, 0.1);
       }
@@ -5737,7 +5742,7 @@
             <!-- Calendar Cells -->
             <div
               id="calendarGrid"
-              style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; min-height: 400px"
+              style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; min-height: 400px; overflow: visible;"
             >
               <!-- Generated dynamically -->
             </div>
@@ -19043,7 +19048,7 @@
                       border: 1px solid ${cellBorderColor};
                       border-radius: 8px; padding: 8px; display: flex; flex-direction: column;
                       cursor: ${hasClasses ? 'pointer' : 'default'};
-                      transition: all 0.2s;"
+                      transition: all 0.2s; position: relative; overflow: visible;"
                onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
                onmouseout="this.style.background='${cellBgColor}'; this.style.borderColor='${cellBorderColor}';">
             <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : 'white'}; margin-bottom: 8px;">
@@ -19051,7 +19056,7 @@
               ${isToday ? '<span style="font-size: 9px; color: #8ab4ff; margin-left: 4px;">TODAY</span>' : ''}
               ${hasSkippedClass ? '<span style="font-size: 9px; color: rgba(150,150,150,0.7); margin-left: 4px;">⚫ CANCELED</span>' : ''}
             </div>
-            <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start;">
+            <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; position: relative; overflow: visible;">
               ${hasClasses ? renderDayDots(dayData, dateStr) : ''}
             </div>
             ${
