@@ -98,6 +98,14 @@
       async function checkAuthentication() {
         try {
           console.log('🔐 Checking authentication...');
+          
+          // Safety check: ensure supabase is initialized
+          if (!supabase) {
+            console.error('❌ Supabase not initialized');
+            showLoginForm();
+            return false;
+          }
+          
           const {
             data: { session },
             error,
@@ -130,6 +138,13 @@
       async function handleLogin(email, password) {
         try {
           console.log('🔐 Attempting login...');
+          
+          // Safety check: ensure supabase is initialized
+          if (!supabase) {
+            console.error('❌ Supabase not initialized');
+            return { success: false, error: 'System not ready. Please refresh the page.' };
+          }
+          
           const { data, error } = await supabase.auth.signInWithPassword({
             email: email,
             password: password,
