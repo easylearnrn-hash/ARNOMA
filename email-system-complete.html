@@ -5685,11 +5685,11 @@ ARNOMA Team"
       }
 
       function getTestStudent() {
-        if (!window.receivedStudents || window.receivedStudents.length === 0) {
+        if (!window.studentsData || window.studentsData.length === 0) {
           alert('⚠️ No students loaded yet. Wait for data to sync.');
           return null;
         }
-        return window.receivedStudents[0];
+        return window.studentsData[0];
       }
 
       async function testProfileUpdate() {
