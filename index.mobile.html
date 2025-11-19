@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>ARNOMA - Mobile [v2.3.5]</title>
+    <title>ARNOMA - Mobile [v2.3.6]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -11,22 +11,23 @@
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
     <meta name="version" content="2.1.8-automation-manager" />
 
-    <!-- Mobile Device Detection and Redirect -->
+    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
     <script>
       (function () {
-        // Check if already on mobile version or explicitly requested desktop
-        if (window.location.pathname.includes('index.mobile.html')) return;
-        if (window.location.search.includes('desktop=1')) return;
-
-        // Check if user is on mobile device
-        const isMobile = /iPhone|iPad|iPod|Android|webOS|BlackBerry|Windows Phone/i.test(navigator.userAgent);
-        const isSmallScreen = window.innerWidth <= 768;
-
-        // Redirect to mobile version
-        if (isMobile || isSmallScreen) {
-          console.log('📱 Mobile detected - redirecting to index.mobile.html');
-          const baseUrl = window.location.origin + window.location.pathname.replace(/index\.html$/, '');
-          window.location.replace(baseUrl + 'index.mobile.html' + window.location.search + window.location.hash);
+        // 🚨 CRITICAL: This is index.mobile.html - NEVER redirect from here
+        // Redirecting from the mobile page causes infinite loops, especially after OAuth
+        console.log('📱 Mobile version loaded - redirect logic disabled');
+        
+        // Block any accidental redirects
+        if (window.location.pathname.includes('index.mobile.html')) {
+          // We're already on mobile - do nothing
+          return;
+        }
+        
+        // Additional safety: If OAuth code is present, never redirect
+        if (window.location.search.includes('code=')) {
+          console.log('� OAuth flow detected - preventing any redirects');
+          return;
         }
       })();
     </script>
@@ -68,7 +69,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA Mobile v2.3.5 - Student Manager Complete Mobile Fix');
+      console.log('🔥 ARNOMA Mobile v2.3.6 - CRITICAL: Infinite Redirect Loop Fix');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -4993,7 +4994,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.5 - Student Manager Complete Mobile Fix</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.6 - CRITICAL: Infinite Redirect Loop Fix</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
