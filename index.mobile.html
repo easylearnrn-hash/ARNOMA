@@ -32,8 +32,8 @@
       })();
     </script>
 
-    <!-- Supabase Configuration -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
+    <!-- Supabase Configuration - ASYNC LOADING FOR PERFORMANCE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1" async></script>
     <script>
       // PERFORMANCE CONFIG - Set to false to disable verbose logging
       const DEBUG_MODE = false;
@@ -171,6 +171,15 @@
       }
 
       function showLoginForm() {
+        // ⚡ Hide loading screen when showing login
+        const loadingScreen = document.getElementById('appLoadingScreen');
+        if (loadingScreen) {
+          loadingScreen.classList.add('fade-out');
+          setTimeout(() => {
+            loadingScreen.style.display = 'none';
+          }, 500);
+        }
+
         // Create login overlay if it doesn't exist
         let loginOverlay = document.getElementById('authLoginOverlay');
 
@@ -2444,9 +2453,61 @@
         }
       }
       /* ========== END FLOATING NAV STYLES ========== */
+
+      /* ========== LOADING SCREEN ========== */
+      #appLoadingScreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        transition: opacity 0.5s ease;
+      }
+      #appLoadingScreen.fade-out {
+        opacity: 0;
+        pointer-events: none;
+      }
+      .loading-spinner {
+        width: 60px;
+        height: 60px;
+        border: 4px solid rgba(165, 180, 252, 0.2);
+        border-top-color: #a5b4fc;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+      .loading-text {
+        margin-top: 24px;
+        font-size: 18px;
+        font-weight: 600;
+        color: #a5b4fc;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      .loading-subtext {
+        margin-top: 8px;
+        font-size: 14px;
+        color: rgba(165, 180, 252, 0.6);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      }
+      /* ========== END LOADING SCREEN ========== */
     </style>
   </head>
   <body>
+    <!-- ⚡ LOADING SCREEN - Shows immediately while app loads -->
+    <div id="appLoadingScreen">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">Loading ARNOMA</div>
+      <div class="loading-subtext">Please wait...</div>
+    </div>
+
     <!-- Email Preview Modal -->
     <div
       id="emailPreviewModal"
@@ -14913,7 +14974,25 @@
             };
           }
 
-          // Load data from Supabase into global state
+          // ⚡ PERFORMANCE: Load cached data immediately for instant display
+          const cachedData = {
+            students: JSON.parse(localStorage.getItem('arnoma_students_cache') || '[]'),
+            groups: JSON.parse(localStorage.getItem('arnoma_groups_cache') || '[]'),
+            payments: JSON.parse(localStorage.getItem('arnoma_payments_cache') || '[]')
+          };
+
+          // Show cached data immediately if available
+          if (cachedData.students.length > 0) {
+            debugLog('⚡ Using cached data for instant display');
+            window.globalData.students = cachedData.students;
+            window.globalData.groups = cachedData.groups;
+            window.globalData.payments = cachedData.payments;
+            window.studentsCache = cachedData.students;
+            window.groupsCache = cachedData.groups;
+            window.paymentsCache = cachedData.payments;
+          }
+
+          // Load fresh data from Supabase in background (will update UI when ready)
           try {
             const [groups, students, payments] = await Promise.all([
               loadGroups(),
@@ -14930,9 +15009,15 @@
             window.studentsCache = students;
             window.paymentsCache = payments;
 
+            // ⚡ CACHE: Store fresh data in localStorage for next load
+            localStorage.setItem('arnoma_students_cache', JSON.stringify(students));
+            localStorage.setItem('arnoma_groups_cache', JSON.stringify(groups));
+            localStorage.setItem('arnoma_payments_cache', JSON.stringify(payments));
+
             console.log(`✅ Loaded ${students.length} students into cache for email system`);
           } catch (error) {
             console.error('❌ Error loading data from Supabase:', error);
+            // Keep using cached data if fresh load fails
           }
 
           // Handle OAuth callback
@@ -14972,17 +15057,29 @@
           // Populate month selector
           populateMonthSelector();
 
-          // Initialize LA offset toggles (loads from cloud) - NON-BLOCKING
-          initializeLAOffsetToggles(); // Don't await - run in background
-          
+          // ⚡ PERFORMANCE: Defer non-critical operations to background
+          setTimeout(() => {
+            // Initialize LA offset toggles (loads from cloud) - NON-BLOCKING
+            initializeLAOffsetToggles();
+            
+            // Create hidden email system iframe for postMessage communication
+            initializeEmailSystemIframe();
+            
+            // Send initial data to email system after iframe loads
+            setTimeout(() => {
+              sendGroupsDataToEmailSystem();
+              debugLog('✅ Sent initial data to email system iframe');
+            }, 1000); // Reduced from 2000ms
+            
+            // Initialize daily auto-backup system
+            initializeDailyAutoBackup();
+          }, 100); // Defer by 100ms to prioritize main UI
+
           // Subscribe to real-time preference changes (syncs across devices)
           subscribeToPreferenceChanges();
 
           // Render payments
           renderPaymentEmailsView();
-
-          // Initialize daily auto-backup system
-          initializeDailyAutoBackup();
 
           // Add filter change listener
           const filterDropdown = document.getElementById('paymentFilterDropdown');
@@ -22386,6 +22483,15 @@
 
           // Then initialize the main app
           await initializeApp();
+
+          // ⚡ HIDE LOADING SCREEN - App is ready!
+          const loadingScreen = document.getElementById('appLoadingScreen');
+          if (loadingScreen) {
+            loadingScreen.classList.add('fade-out');
+            setTimeout(() => {
+              loadingScreen.style.display = 'none';
+            }, 500); // Wait for fade-out animation
+          }
 
           debugLog('[ARNOMA] ✅ Application fully initialized');
         });
