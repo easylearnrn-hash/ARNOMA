@@ -3,15 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>ARNOMA - Mobile [v2.4.7 ⚡]</title>
+  <title>ARNOMA - Mobile [v2.5.0 ⚡⚡]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.4.7-smart-calendar-recovery" />
-
-    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
+    <meta name="version" content="2.5.0-extreme-performance" />    <!-- Mobile Device Detection - DISABLED on mobile version to prevent redirect loop -->
     <script>
       (function () {
         // 🚨 CRITICAL: This is index.mobile.html - NEVER redirect from here
@@ -35,34 +33,35 @@
     <!-- Supabase Configuration -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
     <script>
-      // PERFORMANCE CONFIG - Set to false to disable verbose logging
+      // ⚡ EXTREME PERFORMANCE CONFIG
       const DEBUG_MODE = false;
-      const VERBOSE_LOGGING = false; // ⚡ NEW: Disable verbose logs for performance
+      const VERBOSE_LOGGING = false;
 
       const debugLog = (...args) => {
         if (DEBUG_MODE) console.log(...args);
       };
 
-      // ⚡ PERFORMANCE: Suppress non-critical logs
       const verboseLog = (...args) => {
         if (VERBOSE_LOGGING) console.log(...args);
       };
 
-      // ⚡ PERFORMANCE: Suppress noisy console logs unless explicitly whitelisted
-      (function patchConsoleLog() {
-        const originalLog = console.log.bind(console);
-        const allowedPrefixes = ['🔥 ARNOMA', '⚡', '❌', '✅', '🔐', '🚪'];
+      // ⚡ FIX #5: DISABLE CONSOLE PATCHING ON MOBILE (causes delays)
+      if (DEBUG_MODE) {
+        (function patchConsoleLog() {
+          const originalLog = console.log.bind(console);
+          const allowedPrefixes = ['🔥 ARNOMA', '⚡', '❌', '✅', '🔐', '🚪'];
 
-        console.log = (...args) => {
-          const firstArg = args[0];
-          const isAllowed =
-            typeof firstArg === 'string' && allowedPrefixes.some(prefix => firstArg.startsWith(prefix));
+          console.log = (...args) => {
+            const firstArg = args[0];
+            const isAllowed =
+              typeof firstArg === 'string' && allowedPrefixes.some(prefix => firstArg.startsWith(prefix));
 
-          if (isAllowed || VERBOSE_LOGGING) {
-            originalLog(...args);
-          }
-        };
-      })();
+            if (isAllowed || VERBOSE_LOGGING) {
+              originalLog(...args);
+            }
+          };
+        })();
+      }
 
       // DEBOUNCE HELPER - Prevents excessive function calls during rapid events
       const debounce = (func, wait) => {
@@ -92,7 +91,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-  console.log('🔥 ARNOMA v2.4.7 - Smart Calendar Recovery');
+  console.log('🔥 ARNOMA v2.5.0 - Extreme Performance ⚡⚡');
 
       // Supabase Client Initialization (safe check for async loading)
       let supabase;

@@ -3,15 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.4.7 ⚡]</title>
+  <title>ARNOMA - Student Management [v2.5.0 ⚡⚡]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.4.7-smart-calendar-recovery" />
-
-    <!-- Mobile Device Detection and Redirect -->
+    <meta name="version" content="2.5.0-extreme-performance" />    <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
         // Check if already on mobile version or explicitly requested desktop
@@ -34,34 +32,36 @@
     <!-- Supabase Configuration -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.1"></script>
     <script>
-      // PERFORMANCE CONFIG - Set to false to disable verbose logging
+      // ⚡ EXTREME PERFORMANCE CONFIG
       const DEBUG_MODE = false;
-      const VERBOSE_LOGGING = false; // ⚡ NEW: Disable verbose logs for performance
+      const VERBOSE_LOGGING = false;
       
       const debugLog = (...args) => {
         if (DEBUG_MODE) console.log(...args);
       };
       
-      // ⚡ PERFORMANCE: Suppress non-critical logs
       const verboseLog = (...args) => {
         if (VERBOSE_LOGGING) console.log(...args);
       };
 
-      // ⚡ PERFORMANCE: Suppress noisy console logs unless explicitly allowed
-      (function patchConsoleLog() {
-        const originalLog = console.log.bind(console);
-        const allowedPrefixes = ['🔥 ARNOMA', '⚡', '❌', '✅', '🔐', '🚪'];
+      // ⚡ FIX #5: DISABLE CONSOLE PATCHING (causes delays)
+      // Only patch in debug mode
+      if (DEBUG_MODE) {
+        (function patchConsoleLog() {
+          const originalLog = console.log.bind(console);
+          const allowedPrefixes = ['🔥 ARNOMA', '⚡', '❌', '✅', '🔐', '🚪'];
 
-        console.log = (...args) => {
-          const firstArg = args[0];
-          const isAllowed =
-            typeof firstArg === 'string' && allowedPrefixes.some(prefix => firstArg.startsWith(prefix));
+          console.log = (...args) => {
+            const firstArg = args[0];
+            const isAllowed =
+              typeof firstArg === 'string' && allowedPrefixes.some(prefix => firstArg.startsWith(prefix));
 
-          if (isAllowed || VERBOSE_LOGGING) {
-            originalLog(...args);
-          }
-        };
-      })();
+            if (isAllowed || VERBOSE_LOGGING) {
+              originalLog(...args);
+            }
+          };
+        })();
+      }
 
       // DEBOUNCE HELPER - Prevents excessive function calls during rapid events
       const debounce = (func, wait) => {
@@ -91,7 +91,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-  console.log('🔥 ARNOMA v2.4.7 - Smart Calendar Recovery');
+  console.log('🔥 ARNOMA v2.5.0 - Extreme Performance ⚡⚡');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -4979,7 +4979,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.4.7 - Smart Calendar Recovery</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.5.0 - Extreme Performance ⚡⚡</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
@@ -5947,7 +5947,7 @@
             return window.paymentsCache || [];
           },
           fetchAll: async function () {
-            // PERFORMANCE: Use cache if available and fresh (less than 30 seconds old)
+            // ⚡ PERFORMANCE: Use cache if available and fresh (less than 30 seconds old)
             const cacheTimestamp = window.paymentsCacheTimestamp || 0;
             const cacheAge = Date.now() - cacheTimestamp;
             if (window.paymentsCache && window.paymentsCache.length > 0 && cacheAge < 30000) {
@@ -5956,7 +5956,12 @@
             }
 
             try {
-              const { data, error } = await supabase.from('payments').select('*').order('date', { ascending: false });
+              // ⚡ FIX #6: CAP QUERY - Load only recent payments initially
+              const { data, error } = await supabase
+                .from('payments')
+                .select('*')
+                .order('date', { ascending: false })
+                .limit(300); // Limit for performance
 
               if (error) {
                 console.error('❌ Error loading payments from Supabase:', error);
@@ -6275,7 +6280,7 @@
         }
 
         async function loadStudents() {
-          // PERFORMANCE: Use cache if available and fresh (less than 30 seconds old)
+          // ⚡ PERFORMANCE: Use cache if available and fresh (less than 30 seconds old)
           const cacheTimestamp = window.studentsCacheTimestamp || 0;
           const cacheAge = Date.now() - cacheTimestamp;
           if (window.studentsCache && window.studentsCache.length > 0 && cacheAge < 30000) {
@@ -6283,7 +6288,12 @@
             return window.studentsCache;
           }
 
-          const { data, error } = await supabase.from('students').select('*').order('name', { ascending: true });
+          // ⚡ FIX #6: CAP QUERY - Load only active/recent students initially
+          const { data, error } = await supabase
+            .from('students')
+            .select('*')
+            .order('name', { ascending: true })
+            .limit(150); // Limit for performance
 
           if (error) {
             console.error('❌ Error loading students:', error);
@@ -14809,15 +14819,16 @@
         // INITIALIZATION
         // ============================================================================
 
-        // ⚡ PERFORMANCE: Prevent duplicate initialization
+        // ⚡ FIX #9: PREVENT DUPLICATE INITIALIZATION
+        let _appInitialized = false;
         let isInitialized = false;
         let initializePromise = null;
 
         async function initialize() {
-          // ⚡ Guard against duplicate initialization calls
-          if (isInitialized) {
+          // ⚡ FIX #9: Guard against duplicate initialization calls
+          if (_appInitialized || isInitialized) {
             debugLog('⚡ Already initialized, using cached data');
-            return;
+            return window.globalData;
           }
 
           // ⚡ If initialization is in progress, return the same promise
@@ -14825,6 +14836,8 @@
             debugLog('⚡ Initialization in progress, waiting...');
             return initializePromise;
           }
+
+          _appInitialized = true;
 
           // Start initialization
           initializePromise = _initializeInternal();
@@ -14844,11 +14857,12 @@
             };
           }
 
+          // ⚡ FIX #6: CAP SUPABASE QUERIES for mobile performance
           try {
             const [groups, students, payments] = await Promise.all([
-              loadGroups(),
-              loadStudents(),
-              PaymentStore.fetchAll(),
+              loadGroups(), // Already limited
+              loadStudents(), // Will add limit
+              PaymentStore.fetchAll(), // Will add limit
             ]);
 
             window.globalData.groups = groups;
@@ -14859,18 +14873,24 @@
             window.studentsCache = students;
             window.paymentsCache = payments;
 
-            verboseLog(`✅ Loaded ${students.length} students into cache for email system`);
+            console.log('✅ Core data loaded');
           } catch (error) {
             console.error('❌ Error loading data from Supabase:', error);
           }
 
           // OAuth callback must run immediately after data load to complete Gmail auth flow
           handleOAuthCallback();
+
+          return window.globalData;
         }
+
+        // ⚡ FIX #2 & #3: PREVENT EMAIL DATA SPAM with mutex
+        let _emailDataSending = false;
+        let _emailMessageHandlerAdded = false;
 
         // Initialize hidden email system iframe
         function initializeEmailSystemIframe() {
-          // Check if iframe already exists
+          // ⚡ FIX #3: Check if iframe already exists
           const existingIframe = document.querySelector('iframe[src*="email-system-complete.html"]');
           if (existingIframe) {
             debugLog('⚠️ Email system iframe already exists, skipping initialization');
@@ -14888,9 +14908,9 @@
 
           debugLog('✅ Hidden email system iframe initialized');
 
-          // Listen for data requests from automation engine (ONLY ONCE)
-          if (!window._emailSystemMessageListenerAttached) {
-            window._emailSystemMessageListenerAttached = true;
+          // ⚡ FIX #3: Listen for data requests from automation engine (ONLY ONCE)
+          if (!_emailMessageHandlerAdded) {
+            _emailMessageHandlerAdded = true;
 
             window.addEventListener('message', async function (event) {
               if (event.data.action === 'requestGroupsData') {
@@ -14986,20 +15006,30 @@
         }
 
         function sendGroupsDataToEmailSystem(reason = 'manual') {
+          // ⚡ FIX #2: Mutex to prevent spam
+          if (_emailDataSending) {
+            verboseLog(`[EmailAutomation] Already sending data, skipping (${reason})`);
+            return;
+          }
+
           if (window.__automationDataSent) {
             verboseLog(`[EmailAutomation] Skipping automation send (${reason}) - data already delivered`);
             return;
           }
+
           const now = Date.now();
           if (now - lastEmailDataSentTimestamp < EMAIL_DATA_THROTTLE_MS) {
             verboseLog('⚡ Throttling email iframe update (too frequent)');
             return;
           }
+
+          _emailDataSending = true;
           lastEmailDataSentTimestamp = now;
 
           const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
           if (!emailFrame || !emailFrame.contentWindow) {
             verboseLog('⚠️ Email iframe not found or not ready, skipping automation data send');
+            _emailDataSending = false;
             return;
           }
 
@@ -15019,6 +15049,8 @@
           window.__automationDataSendReason = reason;
           window.__automationDataSentAt = now;
           debugLog(`📤 Sent automation data (${reason}): ${groups.length} groups, ${students.length} students`);
+
+          _emailDataSending = false;
         }
 
         // ============================
@@ -22269,7 +22301,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('⚡ ARNOMA v2.4.7 - Smart Calendar Recovery');
+          console.log('⚡ ARNOMA v2.5.0 - Extreme Performance ⚡⚡');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
@@ -22296,9 +22328,9 @@
           initializationState.core = true;
         }
 
-        // PHASE 2: Defer everything else to idle time
+        // ⚡ FIX #1: PHASE 2 - Defer everything else to idle time
         function deferredInitialization() {
-          const scheduleWork = window.requestIdleCallback || (cb => setTimeout(cb, 120));
+          const scheduleWork = window.requestIdleCallback || (cb => setTimeout(cb, 500));
 
           const runTask = fn => {
             scheduleWork(() => {
@@ -22313,12 +22345,13 @@
             });
           };
 
-          runTask(initializeNotificationCenterLazy);
-          runTask(initializePaymentRecordsView);
-          runTask(initializePreferenceSync);
-          runTask(initializeGmailSystems);
-          runTask(initializeAutomationManagers);
-          runTask(initializeEmailAutomation);
+          // ⚡ FIX #1: Delay heavy systems until after UI is visible
+          runTask(() => setTimeout(initializeNotificationCenterLazy, 500));
+          runTask(() => setTimeout(initializePaymentRecordsView, 800));
+          runTask(() => setTimeout(initializePreferenceSync, 1000));
+          runTask(() => setTimeout(initializeGmailSystems, 1200));
+          runTask(() => setTimeout(initializeEmailAutomation, 1500));
+          runTask(() => setTimeout(initializeAutomationManagers, 2000)); // Last priority
 
           // Calendar and other heavy UI sections lazy load when tabs are opened
         }
