@@ -18592,15 +18592,24 @@
                 const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
                 const classDate = new Date(date);
 
-                // Set both dates to start of day for accurate comparison
+                // Normalize both dates to date-only strings for comparison
+                const classDateStr = formatDateYYYYMMDD(classDate);
+                
                 if (studentCreatedAt) {
-                  studentCreatedAt.setHours(0, 0, 0, 0);
-                }
-                classDate.setHours(0, 0, 0, 0);
-
-                // Skip if class date is before student was created
-                if (studentCreatedAt && classDate < studentCreatedAt) {
-                  return; // Don't show this class
+                  const creationDateStr = formatDateYYYYMMDD(studentCreatedAt);
+                  
+                  // Skip if class date is before student was created
+                  if (classDateStr < creationDateStr) {
+                    debugLog(`[Calendar] Hiding ${classDateStr} for ${student.name} - before creation (${creationDateStr})`);
+                    return; // Don't show this class
+                  }
+                } else {
+                  // FALLBACK: Students without created_at use CALENDAR_START_DATE
+                  const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
+                  if (classDateStr < calendarStartStr) {
+                    debugLog(`[Calendar] Hiding ${classDateStr} for ${student.name} - before calendar start`);
+                    return; // Don't show this class
+                  }
                 }
 
                 const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
@@ -18690,15 +18699,24 @@
               const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
               const classDate = new Date(date);
 
-              // Set both dates to start of day for accurate comparison
+              // Normalize both dates to date-only strings for comparison
+              const classDateStr = formatDateYYYYMMDD(classDate);
+              
               if (studentCreatedAt) {
-                studentCreatedAt.setHours(0, 0, 0, 0);
-              }
-              classDate.setHours(0, 0, 0, 0);
-
-              // Skip if class date is before student was created
-              if (studentCreatedAt && classDate < studentCreatedAt) {
-                return; // Don't show this class
+                const creationDateStr = formatDateYYYYMMDD(studentCreatedAt);
+                
+                // Skip if class date is before student was created
+                if (classDateStr < creationDateStr) {
+                  debugLog(`[DayData] Hiding ${classDateStr} for ${student.name} - before creation (${creationDateStr})`);
+                  return; // Don't show this class
+                }
+              } else {
+                // FALLBACK: Students without created_at use CALENDAR_START_DATE
+                const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
+                if (classDateStr < calendarStartStr) {
+                  debugLog(`[DayData] Hiding ${classDateStr} for ${student.name} - before calendar start`);
+                  return; // Don't show this class
+                }
               }
 
               const paymentStatus = checkPaymentStatus(student, date, pricePerClass, payments);
