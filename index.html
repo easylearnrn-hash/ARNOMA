@@ -20438,14 +20438,14 @@
 
                 console.log(`\n[Student ${studentsChecked}/${studentsArray.length}] ${student.name}`);
 
-                // Skip if student is not active
-                if (student.status && student.status !== 'active') {
-                  debugLog(`  ⏭️  Student status is '${student.status}' (not active) - skipping`);
+                // ONLY send payment reminders to students with 'paused' status (red dont)
+                if (student.status !== 'paused') {
+                  debugLog(`  ⏭️  Student status is '${student.status}' (not paused) - skipping payment reminder`);
                   studentsPaused++;
                   continue;
                 }
 
-                // Skip if paused
+                // Skip if manually paused via automation controls
                 if (isPaused(studentId)) {
                   debugLog('  ⏸️  Auto-reminders PAUSED for this student - skipping');
                   studentsPaused++;
