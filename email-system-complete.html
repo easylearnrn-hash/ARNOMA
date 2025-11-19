@@ -4694,48 +4694,91 @@ ARNOMA Team"
             const subject = `Your Credit Balance Was Updated`;
 
             const bodyContent = `
-              <p>Dear <strong>${student.name}</strong>,</p>
+              <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 0; padding: 0;">
+                <tr>
+                  <td align="center" style="padding: 0;">
+                    <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; margin: 0 auto;">
+                      <tr>
+                        <td style="padding: 0 20px;">
+                          
+                          <!-- Greeting -->
+                          <p style="font-size: 16px; color: #333; margin: 24px 0 20px 0; padding: 0;">Dear <strong>${student.name}</strong>,</p>
 
-              <div style="background: linear-gradient(135deg, rgba(138, 180, 255, 0.1), rgba(167, 139, 250, 0.1)); border-left: 4px solid #8ab4ff; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
-                  💰 Credit Balance Updated
-                </div>
-                <div style="font-size: 15px; color: #555; margin-bottom: 8px;">
-                  Your credit balance has been adjusted:
-                </div>
-                <div style="background: rgba(255, 255, 255, 0.7); padding: 16px; border-radius: 6px; margin: 12px 0;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <div>
-                      <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Previous Balance</div>
-                      <div style="font-size: 20px; color: ${oldBalance >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 700;">$${oldBalance.toFixed(2)}</div>
-                    </div>
-                    <div style="font-size: 24px; color: #8ab4ff; font-weight: 700;">→</div>
-                    <div>
-                      <div style="font-size: 12px; color: #666; margin-bottom: 4px;">New Balance</div>
-                      <div style="font-size: 20px; color: ${newBalance >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 700;">$${newBalance.toFixed(2)}</div>
-                    </div>
-                  </div>
-                  <div style="font-size: 16px; color: ${difference >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 600; text-align: center; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1);">
-                    ${difference >= 0 ? '+' : ''}$${difference.toFixed(2)}
-                  </div>
-                </div>
-              </div>
+                          <!-- Header Block -->
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: linear-gradient(135deg, #8B7ECC, #6B63B5); border-radius: 12px; margin: 20px 0;">
+                            <tr>
+                              <td style="padding: 24px; text-align: center;">
+                                <div style="font-size: 22px; color: #ffffff; font-weight: 700; margin: 0;">💰 Credit Balance Updated</div>
+                              </td>
+                            </tr>
+                          </table>
 
-              <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0;">
-                <div style="font-size: 14px; color: #1e40af; font-weight: 600; margin-bottom: 8px;">
-                  ℹ️ What This Means
-                </div>
-                <div style="font-size: 13px; color: #1e3a8a;">
-                  This adjustment has been made to your account balance. Your credit will ${newBalance > 0 ? 'automatically apply to upcoming classes' : 'be updated accordingly'}.
-                </div>
-              </div>
+                          <!-- Balance Details White Box -->
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; margin: 20px 0;">
+                            <tr>
+                              <td style="padding: 24px;">
+                                
+                                <p style="font-size: 15px; color: #555; margin: 0 0 16px 0; text-align: center;">Your credit balance has been adjusted:</p>
 
-              <div style="font-size: 12px; color: #9ca3af; margin-top: 24px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
-                <p style="margin: 0;">Balance updated on: ${formattedDate}</p>
-                <p style="margin: 8px 0 0 0;">Student: ${student.name}</p>
-              </div>
+                                <!-- Balance Row -->
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0">
+                                  <tr>
+                                    <td width="42%" align="center" style="padding: 12px; vertical-align: middle;">
+                                      <div style="font-size: 12px; color: #666; margin-bottom: 6px;">Previous Balance</div>
+                                      <div style="font-size: 24px; color: ${oldBalance >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 700;">$${oldBalance.toFixed(2)}</div>
+                                    </td>
+                                    <td width="16%" align="center" style="padding: 12px; vertical-align: middle;">
+                                      <div style="font-size: 28px; color: #8B7ECC; font-weight: 700;">→</div>
+                                    </td>
+                                    <td width="42%" align="center" style="padding: 12px; vertical-align: middle;">
+                                      <div style="font-size: 12px; color: #666; margin-bottom: 6px;">New Balance</div>
+                                      <div style="font-size: 24px; color: ${newBalance >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 700;">$${newBalance.toFixed(2)}</div>
+                                    </td>
+                                  </tr>
+                                </table>
 
-              <p style="margin-top: 24px;">If you have any questions about this adjustment, please contact us.</p>
+                                <!-- Amount Change -->
+                                <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e5e7eb;">
+                                  <tr>
+                                    <td align="center" style="padding: 8px 0;">
+                                      <div style="font-size: 20px; color: ${difference >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 700;">${difference >= 0 ? '+' : ''}$${difference.toFixed(2)}</div>
+                                    </td>
+                                  </tr>
+                                </table>
+
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- What This Means Box -->
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; margin: 20px 0;">
+                            <tr>
+                              <td style="padding: 20px;">
+                                <div style="font-size: 15px; color: #1e40af; font-weight: 700; margin: 0 0 10px 0;">ℹ️ What This Means</div>
+                                <div style="font-size: 14px; color: #1e3a8a; line-height: 1.5; margin: 0;">This adjustment has been made to your account balance. Your credit will ${newBalance > 0 ? 'automatically apply to upcoming classes' : 'be updated accordingly'}.</div>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Footer Details -->
+                          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin: 24px 0 0 0; padding: 16px 0 0 0; border-top: 1px solid #e5e7eb;">
+                            <tr>
+                              <td>
+                                <p style="font-size: 12px; color: #9ca3af; margin: 0 0 6px 0;">Balance updated on: ${formattedDate}</p>
+                                <p style="font-size: 12px; color: #9ca3af; margin: 0;">Student: ${student.name}</p>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Contact -->
+                          <p style="font-size: 14px; color: #555; margin: 24px 0 0 0;">If you have any questions about this adjustment, please contact us.</p>
+
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
             `;
 
             const body = generateEmailHTML('Credit Balance Updated', bodyContent);
