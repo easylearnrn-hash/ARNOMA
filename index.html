@@ -11024,6 +11024,15 @@
         let selectedStudent = null;
         let editingStudentId = null;
 
+        // FILTER PERSISTENCE: Store current filter state to maintain filters across student updates
+        let currentFilters = {
+          search: '',
+          group: '',
+          status: '',
+          payment: '',
+          sort: ''
+        };
+
         // Initialize students from Supabase when page loads
         (async function initializeStudents() {
           try {
@@ -11279,6 +11288,24 @@
 
           // Add click-outside-to-cancel-edit listener
           setupClickOutsideEditListener();
+
+          // FILTER PERSISTENCE: Restore and reapply saved filter state
+          const searchInput = document.getElementById('studentSearchInput');
+          const groupFilterEl = document.getElementById('filterGroup');
+          const statusFilterEl = document.getElementById('filterStatus');
+          const paymentFilterEl = document.getElementById('filterPayment');
+          const sortPriceEl = document.getElementById('sortPrice');
+
+          if (searchInput) searchInput.value = currentFilters.search;
+          if (groupFilterEl) groupFilterEl.value = currentFilters.group;
+          if (statusFilterEl) statusFilterEl.value = currentFilters.status;
+          if (paymentFilterEl) paymentFilterEl.value = currentFilters.payment;
+          if (sortPriceEl) sortPriceEl.value = currentFilters.sort;
+
+          // Reapply filters if any are active
+          if (currentFilters.search || currentFilters.group || currentFilters.status || currentFilters.payment || currentFilters.sort) {
+            filterStudents();
+          }
         }
 
         // ===== CLICK OUTSIDE TO CANCEL EDIT =====
@@ -11525,6 +11552,13 @@
           const paymentFilter = document.getElementById('filterPayment')?.value || '';
           const sortPrice = document.getElementById('sortPrice')?.value || '';
 
+          // FILTER PERSISTENCE: Save current filter state
+          currentFilters.search = searchTerm;
+          currentFilters.group = groupFilter;
+          currentFilters.status = statusFilter;
+          currentFilters.payment = paymentFilter;
+          currentFilters.sort = sortPrice;
+
           let cards = Array.from(document.querySelectorAll('.student-item'));
           let visibleCount = 0;
 
@@ -11614,6 +11648,13 @@
           if (filterStatus) filterStatus.value = '';
           if (filterPayment) filterPayment.value = '';
           if (sortPrice) sortPrice.value = '';
+
+          // FILTER PERSISTENCE: Clear saved filter state
+          currentFilters.search = '';
+          currentFilters.group = '';
+          currentFilters.status = '';
+          currentFilters.payment = '';
+          currentFilters.sort = '';
 
           filterStudents();
         }
