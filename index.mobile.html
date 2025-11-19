@@ -14887,8 +14887,8 @@
           // Populate month selector
           populateMonthSelector();
 
-          // Initialize LA offset toggles (loads from cloud)
-          await initializeLAOffsetToggles();
+          // Initialize LA offset toggles (loads from cloud) - NON-BLOCKING
+          initializeLAOffsetToggles(); // Don't await - run in background
           
           // Subscribe to real-time preference changes (syncs across devices)
           subscribeToPreferenceChanges();
