@@ -18600,14 +18600,18 @@
                   
                   // Skip if class date is before student was created
                   if (classDateStr < creationDateStr) {
-                    debugLog(`[Calendar] Hiding ${classDateStr} for ${student.name} - before creation (${creationDateStr})`);
+                    if (DEBUG_MODE) {
+                      console.log('[Calendar] Hiding', classDateStr, 'for', student.name, '- before creation', creationDateStr);
+                    }
                     return; // Don't show this class
                   }
                 } else {
                   // FALLBACK: Students without created_at use CALENDAR_START_DATE
                   const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
                   if (classDateStr < calendarStartStr) {
-                    debugLog(`[Calendar] Hiding ${classDateStr} for ${student.name} - before calendar start`);
+                    if (DEBUG_MODE) {
+                      console.log('[Calendar] Hiding', classDateStr, 'for', student.name, '- before calendar start');
+                    }
                     return; // Don't show this class
                   }
                 }
@@ -18707,14 +18711,18 @@
                 
                 // Skip if class date is before student was created
                 if (classDateStr < creationDateStr) {
-                  debugLog(`[DayData] Hiding ${classDateStr} for ${student.name} - before creation (${creationDateStr})`);
+                  if (DEBUG_MODE) {
+                    console.log('[DayData] Hiding', classDateStr, 'for', student.name, '- before creation', creationDateStr);
+                  }
                   return; // Don't show this class
                 }
               } else {
                 // FALLBACK: Students without created_at use CALENDAR_START_DATE
                 const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
                 if (classDateStr < calendarStartStr) {
-                  debugLog(`[DayData] Hiding ${classDateStr} for ${student.name} - before calendar start`);
+                  if (DEBUG_MODE) {
+                    console.log('[DayData] Hiding', classDateStr, 'for', student.name, '- before calendar start');
+                  }
                   return; // Don't show this class
                 }
               }
