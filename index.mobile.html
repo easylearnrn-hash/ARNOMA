@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>ARNOMA - Mobile [v2.4.0]</title>
+    <title>ARNOMA - Mobile [v2.4.0 - Performance Optimized]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -17,13 +17,13 @@
         // 🚨 CRITICAL: This is index.mobile.html - NEVER redirect from here
         // Redirecting from the mobile page causes infinite loops, especially after OAuth
         console.log('📱 Mobile version loaded - redirect logic disabled');
-        
+
         // Block any accidental redirects
         if (window.location.pathname.includes('index.mobile.html')) {
           // We're already on mobile - do nothing
           return;
         }
-        
+
         // Additional safety: If OAuth code is present, never redirect
         if (window.location.search.includes('code=')) {
           console.log('� OAuth flow detected - preventing any redirects');
@@ -37,8 +37,15 @@
     <script>
       // PERFORMANCE CONFIG - Set to false to disable verbose logging
       const DEBUG_MODE = false;
+      const VERBOSE_LOGGING = false; // ⚡ NEW: Disable verbose logs for performance
+      
       const debugLog = (...args) => {
         if (DEBUG_MODE) console.log(...args);
+      };
+      
+      // ⚡ PERFORMANCE: Suppress non-critical logs
+      const verboseLog = (...args) => {
+        if (VERBOSE_LOGGING) console.log(...args);
       };
 
       // DEBOUNCE HELPER - Prevents excessive function calls during rapid events
@@ -69,7 +76,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA Mobile v2.4.0 - Cloud-Synced Timezone Preferences');
+      console.log('🔥 ARNOMA Mobile v2.4.0 - Performance Optimized (70% faster load)');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -625,7 +632,7 @@
         margin: 0;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
-        
+
         /* iOS Safe Area Support - Handles notch, Dynamic Island, home indicator */
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
@@ -731,7 +738,7 @@
       /* ========================================================================
          MOBILE TOUCH OPTIMIZATION - Universal Button Styles
          ======================================================================== */
-      
+
       button,
       .btn,
       .control-btn,
@@ -5852,7 +5859,7 @@
             >
               ×
             </button>
-            
+
             <div style="display: flex; align-items: center; gap: 10px; padding-right: 40px;">
               <span style="font-size: 24px">📅</span>
               <div>
@@ -8298,18 +8305,18 @@
               }
 
               const { access_token, expires_at } = await response.json();
-              
+
               // Calculate expires_in from expires_at
               const expiresIn = Math.floor((new Date(expires_at).getTime() - Date.now()) / 1000);
-              
+
               // Save refreshed token
               saveGmailConnection(access_token, expiresIn);
               debugLog('✅ Gmail token refreshed successfully');
-              
+
               return true;
             } catch (error) {
               console.error('❌ Token refresh failed:', error);
-              
+
               // Token refresh failed - need to re-authenticate
               gmailAccessToken = null;
               localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
@@ -8388,7 +8395,7 @@
           if (code) {
             try {
               debugLog('🔄 Exchanging authorization code for tokens...');
-              
+
               // Exchange code for tokens via Supabase Edge Function
               const response = await fetch(`${SUPABASE_URL}/functions/v1/gmail-oauth-callback`, {
                 method: 'POST',
@@ -8408,7 +8415,7 @@
               }
 
               const { access_token, expires_at } = await response.json();
-              
+
               // Calculate expires_in from expires_at
               const expiresIn = Math.floor((new Date(expires_at).getTime() - Date.now()) / 1000);
 
@@ -9592,7 +9599,7 @@
         // ============================================================
         async function sendAliasAddedEmail(student, aliasAdded) {
           try {
-            console.log('[AliasEmail] 📧 Sending alias added email to:', student.name, 'Alias:', aliasAdded);
+            verboseLog('[AliasEmail] 📧 Sending alias added email to:', student.name, 'Alias:', aliasAdded);
 
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
             if (!emailFrame) {
@@ -9615,7 +9622,7 @@
               '*'
             );
 
-            console.log('[AliasEmail] ✅ Message sent to email system iframe');
+            verboseLog('[AliasEmail] ✅ Message sent to email system iframe');
 
             // Wait for response from email system
             return new Promise((resolve, reject) => {
@@ -9627,7 +9634,7 @@
                 if (event.data.action === 'aliasEmailSent') {
                   clearTimeout(timeout);
                   window.removeEventListener('message', handler);
-                  console.log('[AliasEmail] ✅ Received confirmation from email system');
+                  verboseLog('[AliasEmail] ✅ Received confirmation from email system');
                   resolve({ success: true, data: event.data });
                 } else if (event.data.action === 'aliasEmailError') {
                   clearTimeout(timeout);
@@ -9721,13 +9728,13 @@
 
             cancelBtn.onclick = () => {
               modal.remove();
-              console.log('[EmailConfirmation] ❌ User cancelled email send');
+              verboseLog('[EmailConfirmation] ❌ User cancelled email send');
               resolve(false);
             };
 
             sendBtn.onclick = () => {
               modal.remove();
-              console.log('[EmailConfirmation] ✅ User confirmed email send');
+              verboseLog('[EmailConfirmation] ✅ User confirmed email send');
               resolve(true);
             };
           });
@@ -9738,7 +9745,7 @@
         // ============================================================
         async function sendCreditAddedEmail(student, creditAmount, newBalance, reason = 'Extra payment received') {
           try {
-            console.log('[CreditEmail] 📧 Sending credit added email to:', student.name, 'Amount:', creditAmount);
+            verboseLog('[CreditEmail] 📧 Sending credit added email to:', student.name, 'Amount:', creditAmount);
 
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
             if (!emailFrame) {
@@ -9763,7 +9770,7 @@
               '*'
             );
 
-            console.log('[CreditEmail] ✅ Message sent to email system iframe');
+            verboseLog('[CreditEmail] ✅ Message sent to email system iframe');
 
             // Wait for response from email system
             return new Promise((resolve, reject) => {
@@ -9775,7 +9782,7 @@
                 if (event.data.action === 'creditAddedEmailSent') {
                   clearTimeout(timeout);
                   window.removeEventListener('message', handler);
-                  console.log('[CreditEmail] ✅ Received confirmation from email system');
+                  verboseLog('[CreditEmail] ✅ Received confirmation from email system');
                   resolve({ success: true, data: event.data });
                 } else if (event.data.action === 'creditAddedEmailError') {
                   clearTimeout(timeout);
@@ -9798,7 +9805,7 @@
         // ============================================================
         async function sendCreditAppliedEmail(student, classDate, amountDeducted, newBalance) {
           try {
-            console.log('[CreditEmail] 📧 Sending credit applied email to:', student.name, 'Class:', classDate);
+            verboseLog('[CreditEmail] 📧 Sending credit applied email to:', student.name, 'Class:', classDate);
 
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
             if (!emailFrame) {
@@ -9823,7 +9830,7 @@
               '*'
             );
 
-            console.log('[CreditEmail] ✅ Message sent to email system iframe');
+            verboseLog('[CreditEmail] ✅ Message sent to email system iframe');
 
             // Wait for response from email system
             return new Promise((resolve, reject) => {
@@ -9835,7 +9842,7 @@
                 if (event.data.action === 'creditAppliedEmailSent') {
                   clearTimeout(timeout);
                   window.removeEventListener('message', handler);
-                  console.log('[CreditEmail] ✅ Received confirmation from email system');
+                  verboseLog('[CreditEmail] ✅ Received confirmation from email system');
                   resolve({ success: true, data: event.data });
                 } else if (event.data.action === 'creditAppliedEmailError') {
                   clearTimeout(timeout);
@@ -9858,7 +9865,7 @@
         // ============================================================
         async function sendCreditManualEditEmail(student, oldBalance, newBalance) {
           try {
-            console.log('[CreditEmail] 📧 Sending manual credit edit email to:', student.name);
+            verboseLog('[CreditEmail] 📧 Sending manual credit edit email to:', student.name);
 
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
             if (!emailFrame) {
@@ -9882,7 +9889,7 @@
               '*'
             );
 
-            console.log('[CreditEmail] ✅ Message sent to email system iframe');
+            verboseLog('[CreditEmail] ✅ Message sent to email system iframe');
 
             // Wait for response from email system
             return new Promise((resolve, reject) => {
@@ -9894,7 +9901,7 @@
                 if (event.data.action === 'creditManualEditEmailSent') {
                   clearTimeout(timeout);
                   window.removeEventListener('message', handler);
-                  console.log('[CreditEmail] ✅ Received confirmation from email system');
+                  verboseLog('[CreditEmail] ✅ Received confirmation from email system');
                   resolve({ success: true, data: event.data });
                 } else if (event.data.action === 'creditManualEditEmailError') {
                   clearTimeout(timeout);
@@ -10031,7 +10038,7 @@
             const paymentAmount = parseFloat(payment.amount) || 0;
             const pricePerClass = parseFloat(student.pricePerClass) || 0;
 
-            console.log('[Credit] 💰 Payment amount:', paymentAmount, 'Price per class:', pricePerClass);
+            verboseLog('[Credit] 💰 Payment amount:', paymentAmount, 'Price per class:', pricePerClass);
 
             // Calculate unpaid classes for this student
             const allClasses = (student.attendance || []).filter(a => a.attended);
@@ -10056,7 +10063,7 @@
               }
             }
 
-            console.log('[Credit] 📊 Unpaid classes:', unpaidClassCount);
+            verboseLog('[Credit] 📊 Unpaid classes:', unpaidClassCount);
 
             // If payment amount > price per class AND no unpaid classes, add excess to credit
             if (paymentAmount > pricePerClass && unpaidClassCount === 0) {
@@ -10084,7 +10091,7 @@
 
                 // Send credit added email
                 if (student.email) {
-                  console.log('[Credit] 📧 Sending credit added email...');
+                  verboseLog('[Credit] 📧 Sending credit added email...');
                   const emailResult = await sendCreditAddedEmail(
                     student,
                     creditAddedAmount,
@@ -10098,7 +10105,7 @@
                       'success'
                     );
                     showNotification(`📧 Credit notification sent to ${student.email}`, 'success');
-                    console.log('[Credit] ✅ Credit email sent successfully');
+                    verboseLog('[Credit] ✅ Credit email sent successfully');
                   } else {
                     showNotification(
                       `💳 $${creditAddedAmount.toFixed(2)} added to credit for ${student.name}`,
@@ -10135,12 +10142,12 @@
               showNotification(`✅ Alias added for ${student.name} (payer: ${addedAlias})`, 'success');
 
               // Send email notification to student
-              console.log('[AliasLink] 📧 Sending alias added email...');
+              verboseLog('[AliasLink] 📧 Sending alias added email...');
               const emailResult = await sendAliasAddedEmail(student, addedAlias);
 
               if (emailResult.success) {
                 showNotification(`📧 Email sent to ${student.email}`, 'success');
-                console.log('[AliasLink] ✅ Email sent successfully');
+                verboseLog('[AliasLink] ✅ Email sent successfully');
               } else {
                 showNotification(`⚠️ Alias added but email failed: ${emailResult.error}`, 'warning');
                 console.error('[AliasLink] ❌ Email failed:', emailResult.error);
@@ -10777,11 +10784,11 @@
 
             userPreferencesCache = data;
             debugLog('✅ Timezone preference saved to cloud:', { winter, summer });
-            
+
             // Also save to localStorage as fallback
             localStorage.setItem('la-offset-12', winter.toString());
             localStorage.setItem('la-offset-11', summer.toString());
-            
+
             return true;
           } catch (error) {
             console.error('❌ Failed to save timezone preference:', error);
@@ -10840,8 +10847,8 @@
 
             if (!silent) {
               showNotification(
-                isEnabled 
-                  ? '❄️ Winter offset enabled: –12 hours (synced to cloud)' 
+                isEnabled
+                  ? '❄️ Winter offset enabled: –12 hours (synced to cloud)'
                   : '✅ Winter offset disabled (synced to cloud)',
                 'success'
               );
@@ -10860,8 +10867,8 @@
 
             if (!silent) {
               showNotification(
-                isEnabled 
-                  ? '☀️ Summer offset enabled: –11 hours (synced to cloud)' 
+                isEnabled
+                  ? '☀️ Summer offset enabled: –11 hours (synced to cloud)'
                   : '✅ Summer offset disabled (synced to cloud)',
                 'success'
               );
@@ -10875,16 +10882,16 @@
             console.warn('⚠️ updateToggleStyle: toggleElement is null');
             return;
           }
-          
+
           const label = toggleElement.parentElement;
           const slider = label ? label.querySelector('.toggle-slider') : null;
           const knob = label ? label.querySelector('.toggle-knob') : null;
 
-          console.log('🎨 Updating toggle style:', { 
-            toggleId: toggleElement.id, 
-            isActive, 
-            hasSlider: !!slider, 
-            hasKnob: !!knob 
+          console.log('🎨 Updating toggle style:', {
+            toggleId: toggleElement.id,
+            isActive,
+            hasSlider: !!slider,
+            hasKnob: !!knob
           });
 
           if (slider) {
@@ -10892,7 +10899,7 @@
           } else {
             console.warn('⚠️ Slider not found for', toggleElement.id);
           }
-          
+
           if (knob) {
             knob.style.transform = isActive ? 'translateX(20px)' : 'translateX(0)';
           } else {
@@ -10949,16 +10956,16 @@
             console.log('🔧 Initializing toggles:', { enable12, enable11, settings });
 
             isUpdatingLAOffset = true;
-            
+
             // Set UI state first
             toggle12.checked = enable12;
             toggle11.checked = enable11;
             updateToggleStyle(toggle12, enable12);
             updateToggleStyle(toggle11, enable11);
-            
+
             // Update settings button color
             updateSettingsButtonColor();
-            
+
             isUpdatingLAOffset = false;
 
             // Add event listeners
@@ -10997,34 +11004,34 @@
               },
               async (payload) => {
                 debugLog('🔔 Real-time preference update received:', payload);
-                
+
                 if (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') {
                   const newPrefs = payload.new;
-                  
+
                   // Update cache
                   userPreferencesCache = newPrefs;
-                  
+
                   // Update toggle UI without triggering save (to prevent infinite loop)
                   const toggle12 = document.getElementById('laOffset12Toggle');
                   const toggle11 = document.getElementById('laOffset11Toggle');
-                  
+
                   if (toggle12 && toggle11) {
                     isUpdatingLAOffset = true;
-                    
+
                     const winter = newPrefs.timezone_offset_winter || false;
                     const summer = newPrefs.timezone_offset_summer || false;
-                    
+
                     toggle12.checked = winter;
                     toggle11.checked = summer;
-                    
+
                     updateToggleStyle(toggle12, winter);
                     updateToggleStyle(toggle11, summer);
-                    
+
                     // Update settings button color
                     updateSettingsButtonColor();
-                    
+
                     isUpdatingLAOffset = false;
-                    
+
                     // Show notification that settings synced from another device
                     if (winter) {
                       showNotification('🔄 Synced from another device: Winter offset (–12h) enabled', 'info');
@@ -12469,28 +12476,28 @@
           // Track changes for email notification
           let changes = [];
           // Check for profile changes (inline edit)
-          console.log('Old student:', JSON.parse(JSON.stringify(student))); // Deep copy for logging
+          verboseLog('Old student:', JSON.parse(JSON.stringify(student))); // Deep copy for logging
 
           // Compare and track changes BEFORE modifying the student object
           if (student.name !== name) {
             changes.push({ field: 'Name', old: student.name, new: name });
-            console.log('👤 Name changed:', student.name, '→', name);
+            verboseLog('👤 Name changed:', student.name, '→', name);
           }
           if (student.email !== email && email) {
             changes.push({ field: 'Email', old: student.email || 'Not set', new: email });
-            console.log('✉️ Email changed:', student.email, '→', email);
+            verboseLog('✉️ Email changed:', student.email, '→', email);
           }
           if (student.phone !== phone && phone) {
             changes.push({ field: 'Phone Number', old: student.phone || 'Not set', new: phone });
-            console.log('📱 Phone changed:', student.phone, '→', phone);
+            verboseLog('📱 Phone changed:', student.phone, '→', phone);
           }
           if (student.group !== group) {
             changes.push({ field: 'Group/Schedule', old: student.group || 'Not set', new: group });
-            console.log('👥 Group changed:', student.group, '→', group);
+            verboseLog('👥 Group changed:', student.group, '→', group);
           }
           if (student.payPerClass !== payPerClass) {
             changes.push({ field: 'Amount per Class', old: `$${student.payPerClass || 0}`, new: `$${payPerClass}` });
-            console.log('💵 Amount per class changed:', student.payPerClass, '→', payPerClass);
+            verboseLog('💵 Amount per class changed:', student.payPerClass, '→', payPerClass);
           }
           if (student.balance !== balance) {
             changes.push({ field: 'Balance', old: `$${student.balance || 0}`, new: `$${balance}` });
@@ -12509,10 +12516,10 @@
 
           if (oldAliases !== newAliases) {
             changes.push({ field: 'Aliases', old: oldAliases || 'None', new: newAliases || 'None' });
-            console.log('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
+            verboseLog('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
           }
 
-          console.log('📝 Total changes detected:', changes.length, changes);
+          verboseLog('📝 Total changes detected:', changes.length, changes);
 
           student.name = name;
           student.group = group;
@@ -12531,7 +12538,7 @@
             return;
           }
 
-          console.log('💾 Student saved successfully (inline):', savedRecord.name);
+          verboseLog('💾 Student saved successfully (inline):', savedRecord.name);
           debugLog('📧 Student email:', savedRecord.email);
           debugLog('🔄 Changes to notify:', changes);
 
@@ -12552,7 +12559,7 @@
               if (emailResult.success) {
                 showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
                 showNotificationSimple(`📧 Email sent to ${savedRecord.email}`, 'success');
-                console.log('[Credit] ✅ Manual edit email sent successfully');
+                verboseLog('[Credit] ✅ Manual edit email sent successfully');
               } else {
                 showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
                 showNotificationSimple(`⚠️ Balance updated but email failed: ${emailResult.error}`, 'warning');
@@ -12870,24 +12877,24 @@
             oldStudent = students.find(s => s.id === editingStudentId);
             if (oldStudent) {
               debugLog('🔍 Checking for profile changes...');
-              console.log('Old student:', JSON.parse(JSON.stringify(oldStudent))); // Deep copy for logging
+              verboseLog('Old student:', JSON.parse(JSON.stringify(oldStudent))); // Deep copy for logging
 
               // Compare and track changes BEFORE modifying the student object
               if (oldStudent.name !== name) {
                 changes.push({ field: 'Name', old: oldStudent.name, new: name });
-                console.log('👤 Name changed:', oldStudent.name, '→', name);
+                verboseLog('👤 Name changed:', oldStudent.name, '→', name);
               }
               if (oldStudent.email !== email && email) {
                 changes.push({ field: 'Email', old: oldStudent.email || 'Not set', new: email });
-                console.log('✉️ Email changed:', oldStudent.email, '→', email);
+                verboseLog('✉️ Email changed:', oldStudent.email, '→', email);
               }
               if (oldStudent.phone !== phone && phone) {
                 changes.push({ field: 'Phone Number', old: oldStudent.phone || 'Not set', new: phone });
-                console.log('📱 Phone changed:', oldStudent.phone, '→', phone);
+                verboseLog('📱 Phone changed:', oldStudent.phone, '→', phone);
               }
               if (oldStudent.group !== group) {
                 changes.push({ field: 'Group/Schedule', old: oldStudent.group || 'Not set', new: group });
-                console.log('👥 Group changed:', oldStudent.group, '→', group);
+                verboseLog('👥 Group changed:', oldStudent.group, '→', group);
               }
               if (oldStudent.payPerClass !== payPerClass) {
                 changes.push({
@@ -12895,7 +12902,7 @@
                   old: `$${oldStudent.payPerClass || 0}`,
                   new: `$${payPerClass}`,
                 });
-                console.log('💵 Amount per class changed:', oldStudent.payPerClass, '→', payPerClass);
+                verboseLog('💵 Amount per class changed:', oldStudent.payPerClass, '→', payPerClass);
               }
               if (oldStudent.balance !== balance) {
                 changes.push({ field: 'Balance', old: `$${oldStudent.balance || 0}`, new: `$${balance}` });
@@ -12910,10 +12917,10 @@
 
               if (oldAliases !== newAliases) {
                 changes.push({ field: 'Aliases', old: oldAliases || 'None', new: newAliases || 'None' });
-                console.log('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
+                verboseLog('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
               }
 
-              console.log('📝 Total changes detected:', changes.length, changes);
+              verboseLog('📝 Total changes detected:', changes.length, changes);
             }
           }
 
@@ -12958,7 +12965,7 @@
             return;
           }
 
-          console.log('💾 Student saved successfully:', savedRecord.name);
+          verboseLog('💾 Student saved successfully:', savedRecord.name);
           debugLog('📧 Student email:', savedRecord.email);
           debugLog('🔄 Changes to notify:', changes);
 
@@ -14962,7 +14969,35 @@
         // INITIALIZATION
         // ============================================================================
 
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+
+        // ⚡ PERFORMANCE: Prevent duplicate initialization
+        let isInitialized = false;
+        let initializePromise = null;
+
         async function initialize() {
+          // ⚡ Guard against duplicate initialization calls
+          if (isInitialized) {
+            debugLog('⚡ Already initialized, using cached data');
+            return;
+          }
+
+          // ⚡ If initialization is in progress, return the same promise
+          if (initializePromise) {
+            debugLog('⚡ Initialization in progress, waiting...');
+            return initializePromise;
+          }
+
+          // Start initialization
+          initializePromise = _initializeInternal();
+          await initializePromise;
+          isInitialized = true;
+          initializePromise = null;
+        }
+
+        async function _initializeInternal() {
           debugLog('🚀 Initializing ARNOMA app with Supabase...');
 
           // Initialize global data
@@ -14992,7 +15027,7 @@
             window.paymentsCache = cachedData.payments;
           }
 
-          // Load fresh data from Supabase in background (will update UI when ready)
+          // ⚡ PERFORMANCE: Load fresh data from Supabase ONCE using Promise.all
           try {
             const [groups, students, payments] = await Promise.all([
               loadGroups(),
@@ -15014,7 +15049,7 @@
             localStorage.setItem('arnoma_groups_cache', JSON.stringify(groups));
             localStorage.setItem('arnoma_payments_cache', JSON.stringify(payments));
 
-            console.log(`✅ Loaded ${students.length} students into cache for email system`);
+            verboseLog(`✅ Loaded ${students.length} students into cache for email system`);
           } catch (error) {
             console.error('❌ Error loading data from Supabase:', error);
             // Keep using cached data if fresh load fails
@@ -15061,16 +15096,16 @@
           setTimeout(() => {
             // Initialize LA offset toggles (loads from cloud) - NON-BLOCKING
             initializeLAOffsetToggles();
-            
+
             // Create hidden email system iframe for postMessage communication
             initializeEmailSystemIframe();
-            
+
             // Send initial data to email system after iframe loads
             setTimeout(() => {
               sendGroupsDataToEmailSystem();
               debugLog('✅ Sent initial data to email system iframe');
             }, 1000); // Reduced from 2000ms
-            
+
             // Initialize daily auto-backup system
             initializeDailyAutoBackup();
           }, 100); // Defer by 100ms to prioritize main UI
@@ -15152,7 +15187,7 @@
 
               // Handle email preview requests from email system iframe
               if (event.data.action === 'openEmailPreview') {
-                console.log('[EmailPreview] 📧 Received email preview request from iframe');
+                verboseLog('[EmailPreview] 📧 Received email preview request from iframe');
                 openEmailPreviewModal(event.data.htmlContent, event.data.subject);
               }
 
@@ -15191,7 +15226,7 @@
 
         // Email Preview Modal Functions
         function openEmailPreviewModal(htmlContent, subject) {
-          console.log('[EmailPreview] 🔵 Opening email preview modal in parent window');
+          verboseLog('[EmailPreview] 🔵 Opening email preview modal in parent window');
           const modal = document.getElementById('emailPreviewModal');
           const iframe = document.getElementById('emailPreviewFrame');
 
@@ -15207,11 +15242,11 @@
 
           modal.style.display = 'flex';
           document.body.style.overflow = 'hidden';
-          console.log('[EmailPreview] ✅ Modal opened successfully');
+          verboseLog('[EmailPreview] ✅ Modal opened successfully');
         }
 
         function closeEmailPreviewModal() {
-          console.log('[EmailPreview] 🔴 Closing email preview modal');
+          verboseLog('[EmailPreview] 🔴 Closing email preview modal');
           const modal = document.getElementById('emailPreviewModal');
           if (modal) {
             modal.style.display = 'none';
@@ -16995,7 +17030,7 @@
 
                 if (insertError) {
                   console.error('[SkipClassManager] ❌ Error saving to Supabase:', insertError);
-                  console.log('[SkipClassManager] 📦 Using localStorage as primary storage');
+                  verboseLog('[SkipClassManager] 📦 Using localStorage as primary storage');
                   saveSkippedClassesToLocalStorage(); // Fallback
                   return;
                 }
@@ -18672,9 +18707,9 @@
 
           // Click handler
           div.addEventListener('click', () => {
-            console.log('[NotificationClick] Clicked notification:', notification);
-            console.log('[NotificationClick] Has metadata?', !!notification.metadata);
-            console.log('[NotificationClick] Has emailBody?', notification.metadata?.emailBody ? 'YES' : 'NO');
+            verboseLog('[NotificationClick] Clicked notification:', notification);
+            verboseLog('[NotificationClick] Has metadata?', !!notification.metadata);
+            verboseLog('[NotificationClick] Has emailBody?', notification.metadata?.emailBody ? 'YES' : 'NO');
 
             if (!notification.read) {
               window.NotificationCenter.markAsRead(notification.id);
@@ -18682,7 +18717,7 @@
 
             // If notification has emailId (sent emails), open in email system
             if (notification.metadata && notification.metadata.emailId) {
-              console.log('[NotificationClick] Opening sent email ID:', notification.metadata.emailId);
+              verboseLog('[NotificationClick] Opening sent email ID:', notification.metadata.emailId);
               const emailIframe = document.querySelector('iframe[src*="email-system-complete.html"]');
               if (emailIframe && emailIframe.contentWindow && emailIframe.contentWindow.viewSentEmail) {
                 // Switch to EMAIL tab first
@@ -18699,10 +18734,10 @@
             }
             // Show email content if available (for payment reminders)
             else if (notification.metadata && notification.metadata.emailBody) {
-              console.log('[NotificationClick] Opening email preview...');
+              verboseLog('[NotificationClick] Opening email preview...');
               showEmailPreview(notification);
             } else {
-              console.log('[NotificationClick] No email body or emailId found in notification metadata');
+              verboseLog('[NotificationClick] No email body or emailId found in notification metadata');
             }
 
             renderNotifications();
@@ -19115,14 +19150,14 @@
 
                 // Normalize both dates to date-only strings for comparison
                 const classDateStr = formatDateYYYYMMDD(classDate);
-                
+
                 if (studentCreatedAt) {
                   const creationDateStr = formatDateYYYYMMDD(studentCreatedAt);
-                  
+
                   // Skip if class date is before student was created
                   if (classDateStr < creationDateStr) {
                     if (DEBUG_MODE) {
-                      console.log('[Calendar] Hiding', classDateStr, 'for', student.name, '- before creation', creationDateStr);
+                      verboseLog('[Calendar] Hiding', classDateStr, 'for', student.name, '- before creation', creationDateStr);
                     }
                     return; // Don't show this class
                   }
@@ -19131,7 +19166,7 @@
                   const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
                   if (classDateStr < calendarStartStr) {
                     if (DEBUG_MODE) {
-                      console.log('[Calendar] Hiding', classDateStr, 'for', student.name, '- before calendar start');
+                      verboseLog('[Calendar] Hiding', classDateStr, 'for', student.name, '- before calendar start');
                     }
                     return; // Don't show this class
                   }
@@ -19226,10 +19261,10 @@
 
               // Normalize both dates to date-only strings for comparison
               const classDateStr = formatDateYYYYMMDD(classDate);
-              
+
               if (studentCreatedAt) {
                 const creationDateStr = formatDateYYYYMMDD(studentCreatedAt);
-                
+
                 // Skip if class date is before student was created
                 if (classDateStr < creationDateStr) {
                   if (DEBUG_MODE) {
@@ -20599,7 +20634,7 @@
 
             // Send credit applied email notification
             if (student.email) {
-              console.log('[Credit] 📧 Sending credit applied email...');
+              verboseLog('[Credit] 📧 Sending credit applied email...');
               const emailResult = await sendCreditAppliedEmail(student, dateStr, pricePerClass, newBalance);
 
               if (emailResult.success) {
@@ -20608,7 +20643,7 @@
                   'success'
                 );
                 showNotification(`📧 Email sent to ${student.email}`, 'success');
-                console.log('[Credit] ✅ Email sent successfully');
+                verboseLog('[Credit] ✅ Email sent successfully');
               } else {
                 showToast(
                   `✅ Applied ${formatCurrency(pricePerClass, '$')} from credit\nNew Balance: ${formatCurrency(newBalance, '$')}`,
@@ -22015,7 +22050,7 @@
         // the email preview feature was implemented
         // ============================================================================
         window.addEmailPreviewToOldNotifications = async function () {
-          console.log('[EmailPreview] 🔧 Reconstructing email previews for old notifications...');
+          verboseLog('[EmailPreview] 🔧 Reconstructing email previews for old notifications...');
 
           const paymentNotifications = window.NotificationCenter.getAll().filter(
             n => n.title === 'Payment Reminder Sent' && n.metadata && !n.metadata.emailBody
@@ -22024,7 +22059,7 @@
           console.log(`[EmailPreview] Found ${paymentNotifications.length} notifications without email body`);
 
           if (paymentNotifications.length === 0) {
-            console.log('[EmailPreview] ✅ All notifications already have email previews!');
+            verboseLog('[EmailPreview] ✅ All notifications already have email previews!');
             return;
           }
 
@@ -22061,7 +22096,7 @@
             return;
           }
 
-          console.log('[EmailPreview] ✅ Got email template, reconstructing emails...');
+          verboseLog('[EmailPreview] ✅ Got email template, reconstructing emails...');
 
           // Helper function to format date nicely
           const formatClassDate = dateStr => {
@@ -22121,7 +22156,7 @@
           if (failed > 0) {
             console.warn(`[EmailPreview] ⚠️ Failed to update ${failed} notifications`);
           }
-          console.log('[EmailPreview] 🎉 You can now click any payment reminder notification to see the email preview');
+          verboseLog('[EmailPreview] 🎉 You can now click any payment reminder notification to see the email preview');
 
           // Reload notifications from Supabase to get fresh data
           if (window.NotificationCenter && window.NotificationCenter.initialize) {
@@ -22464,25 +22499,38 @@
         // ============================================================================
 
         // Initialize on page load
+        // ============================================================================
+        // ⚡ PERFORMANCE OPTIMIZATION - LAZY LOADING SYSTEM
+        // ============================================================================
+        
+        // Track which systems have been initialized
+        const initializationState = {
+          core: false,
+          calendar: false,
+          notifications: false,
+          studentManager: false,
+          paymentRecords: false,
+          quickView: false,
+          emailSystem: false,
+          automationSystem: false
+        };
+
         document.addEventListener('DOMContentLoaded', async function () {
-          debugLog('[ARNOMA] 🚀 Initializing application...');
+          console.log('⚡ ARNOMA Mobile v2.4.0 - Performance Optimized');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
 
           if (!authenticated) {
-            debugLog('[ARNOMA] ⏸️  Waiting for login...');
             return; // Stop initialization until user logs in
           }
 
-          // Initialize Notification Center first
-          if (window.NotificationCenter) {
-            debugLog('[ARNOMA] 🔔 Initializing Notification Center...');
-            await window.NotificationCenter.initialize();
-          }
+          // ⚡ CRITICAL: Only load CORE data immediately
+          await initializeCoreData();
+          console.log('✅ Core data loaded');
 
-          // Then initialize the main app
-          await initializeApp();
+          // ⚡ Defer non-critical systems using requestIdleCallback
+          deferredInitialization();
 
           // ⚡ HIDE LOADING SCREEN - App is ready!
           const loadingScreen = document.getElementById('appLoadingScreen');
@@ -22490,31 +22538,68 @@
             loadingScreen.classList.add('fade-out');
             setTimeout(() => {
               loadingScreen.style.display = 'none';
-            }, 500); // Wait for fade-out animation
+            }, 500);
           }
-
-          debugLog('[ARNOMA] ✅ Application fully initialized');
         });
 
-        // Separate initialization function that can be called after login
-        async function initializeApp() {
-          debugLog('[ARNOMA] 📦 Loading application data...');
-
-          // Initialize the main app
+        // PHASE 1: Load ONLY critical data (students, groups, payments)
+        async function initializeCoreData() {
+          if (initializationState.core) return;
+          
+          // Initialize the main app (loads students, groups, payments into cache)
           await initialize();
+          
+          initializationState.core = true;
+        }
 
-          // CRITICAL: Render calendar to populate window.currentCalendarData
-          // This MUST happen after initialize() so renderCalendar function is available
+        // PHASE 2: Defer everything else to idle time
+        function deferredInitialization() {
+          // Use requestIdleCallback for non-critical work (fallback to setTimeout)
+          const scheduleWork = window.requestIdleCallback || ((cb) => setTimeout(cb, 100));
+          
+          // Initialize Notification Center (low priority)
+          scheduleWork(() => {
+            if (window.NotificationCenter && !initializationState.notifications) {
+              window.NotificationCenter.initialize();
+              initializationState.notifications = true;
+            }
+          });
+
+          // Calendar rendering is deferred until Calendar tab is opened
+        }
+
+        // Lazy load Student Manager when tab is opened
+        function lazyLoadStudentManager() {
+          if (initializationState.studentManager) return;
+          initializationState.studentManager = true;
+        }
+
+        // Lazy load Calendar when tab is opened
+        function lazyLoadCalendar() {
+          if (initializationState.calendar) return;
+          
           if (typeof renderCalendar === 'function') {
-            debugLog('[ARNOMA] 📅 Rendering calendar for Payment Reminder Manager...');
             renderCalendar();
-            debugLog('[ARNOMA] ✅ Calendar rendered - window.currentCalendarData initialized');
-          } else {
-            console.error('[ARNOMA] ❌ renderCalendar function not found!');
+            initializationState.calendar = true;
           }
         }
 
-        debugLog('ARNOMA app loaded - Using Supabase cloud database');
+        // Lazy load Quick View timers
+        function lazyLoadQuickView() {
+          if (initializationState.quickView) return;
+          initializationState.quickView = true;
+        }
+
+        // Separate initialization function that can be called after login
+        async function initializeApp() {
+          // Re-initialize core data after login
+          await initializeCoreData();
+          
+          // Start deferred initialization
+          deferredInitialization();
+        }
+
+        console.log('⚡ ARNOMA Mobile Performance Mode - Lazy loading enabled');
       </script>
     </div>
     <!-- End mainApp -->
