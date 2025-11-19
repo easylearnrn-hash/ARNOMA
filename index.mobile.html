@@ -1634,18 +1634,24 @@
           0 0.1em 0.1em #f1f5f9;
         cursor: pointer;
         position: relative;
-        width: 2.8em;
-        height: 2.8em;
+        width: 40px;
+        height: 40px;
+        min-width: 40px;
+        min-height: 40px;
         transition: box-shadow 0.3s ease-in-out;
         border: none;
         padding: 0;
         flex-shrink: 0;
         z-index: 10;
+        font-size: 14px;
+        font-weight: 700;
+        color: transparent;
+        overflow: hidden;
       }
 
       .group-btn:before,
       .group-btn:after {
-        border-radius: inherit;
+        border-radius: 50%;
         content: "";
         display: block;
         position: absolute;
@@ -1653,34 +1659,28 @@
 
       .group-btn:before {
         background-image: linear-gradient(#f1f5f9, #cbd5e1);
-        box-shadow: 0 0.5em 0.5em 0.15em rgba(0, 0, 0, 0.15);
-        top: 0.35em;
-        left: 0.35em;
-        width: 2.1em;
-        height: 2.1em;
+        box-shadow: 0 6px 8px 2px rgba(0, 0, 0, 0.15);
+        top: 5px;
+        left: 5px;
+        width: 30px;
+        height: 30px;
         transition:
           box-shadow 0.3s cubic-bezier(0.42, -1.84, 0.42, 1.84),
           transform 0.3s cubic-bezier(0.42, -1.84, 0.42, 1.84);
-      }
-
-      .group-btn {
-        font-size: 12px;
-        font-weight: 700;
-        color: transparent;
-        overflow: hidden;
       }
 
       .group-btn:after {
         background-color: #e2e8f0;
         background-image: linear-gradient(rgba(241, 245, 249, 0), #f1f5f9);
         box-shadow:
-          0 0.05em 0 #f1f5f9 inset,
-          0 -0.05em 0 #f1f5f9 inset,
+          0 1px 0 #f1f5f9 inset,
+          0 -1px 0 #f1f5f9 inset,
           0 0 0 0 rgba(99, 102, 241, 0.1) inset;
-        top: 0.9em;
-        left: 0.9em;
-        width: 1em;
-        height: 1em;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 24px;
+        height: 24px;
         transition:
           background-color 0.3s ease-in-out,
           box-shadow 0.3s ease-in-out,
@@ -1690,8 +1690,9 @@
         justify-content: center;
         color: #1e293b;
         content: attr(data-label);
-        font-size: inherit;
-        font-weight: inherit;
+        font-size: 13px;
+        font-weight: 700;
+        line-height: 1;
       }
 
       .group-btn:focus-visible {
@@ -1703,25 +1704,22 @@
       }
 
       /* Active/Pressed state */
-      .group-btn.active:before,
-      .group-btn.active:after {
-        transform: scale(0.98);
-      }
-
       .group-btn.active:before {
-        box-shadow: 0 0.25em 0.25em 0 rgba(0, 0, 0, 0.15);
+        transform: scale(0.98);
+        box-shadow: 0 3px 4px 0 rgba(0, 0, 0, 0.15);
         transition-timing-function: cubic-bezier(0.42, 0, 0.42, 1.84);
       }
 
       .group-btn.active:after {
+        transform: translate(-50%, -50%) scale(0.98);
         background-color: #f1f5f9;
         box-shadow:
-          0 0.05em 0 rgba(99, 102, 241, 0.5) inset,
-          0 -0.05em 0 rgba(99, 102, 241, 0.5) inset,
-          0 0 0.5em 0.15em rgba(99, 102, 241, 0.1) inset;
+          0 1px 0 rgba(99, 102, 241, 0.5) inset,
+          0 -1px 0 rgba(99, 102, 241, 0.5) inset,
+          0 0 8px 2px rgba(99, 102, 241, 0.1) inset;
         transition-timing-function: ease-in-out, ease-in-out, cubic-bezier(0.42, 0, 0.42, 1.84);
         color: #6366f1;
-        text-shadow: 0 0 0.2em #6366f1;
+        text-shadow: 0 0 3px #6366f1;
       }
 
       /* END FEATURE 2 */
