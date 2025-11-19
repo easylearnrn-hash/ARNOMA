@@ -3,13 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.5.0 ⚡⚡]</title>
+    <title>ARNOMA - Student Management [v2.6.4 ⚡⚡]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.7.0-skeuomorphic-buttons" />    <!-- Mobile Device Detection and Redirect -->
+    <meta name="version" content="2.6.4-redesigned-student-cards" />
+    <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
         // Check if already on mobile version or explicitly requested desktop
@@ -35,11 +36,11 @@
       // ⚡ EXTREME PERFORMANCE CONFIG
       const DEBUG_MODE = false;
       const VERBOSE_LOGGING = false;
-      
+
       const debugLog = (...args) => {
         if (DEBUG_MODE) console.log(...args);
       };
-      
+
       const verboseLog = (...args) => {
         if (VERBOSE_LOGGING) console.log(...args);
       };
@@ -91,7 +92,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-  console.log('🔥 ARNOMA v2.5.0 - Extreme Performance ⚡⚡');
+      console.log('🔥 ARNOMA v2.5.0 - Extreme Performance ⚡⚡');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -1140,49 +1141,41 @@
           0 0.1em 0.1em #f1f5f9;
       }
 
-      /* Dark version for amount buttons */
+      /* Redesigned Amount Buttons - Modern Gradient Style */
       .group-buttons:nth-child(2) .group-btn {
-        background-image: linear-gradient(#334155, #475569);
+        background: linear-gradient(145deg, rgba(168, 85, 247, 0.25), rgba(139, 92, 246, 0.3));
+        border: 2px solid rgba(168, 85, 247, 0.4);
         box-shadow:
-          0 0 0 0.1em hsla(270, 90%, 60%, 0),
-          0 0 0.2em #1e293b inset,
-          0 0.1em 0.1em #64748b;
-      }
-
-      .group-buttons:nth-child(2) .group-btn:before {
-        background-image: linear-gradient(#475569, #334155);
-        box-shadow: 0 0.5em 0.5em 0.15em rgba(0, 0, 0, 0.5);
-      }
-
-      .group-buttons:nth-child(2) .group-btn:after {
-        background-color: #334155;
-        background-image: linear-gradient(rgba(71, 85, 105, 0), #475569);
-        box-shadow:
-          0 0.05em 0 #64748b inset,
-          0 -0.05em 0 #64748b inset,
-          0 0 0 0 rgba(139, 92, 246, 0.1) inset;
-        color: #ffffff;
+          0 4px 12px rgba(168, 85, 247, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        color: rgba(220, 180, 255, 0.95);
       }
 
       .group-buttons:nth-child(2) .group-btn:hover {
+        transform: translateY(-3px);
+        border-color: rgba(168, 85, 247, 0.7);
+        background: linear-gradient(145deg, rgba(168, 85, 247, 0.4), rgba(139, 92, 246, 0.45));
         box-shadow:
-          0 0 0 0.1em hsla(270, 90%, 60%, 0.3),
-          0 0 0.2em #1e293b inset,
-          0 0.1em 0.1em #64748b;
+          0 8px 20px rgba(168, 85, 247, 0.5),
+          0 0 30px rgba(168, 85, 247, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        color: #ffffff;
       }
 
-      .group-buttons:nth-child(2) .group-btn.active:before {
-        box-shadow: 0 0.25em 0.25em 0 rgba(0, 0, 0, 0.5);
+      .group-buttons:nth-child(2) .group-btn.active {
+        background: linear-gradient(145deg, #a855f7, #9333ea);
+        border-color: rgba(168, 85, 247, 0.9);
+        box-shadow:
+          0 8px 24px rgba(168, 85, 247, 0.6),
+          0 0 40px rgba(168, 85, 247, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        transform: translateY(-2px) scale(1.05);
       }
 
-      .group-buttons:nth-child(2) .group-btn.active:after {
-        background-color: #475569;
-        box-shadow:
-          0 0.05em 0 rgba(139, 92, 246, 0.5) inset,
-          0 -0.05em 0 rgba(139, 92, 246, 0.5) inset,
-          0 0 0.5em 0.15em rgba(139, 92, 246, 0.1) inset;
-        color: #a855f7;
-        text-shadow: 0 0 0.2em #a855f7;
+      .group-buttons:nth-child(2) .group-btn.active:hover {
+        transform: translateY(-3px) scale(1.05);
       }
 
       /* Group Manager Styles */
@@ -1372,29 +1365,38 @@
       /* Student Manager Styles */
       .student-card,
       .student-item {
-        background: rgba(255, 255, 255, 0.06);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 14px;
-        padding: 20px;
-        backdrop-filter: blur(30px);
-        transition: all 0.2s;
+        background: linear-gradient(145deg, rgba(30, 35, 50, 0.9), rgba(20, 25, 40, 0.85));
+        border: 2px solid rgba(138, 180, 255, 0.2);
+        border-radius: 20px;
+        padding: 24px;
+        backdrop-filter: blur(40px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         flex-direction: column;
         position: relative;
         z-index: 1;
         overflow: visible !important;
+        box-shadow: 
+          0 8px 32px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
       }
 
       .student-card:hover,
       .student-item:hover {
-        transform: translateY(-2px);
-        border-color: #8ab4ff;
-        box-shadow: 0 8px 24px rgba(138, 180, 255, 0.2);
+        transform: translateY(-4px);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow: 
+          0 12px 40px rgba(138, 180, 255, 0.25),
+          0 0 60px rgba(138, 180, 255, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
       }
 
       .student-item.editing {
-        border-color: #4ade80;
-        box-shadow: 0 8px 24px rgba(74, 222, 128, 0.3);
+        border-color: rgba(74, 222, 128, 0.6);
+        background: linear-gradient(145deg, rgba(25, 45, 35, 0.9), rgba(20, 35, 28, 0.85));
+        box-shadow: 
+          0 12px 40px rgba(74, 222, 128, 0.3),
+          0 0 60px rgba(74, 222, 128, 0.2);
       }
 
       .student-view {
@@ -1416,34 +1418,40 @@
       }
 
       .student-name {
-        font-weight: 700;
-        font-size: 20px;
-        color: #f3f4f6;
-        margin-bottom: 4px;
+        font-weight: 800;
+        font-size: 22px;
+        color: #ffffff;
+        margin-bottom: 6px;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        letter-spacing: -0.2px;
       }
 
       .student-name:hover {
         color: #8ab4ff;
+        text-shadow: 
+          0 2px 4px rgba(0, 0, 0, 0.3),
+          0 0 20px rgba(138, 180, 255, 0.5);
+        transform: translateX(2px);
       }
 
       .student-group {
-        font-size: 14px;
-        color: #6b7280;
-        margin-bottom: 16px;
+        font-size: 13px;
+        color: rgba(138, 180, 255, 0.7);
+        margin-bottom: 20px;
+        font-weight: 600;
+        letter-spacing: 0.3px;
       }
 
-      /* BEGIN FEATURE 2 - Instant Group Switch Buttons */
+      /* BEGIN FEATURE 2 - Redesigned Group Switch Buttons */
       .group-buttons {
         display: flex;
-        gap: 12px;
+        gap: 10px;
         justify-content: center;
-        margin: 12px 0;
-        flex-wrap: nowrap;
+        margin: 16px 0;
+        flex-wrap: wrap;
         overflow: visible !important;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
         position: relative;
         z-index: 50;
       }
@@ -1453,116 +1461,62 @@
       }
 
       .group-btn {
-        /* Rounding factors */
-        --rf0: 1;
-        --rf1: calc(1 - var(--rf0));
-        /* Button dimensions */
-        --btn-d: 3.5em;
-        --btn-b: 0.21875em;
-        --p0: 0.3125em;
-        --b1: 0.5em;
-        --p1: 1.25em;
-        /* Actual button border-radius */
-        --r: calc(var(--rf0) * 50% + var(--rf1) * 0.875em);
-        --r1: calc(var(--r) - var(--rf1) * (var(--btn-b) + var(--p0)));
-        --r2: calc(var(--r) - var(--rf1) * (var(--btn-b) + calc(2 * var(--p0) + var(--b1) + var(--p1))));
-        --a: 0.4375;
-
-        box-sizing: border-box;
-        position: relative;
-        border: solid var(--btn-b) transparent;
-        width: var(--btn-d);
-        height: var(--btn-d);
-        min-width: var(--btn-d);
-        min-height: var(--btn-d);
-        border-radius: var(--r);
-        background: linear-gradient(#e2e3e7, #d4d5d9) border-box;
-        text-indent: -200vmax;
+        background: linear-gradient(145deg, rgba(51, 65, 85, 0.8), rgba(30, 41, 59, 0.9));
+        border: 2px solid rgba(138, 180, 255, 0.3);
+        border-radius: 12px;
+        box-shadow:
+          0 4px 12px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
         cursor: pointer;
+        position: relative;
+        min-width: 50px;
+        height: 50px;
+        padding: 0 16px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border: 2px solid rgba(138, 180, 255, 0.3);
         flex-shrink: 0;
         z-index: 50;
-        transition: all 0.3s;
-        font-size: 14px;
+        font-size: 15px;
         font-weight: 700;
-        color: transparent;
+        color: rgba(138, 180, 255, 0.9);
         overflow: visible;
-      }
-
-      .group-btn:before,
-      .group-btn:after {
-        position: absolute;
-        transform: translateY(0);
-        transition: transform 0.3s;
-        border-radius: 50%;
-      }
-
-      .group-btn:before {
-        content: '';
-        top: var(--p0);
-        right: var(--p0);
-        bottom: var(--p0);
-        left: var(--p0);
-        border: solid var(--b1) transparent;
-        padding: var(--p1);
-        border-radius: var(--r1);
-        box-shadow: 0 3px 7px rgba(0, 0, 0, var(--a)), 0 5px 13px rgba(0, 0, 0, var(--a)),
-          inset 0 -1px 2px rgba(255, 255, 255, 0.25);
-        background: linear-gradient(#ccc, #fff) content-box, linear-gradient(#fefefe, #cbccd0) padding-box,
-          linear-gradient(#f1f1f1, #d2d5ce) border-box;
-      }
-
-      .group-btn:after {
-        content: attr(data-label);
         display: flex;
         align-items: center;
         justify-content: center;
-        top: calc(2 * var(--p0) + var(--b1) + var(--p1));
-        right: calc(2 * var(--p0) + var(--b1) + var(--p1));
-        bottom: calc(2 * var(--p0) + var(--b1) + var(--p1));
-        left: calc(2 * var(--p0) + var(--b1) + var(--p1));
-        border-radius: var(--r2);
-        background: linear-gradient(#dadada, #fff);
-        color: #1e293b;
-        font-size: 15px;
-        font-weight: 700;
-        text-indent: 0;
-        line-height: 1;
-      }
-
-      .group-btn:hover,
-      .group-btn:focus {
-        outline: solid 0 transparent;
-      }
-
-      .group-btn:active:before,
-      .group-btn:active:after {
-        transform: translateY(1px);
-      }
-
-      .group-btn.active:after {
-        background: linear-gradient(#6366f1, #818cf8);
-        color: #fff;
         text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
       }
 
-      /* Amount buttons (second group-buttons) - Yellow/Gold theme */
-      .group-buttons:nth-child(2) .group-btn {
-        background: linear-gradient(#f0c101, #f9a123) border-box;
+      .group-btn:hover {
+        transform: translateY(-3px);
+        border-color: rgba(138, 180, 255, 0.6);
+        box-shadow:
+          0 8px 20px rgba(138, 180, 255, 0.4),
+          0 0 30px rgba(138, 180, 255, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        background: linear-gradient(145deg, rgba(59, 130, 246, 0.4), rgba(99, 102, 241, 0.4));
+        color: #ffffff;
       }
 
-      .group-buttons:nth-child(2) .group-btn:before {
-        background: linear-gradient(#ffd700, #ffed4e) content-box, linear-gradient(#fffacd, #fff8dc) padding-box,
-          linear-gradient(#fef3c7, #fde68a) border-box;
+      .group-btn:active {
+        transform: translateY(-1px) scale(0.98);
       }
 
-      .group-buttons:nth-child(2) .group-btn:after {
-        background: linear-gradient(#a1c82d, #e8e681);
-        color: #1e293b;
+      /* Active/Pressed state */
+      .group-btn.active {
+        background: linear-gradient(145deg, #6366f1, #8b5cf6);
+        border-color: rgba(139, 92, 246, 0.8);
+        box-shadow:
+          0 8px 24px rgba(139, 92, 246, 0.5),
+          0 0 40px rgba(139, 92, 246, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        color: #ffffff;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        transform: translateY(-2px) scale(1.05);
       }
 
-      .group-buttons:nth-child(2) .group-btn.active:after {
-        background: linear-gradient(#10b981, #34d399);
-        color: #fff;
+      .group-btn.active:hover {
+        transform: translateY(-3px) scale(1.05);
       }
 
       /* END FEATURE 2 */
@@ -5118,7 +5072,9 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.5.0 - Extreme Performance ⚡⚡</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
+              🔥 ARNOMA v2.5.0 - Extreme Performance ⚡⚡
+            </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
@@ -22128,7 +22084,11 @@
 
               if (error) {
                 // Silently fail if authentication/permission error
-                if (error.code === 'PGRST301' || error.message.includes('JWT') || error.message.includes('Load failed')) {
+                if (
+                  error.code === 'PGRST301' ||
+                  error.message.includes('JWT') ||
+                  error.message.includes('Load failed')
+                ) {
                   debugLog('[NotificationCenter] ⏭️ Skipping - auth required');
                   return;
                 }
@@ -22215,7 +22175,11 @@
 
               if (error) {
                 // Silently fail if authentication/permission error
-                if (error.code === 'PGRST301' || error.message.includes('JWT') || error.message.includes('Load failed')) {
+                if (
+                  error.code === 'PGRST301' ||
+                  error.message.includes('JWT') ||
+                  error.message.includes('Load failed')
+                ) {
                   debugLog('[NotificationCenter] ⏭️ Skipping save - auth required');
                   return null;
                 }
@@ -22452,7 +22416,7 @@
         // ============================================================================
         // ⚡ PERFORMANCE OPTIMIZATION - LAZY LOADING SYSTEM
         // ============================================================================
-        
+
         // Track which systems have been initialized
         const initializationState = {
           core: false,
@@ -22489,10 +22453,10 @@
         // PHASE 1: Load ONLY critical data (students, groups, payments)
         async function initializeCoreData() {
           if (initializationState.core) return;
-          
+
           // Initialize the main app (loads students, groups, payments into cache)
           await initialize();
-          
+
           initializationState.core = true;
         }
 
@@ -22614,7 +22578,7 @@
         // Lazy load Student Manager when tab is opened
         function lazyLoadStudentManager() {
           if (initializationState.studentManager) return;
-          
+
           // Student list rendering happens here
           // This is already called by openStudentManager()
           initializationState.studentManager = true;
@@ -22629,7 +22593,7 @@
         // Lazy load Quick View timers
         function lazyLoadQuickView() {
           if (initializationState.quickView) return;
-          
+
           // Quick View timer initialization
           // Will be called when Quick View is opened
           initializationState.quickView = true;
@@ -22639,7 +22603,7 @@
         async function initializeApp() {
           // Re-initialize core data after login
           await initializeCoreData();
-          
+
           // Start deferred initialization
           deferredInitialization();
         }
