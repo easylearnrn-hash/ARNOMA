@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.4.5 ⚡]</title>
+  <title>ARNOMA - Student Management [v2.4.6 ⚡]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -91,7 +91,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.4.5');
+  console.log('🔥 ARNOMA v2.4.6');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -156,8 +156,19 @@
             currentUser = data.user;
             hideLoginForm();
 
+            // Reset automation sync guard so we can push fresh data post-login exactly once
+            window.__automationDataSent = false;
+            window.__automationDataSendReason = null;
+            window.__automationDataSentAt = null;
+            const shouldForceAutomationSync =
+              typeof initializationState !== 'undefined' && initializationState.emailSystem === true;
+
             // Reload data after successful login
             await initializeApp();
+
+            if (shouldForceAutomationSync && typeof queueEmailDataSend === 'function') {
+              queueEmailDataSend('post-login');
+            }
 
             return { success: true };
           }
@@ -185,6 +196,11 @@
           window.paymentsCache = [];
           window.studentsCache = [];
           window.groupsCache = [];
+
+          // Allow the next authenticated session to trigger a fresh automation sync
+          window.__automationDataSent = false;
+          window.__automationDataSendReason = null;
+          window.__automationDataSentAt = null;
 
           showLoginForm();
         } catch (error) {
@@ -4963,7 +4979,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.0</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.4.6 - Automation Guard Hotfix</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
@@ -14878,6 +14894,10 @@
 
             window.addEventListener('message', async function (event) {
               if (event.data.action === 'requestGroupsData') {
+                if (window.__automationDataSent) {
+                  verboseLog('[EmailAutomation] Ignoring iframe requestGroupsData - automation payload already sent');
+                  return;
+                }
                 queueEmailDataSend('iframe-request');
               }
 
@@ -14913,11 +14933,6 @@
 
             debugLog('✅ Email system message listener attached');
           }
-
-          // Send initial data after iframe loads
-          iframe.addEventListener('load', function () {
-            queueEmailDataSend('iframe-load');
-          });
         }
 
         // Email Preview Modal Functions
@@ -14953,17 +14968,28 @@
         let lastEmailDataSentTimestamp = 0;
         const EMAIL_DATA_THROTTLE_MS = 1000;
         let emailDataQueueHandle = null;
+        window.__automationDataSent = window.__automationDataSent || false;
+        window.__automationDataSendReason = window.__automationDataSendReason || null;
+        window.__automationDataSentAt = window.__automationDataSentAt || null;
 
         function queueEmailDataSend(reason = 'manual') {
+          if (window.__automationDataSent) {
+            verboseLog(`[EmailAutomation] Skipping queued iframe update (${reason}) - automation data already sent`);
+            return;
+          }
           if (emailDataQueueHandle) return;
           emailDataQueueHandle = setTimeout(() => {
             emailDataQueueHandle = null;
-            sendGroupsDataToEmailSystem();
+            sendGroupsDataToEmailSystem(reason);
           }, EMAIL_DATA_THROTTLE_MS);
           verboseLog(`[EmailAutomation] Queued iframe update (${reason})`);
         }
 
-        function sendGroupsDataToEmailSystem() {
+        function sendGroupsDataToEmailSystem(reason = 'manual') {
+          if (window.__automationDataSent) {
+            verboseLog(`[EmailAutomation] Skipping automation send (${reason}) - data already delivered`);
+            return;
+          }
           const now = Date.now();
           if (now - lastEmailDataSentTimestamp < EMAIL_DATA_THROTTLE_MS) {
             verboseLog('⚡ Throttling email iframe update (too frequent)');
@@ -14972,8 +14998,8 @@
           lastEmailDataSentTimestamp = now;
 
           const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
-          if (!emailFrame) {
-            verboseLog('⚠️ Email iframe not found, skipping automation data send');
+          if (!emailFrame || !emailFrame.contentWindow) {
+            verboseLog('⚠️ Email iframe not found or not ready, skipping automation data send');
             return;
           }
 
@@ -14989,11 +15015,11 @@
             '*'
           );
 
-          debugLog(`📤 Sent automation data: ${groups.length} groups, ${students.length} students`);
+          window.__automationDataSent = true;
+          window.__automationDataSendReason = reason;
+          window.__automationDataSentAt = now;
+          debugLog(`📤 Sent automation data (${reason}): ${groups.length} groups, ${students.length} students`);
         }
-
-        window.addEventListener('groups:updated', () => queueEmailDataSend('groups'));
-        window.addEventListener('students:updated', () => queueEmailDataSend('students'));
 
         // ============================
         // BEGIN QUICK VIEW FUNCTIONS
@@ -22248,7 +22274,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('⚡ ARNOMA v2.4.5 - Performance Optimized');
+          console.log('⚡ ARNOMA v2.4.6 - Automation Guard Hotfix');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();

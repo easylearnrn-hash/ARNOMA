@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>ARNOMA - Mobile [v2.4.5 ⚡]</title>
+  <title>ARNOMA - Mobile [v2.4.6 ⚡]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -38,11 +38,11 @@
       // PERFORMANCE CONFIG - Set to false to disable verbose logging
       const DEBUG_MODE = false;
       const VERBOSE_LOGGING = false; // ⚡ NEW: Disable verbose logs for performance
-      
+
       const debugLog = (...args) => {
         if (DEBUG_MODE) console.log(...args);
       };
-      
+
       // ⚡ PERFORMANCE: Suppress non-critical logs
       const verboseLog = (...args) => {
         if (VERBOSE_LOGGING) console.log(...args);
@@ -92,7 +92,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.4.5');
+  console.log('🔥 ARNOMA v2.4.6');
 
       // Supabase Client Initialization (safe check for async loading)
       let supabase;
@@ -114,14 +114,14 @@
       async function checkAuthentication() {
         try {
           console.log('🔐 Checking authentication...');
-          
+
           // Safety check: ensure supabase is initialized
           if (!supabase) {
             console.error('❌ Supabase not initialized');
             showLoginForm();
             return false;
           }
-          
+
           const {
             data: { session },
             error,
@@ -154,13 +154,13 @@
       async function handleLogin(email, password) {
         try {
           console.log('🔐 Attempting login...');
-          
+
           // Safety check: ensure supabase is initialized
           if (!supabase) {
             console.error('❌ Supabase not initialized');
             return { success: false, error: 'System not ready. Please refresh the page.' };
           }
-          
+
           const { data, error } = await supabase.auth.signInWithPassword({
             email: email,
             password: password,
@@ -177,8 +177,20 @@
             currentUser = data.user;
             hideLoginForm();
 
+            // Reset automation sync guard so post-login data can be sent once
+            window.__automationDataSent = false;
+            window.__automationDataSendReason = null;
+            window.__automationDataSentAt = null;
+            const shouldForceAutomationSync =
+              typeof initializationState !== 'undefined' && initializationState.emailSystem === true;
+
             // Reload data after successful login
             await initializeApp();
+
+            // If the automation iframe was already online (e.g., relogin), push fresh data once
+            if (shouldForceAutomationSync && typeof queueEmailDataSend === 'function') {
+              queueEmailDataSend('post-login');
+            }
 
             return { success: true };
           }
@@ -206,6 +218,11 @@
           window.paymentsCache = [];
           window.studentsCache = [];
           window.groupsCache = [];
+
+          // Allow the next authenticated session to push fresh automation data once
+          window.__automationDataSent = false;
+          window.__automationDataSendReason = null;
+          window.__automationDataSentAt = null;
 
           showLoginForm();
         } catch (error) {
@@ -672,7 +689,7 @@
         /* iOS Safe Area Support - Handles notch, Dynamic Island, home indicator */
         padding-left: env(safe-area-inset-left);
         padding-right: env(safe-area-inset-right);
-        padding-bottom: env(safe-area-inset-bottom);
+  padding-bottom: calc(env(safe-area-inset-bottom) + 140px);
       }
 
       .container {
@@ -760,6 +777,62 @@
           0 0 24px rgba(34, 197, 94, 0.35) !important;
         border-color: #22c55e !important;
         background: rgba(34, 197, 94, 0.15) !important;
+      }
+
+      .mobile-control-dock {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 12px 16px calc(12px + env(safe-area-inset-bottom));
+        background: rgba(11, 11, 16, 0.95);
+        border-top: 1px solid rgba(148, 163, 184, 0.2);
+        box-shadow: 0 -18px 40px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 1400;
+      }
+
+      .mobile-control-dock .dock-row {
+        display: flex;
+        width: 100%;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .mobile-control-dock .dock-primary-actions .gmail-btn {
+        flex: 1;
+        justify-content: center;
+        font-size: 14px;
+      }
+
+      .mobile-control-dock .dock-primary-actions .gmail-btn span {
+        width: 100%;
+        text-align: center;
+      }
+
+      .mobile-control-dock .dock-icon-actions {
+        justify-content: space-between;
+      }
+
+      .mobile-control-dock .control-btn,
+      .mobile-control-dock .gmail-btn {
+        flex-shrink: 0;
+      }
+
+      .mobile-control-dock .control-btn {
+        width: 48px;
+        height: 48px;
+        min-width: 48px;
+        min-height: 48px;
+        border-radius: 14px;
+      }
+
+      .mobile-control-dock .dock-settings {
+        position: relative;
       }
 
       @keyframes spin {
@@ -1801,7 +1874,7 @@
       /* ========== BEGIN FLOATING NAV STYLES ========== */
       .floating-nav {
         position: fixed;
-        bottom: 20px;
+        bottom: calc(120px + env(safe-area-inset-bottom));
         right: 20px;
         z-index: 9999;
         display: flex;
@@ -5185,7 +5258,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.4.0 - Cloud-Synced Timezone Preferences</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.4.6 - Automation Guard Hotfix</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
@@ -5193,18 +5266,24 @@
             <option value="unmatched">Unmatched Only</option>
             <option value="ignored">Ignored</option>
           </select>
-          <div class="header-controls">
+        </div>
+
+        <!-- Mobile Footer Control Dock -->
+        <div class="mobile-control-dock" aria-label="Payment actions quick access">
+          <div class="dock-row dock-primary-actions">
             <button
               id="fullSyncBtn"
               class="gmail-btn"
               onclick="openFullSyncDatePicker()"
               title="Full sync - choose date range to fetch all payments"
             >
-              <span id="fullSyncBtnText">Full Sync</span>
+              <span id="fullSyncBtnText" style="width: 100%; text-align: center">Full Sync</span>
             </button>
             <button id="gmailBtn" class="gmail-btn" onclick="toggleGmailConnection()">
-              <span id="gmailBtnText">Gmail</span>
+              <span id="gmailBtnText" style="width: 100%; text-align: center">Gmail</span>
             </button>
+          </div>
+          <div class="dock-row dock-icon-actions">
             <button
               id="autoRefreshToggle"
               class="control-btn"
@@ -5228,14 +5307,14 @@
             <button id="calendarBtn" class="control-btn" onclick="openSmartCalendar()" title="Smart Payment Calendar">
               📅
             </button>
-            <div style="position: relative">
+            <div class="dock-settings">
               <button id="settingsBtn" class="control-btn" onclick="toggleSettingsMenu()" title="Settings">⚙️</button>
               <div
                 id="settingsMenu"
                 style="
                   display: none;
                   position: absolute;
-                  top: 44px;
+                  bottom: calc(100% + 16px);
                   right: 0;
                   background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
                   border: 2px solid rgba(138, 180, 255, 0.3);
@@ -5243,7 +5322,7 @@
                   min-width: 250px;
                   backdrop-filter: blur(20px);
                   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
-                  z-index: 1000;
+                  z-index: 2000;
                   overflow: hidden;
                 "
               >
@@ -15104,6 +15183,10 @@
 
             window.addEventListener('message', async function (event) {
               if (event.data.action === 'requestGroupsData') {
+                if (window.__automationDataSent) {
+                  verboseLog('[EmailAutomation] Ignoring iframe requestGroupsData - automation payload already sent');
+                  return;
+                }
                 queueEmailDataSend('iframe-request');
               }
 
@@ -15139,11 +15222,6 @@
 
             debugLog('✅ Email system message listener attached');
           }
-
-          // Send initial data after iframe loads
-          iframe.addEventListener('load', function () {
-            queueEmailDataSend('iframe-load');
-          });
         }
 
         // Email Preview Modal Functions
@@ -15180,17 +15258,28 @@
         let lastEmailDataSentTimestamp = 0;
         const EMAIL_DATA_THROTTLE_MS = 1000;
         let emailDataQueueHandle = null;
+        window.__automationDataSent = window.__automationDataSent || false;
+        window.__automationDataSendReason = window.__automationDataSendReason || null;
+        window.__automationDataSentAt = window.__automationDataSentAt || null;
 
         function queueEmailDataSend(reason = 'manual') {
+          if (window.__automationDataSent) {
+            verboseLog(`[EmailAutomation] Skipping queued iframe update (${reason}) - automation data already sent`);
+            return;
+          }
           if (emailDataQueueHandle) return;
           emailDataQueueHandle = setTimeout(() => {
             emailDataQueueHandle = null;
-            sendGroupsDataToEmailSystem();
+            sendGroupsDataToEmailSystem(reason);
           }, EMAIL_DATA_THROTTLE_MS);
           verboseLog(`[EmailAutomation] Queued iframe update (${reason})`);
         }
 
-        function sendGroupsDataToEmailSystem() {
+        function sendGroupsDataToEmailSystem(reason = 'manual') {
+          if (window.__automationDataSent) {
+            verboseLog(`[EmailAutomation] Skipping automation send (${reason}) - data already delivered`);
+            return;
+          }
           const now = Date.now();
           if (now - lastEmailDataSentTimestamp < EMAIL_DATA_THROTTLE_MS) {
             verboseLog('⚡ Throttling email iframe update (too frequent)');
@@ -15199,8 +15288,8 @@
           lastEmailDataSentTimestamp = now;
 
           const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
-          if (!emailFrame) {
-            verboseLog('⚠️ Email iframe not found, skipping automation data send');
+          if (!emailFrame || !emailFrame.contentWindow) {
+            verboseLog('⚠️ Email iframe not found or not ready, skipping automation data send');
             return;
           }
 
@@ -15216,11 +15305,11 @@
             '*'
           );
 
-          debugLog(`📤 Sent automation data: ${groups.length} groups, ${students.length} students`);
+          window.__automationDataSent = true;
+          window.__automationDataSendReason = reason;
+          window.__automationDataSentAt = now;
+          debugLog(`📤 Sent automation data (${reason}): ${groups.length} groups, ${students.length} students`);
         }
-
-        window.addEventListener('groups:updated', () => queueEmailDataSend('groups'));
-        window.addEventListener('students:updated', () => queueEmailDataSend('students'));
 
         // ============================
         // BEGIN QUICK VIEW FUNCTIONS
@@ -22437,7 +22526,7 @@
         // ============================================================================
         // ⚡ PERFORMANCE OPTIMIZATION - LAZY LOADING SYSTEM
         // ============================================================================
-        
+
         // Track which systems have been initialized
         const initializationState = {
           core: false,
@@ -22453,7 +22542,7 @@
         };
 
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('⚡ ARNOMA Mobile v2.4.5 - Performance Optimized');
+          console.log('⚡ ARNOMA Mobile v2.4.6 - Automation Guard Hotfix');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
@@ -22482,10 +22571,10 @@
         // PHASE 1: Load ONLY critical data (students, groups, payments)
         async function initializeCoreData() {
           if (initializationState.core) return;
-          
+
           // Initialize the main app (loads students, groups, payments into cache)
           await initialize();
-          
+
           initializationState.core = true;
         }
 
@@ -22610,7 +22699,7 @@
         // Lazy load Calendar when tab is opened
         function lazyLoadCalendar() {
           if (initializationState.calendar) return;
-          
+
           if (typeof renderCalendar === 'function') {
             renderCalendar();
             initializationState.calendar = true;
@@ -22627,7 +22716,7 @@
         async function initializeApp() {
           // Re-initialize core data after login
           await initializeCoreData();
-          
+
           // Start deferred initialization
           deferredInitialization();
         }

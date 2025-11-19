@@ -383,32 +383,67 @@
       </div>
 
       <!-- Email Testing Section -->
-      <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 24px 32px; border-radius: 16px; margin-bottom: 32px;">
-        <h2 style="color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
-          <span style="font-size: 32px;">🧪</span>
+      <div
+        style="
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          padding: 24px 32px;
+          border-radius: 16px;
+          margin-bottom: 32px;
+        "
+      >
+        <h2 style="color: white; margin-bottom: 16px; display: flex; align-items: center; gap: 12px">
+          <span style="font-size: 32px">🧪</span>
           <span>Email Handler Testing</span>
         </h2>
-        <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">Click any button to send a test email to your inbox</p>
-        
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-          <button onclick="testProfileUpdate()" class="btn" style="background: #8b5cf6; color: white;">📝 Profile Update</button>
-          <button onclick="testAliasAdded()" class="btn" style="background: #8b5cf6; color: white;">👥 Alias Added</button>
-          <button onclick="testScheduleUpdate()" class="btn" style="background: #8b5cf6; color: white;">📅 Schedule Update</button>
-          <button onclick="testGroupEnrollment()" class="btn" style="background: #8b5cf6; color: white;">🎓 Group Enrollment</button>
-          <button onclick="testCreditAdded()" class="btn" style="background: #10b981; color: white;">💰 Credit Added</button>
-          <button onclick="testCreditApplied()" class="btn" style="background: #10b981; color: white;">💳 Credit Applied</button>
-          <button onclick="testCreditEdit()" class="btn" style="background: #10b981; color: white;">✏️ Credit Edit</button>
-          <button onclick="testStatusPaused()" class="btn" style="background: #ef4444; color: white;">⏸️ Status Paused</button>
-          <button onclick="testStatusActive()" class="btn" style="background: #22c55e; color: white;">▶️ Status Active</button>
-          <button onclick="testStatusGraduated()" class="btn" style="background: #06b6d4; color: white;">🎓 Graduated</button>
-          <button onclick="testAbsence()" class="btn" style="background: #f59e0b; color: white;">❌ Absence</button>
-          <button onclick="testScheduleChange()" class="btn" style="background: #3b82f6; color: white;">🔄 Schedule Change</button>
+        <p style="color: rgba(255, 255, 255, 0.9); margin-bottom: 20px">
+          Click any button to send a test email to your inbox
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px">
+          <button onclick="testProfileUpdate()" class="btn" style="background: #8b5cf6; color: white">
+            📝 Profile Update
+          </button>
+          <button onclick="testAliasAdded()" class="btn" style="background: #8b5cf6; color: white">
+            👥 Alias Added
+          </button>
+          <button onclick="testScheduleUpdate()" class="btn" style="background: #8b5cf6; color: white">
+            📅 Schedule Update
+          </button>
+          <button onclick="testGroupEnrollment()" class="btn" style="background: #8b5cf6; color: white">
+            🎓 Group Enrollment
+          </button>
+          <button onclick="testCreditAdded()" class="btn" style="background: #10b981; color: white">
+            💰 Credit Added
+          </button>
+          <button onclick="testCreditApplied()" class="btn" style="background: #10b981; color: white">
+            💳 Credit Applied
+          </button>
+          <button onclick="testCreditEdit()" class="btn" style="background: #10b981; color: white">
+            ✏️ Credit Edit
+          </button>
+          <button onclick="testStatusPaused()" class="btn" style="background: #ef4444; color: white">
+            ⏸️ Status Paused
+          </button>
+          <button onclick="testStatusActive()" class="btn" style="background: #22c55e; color: white">
+            ▶️ Status Active
+          </button>
+          <button onclick="testStatusGraduated()" class="btn" style="background: #06b6d4; color: white">
+            🎓 Graduated
+          </button>
+          <button onclick="testAbsence()" class="btn" style="background: #f59e0b; color: white">❌ Absence</button>
+          <button onclick="testScheduleChange()" class="btn" style="background: #3b82f6; color: white">
+            🔄 Schedule Change
+          </button>
         </div>
-        
-        <div style="margin-top: 16px; padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
-          <label style="color: white; display: block; margin-bottom: 8px;">Test Email Address:</label>
-          <input type="email" id="testEmailAddress" placeholder="your@email.com" 
-                 style="width: 100%; padding: 10px; border-radius: 6px; border: none; background: rgba(255,255,255,0.9);" />
+
+        <div style="margin-top: 16px; padding: 12px; background: rgba(0, 0, 0, 0.2); border-radius: 8px">
+          <label style="color: white; display: block; margin-bottom: 8px">Test Email Address:</label>
+          <input
+            type="email"
+            id="testEmailAddress"
+            placeholder="your@email.com"
+            style="width: 100%; padding: 10px; border-radius: 6px; border: none; background: rgba(255, 255, 255, 0.9)"
+          />
         </div>
       </div>
 
@@ -1893,7 +1928,7 @@ ARNOMA Team"
         console.log('🔵 openPreviewModal called');
         const modal = document.getElementById('previewModal');
         const iframe = document.getElementById('previewFrame');
-        
+
         if (!modal) {
           console.error('❌ previewModal element not found!');
           return;
@@ -1902,22 +1937,22 @@ ARNOMA Team"
           console.error('❌ previewFrame element not found!');
           return;
         }
-        
+
         console.log('✅ Modal and iframe found, writing content...');
         const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
         iframeDoc.open();
         iframeDoc.write(htmlContent);
         iframeDoc.close();
-        
+
         console.log('✅ Content written, adding active class...');
         modal.classList.add('active');
-        
+
         // DEBUG: Check if modal is actually visible
         const computedStyle = window.getComputedStyle(modal);
         console.log('🔍 Modal display style:', computedStyle.display);
         console.log('🔍 Modal z-index:', computedStyle.zIndex);
         console.log('🔍 Modal has active class:', modal.classList.contains('active'));
-        
+
         console.log('✅ Modal should now be visible with active class');
       }
 
@@ -2025,7 +2060,7 @@ ARNOMA Team"
               checkInterval: '24 hours',
               trigger: 'Unpaid classes detected',
               lastRun: localStorage.getItem('payment_reminder_last_check') || 'Never',
-              managedBy: 'PaymentReminderManager (index.html)'
+              managedBy: 'PaymentReminderManager (index.html)',
             },
             {
               id: 'system_class_reminder_12h',
@@ -2040,7 +2075,7 @@ ARNOMA Team"
               checkInterval: '1 hour',
               trigger: '12 hours before class',
               lastRun: localStorage.getItem('class_reminder_last_check') || 'Never',
-              managedBy: 'ClassReminderManager (index.html)'
+              managedBy: 'ClassReminderManager (index.html)',
             },
             {
               id: 'system_class_starting_soon',
@@ -2055,8 +2090,8 @@ ARNOMA Team"
               checkInterval: '10 minutes',
               trigger: '30 minutes before class (25-35 min window)',
               lastRun: localStorage.getItem('class_starting_soon_last_check') || 'Never',
-              managedBy: 'ClassStartingSoonManager (index.html)'
-            }
+              managedBy: 'ClassStartingSoonManager (index.html)',
+            },
           ];
         },
 
@@ -2064,27 +2099,33 @@ ARNOMA Team"
         toggleSystemAutomation(automationId) {
           const storageKey = `automation_${automationId}_paused`;
           const isPaused = localStorage.getItem(storageKey) === 'true';
-          
+
           if (isPaused) {
             localStorage.removeItem(storageKey);
             showNotification(`Resumed: ${automationId}`, 'success');
-            
+
             // Notify parent window
-            window.parent.postMessage({
-              action: 'resumeAutomation',
-              automationId: automationId
-            }, '*');
+            window.parent.postMessage(
+              {
+                action: 'resumeAutomation',
+                automationId: automationId,
+              },
+              '*'
+            );
           } else {
             localStorage.setItem(storageKey, 'true');
             showNotification(`Paused: ${automationId}`, 'info');
-            
+
             // Notify parent window
-            window.parent.postMessage({
-              action: 'pauseAutomation',
-              automationId: automationId
-            }, '*');
+            window.parent.postMessage(
+              {
+                action: 'pauseAutomation',
+                automationId: automationId,
+              },
+              '*'
+            );
           }
-          
+
           this.renderAutomations();
         },
 
@@ -2119,7 +2160,7 @@ ARNOMA Team"
 
           // Get system automations (hardcoded, always active)
           const systemAutomations = this.getSystemAutomations();
-          
+
           // Combine system and custom automations
           const allAutomations = [...systemAutomations, ...this._automations];
 
@@ -2136,7 +2177,9 @@ ARNOMA Team"
             return;
           }
 
-          const activeCount = systemAutomations.filter(a => !this.isSystemAutomationPaused(a.id)).length + this._automations.filter(a => a.active).length;
+          const activeCount =
+            systemAutomations.filter(a => !this.isSystemAutomationPaused(a.id)).length +
+            this._automations.filter(a => a.active).length;
 
           const html = `
           <div style="margin-bottom: 24px;">
@@ -2145,10 +2188,11 @@ ARNOMA Team"
               <span style="font-size: 13px; color: var(--secondary);">Built-in & always running</span>
             </div>
             <div style="display: grid; gap: 12px;">
-              ${systemAutomations.map(automation => {
-                const isPaused = this.isSystemAutomationPaused(automation.id);
-                
-                return `
+              ${systemAutomations
+                .map(automation => {
+                  const isPaused = this.isSystemAutomationPaused(automation.id);
+
+                  return `
               <div class="template-card" style="border-left: 4px solid ${isPaused ? '#f59e0b' : '#22c55e'}; background: rgba(255,255,255,0.02);">
                 <div style="display: flex; justify-content: space-between; align-items: start;">
                   <div style="flex: 1;">
@@ -2186,11 +2230,14 @@ ARNOMA Team"
                 </div>
               </div>
             `;
-              }).join('')}
+                })
+                .join('')}
             </div>
           </div>
 
-          ${this._automations.length > 0 ? `
+          ${
+            this._automations.length > 0
+              ? `
           <div style="margin-top: 32px;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
               <h3 style="margin: 0;">Custom Automations (${this._automations.length})</h3>
@@ -2199,11 +2246,12 @@ ARNOMA Team"
               </button>
             </div>
             <div style="display: grid; gap: 12px;">
-              ${this._automations.map(automation => {
-                const nextRun = this.getNextRunTime(automation);
-                const countdown = this.formatCountdown(nextRun);
+              ${this._automations
+                .map(automation => {
+                  const nextRun = this.getNextRunTime(automation);
+                  const countdown = this.formatCountdown(nextRun);
 
-                return `
+                  return `
               <div class="template-card" style="border-left: 4px solid ${automation.active ? '#3b82f6' : '#64748b'};">
                 <div style="display: flex; justify-content: space-between; align-items: start;">
                   <div style="flex: 1;">
@@ -2217,11 +2265,15 @@ ARNOMA Team"
                       <span style="background: rgba(59,130,246,.2); padding: 4px 8px; border-radius: 4px; color: #bfdbfe;">
                         ⏰ ${this.getScheduleLabel(automation)}
                       </span>
-                      ${automation.active && nextRun ? `
+                      ${
+                        automation.active && nextRun
+                          ? `
                       <span id="countdown-${automation.id}" style="background: rgba(34,197,94,.2); padding: 4px 8px; border-radius: 4px; color: #86efac; font-weight: 600;">
                         ⏱️ ${countdown}
                       </span>
-                      ` : ''}
+                      `
+                          : ''
+                      }
                     </div>
                   </div>
                   <div style="display: flex; gap: 6px;">
@@ -2238,10 +2290,12 @@ ARNOMA Team"
                 </div>
               </div>
             `;
-              }).join('')}
+                })
+                .join('')}
             </div>
           </div>
-          ` : `
+          `
+              : `
           <div style="text-align: center; padding: 40px 20px; border: 2px dashed rgba(165,180,252,.2); border-radius: 12px; margin-top: 24px;">
             <div style="font-size: 48px; opacity: 0.4; margin-bottom: 12px;">➕</div>
             <p style="font-size: 14px; color: var(--secondary); margin-bottom: 16px;">Create custom automations for your workflow</p>
@@ -2249,7 +2303,8 @@ ARNOMA Team"
               Create Custom Automation
             </button>
           </div>
-          `}
+          `
+          }
         `;
 
           container.innerHTML = html;
@@ -2602,11 +2657,7 @@ ARNOMA Team"
         if (!email) {
           console.log('📥 Email not in cache, fetching from Supabase...');
           try {
-            const { data, error } = await supabase
-              .from('sent_emails')
-              .select('*')
-              .eq('id', emailId)
-              .single();
+            const { data, error } = await supabase.from('sent_emails').select('*').eq('id', emailId).single();
 
             if (error) throw error;
             email = data;
@@ -2635,11 +2686,14 @@ ARNOMA Team"
         console.log('✅ Sending email preview to parent window via postMessage');
         try {
           // Send to parent window to open preview
-          window.parent.postMessage({
-            action: 'openEmailPreview',
-            htmlContent: email.html_content,
-            subject: email.subject
-          }, '*');
+          window.parent.postMessage(
+            {
+              action: 'openEmailPreview',
+              htmlContent: email.html_content,
+              subject: email.subject,
+            },
+            '*'
+          );
           console.log('✅ Posted message to parent window');
         } catch (error) {
           console.error('❌ Error posting message to parent:', error);
@@ -3215,15 +3269,18 @@ ARNOMA Team"
       // Track sent emails in Supabase with full HTML content
       async function trackSentEmail(recipient, subject, template_name, htmlContent = null, metadata = {}) {
         try {
-          const { data, error } = await supabase.from('sent_emails').insert([
-            {
-              recipient_email: recipient,
-              subject: subject,
-              template_name: template_name,
-              html_content: htmlContent,
-              sent_at: new Date().toISOString(),
-            },
-          ]).select();
+          const { data, error } = await supabase
+            .from('sent_emails')
+            .insert([
+              {
+                recipient_email: recipient,
+                subject: subject,
+                template_name: template_name,
+                html_content: htmlContent,
+                sent_at: new Date().toISOString(),
+              },
+            ])
+            .select();
 
           if (error) throw error;
           console.log(
@@ -3231,7 +3288,7 @@ ARNOMA Team"
             recipient,
             metadata.recipientName ? `(${metadata.recipientName})` : ''
           );
-          
+
           // Return the inserted email record (includes id)
           return data && data[0] ? data[0] : null;
         } catch (error) {
@@ -4700,7 +4757,7 @@ ARNOMA Team"
                     <table width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; width: 100%; margin: 0 auto;">
                       <tr>
                         <td style="padding: 0 20px;">
-                          
+
                           <!-- Greeting -->
                           <p style="font-size: 16px; color: #333; margin: 24px 0 20px 0; padding: 0;">Dear <strong>${student.name}</strong>,</p>
 
@@ -4717,7 +4774,7 @@ ARNOMA Team"
                           <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background: #ffffff; border: 1px solid #e5e7eb; border-radius: 8px; margin: 20px 0;">
                             <tr>
                               <td style="padding: 24px;">
-                                
+
                                 <p style="font-size: 15px; color: #555; margin: 0 0 16px 0; text-align: center;">Your credit balance has been adjusted:</p>
 
                                 <!-- Balance Row -->
@@ -4903,13 +4960,16 @@ ARNOMA Team"
 
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
             });
 
             if (!response.ok) throw new Error('Failed to send email');
 
-            await trackSentEmail(student.email, subject, 'Status Change', body, { recipientName: student.name, groupName: groupName });
+            await trackSentEmail(student.email, subject, 'Status Change', body, {
+              recipientName: student.name,
+              groupName: groupName,
+            });
 
             window.parent.postMessage({ action: 'statusChangeToPausedEmailSent', success: true }, '*');
           } catch (error) {
@@ -4952,13 +5012,16 @@ ARNOMA Team"
 
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
             });
 
             if (!response.ok) throw new Error('Failed to send email');
 
-            await trackSentEmail(student.email, subject, 'Status Change', body, { recipientName: student.name, groupName: groupName });
+            await trackSentEmail(student.email, subject, 'Status Change', body, {
+              recipientName: student.name,
+              groupName: groupName,
+            });
 
             window.parent.postMessage({ action: 'statusChangeToActiveEmailSent', success: true }, '*');
           } catch (error) {
@@ -5006,13 +5069,16 @@ ARNOMA Team"
 
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
             });
 
             if (!response.ok) throw new Error('Failed to send email');
 
-            await trackSentEmail(student.email, subject, 'Status Change', body, { recipientName: student.name, groupName: groupName });
+            await trackSentEmail(student.email, subject, 'Status Change', body, {
+              recipientName: student.name,
+              groupName: groupName,
+            });
 
             window.parent.postMessage({ action: 'statusChangeToGraduatedEmailSent', success: true }, '*');
           } catch (error) {
@@ -5063,13 +5129,17 @@ ARNOMA Team"
 
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
             });
 
             if (!response.ok) throw new Error('Failed to send email');
 
-            await trackSentEmail(student.email, subject, 'Absence Notification', body, { recipientName: student.name, groupName: groupName, classDate: classDate });
+            await trackSentEmail(student.email, subject, 'Absence Notification', body, {
+              recipientName: student.name,
+              groupName: groupName,
+              classDate: classDate,
+            });
 
             window.parent.postMessage({ action: 'absenceNotificationEmailSent', success: true }, '*');
           } catch (error) {
@@ -5096,7 +5166,7 @@ ARNOMA Team"
                 <div style="font-size: 15px; color: #555; margin-bottom: 12px;">
                   Your class schedule for <strong>Group ${groupName}</strong> has been updated.
                 </div>
-                
+
                 <div style="background: rgba(255, 255, 255, 0.7); padding: 16px; border-radius: 6px; margin: 12px 0;">
                   <div style="margin-bottom: 12px;">
                     <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Previous Schedule:</div>
@@ -5120,13 +5190,18 @@ ARNOMA Team"
 
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
             });
 
             if (!response.ok) throw new Error('Failed to send email');
 
-            await trackSentEmail(student.email, subject, 'Schedule Change', body, { recipientName: student.name, groupName: groupName, oldSchedule, newSchedule });
+            await trackSentEmail(student.email, subject, 'Schedule Change', body, {
+              recipientName: student.name,
+              groupName: groupName,
+              oldSchedule,
+              newSchedule,
+            });
 
             window.parent.postMessage({ action: 'scheduleChangeEmailSent', success: true }, '*');
           } catch (error) {
@@ -5181,13 +5256,17 @@ ARNOMA Team"
 
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
             });
 
             if (!response.ok) throw new Error('Failed to send email');
 
-            await trackSentEmail(student.email, subject, 'Group Enrollment', body, { recipientName: student.name, groupName: groupName, groupSchedule });
+            await trackSentEmail(student.email, subject, 'Group Enrollment', body, {
+              recipientName: student.name,
+              groupName: groupName,
+              groupSchedule,
+            });
 
             window.parent.postMessage({ action: 'groupEnrollmentEmailSent', success: true }, '*');
           } catch (error) {
@@ -5249,13 +5328,18 @@ ARNOMA Team"
 
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-              body: JSON.stringify({ to: student.email, subject: subject, html: body })
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
             });
 
             if (!response.ok) throw new Error('Failed to send email');
 
-            await trackSentEmail(student.email, subject, 'Payment Receipt', body, { recipientName: student.name, paymentAmount, paymentDate, newBalance });
+            await trackSentEmail(student.email, subject, 'Payment Receipt', body, {
+              recipientName: student.name,
+              paymentAmount,
+              paymentDate,
+              newBalance,
+            });
 
             window.parent.postMessage({ action: 'paymentReceiptEmailSent', success: true }, '*');
           } catch (error) {
@@ -5311,14 +5395,26 @@ ARNOMA Team"
         window.studentsData = [];
       }
       let sentReminders = new Set(); // Track sent reminders to avoid duplicates
-      window.dataReceived = false; // GLOBAL flag to track if we've received data from parent
+  window.__automationDataReceived = window.__automationDataReceived || false; // Guard duplicate payloads
+  window.__automationDataReceivedAt = window.__automationDataReceivedAt || null;
+  window.__automationEngineInitialized = window.__automationEngineInitialized || false;
+  let automationDataRequestInterval = null;
 
       // Listen for data from parent window (index.html)
       window.addEventListener('message', function (event) {
         if (event.data.action === 'updateGroupsData') {
+          if (window.__automationDataReceived) {
+            console.log('[AutomationEngine] 🔁 Duplicate automation payload ignored');
+            return;
+          }
           window.groupsData = event.data.groups || [];
           window.studentsData = event.data.students || [];
-          window.dataReceived = true; // Mark that we've received data (GLOBAL)
+          window.__automationDataReceived = true; // Mark that we've received data (GLOBAL)
+          window.__automationDataReceivedAt = Date.now();
+          if (automationDataRequestInterval) {
+            clearInterval(automationDataRequestInterval);
+            automationDataRequestInterval = null;
+          }
 
           console.log(
             `📨 Received data from parent: ${window.groupsData.length} groups, ${window.studentsData.length} students`
@@ -5345,6 +5441,9 @@ ARNOMA Team"
 
       // Request initial data from parent
       function requestDataFromParent() {
+        if (window.__automationDataReceived) {
+          return;
+        }
         if (window.parent && window.parent !== window) {
           window.parent.postMessage({ action: 'requestGroupsData' }, '*');
         }
@@ -5674,6 +5773,11 @@ ARNOMA Team"
 
       // Initialize automation engine
       function initAutomationEngine() {
+        if (window.__automationEngineInitialized) {
+          console.log('[AutomationEngine] ⚠️ Already initialized, skipping duplicate init');
+          return;
+        }
+        window.__automationEngineInitialized = true;
         console.log('[AutomationEngine] ⚡ Initialized');
 
         // Load automations from localStorage
@@ -5682,8 +5786,14 @@ ARNOMA Team"
         // Request data from parent immediately
         requestDataFromParent();
 
-        // Request data every 30 seconds
-        setInterval(requestDataFromParent, 30000);
+        // Request data every 30 seconds until the first payload arrives
+        if (!automationDataRequestInterval) {
+          automationDataRequestInterval = setInterval(() => {
+            if (!window.__automationDataReceived) {
+              requestDataFromParent();
+            }
+          }, 30000);
+        }
 
         // Check automations every 60 seconds
         setInterval(checkAutomations, 60000);
@@ -5692,8 +5802,8 @@ ARNOMA Team"
         let firstCheckAttempts = 0;
         const waitForDataAndCheck = () => {
           firstCheckAttempts++;
-          if (window.dataReceived || firstCheckAttempts >= 30) {
-            if (!window.dataReceived) {
+          if (window.__automationDataReceived || firstCheckAttempts >= 30) {
+            if (!window.__automationDataReceived) {
               console.warn('[AutomationEngine] ⚠️ No data received after 30s');
             }
             checkAutomations();
@@ -5734,13 +5844,13 @@ ARNOMA Team"
       async function testProfileUpdate() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail() },
           changes: 'Phone number updated to (123) 456-7890',
-          emailType: 'current'
+          emailType: 'current',
         };
-        
+
         window.postMessage({ action: 'sendProfileUpdateEmail', ...testData }, '*');
         alert('✅ Profile Update email sent!');
       }
@@ -5748,12 +5858,12 @@ ARNOMA Team"
       async function testAliasAdded() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           mainStudent: { name: student.name, email: getTestEmail() },
-          aliasName: 'Test Alias Student'
+          aliasName: 'Test Alias Student',
         };
-        
+
         window.postMessage({ action: 'sendAliasAddedEmail', ...testData }, '*');
         alert('✅ Alias Added email sent!');
       }
@@ -5761,13 +5871,13 @@ ARNOMA Team"
       async function testScheduleUpdate() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail(), group: student.group || 'Test Group' },
           oldSchedule: 'Monday 6:00 PM',
-          newSchedule: 'Tuesday 7:00 PM'
+          newSchedule: 'Tuesday 7:00 PM',
         };
-        
+
         window.postMessage({ action: 'sendScheduleUpdateEmail', ...testData }, '*');
         alert('✅ Schedule Update email sent!');
       }
@@ -5775,13 +5885,13 @@ ARNOMA Team"
       async function testGroupEnrollment() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail(), group: student.group || 'Test Group' },
           groupName: student.group || 'Test Group',
-          schedule: 'Monday 6:00 PM'
+          schedule: 'Monday 6:00 PM',
         };
-        
+
         window.postMessage({ action: 'sendGroupEnrollmentEmail', ...testData }, '*');
         alert('✅ Group Enrollment email sent!');
       }
@@ -5789,14 +5899,14 @@ ARNOMA Team"
       async function testCreditAdded() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail() },
           creditAmount: 50,
           reason: 'Testing credit addition',
-          newBalance: 150
+          newBalance: 150,
         };
-        
+
         window.postMessage({ action: 'sendCreditAddedEmail', ...testData }, '*');
         alert('✅ Credit Added email sent!');
       }
@@ -5804,14 +5914,14 @@ ARNOMA Team"
       async function testCreditApplied() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail() },
           creditAmount: 50,
           classDate: '2025-11-20',
-          remainingBalance: 100
+          remainingBalance: 100,
         };
-        
+
         window.postMessage({ action: 'sendCreditAppliedEmail', ...testData }, '*');
         alert('✅ Credit Applied email sent!');
       }
@@ -5819,14 +5929,14 @@ ARNOMA Team"
       async function testCreditEdit() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail() },
           oldBalance: 100,
           newBalance: 150,
-          reason: 'Manual adjustment for testing'
+          reason: 'Manual adjustment for testing',
         };
-        
+
         window.postMessage({ action: 'sendCreditManualEditEmail', ...testData }, '*');
         alert('✅ Credit Manual Edit email sent!');
       }
@@ -5834,12 +5944,12 @@ ARNOMA Team"
       async function testStatusPaused() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail() },
-          reason: 'Testing pause status'
+          reason: 'Testing pause status',
         };
-        
+
         window.postMessage({ action: 'sendStatusChangeToPausedEmail', ...testData }, '*');
         alert('✅ Status Changed to Paused email sent!');
       }
@@ -5847,11 +5957,11 @@ ARNOMA Team"
       async function testStatusActive() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
-          student: { name: student.name, email: getTestEmail() }
+          student: { name: student.name, email: getTestEmail() },
         };
-        
+
         window.postMessage({ action: 'sendStatusChangeToActiveEmail', ...testData }, '*');
         alert('✅ Status Changed to Active email sent!');
       }
@@ -5859,12 +5969,12 @@ ARNOMA Team"
       async function testStatusGraduated() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail() },
-          graduationDate: '2025-11-19'
+          graduationDate: '2025-11-19',
         };
-        
+
         window.postMessage({ action: 'sendStatusChangeToGraduatedEmail', ...testData }, '*');
         alert('✅ Status Changed to Graduated email sent!');
       }
@@ -5872,13 +5982,13 @@ ARNOMA Team"
       async function testAbsence() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail() },
           classDate: '2025-11-19',
-          reason: 'Testing absence notification'
+          reason: 'Testing absence notification',
         };
-        
+
         window.postMessage({ action: 'sendAbsenceNotificationEmail', ...testData }, '*');
         alert('✅ Absence Notification email sent!');
       }
@@ -5886,15 +5996,15 @@ ARNOMA Team"
       async function testScheduleChange() {
         const student = getTestStudent();
         if (!student) return;
-        
+
         const testData = {
           student: { name: student.name, email: getTestEmail(), group: student.group || 'Test Group' },
           groupName: student.group || 'Test Group',
           oldSchedule: 'Monday 6:00 PM',
           newSchedule: 'Tuesday 7:00 PM',
-          effectiveDate: '2025-11-20'
+          effectiveDate: '2025-11-20',
         };
-        
+
         window.postMessage({ action: 'sendScheduleChangeEmail', ...testData }, '*');
         alert('✅ Schedule Change email sent!');
       }
