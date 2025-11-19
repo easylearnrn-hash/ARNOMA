@@ -9482,7 +9482,7 @@
         // ============================================================
         // SEND MANUAL CREDIT EDIT EMAIL TO STUDENT
         // ============================================================
-        async function sendCreditManualEditEmail(student, oldBalance, newBalance, reason = 'Manual adjustment') {
+        async function sendCreditManualEditEmail(student, oldBalance, newBalance) {
           try {
             console.log('[CreditEmail] 📧 Sending manual credit edit email to:', student.name);
 
@@ -9503,7 +9503,6 @@
                 },
                 oldBalance: oldBalance,
                 newBalance: newBalance,
-                reason: reason,
                 timestamp: new Date().toISOString(),
               },
               '*'
@@ -11957,27 +11956,36 @@
           debugLog('🔄 Changes to notify:', changes);
 
           // Send profile update email if there are changes and student has email
-          // If balance was changed manually, send credit manual edit email instead of profile update
+          // If balance was changed manually, ask user if they want to send an email
           if (balanceChanged && savedRecord.email && savedRecord.email.trim() !== '') {
-            console.log('💳 Sending credit manual edit email for balance change');
-            const emailResult = await sendCreditManualEditEmail(
-              savedRecord,
-              oldBalance,
-              balance,
-              'Manual administrative adjustment'
-            );
+            console.log('💳 Credit balance changed - asking user about email notification');
+            
+            // Ask user if they want to send the email
+            const sendEmail = confirm(`Do you want to send the credit change email to this student?\n\nStudent: ${savedRecord.name}\nEmail: ${savedRecord.email}\n\nPrevious Balance: $${oldBalance.toFixed(2)}\nNew Balance: $${balance.toFixed(2)}`);
+            
+            if (sendEmail) {
+              console.log('💳 User confirmed - sending credit manual edit email');
+              const emailResult = await sendCreditManualEditEmail(
+                savedRecord,
+                oldBalance,
+                balance
+              );
 
-            if (emailResult.success) {
-              showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
-              showNotificationSimple(`📧 Email sent to ${savedRecord.email}`, 'success');
-              console.log('[Credit] ✅ Manual edit email sent successfully');
+              if (emailResult.success) {
+                showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
+                showNotificationSimple(`📧 Email sent to ${savedRecord.email}`, 'success');
+                console.log('[Credit] ✅ Manual edit email sent successfully');
+              } else {
+                showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
+                showNotificationSimple(`⚠️ Balance updated but email failed: ${emailResult.error}`, 'warning');
+                console.error('[Credit] ❌ Email failed:', emailResult.error);
+              }
             } else {
+              console.log('💳 User declined - credit updated without email');
               showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
-              showNotificationSimple(`⚠️ Balance updated but email failed: ${emailResult.error}`, 'warning');
-              console.error('[Credit] ❌ Email failed:', emailResult.error);
             }
 
-            // Remove balance from changes list since we sent a specific credit email
+            // Remove balance from changes list since we handled it separately
             changes = changes.filter(c => c.field !== 'Balance');
           }
 

@@ -4679,7 +4679,6 @@ ARNOMA Team"
 
             const oldBalance = parseFloat(event.data.oldBalance) || 0;
             const newBalance = parseFloat(event.data.newBalance) || 0;
-            const reason = event.data.reason || 'Manual adjustment';
             const difference = newBalance - oldBalance;
             const timestamp = event.data.timestamp ? new Date(event.data.timestamp) : new Date();
             const formattedDate = timestamp.toLocaleDateString('en-US', {
@@ -4719,9 +4718,6 @@ ARNOMA Team"
                   <div style="font-size: 16px; color: ${difference >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 600; text-align: center; padding-top: 12px; border-top: 1px solid rgba(0,0,0,0.1);">
                     ${difference >= 0 ? '+' : ''}$${difference.toFixed(2)}
                   </div>
-                </div>
-                <div style="font-size: 14px; color: #666; margin-top: 12px;">
-                  <strong>Reason:</strong> ${reason}
                 </div>
               </div>
 
