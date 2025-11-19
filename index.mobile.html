@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>ARNOMA - Mobile [v2.3.4]</title>
+    <title>ARNOMA - Mobile [v2.3.5]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA Mobile v2.3.4 - Student Manager Mobile Layout Fix');
+      console.log('🔥 ARNOMA Mobile v2.3.5 - Student Manager Complete Mobile Fix');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -3200,15 +3200,12 @@
         <div
           onclick="event.stopPropagation()"
           style="
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            margin: 5vh auto;
-            width: 100%;
-            max-width: 100%;
-            height: 90vh;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 400px;
             max-height: 90vh;
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(24px);
@@ -3221,12 +3218,38 @@
             box-sizing: border-box;
           "
         >
+          <!-- Close Button -->
+          <button
+            onclick="closeStudentManager()"
+            style="
+              position: absolute;
+              top: 12px;
+              right: 12px;
+              font-size: 20px;
+              background: rgba(255, 255, 255, 0.1);
+              border: 1px solid rgba(255, 255, 255, 0.2);
+              border-radius: 50%;
+              width: 32px;
+              height: 32px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              cursor: pointer;
+              z-index: 9999;
+              color: white;
+              padding: 0;
+            "
+          >
+            &times;
+          </button>
+
           <!-- Header -->
           <div
             style="
               background: rgba(255, 255, 255, 0.05);
               border-bottom: 1px solid rgba(255, 255, 255, 0.1);
               padding: 16px;
+              padding-top: 48px;
               box-sizing: border-box;
             "
           >
@@ -3238,13 +3261,13 @@
                   -webkit-background-clip: text;
                   background-clip: text;
                   -webkit-text-fill-color: transparent;
-                  font-size: 24px;
+                  font-size: 20px;
                   font-weight: 900;
                 "
               >
                 👩‍⚕️ Student Manager
               </h1>
-              <div style="display: flex; flex-wrap: wrap; gap: 8px; width: 100%;">
+              <div style="display: flex; flex-direction: column; gap: 8px; width: 100%;">
                 <button
                   onclick="openAddStudent()"
                   style="
@@ -3257,8 +3280,7 @@
                     font-weight: 700;
                     cursor: pointer;
                     box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-                    flex: 1 1 45%;
-                    min-width: 120px;
+                    width: 100%;
                   "
                 >
                   + Add Student
@@ -3276,8 +3298,7 @@
                     font-weight: 700;
                     cursor: pointer;
                     box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-                    flex: 1 1 45%;
-                    min-width: 120px;
+                    width: 100%;
                   "
                 >
                   📋 Bulk Add
@@ -3294,8 +3315,7 @@
                     font-size: 13px;
                     font-weight: 700;
                     cursor: pointer;
-                    flex: 1 1 45%;
-                    min-width: 120px;
+                    width: 100%;
                   "
                 >
                   Waiting List
@@ -3311,8 +3331,7 @@
                     font-size: 13px;
                     font-weight: 700;
                     cursor: pointer;
-                    flex: 1 1 45%;
-                    min-width: 120px;
+                    width: 100%;
                   "
                 >
                   Find Duplicates
@@ -3329,42 +3348,23 @@
                     font-size: 13px;
                     font-weight: 700;
                     cursor: pointer;
-                    flex: 1 1 45%;
-                    min-width: 120px;
+                    width: 100%;
                   "
                 >
                   ☁️ Sync Cloud
-                </button>
-                <button
-                  onclick="closeStudentManager()"
-                  style="
-                    background: rgba(255, 255, 255, 0.1);
-                    border: 1px solid rgba(255, 255, 255, 0.2);
-                    width: 36px;
-                    height: 36px;
-                    border-radius: 50%;
-                    color: white;
-                    font-size: 24px;
-                    cursor: pointer;
-                    padding: 0;
-                    flex: 0 0 36px;
-                  "
-                >
-                  &times;
                 </button>
               </div>
             </div>
 
             <!-- Filter Controls -->
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center; width: 100%; box-sizing: border-box;">
+            <div style="display: flex; flex-direction: column; gap: 8px; width: 100%; box-sizing: border-box;">
               <input
                 type="text"
                 id="studentSearchInput"
                 placeholder="🔍 Search..."
                 oninput="debouncedFilterStudents()"
                 style="
-                  flex: 1 1 100%;
-                  min-width: 200px;
+                  width: 100%;
                   padding: 10px 16px;
                   background: rgba(255, 255, 255, 0.05);
                   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -3386,8 +3386,7 @@
                   color: white;
                   font-size: 13px;
                   font-weight: 600;
-                  flex: 1 1 45%;
-                  min-width: 130px;
+                  width: 100%;
                   box-sizing: border-box;
                 "
               >
@@ -3406,8 +3405,7 @@
                   color: white;
                   font-size: 13px;
                   font-weight: 600;
-                  flex: 1 1 45%;
-                  min-width: 130px;
+                  width: 100%;
                   box-sizing: border-box;
                 "
               >
@@ -3428,8 +3426,7 @@
                   color: white;
                   font-size: 13px;
                   font-weight: 600;
-                  flex: 1 1 45%;
-                  min-width: 130px;
+                  width: 100%;
                   box-sizing: border-box;
                 "
               >
@@ -3449,8 +3446,7 @@
                   color: white;
                   font-size: 13px;
                   font-weight: 600;
-                  flex: 1 1 45%;
-                  min-width: 130px;
+                  width: 100%;
                   box-sizing: border-box;
                 "
               >
@@ -3468,6 +3464,14 @@
                   border-radius: 10px;
                   color: white;
                   font-size: 13px;
+                  font-weight: 600;
+                  cursor: pointer;
+                  width: 100%;
+                "
+              >
+                Clear Filters
+              </button>
+            </div>
                   font-weight: 600;
                   cursor: pointer;
                 "
@@ -4989,7 +4993,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.4 - Student Manager Mobile Layout Fix</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.5 - Student Manager Complete Mobile Fix</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
