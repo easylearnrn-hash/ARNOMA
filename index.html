@@ -1134,34 +1134,23 @@
 
       /* Student Manager Styles */
       .group-btn:hover {
-        transform: translateY(-3px) scale(1.02);
-        border-color: rgba(138, 180, 255, 0.4);
-        box-shadow: 
-          0 6px 20px rgba(138, 180, 255, 0.25),
-          0 2px 8px rgba(0, 0, 0, 0.4),
-          inset 0 1px 2px rgba(255, 255, 255, 0.15);
-        background: linear-gradient(135deg, rgba(51, 65, 85, 0.9), rgba(71, 85, 105, 0.9));
+        transform: translateY(-1px);
+        border-color: rgba(139, 92, 246, 0.5);
+        background: rgba(51, 65, 85, 0.7);
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
       }
 
       .group-btn.active {
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6) !important;
-        border-color: rgba(139, 92, 246, 0.6) !important;
+        background: linear-gradient(135deg, #6366f1, #8b5cf6) !important;
+        border-color: rgba(139, 92, 246, 0.7) !important;
         color: #ffffff !important;
-        box-shadow: 
-          0 6px 24px rgba(139, 92, 246, 0.5),
-          0 2px 12px rgba(59, 130, 246, 0.3),
-          inset 0 1px 2px rgba(255, 255, 255, 0.2) !important;
+        box-shadow: 0 2px 12px rgba(139, 92, 246, 0.4) !important;
         font-weight: 700 !important;
-        transform: scale(1.05) !important;
       }
 
       .group-btn.active:hover {
-        transform: translateY(-2px) scale(1.06) !important;
-        box-shadow: 
-          0 8px 28px rgba(139, 92, 246, 0.6),
-          0 4px 16px rgba(59, 130, 246, 0.4),
-          inset 0 1px 2px rgba(255, 255, 255, 0.25) !important;
-        border-color: rgba(139, 92, 246, 0.8) !important;
+        transform: translateY(-1px) !important;
+        box-shadow: 0 3px 16px rgba(139, 92, 246, 0.5) !important;
       }
 
       /* Group Manager Styles */
@@ -1411,53 +1400,34 @@
       /* BEGIN FEATURE 2 - Instant Group Switch Buttons */
       .group-buttons {
         display: flex;
-        gap: 8px;
+        gap: 6px;
         justify-content: center;
-        margin: 12px 0;
+        margin: 8px 0;
         flex-wrap: nowrap;
-        overflow-x: hidden; /* Changed from auto to hidden - no scrolling */
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE/Edge */
+        overflow-x: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
       }
 
       .group-buttons::-webkit-scrollbar {
-        display: none; /* Chrome/Safari */
+        display: none;
       }
 
       .group-btn {
-        padding: 8px 16px;
-        border-radius: 12px;
-        font-size: 13px;
+        padding: 5px 11px;
+        border-radius: 8px;
+        font-size: 11px;
         font-weight: 600;
+        letter-spacing: 0.3px;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        border: 1.5px solid rgba(138, 180, 255, 0.2);
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.8), rgba(51, 65, 85, 0.8));
-        backdrop-filter: blur(12px);
-        color: rgba(226, 232, 240, 0.9);
-        min-width: 42px;
+        transition: all 0.2s ease;
+        border: 1px solid rgba(139, 92, 246, 0.25);
+        background: rgba(30, 41, 59, 0.6);
+        color: rgba(203, 213, 225, 0.85);
+        min-width: 32px;
         white-space: nowrap;
         flex-shrink: 0;
-        box-shadow: 
-          0 2px 8px rgba(0, 0, 0, 0.3),
-          inset 0 1px 1px rgba(255, 255, 255, 0.1);
-        position: relative;
-        overflow: hidden;
-      }
-
-      .group-btn::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(138, 180, 255, 0.15), transparent);
-        transition: left 0.5s ease;
-      }
-
-      .group-btn:hover::before {
-        left: 100%;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
       }
 
       /* END FEATURE 2 */
