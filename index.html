@@ -10592,39 +10592,50 @@
 
         // Initialize toggle states on page load - NOW LOADS FROM CLOUD
         async function initializeLAOffsetToggles() {
-          const settings = await getLAOffsetSettings(); // Load from cloud
-          const toggle12 = document.getElementById('laOffset12Toggle');
-          const toggle11 = document.getElementById('laOffset11Toggle');
+          try {
+            const settings = await getLAOffsetSettings(); // Load from cloud
+            const toggle12 = document.getElementById('laOffset12Toggle');
+            const toggle11 = document.getElementById('laOffset11Toggle');
 
-          const enable12 = Boolean(settings.offset12);
-          const enable11 = !enable12 && Boolean(settings.offset11);
+            if (!toggle12 || !toggle11) {
+              console.warn('⚠️ Toggle elements not found');
+              return;
+            }
 
-          isUpdatingLAOffset = true;
-          await setLAOffset(12, enable12, { silent: true });
-          await setLAOffset(11, enable11, { silent: true });
-          if (toggle12) toggle12.checked = enable12;
-          if (toggle11) toggle11.checked = enable11;
-          isUpdatingLAOffset = false;
+            const enable12 = Boolean(settings.offset12);
+            const enable11 = !enable12 && Boolean(settings.offset11);
 
-          if (toggle12) {
+            console.log('🔧 Initializing toggles:', { enable12, enable11, settings });
+
+            isUpdatingLAOffset = true;
+            
+            // Set UI state first
+            toggle12.checked = enable12;
+            toggle11.checked = enable11;
+            updateToggleStyle(toggle12, enable12);
+            updateToggleStyle(toggle11, enable11);
+            
+            isUpdatingLAOffset = false;
+
+            // Add event listeners
             toggle12.addEventListener('change', async event => {
               if (isUpdatingLAOffset) return;
               isUpdatingLAOffset = true;
               await setLAOffset(12, event.target.checked);
               isUpdatingLAOffset = false;
             });
-          }
 
-          if (toggle11) {
             toggle11.addEventListener('change', async event => {
               if (isUpdatingLAOffset) return;
               isUpdatingLAOffset = true;
               await setLAOffset(11, event.target.checked);
               isUpdatingLAOffset = false;
             });
-          }
 
-          debugLog('✅ LA offset toggles initialized from cloud');
+            console.log('✅ LA offset toggles initialized:', { winter: enable12, summer: enable11 });
+          } catch (error) {
+            console.error('❌ Failed to initialize LA offset toggles:', error);
+          }
         }
 
         // Subscribe to real-time preference changes (syncs instantly across all devices)
