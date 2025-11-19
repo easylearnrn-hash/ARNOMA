@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <title>ARNOMA - Mobile [v2.2.1]</title>
+    <title>ARNOMA - Mobile [v2.3.2]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -68,7 +68,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA Mobile v2.3.1 - Mobile Layout + Red Dot Creation Date Fix');
+      console.log('🔥 ARNOMA Mobile v2.3.2 - Full Mobile Responsive Layout Fix');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -611,47 +611,56 @@
         background: #0b0b10;
         color: #e5e7eb;
         min-height: 100vh;
-        padding: 20px;
+        padding: 0;
         margin: 0;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch !important;
       }
 
       .container {
-        max-width: 100%;
-        margin: 0 auto;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
         background: transparent;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 18px;
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
+        border: none;
+        border-radius: 0;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        box-shadow: none;
         overflow: visible;
-        transition: 0.25s ease-in-out;
+        transition: none;
+        box-sizing: border-box;
       }
 
       .header {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 24px;
+        padding: 16px 12px;
         display: flex;
-        align-items: center;
+        flex-direction: column;
         gap: 12px;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .header h1 {
-        font-size: 24px;
+        font-size: 20px;
         font-weight: 700;
         color: white;
         display: flex;
-        align-items: center;
-        gap: 12px;
+        flex-direction: column;
+        gap: 6px;
         flex: 1;
+        margin: 0;
+        width: 100%;
       }
 
       .header-controls {
         display: flex;
         align-items: center;
+        flex-wrap: wrap;
         gap: 8px;
+        width: 100%;
       }
 
       .control-btn {
@@ -689,18 +698,19 @@
       }
 
       .gmail-btn {
-        padding: 8px 16px;
+        padding: 8px 12px;
         background: rgba(255, 255, 255, 0.15);
         border: 1px solid rgba(255, 255, 255, 0.3);
         border-radius: 8px;
         color: white;
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         cursor: pointer;
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 6px;
         transition: all 0.2s;
+        white-space: nowrap;
       }
 
       .gmail-btn:hover {
@@ -723,7 +733,6 @@
         font-size: 13px;
         color: rgba(255, 255, 255, 0.9);
         font-weight: 600;
-        margin-left: 8px;
       }
 
       .filter-dropdown {
@@ -735,41 +744,45 @@
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
-        margin-left: 8px;
+        flex: 1;
+        min-width: 150px;
       }
 
       .content {
-        padding: 20px;
-        max-height: calc(90vh - 100px);
+        padding: 12px;
+        width: 100%;
+        box-sizing: border-box;
         overflow-y: auto;
       }
 
       .date-section {
-        margin-bottom: 24px;
+        margin-bottom: 16px;
         background: rgba(15, 23, 42, 0.6);
         border: 1px solid rgba(51, 65, 85, 0.5);
         border-radius: 12px;
         overflow: hidden;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .date-header {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 14px 20px;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
         background: rgba(15, 23, 42, 0.8);
         border-bottom: 1px solid rgba(51, 65, 85, 0.5);
       }
 
       .date-title {
-        font-size: 15px;
+        font-size: 14px;
         font-weight: 600;
         color: #e2e8f0;
         letter-spacing: 0.3px;
       }
 
       .date-total {
-        font-size: 14px;
+        font-size: 13px;
         font-weight: 600;
         color: #94a3b8;
       }
@@ -777,32 +790,25 @@
       .payments-table {
         background: transparent;
         border: none;
-        overflow: hidden;
+        overflow-x: auto;
+        width: 100%;
       }
 
       .table-header {
-        display: grid;
-        grid-template-columns: 100px 1fr 1fr 100px 1fr 180px 1fr 40px;
-        gap: 16px;
-        padding: 14px 20px;
-        background: rgba(30, 41, 59, 0.4);
-        border-bottom: 1px solid rgba(51, 65, 85, 0.5);
-        font-size: 11px;
-        font-weight: 700;
-        color: #94a3b8;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
+        display: none;
       }
 
       .table-row {
-        display: grid;
-        grid-template-columns: 100px 1fr 1fr 100px 1fr 180px 1fr 40px;
-        gap: 16px;
-        padding: 16px 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px;
         border-bottom: 1px solid rgba(51, 65, 85, 0.3);
         font-size: 13px;
         color: #e2e8f0;
         transition: background 0.15s ease;
+        width: 100%;
+        box-sizing: border-box;
       }
 
       .table-row:hover {
@@ -947,15 +953,17 @@
         border: 1px solid rgba(34, 197, 94, 0.3);
         border-radius: 8px;
         padding: 0;
-        margin: 20px;
+        margin: 12px;
         overflow: hidden;
+        width: calc(100% - 24px);
+        box-sizing: border-box;
       }
 
       .month-total-header-row {
         display: flex;
         align-items: center;
         justify-content: center;
-        padding: 6px 20px;
+        padding: 6px 12px;
       }
 
       .month-total-header-left {
@@ -966,12 +974,12 @@
       }
 
       .month-total-values {
-        padding: 0 20px 16px 20px;
+        padding: 0 12px 12px 12px;
         transition:
           max-height 0.3s ease,
           opacity 0.3s ease,
           padding 0.3s ease;
-        max-height: 200px;
+        max-height: 300px;
         opacity: 1;
         overflow: hidden;
       }
@@ -979,29 +987,29 @@
       .month-total-values.collapsed {
         max-height: 0;
         opacity: 0;
-        padding: 0 20px;
+        padding: 0 12px;
       }
 
       .month-total-content {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 24px;
+        flex-direction: column;
+        gap: 16px;
         width: 100%;
       }
 
       .month-total-stats {
         display: flex;
-        align-items: center;
-        gap: 32px;
-        margin-left: auto;
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
       }
 
       .month-total-item {
         display: flex;
         align-items: center;
+        justify-content: space-between;
         gap: 8px;
-        white-space: nowrap;
+        width: 100%;
       }
 
       .month-total-toggle {
@@ -1058,6 +1066,8 @@
         outline: none;
         appearance: none;
         padding-right: 32px;
+        width: 100%;
+        box-sizing: border-box;
         background-image:
           linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15)),
           url('data:image/svg+xml;charset=UTF-8,<svg width="12" height="8" viewBox="0 0 12 8" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5L6 6.5L11 1.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>');
@@ -1762,8 +1772,9 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 560px;
-        max-height: 760px;
+        width: 90vw;
+        max-width: 560px;
+        max-height: 85vh;
         padding: 0;
         border-radius: 18px;
         background: rgba(30, 30, 40, 0.95);
@@ -2195,8 +2206,8 @@
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 16px;
         padding: 24px;
-        min-width: 380px;
-        max-width: 90%;
+        width: 90vw;
+        max-width: 380px;
         box-shadow:
           0 20px 60px rgba(0, 0, 0, 0.9),
           0 0 40px rgba(138, 180, 255, 0.3);
@@ -2506,8 +2517,8 @@
           top: 50%;
           left: 50%;
           transform: translate(-50%, -50%);
-          width: 700px;
-          max-width: 90%;
+          width: 90vw;
+          max-width: 700px;
           max-height: 80vh;
           background: rgba(30, 30, 40, 0.98);
           border: 1px solid rgba(255, 255, 255, 0.2);
@@ -2658,7 +2669,7 @@
           border: 2px solid rgba(138, 180, 255, 0.3);
           border-radius: 16px;
           padding: 24px;
-          min-width: 400px;
+          width: 90vw;
           max-width: 500px;
           max-height: 85vh;
           overflow-y: auto;
@@ -2980,7 +2991,8 @@
           border: 1px solid rgba(255, 255, 255, 0.1);
           border-radius: 16px;
           padding: 32px;
-          min-width: 500px;
+          width: 90vw;
+          max-width: 500px;
           backdrop-filter: blur(20px);
           box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
           z-index: 10001;
@@ -3177,7 +3189,7 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 95%;
-            max-width: 1400px;
+            max-width: 100%;
             max-height: 90vh;
             background: rgba(15, 23, 42, 0.95);
             backdrop-filter: blur(24px);
@@ -4933,7 +4945,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.1 - Mobile Layout + Red Dot Creation Date Fix</span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.3.2 - Full Mobile Responsive Layout Fix</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
