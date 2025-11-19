@@ -2,10 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>ARNOMA - Mobile [v2.2.1]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
@@ -611,6 +608,8 @@
         min-height: 100vh;
         padding: 20px;
         margin: 0;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch !important;
       }
 
       .container {
@@ -622,7 +621,7 @@
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35);
-        overflow: hidden;
+        overflow: visible;
         transition: 0.25s ease-in-out;
       }
 
@@ -2347,17 +2346,81 @@
   </head>
   <body>
     <!-- Email Preview Modal -->
-    <div id="emailPreviewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(8px); z-index: 100005; align-items: center; justify-content: center; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%); border: 2px solid rgba(165, 180, 252, 0.4); border-radius: 20px; width: 800px; height: 85vh; overflow: hidden; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-        <div style="display: flex; align-items: center; justify-content: space-between; padding: 24px 32px; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
-          <h2 style="display: flex; align-items: center; gap: 12px; margin: 0; font-size: 24px; font-weight: 700; color: #a5b4fc;">
+    <div
+      id="emailPreviewModal"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(8px);
+        z-index: 100005;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      "
+    >
+      <div
+        style="
+          background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+          border: 2px solid rgba(165, 180, 252, 0.4);
+          border-radius: 20px;
+          width: 90vw;
+          max-width: 800px;
+          height: 85vh;
+          overflow-y: auto;
+          box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        "
+      >
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 24px 32px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          "
+        >
+          <h2
+            style="
+              display: flex;
+              align-items: center;
+              gap: 12px;
+              margin: 0;
+              font-size: 24px;
+              font-weight: 700;
+              color: #a5b4fc;
+            "
+          >
             <span>👁️</span>
             <span>Email Preview</span>
           </h2>
-          <span onclick="closeEmailPreviewModal()" style="font-size: 36px; color: rgba(255, 255, 255, 0.6); cursor: pointer; transition: all 0.2s ease; line-height: 1; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center;">&times;</span>
+          <span
+            onclick="closeEmailPreviewModal()"
+            style="
+              font-size: 36px;
+              color: rgba(255, 255, 255, 0.6);
+              cursor: pointer;
+              transition: all 0.2s ease;
+              line-height: 1;
+              width: 36px;
+              height: 36px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+            "
+          >
+            &times;
+          </span>
         </div>
-        <div style="padding: 0; height: calc(100% - 81px);">
-          <iframe id="emailPreviewFrame" style="width: 100%; height: 100%; border: none; border-radius: 0 0 16px 16px;"></iframe>
+        <div style="padding: 0; height: calc(100% - 81px); overflow-y: auto">
+          <iframe
+            id="emailPreviewFrame"
+            style="width: 100%; height: 100%; border: none; border-radius: 0 0 16px 16px"
+          ></iframe>
         </div>
       </div>
     </div>
@@ -4863,7 +4926,10 @@
 
       <div class="container">
         <div class="header">
-          <h1>Payment Records <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500;">🔥 ARNOMA v2.2.1</span></h1>
+          <h1>
+            Payment Records
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">🔥 ARNOMA v2.2.1</span>
+          </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
             <option value="matched">Matched Only</option>
@@ -6047,7 +6113,7 @@
                   payment.date || new Date().toISOString().split('T')[0],
                   student.balance
                 );
-                
+
                 if (emailResult.success) {
                   console.log('✅ Payment receipt email sent successfully');
                   // Create notification
@@ -6342,13 +6408,14 @@
             if (!seen.has(key)) {
               deduped.push(g);
               seen.add(key);
+            }
           }
-        }
 
-        window.groupsCache = deduped;
-        window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
-        return window.groupsCache;
-      }        async function saveGroup(groupData) {
+          window.groupsCache = deduped;
+          window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
+          return window.groupsCache;
+        }
+        async function saveGroup(groupData) {
           // Map 'name' to 'group_name' for Supabase
           const payload = {
             group_name: groupData.name || groupData.group_name,
@@ -7056,6 +7123,7 @@
 
           modal.appendChild(modalContent);
           document.body.appendChild(modal);
+          document.body.style.overflow = 'hidden';
 
           // Add event listeners
           const searchInput = document.getElementById('studentSearchInput');
@@ -9216,6 +9284,7 @@
             setTimeout(() => {
               modal.remove();
               backdrop.remove();
+              document.body.style.overflow = 'auto';
               window.PopupManager?.activePopups?.delete('linkStudentModal');
             }, 250);
             // END POPUP BACK & EXIT FIX
@@ -9297,9 +9366,9 @@
 
             modal.innerHTML = `
             <div style="background: linear-gradient(135deg, #1a1f35 0%, #0f1629 100%);
-              border: 2px solid #3b82f6; border-radius: 16px;
-              padding: 32px; width: 800px; height: 85vh; display: flex; flex-direction: column;
-              box-shadow: 0 20px 60px rgba(0,0,0,0.5);">
+              border: 2px solid #3b82f6; border-radius: 20px;
+              padding: 32px; width: 90vw; max-width: 800px; height: 85vh; display: flex; flex-direction: column;
+              box-shadow: 0 20px 60px rgba(0,0,0,0.5); overflow-y: auto;">
               <h2 style="color: #fff; margin: 0 0 16px 0; display: flex; align-items: center; gap: 12px;">
                 <span style="font-size: 28px;">📧</span>
                 <span>Confirm Email Send</span>
@@ -9337,6 +9406,7 @@
           `;
 
             document.body.appendChild(modal);
+            document.body.style.overflow = 'hidden';
 
             const cancelBtn = document.getElementById('cancelEmailBtn');
             const sendBtn = document.getElementById('sendEmailBtn');
@@ -9355,12 +9425,14 @@
 
             cancelBtn.onclick = () => {
               modal.remove();
+              document.body.style.overflow = 'auto';
               console.log('[EmailConfirmation] ❌ User cancelled email send');
               resolve(false);
             };
 
             sendBtn.onclick = () => {
               modal.remove();
+              document.body.style.overflow = 'auto';
               console.log('[EmailConfirmation] ✅ User confirmed email send');
               resolve(true);
             };
@@ -11925,17 +11997,15 @@
           // If balance was changed manually, ask user if they want to send an email
           if (balanceChanged && savedRecord.email && savedRecord.email.trim() !== '') {
             console.log('💳 Credit balance changed - asking user about email notification');
-            
+
             // Ask user if they want to send the email
-            const sendEmail = confirm(`Do you want to send the credit change email to this student?\n\nStudent: ${savedRecord.name}\nEmail: ${savedRecord.email}\n\nPrevious Balance: $${oldBalance.toFixed(2)}\nNew Balance: $${balance.toFixed(2)}`);
-            
+            const sendEmail = confirm(
+              `Do you want to send the credit change email to this student?\n\nStudent: ${savedRecord.name}\nEmail: ${savedRecord.email}\n\nPrevious Balance: $${oldBalance.toFixed(2)}\nNew Balance: $${balance.toFixed(2)}`
+            );
+
             if (sendEmail) {
               console.log('💳 User confirmed - sending credit manual edit email');
-              const emailResult = await sendCreditManualEditEmail(
-                savedRecord,
-                oldBalance,
-                balance
-              );
+              const emailResult = await sendCreditManualEditEmail(savedRecord, oldBalance, balance);
 
               if (emailResult.success) {
                 showNotificationSimple(`💳 Credit balance updated for ${savedRecord.name}`, 'success');
@@ -14493,7 +14563,7 @@
           // Listen for data requests from automation engine (ONLY ONCE)
           if (!window._emailSystemMessageListenerAttached) {
             window._emailSystemMessageListenerAttached = true;
-            
+
             window.addEventListener('message', async function (event) {
               if (event.data.action === 'requestGroupsData') {
                 sendGroupsDataToEmailSystem();
@@ -14528,7 +14598,7 @@
                 }
               }
             });
-            
+
             debugLog('✅ Email system message listener attached');
           }
 
@@ -14543,18 +14613,19 @@
           console.log('[EmailPreview] 🔵 Opening email preview modal in parent window');
           const modal = document.getElementById('emailPreviewModal');
           const iframe = document.getElementById('emailPreviewFrame');
-          
+
           if (!modal || !iframe) {
             console.error('[EmailPreview] ❌ Modal or iframe not found!');
             return;
           }
-          
+
           const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
           iframeDoc.open();
           iframeDoc.write(htmlContent);
           iframeDoc.close();
-          
+
           modal.style.display = 'flex';
+          document.body.style.overflow = 'hidden';
           console.log('[EmailPreview] ✅ Modal opened successfully');
         }
 
@@ -14564,6 +14635,7 @@
           if (modal) {
             modal.style.display = 'none';
           }
+          document.body.style.overflow = 'auto';
         }
 
         // Send groups and students data to email system for automation
@@ -14835,8 +14907,7 @@
 
             if (currentQuickViewTab === 'byGroup') {
               // BY GROUP VIEW
-              html =
-                '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px;">';
+              html = '<div style="display: grid; grid-template-columns: 1fr; gap: 20px;">';
               groupsData.forEach(group => {
                 const schedule = formatScheduleQuickView(group.schedule || '');
                 // Ensure group name starts with "Group" prefix if it's just a letter
@@ -18717,7 +18788,7 @@
             // This prevents existing students from having retroactive unpaid classes
             debugLog(`[RedDot] Student ${student.name} has no created_at - using calendar start date as fallback`);
             const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
-            
+
             if (dateStr < calendarStartStr) {
               // Class date is before calendar start - hide it
               debugLog(`[RedDot] Hiding ${dateStr} - before calendar start (${calendarStartStr})`);
@@ -19847,11 +19918,11 @@
           try {
             console.log('💳 Creating quick payment via addPayment()...');
             const result = await addPayment(paymentData);
-            
+
             if (result) {
               showToast('✅ Payment added & receipt sent!', 'success');
               renderCalendar();
-              
+
               // Reload payments to update UI
               await window.PaymentStore.load();
             } else {
@@ -20374,7 +20445,7 @@
 
               const today = getLADate();
               const todayStr = formatDateYYYYMMDD(today);
-              
+
               // Update last check time
               localStorage.setItem('payment_reminder_last_check', new Date().toISOString());
 
@@ -20823,7 +20894,8 @@
             // Generate payment message based on status
             let paymentMessage = '';
             if (paymentStatus === 'paid') {
-              paymentMessage = '<p style="color: #10b981; font-weight: 600;">✅ Your payment for this class is confirmed!</p>';
+              paymentMessage =
+                '<p style="color: #10b981; font-weight: 600;">✅ Your payment for this class is confirmed!</p>';
             } else if (creditBalance > 0) {
               const studentPrice = student.payPerClass || student.pricePerClass || 50;
               const remainingCredit = creditBalance - studentPrice;
@@ -20889,7 +20961,7 @@
 
               const nowLA = getLADate();
               const todayStr = formatDateYYYYMMDD(nowLA);
-              
+
               // Update last check time
               localStorage.setItem('class_reminder_last_check', new Date().toISOString());
 
@@ -20929,13 +21001,13 @@
               for (const dayData of calendarData.days) {
                 const dateStr = formatDateYYYYMMDD(dayData.date);
                 const classDateObj = new Date(dateStr + 'T00:00:00-08:00');
-                
+
                 // Calculate hours until class
                 for (const classData of dayData.studentsWithClass) {
                   classesChecked++;
                   const student = classData.student;
                   const group = groups.find(g => g.name === student.group);
-                  
+
                   if (!group || !group.schedule) continue;
 
                   // Parse class time
@@ -20945,7 +21017,7 @@
                     weekday: 'long',
                   });
                   const todaySlot = scheduleSlots.find(slot => slot.day === dayName);
-                  
+
                   if (!todaySlot) continue;
 
                   // Calculate exact class start time in LA
@@ -20954,7 +21026,7 @@
 
                   // Check if we're 12 hours before class
                   const hoursUntilClass = (classStartTime - nowLA) / (1000 * 60 * 60);
-                  
+
                   // Send if between 11.5 and 12.5 hours before (1-hour window)
                   if (hoursUntilClass >= 11.5 && hoursUntilClass <= 12.5) {
                     // Check if already sent
@@ -20971,7 +21043,9 @@
                     });
 
                     console.log(`[ClassReminderManager] 📧 Sending class reminder to ${student.name}`);
-                    console.log(`[ClassReminderManager]    Class: ${student.group} on ${dateStr} at ${classTimeFormatted}`);
+                    console.log(
+                      `[ClassReminderManager]    Class: ${student.group} on ${dateStr} at ${classTimeFormatted}`
+                    );
                     console.log(`[ClassReminderManager]    Hours until class: ${hoursUntilClass.toFixed(1)}`);
 
                     // Determine payment status
@@ -21000,7 +21074,6 @@
               console.log('  Classes checked:', classesChecked);
               console.log('  Reminders sent:', remindersSent);
               console.log('═══════════════════════════════════════════════════════\n');
-
             } catch (error) {
               console.error('[ClassReminderManager] ❌ Error checking reminders:', error);
             }
@@ -21061,9 +21134,12 @@
             }
 
             // Run checks every hour
-            setInterval(() => {
-              checkAndSendReminders();
-            }, 60 * 60 * 1000);
+            setInterval(
+              () => {
+                checkAndSendReminders();
+              },
+              60 * 60 * 1000
+            );
           }
 
           // Public API
@@ -21173,7 +21249,7 @@
 
               const nowLA = getLADate();
               const todayStr = formatDateYYYYMMDD(nowLA);
-              
+
               // Update last check time
               localStorage.setItem('class_starting_soon_last_check', new Date().toISOString());
 
@@ -21250,12 +21326,7 @@
                     console.log(`[ClassStartingSoonManager]    Class: ${student.group} at ${classTimeFormatted}`);
                     console.log(`[ClassStartingSoonManager]    Minutes until class: ${minutesUntilClass.toFixed(1)}`);
 
-                    const sent = await sendStartingSoonReminder(
-                      student,
-                      classTimeFormatted,
-                      student.group,
-                      dateStr
-                    );
+                    const sent = await sendStartingSoonReminder(student, classTimeFormatted, student.group, dateStr);
 
                     if (sent) {
                       markReminderSent(student.id, dateStr);
@@ -21270,7 +21341,6 @@
               console.log('  Classes checked:', classesChecked);
               console.log('  Reminders sent:', remindersSent);
               console.log('═══════════════════════════════════════════════════════\n');
-
             } catch (error) {
               console.error('[ClassStartingSoonManager] ❌ Error:', error);
             }
@@ -21319,9 +21389,12 @@
             }
 
             // Check every 10 minutes (more frequent than 12h reminder)
-            setInterval(() => {
-              checkAndSendReminders();
-            }, 10 * 60 * 1000);
+            setInterval(
+              () => {
+                checkAndSendReminders();
+              },
+              10 * 60 * 1000
+            );
           }
 
           return {
