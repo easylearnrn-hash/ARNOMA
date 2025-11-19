@@ -6217,6 +6217,12 @@
               : studentData.aliases;
           }
 
+          // CRITICAL: Set created_at for new students (used for red dot calendar logic)
+          // This ensures red dots only appear for classes AFTER the student was added
+          if (!isUpdate) {
+            payload.created_at = studentData.created_at || studentData.createdAt || new Date().toISOString();
+          }
+
           // CRITICAL: Never include 'id' in payload for INSERT
           // Only use it in UPDATE .eq() clause
           if (payload.id) {
@@ -18726,6 +18732,7 @@
 
           // RULE 1b: Skip dates before student was created (NO RETROACTIVE UNPAID DOTS)
           // Students should not have red unpaid dots for classes before they existed
+          // This prevents showing red dots for dates before the student was added to the system
           if (student.created_at) {
             // Parse student creation date and convert to LA timezone
             const studentCreatedAt = new Date(student.created_at);
@@ -18736,12 +18743,30 @@
 
             if (dateStr < creationDateStr) {
               // Class date is before student existed - hide it
+              debugLog(`[RedDot] Hiding ${dateStr} - before student creation (${creationDateStr})`);
               return {
                 status: 'hidden',
                 paid: false,
                 amount: 0,
                 balance: 0,
                 message: 'Before student creation date',
+              };
+            }
+          } else {
+            // FALLBACK: If student has no created_at, use CALENDAR_START_DATE to avoid showing old red dots
+            // This prevents existing students from having retroactive unpaid classes
+            debugLog(`[RedDot] Student ${student.name} has no created_at - using calendar start date as fallback`);
+            const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
+            
+            if (dateStr < calendarStartStr) {
+              // Class date is before calendar start - hide it
+              debugLog(`[RedDot] Hiding ${dateStr} - before calendar start (${calendarStartStr})`);
+              return {
+                status: 'hidden',
+                paid: false,
+                amount: 0,
+                balance: 0,
+                message: 'Before calendar start date',
               };
             }
           }
