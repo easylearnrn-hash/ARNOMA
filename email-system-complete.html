@@ -3398,13 +3398,16 @@ ARNOMA Team"
       emailSystem.init();
       loadGroupsFromSupabase();
 
-      // Check Gmail connection on load
-      if (!useSupabaseEmail) {
-        handleGmailOAuthCallback();
-      } else {
+      // Check Gmail OAuth callback (for payment fetching)
+      handleGmailOAuthCallback();
+
+      // Log email sending system status
+      if (useSupabaseEmail) {
         console.log('✅ Using Supabase + Resend email system (no Gmail required)');
       }
-      if (!useSupabaseEmail && isGmailConnected()) {
+      
+      // Update Gmail button state if connected
+      if (isGmailConnected()) {
         updateGmailButtonState(true);
       }
 
