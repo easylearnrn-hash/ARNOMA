@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.9.1 - Gmail OAuth Refresh Token]</title>
+    <title>ARNOMA - Student Management [v2.9.1 - Gmail OAuth Refresh Token]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -1513,23 +1513,36 @@
       }
 
       /* Group-specific colors */
-      .btn-wrapper.group-A { --hue: 346deg; } /* Pastel Pink */
-      .btn-wrapper.group-B { --hue: 23deg; }  /* Peach/Coral */
-      .btn-wrapper.group-C { --hue: 50deg; }  /* Soft Yellow */
-      .btn-wrapper.group-D { --hue: 145deg; } /* Mint Green */
-      .btn-wrapper.group-E { --hue: 204deg; } /* Baby Blue */
-      .btn-wrapper.group-F { --hue: 260deg; } /* Pastel Lavender */
+      .btn-wrapper.group-A {
+        --hue: 346deg;
+      } /* Pastel Pink */
+      .btn-wrapper.group-B {
+        --hue: 23deg;
+      } /* Peach/Coral */
+      .btn-wrapper.group-C {
+        --hue: 50deg;
+      } /* Soft Yellow */
+      .btn-wrapper.group-D {
+        --hue: 145deg;
+      } /* Mint Green */
+      .btn-wrapper.group-E {
+        --hue: 204deg;
+      } /* Baby Blue */
+      .btn-wrapper.group-F {
+        --hue: 260deg;
+      } /* Pastel Lavender */
 
       /* Amount buttons - darker green */
-      .btn-wrapper.amount { --hue: 145deg; }
+      .btn-wrapper.amount {
+        --hue: 145deg;
+      }
       .btn-wrapper.amount .btn.active .btn-txt {
         background: linear-gradient(180deg, hsla(145, 80%, 40%, 1), hsla(145, 75%, 28%, 1));
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
         color: transparent;
-        filter: drop-shadow(0 0 7px hsla(145, 80%, 35%, 0.85))
-          drop-shadow(0 0 12px hsla(145, 75%, 28%, 0.75));
+        filter: drop-shadow(0 0 7px hsla(145, 80%, 35%, 0.85)) drop-shadow(0 0 12px hsla(145, 75%, 28%, 0.75));
       }
 
       /* INNER BUTTON (EMBOSSED) */
@@ -1547,11 +1560,13 @@
 
         /* ✨ EMBOSS EFFECT HERE ✨ */
         box-shadow:
-          inset 3px 3px 6px rgba(0, 0, 0, 0.12), /* bottom-right shadow */
-          inset -3px -3px 7px rgba(255, 255, 255, 0.9), /* top-left highlight */
-          0 3px 6px rgba(0, 0, 0, 0.08); /* slight outer lift */
+          inset 3px 3px 6px rgba(0, 0, 0, 0.12),
+          /* bottom-right shadow */ inset -3px -3px 7px rgba(255, 255, 255, 0.9),
+          /* top-left highlight */ 0 3px 6px rgba(0, 0, 0, 0.08); /* slight outer lift */
 
-        transition: transform 0.15s ease, box-shadow 0.25s ease;
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.25s ease;
       }
 
       /* TEXT + PERFECT CENTER */
@@ -1633,7 +1648,7 @@
         background: rgba(76, 175, 80, 0.25);
         border: 2px solid #4caf50;
         color: #5eff6c;
-        text-shadow: 
+        text-shadow:
           0 0 10px rgba(94, 255, 108, 0.5),
           0 0 20px rgba(94, 255, 108, 0.32);
         box-shadow:
@@ -10214,12 +10229,7 @@
               const paymentDate = payment.emailDate || payment.transactionDate || payment.createdAt;
               const currentBalance = parseFloat(student.balance) || 0;
 
-              const emailResult = await sendPaymentReceiptEmail(
-                student,
-                paymentAmount,
-                paymentDate,
-                currentBalance
-              );
+              const emailResult = await sendPaymentReceiptEmail(student, paymentAmount, paymentDate, currentBalance);
 
               if (emailResult.success) {
                 showNotification(`📧 Payment receipt sent to ${student.email}`, 'success');
@@ -10678,9 +10688,44 @@
         // NOTIFICATIONS SYSTEM
         // ============================================================================
 
-        // Notification stub (removed notification center)
+        // Global notification system (toast notifications)
         function showNotification(message, type = 'info') {
-          const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
+          // Create notification element
+          const notification = document.createElement('div');
+          
+          const colors = {
+            success: 'rgba(34, 197, 94, 0.95)',
+            error: 'rgba(239, 68, 68, 0.95)',
+            warning: 'rgba(251, 191, 36, 0.95)',
+            info: 'rgba(59, 130, 246, 0.95)'
+          };
+          
+          notification.style.cssText = `
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: ${colors[type] || colors.info};
+            color: white;
+            padding: 16px 24px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+            z-index: 100003;
+            font-size: 14px;
+            font-weight: 500;
+            animation: slideInRight 0.3s ease-out;
+            max-width: 350px;
+          `;
+          notification.textContent = message;
+
+          document.body.appendChild(notification);
+
+          // Auto-remove after 3 seconds
+          setTimeout(() => {
+            notification.style.opacity = '0';
+            notification.style.transform = 'translateX(400px)';
+            notification.style.transition = 'all 0.3s ease-out';
+            setTimeout(() => notification.remove(), 300);
+          }, 3000);
         }
 
         // ============================================================================
@@ -11951,9 +11996,7 @@
           const activeGroups = window.groupsCache?.filter(g => g.active !== false) || [];
           const uniqueGroups = [...new Set(activeStudents.map(s => s.group).filter(g => g))].sort();
           // Filter to only include groups that are active
-          const visibleUniqueGroups = uniqueGroups.filter(groupName => 
-            activeGroups.some(g => g.name === groupName)
-          );
+          const visibleUniqueGroups = uniqueGroups.filter(groupName => activeGroups.some(g => g.name === groupName));
           const groupFilter = document.getElementById('filterGroup');
           if (groupFilter) {
             groupFilter.innerHTML =
@@ -12867,7 +12910,7 @@
 
         async function toggleVisibility(studentId, visible) {
           console.log('🔄 toggleVisibility called:', { studentId, visible });
-          
+
           // Handle both string and numeric IDs from Supabase
           const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
           if (!student) {
@@ -12876,14 +12919,14 @@
           }
 
           console.log('📝 Before update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
-          
+
           student.showInGrid = visible;
 
           console.log('📝 After update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
 
           // Save to Supabase
           const result = await saveStudent(student);
-          
+
           if (!result) {
             console.error('❌ Failed to save student visibility');
             showNotificationSimple('Failed to update visibility', 'error');
@@ -15718,9 +15761,9 @@
               });
 
               // Get today's weekday in LA timezone
-              const todayLA = new Date().toLocaleString('en-US', { 
-                timeZone: 'America/Los_Angeles', 
-                weekday: 'long' 
+              const todayLA = new Date().toLocaleString('en-US', {
+                timeZone: 'America/Los_Angeles',
+                weekday: 'long',
               });
 
               html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
@@ -15728,7 +15771,7 @@
                 const sessions = daySchedule[day] || [];
                 const isTodayLA = day === todayLA;
                 const todayClass = isTodayLA ? ' quickview-today-stroke' : '';
-                
+
                 html += `
               <div class="${todayClass}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
                 <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
@@ -15858,9 +15901,9 @@
               });
 
               // Get today's weekday in Yerevan timezone
-              const todayYerevan = new Date().toLocaleString('en-US', { 
-                timeZone: 'Asia/Yerevan', 
-                weekday: 'long' 
+              const todayYerevan = new Date().toLocaleString('en-US', {
+                timeZone: 'Asia/Yerevan',
+                weekday: 'long',
               });
 
               html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
@@ -15868,7 +15911,7 @@
                 const sessions = daySchedule[day] || [];
                 const isTodayYerevan = day === todayYerevan;
                 const todayClass = isTodayYerevan ? ' quickview-today-stroke' : '';
-                
+
                 html += `
               <div class="${todayClass}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
                 <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
