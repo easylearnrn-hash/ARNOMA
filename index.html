@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.7.0 ⭕]</title>
+    <title>ARNOMA - Student Management [v2.7.1 ✅]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -92,7 +92,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('⭕ ARNOMA v2.7.0 - Exact Round Button Component ⭕');
+      console.log('✅ ARNOMA v2.7.1 - Clean Round Buttons with Data Attributes ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -1584,10 +1584,20 @@
         --hue: 270deg;
       }
 
-      /* Amount buttons - mint green */
-      .btn-wrapper.amount-btn {
+      /* Amount button color - one mint green */
+      .btn-wrapper.amount {
         --btn-color: #c8f7c5;
         --hue: 142deg;
+      }
+
+      /* Row alignment */
+      .group-buttons-row,
+      .amount-buttons-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: center;
       }
 
       /* END FEATURE 2 */
@@ -5146,7 +5156,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              ⭕ ARNOMA v2.7.0 - Exact Round Button Component ⭕
+              ✅ ARNOMA v2.7.1 - Clean Round Buttons with Data Attributes ✅
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -12056,17 +12066,13 @@
               <span style="font-size: 11px; color: rgba(200, 181, 255, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Switch Group</span>
               <span style="font-size: 10px; color: rgba(200, 181, 255, 0.5); font-weight: 600;">Current: ${escapeHtml(student.group || 'N/A')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
-              ${['A', 'B', 'C', 'D', 'E', 'F']
-                .map(
-                  g =>
-                    `<div class="btn-wrapper group-${g}">
-                      <button class="btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')">
-                        <span class="btn-txt">${g}</span>
-                      </button>
-                    </div>`
-                )
-                .join('')}
+            <div class="group-buttons-row" onclick="event.stopPropagation()">
+              <div class="btn-wrapper group-A"><button class="btn ${(student.group || '').toUpperCase() === 'A' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'A')" data-group="A"><span class="btn-txt">A</span></button></div>
+              <div class="btn-wrapper group-B"><button class="btn ${(student.group || '').toUpperCase() === 'B' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'B')" data-group="B"><span class="btn-txt">B</span></button></div>
+              <div class="btn-wrapper group-C"><button class="btn ${(student.group || '').toUpperCase() === 'C' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'C')" data-group="C"><span class="btn-txt">C</span></button></div>
+              <div class="btn-wrapper group-D"><button class="btn ${(student.group || '').toUpperCase() === 'D' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'D')" data-group="D"><span class="btn-txt">D</span></button></div>
+              <div class="btn-wrapper group-E"><button class="btn ${(student.group || '').toUpperCase() === 'E' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'E')" data-group="E"><span class="btn-txt">E</span></button></div>
+              <div class="btn-wrapper group-F"><button class="btn ${(student.group || '').toUpperCase() === 'F' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'F')" data-group="F"><span class="btn-txt">F</span></button></div>
             </div>
           </div>
 
@@ -12076,17 +12082,11 @@
               <span style="font-size: 11px; color: rgba(100, 180, 100, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
               <span style="font-size: 10px; color: rgba(100, 180, 100, 0.5); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
-              ${[25, 50, 75, 100]
-                .map(
-                  amount =>
-                    `<div class="btn-wrapper amount-btn">
-                      <button class="btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})">
-                        <span class="btn-txt">${amount}</span>
-                      </button>
-                    </div>`
-                )
-                .join('')}
+            <div class="amount-buttons-row" onclick="event.stopPropagation()">
+              <div class="btn-wrapper amount"><button class="btn ${Number(student.payPerClass) === 25 ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', 25)" data-amount="25"><span class="btn-txt">25</span></button></div>
+              <div class="btn-wrapper amount"><button class="btn ${Number(student.payPerClass) === 50 ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', 50)" data-amount="50"><span class="btn-txt">50</span></button></div>
+              <div class="btn-wrapper amount"><button class="btn ${Number(student.payPerClass) === 75 ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', 75)" data-amount="75"><span class="btn-txt">75</span></button></div>
+              <div class="btn-wrapper amount"><button class="btn ${Number(student.payPerClass) === 100 ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', 100)" data-amount="100"><span class="btn-txt">100</span></button></div>
             </div>
           </div>
 
@@ -22564,7 +22564,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('⭕ ARNOMA v2.7.0 - Exact Round Button Component ⭕');
+          console.log('✅ ARNOMA v2.7.1 - Clean Round Buttons with Data Attributes ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
