@@ -11980,7 +11980,7 @@
               <span style="font-size: 11px; color: rgba(138, 180, 255, 0.7); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Switch Group</span>
               <span style="font-size: 10px; color: rgba(138, 180, 255, 0.4); font-weight: 600;">Current: ${escapeHtml(student.group || 'N/A')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()">
+            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
               ${['A', 'B', 'C', 'D', 'E', 'F']
                 .map(
                   g => `<button class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">${g}</button>`
@@ -11995,7 +11995,7 @@
               <span style="font-size: 11px; color: rgba(216, 180, 254, 0.7); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
               <span style="font-size: 10px; color: rgba(216, 180, 254, 0.4); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()">
+            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
               ${[25, 50, 75, 100]
                 .map(
                   amount => `<button class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})" title="Set pay to $${amount}">$${amount}</button>`
