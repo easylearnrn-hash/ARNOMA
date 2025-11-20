@@ -5902,7 +5902,8 @@ ARNOMA Team"
 
         const testData = {
           mainStudent: { name: student.name, email: getTestEmail() },
-          aliasName: 'Test Alias Student',
+          aliasAdded: 'Test Alias Name',
+          timestamp: new Date().toISOString()
         };
 
         window.postMessage({ action: 'sendAliasAddedEmail', ...testData }, '*');
@@ -5914,7 +5915,8 @@ ARNOMA Team"
         if (!student) return;
 
         const testData = {
-          student: { name: student.name, email: getTestEmail(), group: student.group || 'Test Group' },
+          students: [{ name: student.name, email: getTestEmail(), group: student.group || 'E' }],
+          groupName: student.group || 'E',
           oldSchedule: 'Monday 6:00 PM',
           newSchedule: 'Tuesday 7:00 PM',
         };
