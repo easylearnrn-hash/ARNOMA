@@ -3406,22 +3406,25 @@ ARNOMA Team"
       emailSystem.init();
       loadGroupsFromSupabase();
 
-      // Check Gmail OAuth callback (for payment fetching)
-      await handleGmailOAuthCallback();
+      // Initialize Gmail connection (async)
+      (async () => {
+        // Check Gmail OAuth callback (for payment fetching)
+        await handleGmailOAuthCallback();
 
-      // Try to load Gmail token from database on every page load
-      if (!isGmailConnected()) {
-        await loadTokenFromDatabase();
-      }
+        // Try to load Gmail token from database on every page load
+        if (!isGmailConnected()) {
+          await loadTokenFromDatabase();
+        }
+
+        // Update Gmail button state if connected
+        if (isGmailConnected()) {
+          updateGmailButtonState(true);
+        }
+      })();
 
       // Log email sending system status
       if (useSupabaseEmail) {
         console.log('✅ Using Supabase + Resend email system (no Gmail required)');
-      }
-      
-      // Update Gmail button state if connected
-      if (isGmailConnected()) {
-        updateGmailButtonState(true);
       }
 
       // Listen for auto-reminder requests from parent window
