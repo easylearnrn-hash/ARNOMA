@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.9.0 - Gmail OAuth Auto-Refresh]</title>
+  <title>ARNOMA - Student Management [v2.9.1 - Quick View Today Highlight]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.9.0" />
+    <meta name="version" content="2.9.1" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -1596,6 +1596,13 @@
         font-size: 0.85rem;
         opacity: 0.8;
         margin-bottom: 4px;
+      }
+
+      /* Quick View - Today Highlight */
+      .quickview-today-stroke {
+        border: 2px solid rgba(255, 255, 255, 0.65) !important;
+        border-radius: 12px;
+        box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
       }
 
       .price-pill {
@@ -15709,11 +15716,20 @@
                 });
               });
 
+              // Get today's weekday in LA timezone
+              const todayLA = new Date().toLocaleString('en-US', { 
+                timeZone: 'America/Los_Angeles', 
+                weekday: 'long' 
+              });
+
               html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
               weekdays.forEach(day => {
                 const sessions = daySchedule[day] || [];
+                const isTodayLA = day === todayLA;
+                const todayClass = isTodayLA ? ' quickview-today-stroke' : '';
+                
                 html += `
-              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
+              <div class="${todayClass}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
                 <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                   ${
@@ -15840,11 +15856,20 @@
                 });
               });
 
+              // Get today's weekday in Yerevan timezone
+              const todayYerevan = new Date().toLocaleString('en-US', { 
+                timeZone: 'Asia/Yerevan', 
+                weekday: 'long' 
+              });
+
               html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
               weekdays.forEach(day => {
                 const sessions = daySchedule[day] || [];
+                const isTodayYerevan = day === todayYerevan;
+                const todayClass = isTodayYerevan ? ' quickview-today-stroke' : '';
+                
                 html += `
-              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
+              <div class="${todayClass}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
                 <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                   ${
