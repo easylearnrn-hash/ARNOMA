@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.7.3 ✨ Neutral Rounds]</title>
+  <title>ARNOMA - Student Management [v2.7.4 ♻️ Round Button Cleanup]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -1134,52 +1134,6 @@
       }
 
       /* Student Manager Styles */
-      .group-btn:hover {
-        box-shadow:
-          0 0 0 0.1em hsla(223, 90%, 60%, 0.3),
-          0 0 0.2em #94a3b8 inset,
-          0 0.1em 0.1em #f1f5f9;
-      }
-
-      /* Elite Amount Buttons - Purple Theme */
-      .group-buttons:nth-child(2) .group-btn {
-        background: linear-gradient(135deg, rgba(88, 28, 135, 0.5), rgba(67, 20, 103, 0.7));
-        border: 1px solid rgba(168, 85, 247, 0.3);
-        box-shadow:
-          0 2px 8px rgba(168, 85, 247, 0.25),
-          inset 0 1px 0 rgba(255, 255, 255, 0.05),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-        color: rgba(216, 180, 254, 0.9);
-      }
-
-      .group-buttons:nth-child(2) .group-btn:hover {
-        background: linear-gradient(135deg, rgba(126, 34, 206, 0.5), rgba(107, 33, 168, 0.6));
-        border-color: rgba(168, 85, 247, 0.5);
-        box-shadow:
-          0 4px 12px rgba(168, 85, 247, 0.35),
-          0 0 20px rgba(168, 85, 247, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        color: #ffffff;
-      }
-
-      .group-buttons:nth-child(2) .group-btn.active {
-        background: linear-gradient(135deg, #a855f7, #9333ea);
-        border-color: rgba(168, 85, 247, 0.8);
-        box-shadow:
-          0 4px 16px rgba(168, 85, 247, 0.5),
-          0 0 24px rgba(168, 85, 247, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-        color: #ffffff;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-      }
-
-      .group-buttons:nth-child(2) .group-btn.active:hover {
-        box-shadow:
-          0 6px 20px rgba(168, 85, 247, 0.6),
-          0 0 30px rgba(168, 85, 247, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.25);
-      }
 
       /* Group Manager Styles */
       .group-day-btn:hover {
@@ -1447,33 +1401,6 @@
         margin-bottom: 20px;
         font-weight: 600;
         letter-spacing: 0.3px;
-      }
-
-      /* BEGIN FEATURE 2 - Elite Group Switch Buttons */
-      .group-buttons {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-start;
-        margin: 0;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: visible;
-        position: relative;
-        z-index: 50;
-        padding: 2px 0;
-      }
-
-      .group-buttons::-webkit-scrollbar {
-        height: 2px;
-      }
-
-      .group-buttons::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      .group-buttons::-webkit-scrollbar-thumb {
-        background: rgba(138, 180, 255, 0.3);
-        border-radius: 2px;
       }
 
       /* -----------------------------------
@@ -5163,7 +5090,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              ✨ ARNOMA v2.7.3 - Neutral Round Buttons ✨
+              ♻️ ARNOMA v2.7.4 - Round Button Cleanup ♻️
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -11980,7 +11907,7 @@
 
             // Check if clicked on any interactive element (button, input, select, etc.)
             const clickedInteractive = event.target.closest(
-              'button, input, textarea, select, a, label, .status-pill-single, .mini-toggle, .group-btn'
+              'button, input, textarea, select, a, label, .status-pill-single, .mini-toggle, .btn-wrapper, [data-group], [data-amount]'
             );
 
             // If clicked outside all editing cards and not on an interactive element, cancel all edits
@@ -12365,32 +12292,20 @@
             }
           });
 
-          // Update group button active states (buttons A-F)
-          const allButtonContainers = card.querySelectorAll('.group-buttons');
-          allButtonContainers.forEach(container => {
-            const buttons = container.querySelectorAll('.group-btn');
-            buttons.forEach(btn => {
-              const btnText = btn.textContent.trim();
+          // Update round group buttons (A-F)
+          const groupButtons = card.querySelectorAll('.group-buttons-row .btn[data-group]');
+          const targetGroup = (student.group || '').toUpperCase();
+          groupButtons.forEach(btn => {
+            const btnGroup = (btn.dataset.group || '').toUpperCase();
+            btn.classList.toggle('active', btnGroup === targetGroup);
+          });
 
-              // Check if this is a group button (single letter A-F)
-              if (btnText.length === 1 && /[A-F]/.test(btnText)) {
-                if ((student.group || '').toUpperCase() === btnText) {
-                  btn.classList.add('active');
-                } else {
-                  btn.classList.remove('active');
-                }
-              }
-
-              // Check if this is a payment button (starts with $)
-              if (btnText.startsWith('$')) {
-                const btnAmount = parseInt(btnText.replace('$', ''));
-                if (Number(student.payPerClass) === btnAmount) {
-                  btn.classList.add('active');
-                } else {
-                  btn.classList.remove('active');
-                }
-              }
-            });
+          // Update round amount buttons ($25-$100)
+          const amountButtons = card.querySelectorAll('.amount-buttons-row .btn[data-amount]');
+          const targetAmount = Number(student.payPerClass);
+          amountButtons.forEach(btn => {
+            const btnAmount = Number(btn.dataset.amount);
+            btn.classList.toggle('active', btnAmount === targetAmount);
           });
         }
 
@@ -12485,8 +12400,9 @@
             event &&
             (event.target.closest('.status-pill-single') ||
               event.target.closest('.mini-toggle') ||
-              event.target.closest('.group-btn') ||
-              event.target.closest('.group-buttons'))
+              event.target.closest('[data-group]') ||
+              event.target.closest('[data-amount]') ||
+              event.target.closest('.btn-wrapper'))
           ) {
             return;
           }
@@ -22571,7 +22487,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.7.3 - Neutral Round Buttons enforced ✅');
+          console.log('✅ ARNOMA v2.7.4 - Round Button Cleanup complete ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
