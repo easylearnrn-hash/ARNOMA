@@ -13047,6 +13047,7 @@
                   email: student.email,
                   group: student.group || 'Not assigned',
                   groupSchedule: groupSchedule,
+                  payPerClass: student.payPerClass || 0,
                 },
               },
               '*'
@@ -13400,6 +13401,7 @@
                 student: { name: student.name, email: student.email, id: student.id },
                 groupName: groupName,
                 groupSchedule: groupSchedule,
+                payPerClass: student.payPerClass || 0,
               },
               '*'
             );

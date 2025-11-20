@@ -3865,11 +3865,12 @@ ARNOMA Team"
               <div class="info-box" style="background-color: #faf5ff; border-left: 4px solid #9333ea; padding: 16px; margin: 20px 0; border-radius: 8px;">
                 <p style="margin: 4px 0; color: #1f2937; font-size: 15px;"><strong>Group:</strong> ${student.group || 'Not assigned yet'}</p>
                 <p style="margin: 4px 0; color: #1f2937; font-size: 15px;"><strong>Schedule:</strong> ${student.groupSchedule || 'To be determined'}</p>
+                <p style="margin: 4px 0; color: #1f2937; font-size: 15px;"><strong>Pay Per Class:</strong> $${student.payPerClass || 0}</p>
               </div>
 
               <p>Welcome to your all-in-one nursing classroom! You are enrolled in <strong>${student.group || 'your group'} - ${student.groupSchedule ? student.groupSchedule.split('—')[0].trim() : 'TBD'}</strong>, and your group schedule is <strong>${student.groupSchedule || 'to be determined'}</strong>.</p>
 
-              <p>Please make sure to complete your payment before class so that all your notes and materials will be accessible once the class ends.</p>
+              <p><strong>Your payment amount is $${student.payPerClass || 0} per class.</strong> Please make sure to complete your payment before class so that all your notes and materials will be accessible once the class ends.</p>
 
               <div class="payment-frame">
                 <p style="margin: 0 0 15px 0; color: #4b5563; font-size: 18px; font-weight: 600;">
@@ -5215,6 +5216,7 @@ ARNOMA Team"
             const student = event.data.student;
             const groupName = event.data.groupName;
             const groupSchedule = event.data.groupSchedule;
+            const payPerClass = event.data.payPerClass || student.payPerClass || 0;
 
             const subject = 'Welcome to Your New ARNOMA Group!';
             const bodyContent = `
@@ -5242,6 +5244,21 @@ ARNOMA Team"
 
               <div style="background: rgba(255, 255, 255, 0.5); border: 1px solid rgba(0, 0, 0, 0.1); padding: 16px; border-radius: 8px; margin: 20px 0;">
                 <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">
+                  📅 Your Class Schedule:
+                </div>
+                <div style="font-size: 15px; color: #555; font-weight: 600;">
+                  ${groupSchedule}
+                </div>
+              </div>
+
+              <div style="background: rgba(251, 191, 36, 0.1); border: 1px solid rgba(251, 191, 36, 0.3); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #92400e; font-weight: 600; margin-bottom: 8px;">
+                  💰 Payment Amount:
+                </div>
+                <div style="font-size: 18px; color: #78350f; font-weight: 700;">
+                  $${payPerClass} per class
+                </div>
+              </div>                <div style="font-size: 14px; color: #333; font-weight: 600; margin-bottom: 8px;">
                   📅 Your Class Schedule:
                 </div>
                 <div style="font-size: 15px; color: #555; font-weight: 600;">
