@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.6.9 🔘]</title>
+    <title>ARNOMA - Student Management [v2.7.0 ⭕]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -92,7 +92,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔘 ARNOMA v2.6.9 - New Round Button Design 🔘');
+      console.log('⭕ ARNOMA v2.7.0 - Exact Round Button Component ⭕');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -1501,9 +1501,6 @@
           2px 2px 8px #0001 inset;
       }
 
-      /* -----------------------------------
-         INNER BUTTON
-      ------------------------------------*/
       .btn {
         width: calc(100% - 2 * var(--padding));
         height: calc(100% - 2 * var(--padding));
@@ -1528,13 +1525,9 @@
         transition: transform 0.15s ease, filter 0.2s ease;
       }
 
-      /* -----------------------------------
-         TEXT — PERFECT CENTER
-      ------------------------------------*/
       .btn-txt {
         font-size: 34px;
         font-weight: 700;
-
         line-height: 1;
         display: flex;
         align-items: center;
@@ -1544,12 +1537,9 @@
         transition: all 0.15s ease;
       }
 
-      /* -----------------------------------
-         ACTIVE (SAME FOR SELECTED)
-      ------------------------------------*/
+      /* SELECTED state ONLY */
       .btn:active .btn-txt,
-      .btn.active .btn-txt,
-      .btn.selected .btn-txt {
+      .btn.active .btn-txt {
         background: linear-gradient(
           180deg,
           hsla(var(--hue), 100%, 70%, 1) 0%,
@@ -1568,12 +1558,7 @@
         transform: translateY(2px) scale(0.96);
       }
 
-      .btn.active,
-      .btn.selected {
-        transform: translateY(2px) scale(0.96);
-      }
-
-      /* Button colors per group */
+      /* Pastel colors per group */
       .btn-wrapper.group-A {
         --btn-color: #ffb5c8;
         --hue: 345deg;
@@ -5161,7 +5146,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              🔘 ARNOMA v2.6.9 - New Round Button Design 🔘
+              ⭕ ARNOMA v2.7.0 - Exact Round Button Component ⭕
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -22579,7 +22564,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('🔘 ARNOMA v2.6.9 - New Round Button Design 🔘');
+          console.log('⭕ ARNOMA v2.7.0 - Exact Round Button Component ⭕');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
