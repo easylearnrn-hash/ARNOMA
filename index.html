@@ -11958,7 +11958,7 @@
           <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 20px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(17, 24, 39, 0.9));">
             <div style="padding: 18px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.12)); border-radius: 14px; border: 1px solid rgba(59, 130, 246, 0.3); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
               <div style="font-size: 11px; color: rgba(147, 197, 253, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 8px;">Group</div>
-              <div style="font-size: 26px; color: #60a5fa; font-weight: 900; letter-spacing: -0.8px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">G${escapeHtml(student.group || 'N/A')}</div>
+              <div style="font-size: 26px; color: #60a5fa; font-weight: 900; letter-spacing: -0.8px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">${escapeHtml(student.group || 'N/A')}</div>
             </div>
             <div style="padding: 18px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(21, 128, 61, 0.12)); border-radius: 14px; border: 1px solid rgba(34, 197, 94, 0.3); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
               <div style="font-size: 11px; color: rgba(134, 239, 172, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 8px;">Pay/Class</div>
@@ -11978,12 +11978,12 @@
           <div style="padding: 20px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.12)); border-top: 1px solid rgba(59, 130, 246, 0.15); border-bottom: 1px solid rgba(59, 130, 246, 0.15); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
               <span style="font-size: 12px; color: rgba(147, 197, 253, 0.9); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">Switch Group</span>
-              <span style="font-size: 11px; color: rgba(96, 165, 250, 0.6); font-weight: 600; background: rgba(59, 130, 246, 0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">Current: G${escapeHtml(student.group || 'N/A')}</span>
+              <span style="font-size: 11px; color: rgba(96, 165, 250, 0.6); font-weight: 600; background: rgba(59, 130, 246, 0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">Current: ${escapeHtml(student.group || 'N/A')}</span>
             </div>
             <div class="group-buttons" onclick="event.stopPropagation()">
               ${['A', 'B', 'C', 'D', 'E', 'F']
                 .map(
-                  g => `<button class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">G${g}</button>`
+                  g => `<button class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">${g}</button>`
                 )
                 .join('')}
             </div>
