@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.7.5 ⏪ Original Buttons]</title>
+  <title>ARNOMA - Student Management [v2.8.4 - Toggle Debug]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.6.4-redesigned-student-cards" />
+    <meta name="version" content="2.8.4" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -6451,7 +6451,7 @@
             payPerClass: record.price_per_class ?? record.payPerClass ?? null,
             balance: record.balance ?? 0,
             status: normalizeStudentStatusValue(record.status),
-            showInGrid: record.show_in_grid ?? record.showInGrid ?? true,
+            showInGrid: record.show_in_grid ?? record.showInGrid ?? true, // Default true only for legacy records
             isActive: record.is_active ?? record.isActive ?? true,
             statusChangedDate: record.status_changed_date ?? record.statusChangedDate ?? null,
             created_at: record.created_at ?? null, // Preserve creation timestamp for calendar logic
@@ -6520,10 +6520,13 @@
           if (studentData.phone) payload.phone = studentData.phone;
           if (studentData.notes) payload.notes = studentData.notes;
 
-          // NOTE: show_in_grid and is_active are NOT in Supabase schema
-          // They are only used locally in the frontend
-          // if (typeof studentData.showInGrid === 'boolean') payload.show_in_grid = studentData.showInGrid;
-          // if (typeof studentData.isActive === 'boolean') payload.is_active = studentData.isActive;
+          // Save show_in_grid to Supabase (controls calendar visibility)
+          if (typeof studentData.showInGrid === 'boolean') {
+            payload.show_in_grid = studentData.showInGrid;
+            console.log('✅ Adding show_in_grid to payload:', payload.show_in_grid);
+          } else {
+            console.warn('⚠️ showInGrid is not a boolean:', typeof studentData.showInGrid, studentData.showInGrid);
+          }
 
           // Handle aliases - convert array to delimited string using ||| separator
           // This prevents aliases with commas (like "Company, Inc.") from being split incorrectly
@@ -6544,6 +6547,8 @@
           if (payload.id) {
             delete payload.id;
           }
+
+          console.log('📤 Supabase payload:', isUpdate ? 'UPDATE' : 'INSERT', payload);
 
           try {
             let result;
@@ -6637,6 +6642,7 @@
             name: group.group_name,
             schedule: group.schedule,
             color: group.color,
+            active: group.active ?? true, // Default true for legacy records
             created_at: group.created_at,
             updated_at: group.updated_at,
           }));
@@ -6669,6 +6675,11 @@
             schedule: groupData.schedule,
             color: groupData.color,
           };
+
+          // Save active field if provided
+          if (typeof groupData.active === 'boolean') {
+            payload.active = groupData.active;
+          }
 
           // Track old schedule for email notification
           let oldSchedule = null;
@@ -11897,14 +11908,19 @@
           grid.innerHTML = '';
           const activeStudents = students.filter(s => s.isActive !== false);
 
-          // Populate group filter dropdown
+          // Populate group filter dropdown - only show active groups
+          const activeGroups = window.groupsCache?.filter(g => g.active !== false) || [];
           const uniqueGroups = [...new Set(activeStudents.map(s => s.group).filter(g => g))].sort();
+          // Filter to only include groups that are active
+          const visibleUniqueGroups = uniqueGroups.filter(groupName => 
+            activeGroups.some(g => g.name === groupName)
+          );
           const groupFilter = document.getElementById('filterGroup');
           if (groupFilter) {
             groupFilter.innerHTML =
               '<option value="">All Groups</option>' +
               '<option value="no-group">No Group</option>' +
-              uniqueGroups.map(g => `<option value="${escapeHtml(g)}">Group ${escapeHtml(g)}</option>`).join('');
+              visibleUniqueGroups.map(g => `<option value="${escapeHtml(g)}">Group ${escapeHtml(g)}</option>`).join('');
           }
 
           // Sort students
@@ -12011,7 +12027,8 @@
           card.setAttribute('data-balance', student.balance || 0);
 
           const statusDetails = getStatusDetails(student.status);
-          const showInGrid = student.showInGrid !== false;
+          // Respect the exact saved value - default to true only if undefined/null (legacy records)
+          const showInGrid = student.showInGrid ?? true;
           const aliases =
             student.aliases && typeof student.aliases === 'string'
               ? student.aliases
@@ -12069,16 +12086,20 @@
               <span style="font-size: 10px; color: rgba(200, 181, 255, 0.5); font-weight: 600;">Current: ${escapeHtml(student.group || 'N/A')}</span>
             </div>
             <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
-              ${['A', 'B', 'C', 'D', 'E', 'F']
-                .map(
-                  g =>
-                    `<div class="btn-wrapper group-${g}">
-                      <button class="btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">
-                        <span class="btn-txt">${g}</span>
-                      </button>
-                    </div>`
-                )
-                .join('')}
+              ${(() => {
+                const activeGroups = (window.groupsCache || []).filter(g => g.active !== false).map(g => g.name);
+                return ['A', 'B', 'C', 'D', 'E', 'F']
+                  .filter(g => activeGroups.includes(g))
+                  .map(
+                    g =>
+                      `<div class="btn-wrapper group-${g}">
+                        <button class="btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">
+                          <span class="btn-txt">${g}</span>
+                        </button>
+                      </div>`
+                  )
+                  .join('');
+              })()}
             </div>
           </div>
 
@@ -12806,17 +12827,42 @@
         }
 
         async function toggleVisibility(studentId, visible) {
+          console.log('🔄 toggleVisibility called:', { studentId, visible });
+          
           // Handle both string and numeric IDs from Supabase
           const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
-          if (!student) return;
+          if (!student) {
+            console.error('❌ Student not found:', studentId);
+            return;
+          }
 
+          console.log('📝 Before update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
+          
           student.showInGrid = visible;
 
-          // Save only this student to Supabase
-          await saveStudent(student);
+          console.log('📝 After update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
 
-          // Update cache
+          // Save to Supabase
+          const result = await saveStudent(student);
+          
+          if (!result) {
+            console.error('❌ Failed to save student visibility');
+            showNotificationSimple('Failed to update visibility', 'error');
+            return;
+          }
+
+          console.log('✅ Saved to Supabase:', result);
+
+          // Update cache and invalidate TTL
           window.studentsCache = students;
+          window.studentsCacheTimestamp = Date.now();
+
+          // Dispatch event for calendar refresh
+          window.dispatchEvent(
+            new CustomEvent('students:updated', {
+              detail: { source: 'toggle-visibility' },
+            })
+          );
 
           showNotificationSimple(visible ? 'Student shown in calendar' : 'Student hidden from calendar', 'success');
         }
@@ -12837,6 +12883,14 @@
 
           // Clear group selections
           document.querySelectorAll('.group-select-btn').forEach(btn => btn.classList.remove('selected'));
+
+          // Hide inactive group buttons
+          const activeGroups = (window.groupsCache || []).filter(g => g.active !== false);
+          document.querySelectorAll('.group-select-btn').forEach(btn => {
+            const groupLetter = btn.textContent.trim();
+            const isActive = activeGroups.some(g => g.name === groupLetter);
+            btn.style.display = isActive ? 'inline-block' : 'none';
+          });
 
           // Clear pay amount selections
           document.querySelectorAll('.pay-select-btn').forEach(btn => {
@@ -14521,9 +14575,14 @@
           sortedGroups.forEach(group => {
             const card = document.createElement('div');
             card.className = 'group-card';
+            const isActive = group.active ?? true;
             card.innerHTML = `
-          <div class="group-title">
+          <div class="group-title" style="display: flex; justify-content: space-between; align-items: center;">
             <span>${escapeHtml(group.name)}</span>
+            <label class="mini-toggle" title="${isActive ? 'Group visible' : 'Group hidden'}" onclick="event.stopPropagation()" style="margin: 0;">
+              <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleGroupVisibility('${escapeHtml(group.name)}', this.checked)">
+              <span class="slider"></span>
+            </label>
           </div>
           <div class="schedule-display">
             ${group.schedule ? renderScheduleSlots(group.schedule) : '<em style="color:#94a3b8;font-size:0.9rem;">No schedule set</em>'}
@@ -14616,6 +14675,27 @@
           window.dispatchEvent(new CustomEvent('schedules:updated', { detail: groups }));
           showToast('🗑️ Group Deleted');
           renderGroups();
+        }
+
+        // ===== TOGGLE GROUP VISIBILITY =====
+        async function toggleGroupVisibility(groupName, visible) {
+          const group = groups.find(g => g.name === groupName);
+          if (!group) return;
+
+          group.active = visible;
+
+          // Save to Supabase
+          await saveGroup(group);
+
+          // Update cache and invalidate TTL
+          window.groupsCache = groups;
+          window.groupsCacheTimestamp = Date.now();
+
+          // Dispatch events for UI updates
+          window.dispatchEvent(new CustomEvent('groups:updated', { detail: groups }));
+          window.dispatchEvent(new CustomEvent('schedules:updated', { detail: groups }));
+
+          showToast(visible ? '✅ Group visible' : '👁️‍🗨️ Group hidden');
         }
 
         // ===== EDIT SCHEDULE =====
@@ -15515,12 +15595,13 @@
           if (!contentEl) return;
 
           try {
-            // Load groups from Supabase cache
-            const groupsData = window.groupsCache || window.globalData?.groups || [];
+            // Load groups from Supabase cache - only show active groups
+            const allGroups = window.groupsCache || window.globalData?.groups || [];
+            const groupsData = allGroups.filter(g => g.active !== false);
 
             if (!Array.isArray(groupsData) || groupsData.length === 0) {
               contentEl.innerHTML =
-                '<div style="text-align: center; padding: 60px; color: rgba(255,255,255,0.5); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">📚</div><p>No groups found.<br>Add groups in Group Manager to see schedules here.</p></div>';
+                '<div style="text-align: center; padding: 60px; color: rgba(255,255,255,0.5); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">📚</div><p>No active groups found.<br>Add groups in Group Manager to see schedules here.</p></div>';
               return;
             }
 
@@ -19106,10 +19187,11 @@
           const groups = window.groupsCache || window.globalData?.groups || [];
           const payments = PaymentStore.getAll();
 
-          // Filter active students
+          // Filter active students who are shown in calendar
           const activeStudents = students.filter(s => {
             const status = (s.status || 'active').toLowerCase();
-            return status === 'active' && s.isActive !== false;
+            const showInGrid = s.showInGrid ?? s.show_in_grid ?? true;
+            return status === 'active' && s.isActive !== false && showInGrid === true;
           });
 
           // Map students to their schedules
