@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.7.5 ⏪ Original Buttons]</title>
+  <title>ARNOMA - Student Management [v2.7.6 🔘 Round Buttons Restored]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -1133,52 +1133,128 @@
         padding: 10px;
       }
 
-      /* Student Manager Styles */
-      .group-btn:hover {
+      /* -----------------------------------
+         ROUND BUTTON WRAPPER
+      ------------------------------------*/
+      .btn-wrapper {
+        --size: 90px;
+        --padding: 10px;
+        --hue: 142deg;
+        --btn-color: #e4e4e4;
+
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background: #00000008;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
         box-shadow:
-          0 0 0 0.1em hsla(223, 90%, 60%, 0.3),
-          0 0 0.2em #94a3b8 inset,
-          0 0.1em 0.1em #f1f5f9;
+          1px 1px 2px 0 #fffd,
+          2px 2px 2px #0001 inset,
+          2px 2px 4px #0001 inset,
+          2px 2px 8px #0001 inset;
       }
 
-      /* Elite Amount Buttons - Purple Theme */
-      .group-buttons:nth-child(2) .group-btn {
-        background: linear-gradient(135deg, rgba(88, 28, 135, 0.5), rgba(67, 20, 103, 0.7));
-        border: 1px solid rgba(168, 85, 247, 0.3);
+      .btn {
+        width: calc(100% - 2 * var(--padding));
+        height: calc(100% - 2 * var(--padding));
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+
+  display: flex;
+  align-items: center;
+        justify-content: center;
+
+        background: linear-gradient(#fff2, #0001), var(--btn-color);
+
         box-shadow:
-          0 2px 8px rgba(168, 85, 247, 0.25),
-          inset 0 1px 0 rgba(255, 255, 255, 0.05),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-        color: rgba(216, 180, 254, 0.9);
+          1px 1px 2px -1px #fff inset,
+          0 2px 1px #00000010,
+          0 4px 2px #00000010,
+          0 8px 4px #00000010,
+          0 16px 8px #00000010,
+          0 32px 16px #00000010;
+
+        transition: transform 0.15s ease, filter 0.2s ease;
       }
 
-      .group-buttons:nth-child(2) .group-btn:hover {
-        background: linear-gradient(135deg, rgba(126, 34, 206, 0.5), rgba(107, 33, 168, 0.6));
-        border-color: rgba(168, 85, 247, 0.5);
-        box-shadow:
-          0 4px 12px rgba(168, 85, 247, 0.35),
-          0 0 20px rgba(168, 85, 247, 0.2),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        color: #ffffff;
+      .btn-txt {
+        font-size: 34px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+
+        font-family: 'Montserrat', 'Manrope', sans-serif;
+        color: #222;
+        transition: all 0.15s ease;
       }
 
-      .group-buttons:nth-child(2) .group-btn.active {
-        background: linear-gradient(135deg, #a855f7, #9333ea);
-        border-color: rgba(168, 85, 247, 0.8);
-        box-shadow:
-          0 4px 16px rgba(168, 85, 247, 0.5),
-          0 0 24px rgba(168, 85, 247, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-        color: #ffffff;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      /* SELECTED state ONLY */
+      .btn:active .btn-txt,
+      .btn.active .btn-txt {
+        background: linear-gradient(
+          180deg,
+          hsla(var(--hue), 100%, 70%, 1) 0%,
+          hsla(var(--hue), 90%, 55%, 1) 40%,
+          hsla(var(--hue), 80%, 40%, 1) 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+
+        filter: drop-shadow(0 0 8px hsla(var(--hue), 100%, 70%, 0.8))
+          drop-shadow(0 0 14px hsla(var(--hue), 100%, 60%, 0.6));
       }
 
-      .group-buttons:nth-child(2) .group-btn.active:hover {
-        box-shadow:
-          0 6px 20px rgba(168, 85, 247, 0.6),
-          0 0 30px rgba(168, 85, 247, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      .btn:active {
+        transform: translateY(2px) scale(0.96);
+      }
+
+      /* GROUP COLORS */
+      .group-A {
+        --btn-color: #ffb5c8;
+        --hue: 345deg;
+      }
+      .group-B {
+        --btn-color: #ffd9a8;
+        --hue: 30deg;
+      }
+      .group-C {
+        --btn-color: #fff7a5;
+        --hue: 55deg;
+      }
+      .group-D {
+        --btn-color: #c8f7c5;
+        --hue: 142deg;
+      }
+      .group-E {
+        --btn-color: #c7e9ff;
+        --hue: 200deg;
+      }
+      .group-F {
+        --btn-color: #dcc7ff;
+        --hue: 270deg;
+      }
+
+      /* AMOUNT BUTTON COLOR */
+      .amount {
+        --btn-color: #c8f7c5;
+        --hue: 142deg;
+      }
+
+      /* ROW ALIGNMENT */
+      .group-buttons-row,
+      .amount-buttons-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        justify-content: flex-start;
+        align-items: center;
       }
 
       /* Group Manager Styles */
@@ -1447,33 +1523,6 @@
         margin-bottom: 20px;
         font-weight: 600;
         letter-spacing: 0.3px;
-      }
-
-      /* BEGIN FEATURE 2 - Elite Group Switch Buttons */
-      .group-buttons {
-        display: flex;
-        gap: 8px;
-        justify-content: flex-start;
-        margin: 0;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: visible;
-        position: relative;
-        z-index: 50;
-        padding: 2px 0;
-      }
-
-      .group-buttons::-webkit-scrollbar {
-        height: 2px;
-      }
-
-      .group-buttons::-webkit-scrollbar-track {
-        background: transparent;
-      }
-
-      .group-buttons::-webkit-scrollbar-thumb {
-        background: rgba(138, 180, 255, 0.3);
-        border-radius: 2px;
       }
 
       .student-status {
@@ -11847,7 +11896,7 @@
 
             // Check if clicked on any interactive element (button, input, select, etc.)
             const clickedInteractive = event.target.closest(
-              'button, input, textarea, select, a, label, .status-pill-single, .mini-toggle, .group-btn'
+              'button, input, textarea, select, a, label, .status-pill-single, .mini-toggle, .group-btn, .btn[data-group], .btn[data-amount]'
             );
 
             // If clicked outside all editing cards and not on an interactive element, cancel all edits
@@ -11940,29 +11989,27 @@
               <span style="font-size: 11px; color: rgba(200, 181, 255, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Switch Group</span>
               <span style="font-size: 10px; color: rgba(200, 181, 255, 0.5); font-weight: 600;">Current: ${escapeHtml(student.group || 'N/A')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
-              ${['A', 'B', 'C', 'D', 'E', 'F']
-                .map(
-                  g =>
-                    `<button class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">${g}</button>`
-                )
-                .join('')}
+            <div class="group-buttons-row" onclick="event.stopPropagation()">
+              <div class="btn-wrapper group-A"><button class="btn ${(student.group || '').toUpperCase() === 'A' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'A')" data-group="A"><span class="btn-txt">A</span></button></div>
+              <div class="btn-wrapper group-B"><button class="btn ${(student.group || '').toUpperCase() === 'B' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'B')" data-group="B"><span class="btn-txt">B</span></button></div>
+              <div class="btn-wrapper group-C"><button class="btn ${(student.group || '').toUpperCase() === 'C' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'C')" data-group="C"><span class="btn-txt">C</span></button></div>
+              <div class="btn-wrapper group-D"><button class="btn ${(student.group || '').toUpperCase() === 'D' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'D')" data-group="D"><span class="btn-txt">D</span></button></div>
+              <div class="btn-wrapper group-E"><button class="btn ${(student.group || '').toUpperCase() === 'E' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'E')" data-group="E"><span class="btn-txt">E</span></button></div>
+              <div class="btn-wrapper group-F"><button class="btn ${(student.group || '').toUpperCase() === 'F' ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', 'F')" data-group="F"><span class="btn-txt">F</span></button></div>
             </div>
           </div>
 
           <!-- Amount Switcher -->
-          <div style="padding: 16px 20px; background: linear-gradient(135deg, rgba(174, 203, 250, 0.08), rgba(174, 203, 250, 0.12)); border-bottom: 1px solid rgba(174, 203, 250, 0.2);">
+          <div style="padding: 16px 20px; background: linear-gradient(135deg, rgba(200, 247, 197, 0.08), rgba(168, 215, 165, 0.12)); border-bottom: 1px solid rgba(200, 247, 197, 0.2);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-              <span style="font-size: 11px; color: rgba(174, 203, 250, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
-              <span style="font-size: 10px; color: rgba(174, 203, 250, 0.5); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
+              <span style="font-size: 11px; color: rgba(100, 180, 100, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
+              <span style="font-size: 10px; color: rgba(100, 180, 100, 0.5); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
-              ${[25, 50, 75, 100]
-                .map(
-                  amount =>
-                    `<button class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})" title="Set pay to $${amount}">$${amount}</button>`
-                )
-                .join('')}
+            <div class="amount-buttons-row" onclick="event.stopPropagation()">
+              <div class="btn-wrapper amount"><button class="btn ${Number(student.payPerClass) === 25 ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', 25)" data-amount="25"><span class="btn-txt">25</span></button></div>
+              <div class="btn-wrapper amount"><button class="btn ${Number(student.payPerClass) === 50 ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', 50)" data-amount="50"><span class="btn-txt">50</span></button></div>
+              <div class="btn-wrapper amount"><button class="btn ${Number(student.payPerClass) === 75 ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', 75)" data-amount="75"><span class="btn-txt">75</span></button></div>
+              <div class="btn-wrapper amount"><button class="btn ${Number(student.payPerClass) === 100 ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', 100)" data-amount="100"><span class="btn-txt">100</span></button></div>
             </div>
           </div>
 
@@ -12234,32 +12281,20 @@
             }
           });
 
-          // Update group button active states (buttons A-F)
-          const allButtonContainers = card.querySelectorAll('.group-buttons');
-          allButtonContainers.forEach(container => {
-            const buttons = container.querySelectorAll('.group-btn');
-            buttons.forEach(btn => {
-              const btnText = btn.textContent.trim();
+          // Update round group buttons (A-F)
+          const groupButtons = card.querySelectorAll('.group-buttons-row .btn[data-group]');
+          const targetGroup = (student.group || '').toUpperCase();
+          groupButtons.forEach(btn => {
+            const btnGroup = (btn.dataset.group || '').toUpperCase();
+            btn.classList.toggle('active', btnGroup === targetGroup);
+          });
 
-              // Check if this is a group button (single letter A-F)
-              if (btnText.length === 1 && /[A-F]/.test(btnText)) {
-                if ((student.group || '').toUpperCase() === btnText) {
-                  btn.classList.add('active');
-                } else {
-                  btn.classList.remove('active');
-                }
-              }
-
-              // Check if this is a payment button (starts with $)
-              if (btnText.startsWith('$')) {
-                const btnAmount = parseInt(btnText.replace('$', ''));
-                if (Number(student.payPerClass) === btnAmount) {
-                  btn.classList.add('active');
-                } else {
-                  btn.classList.remove('active');
-                }
-              }
-            });
+          // Update round amount buttons ($25-$100)
+          const amountButtons = card.querySelectorAll('.amount-buttons-row .btn[data-amount]');
+          const targetAmount = Number(student.payPerClass);
+          amountButtons.forEach(btn => {
+            const btnAmount = Number(btn.dataset.amount);
+            btn.classList.toggle('active', btnAmount === targetAmount);
           });
         }
 
@@ -12355,7 +12390,9 @@
             (event.target.closest('.status-pill-single') ||
               event.target.closest('.mini-toggle') ||
               event.target.closest('.group-btn') ||
-              event.target.closest('.group-buttons'))
+              event.target.closest('.group-buttons') ||
+              event.target.closest('.btn[data-group]') ||
+              event.target.closest('.btn[data-amount]'))
           ) {
             return;
           }
