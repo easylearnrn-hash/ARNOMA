@@ -18,7 +18,7 @@ serve(async req => {
 
   try {
     const url = new URL(req.url);
-    
+
     // Handle GET request (OAuth callback from Google)
     if (req.method === 'GET') {
       const code = url.searchParams.get('code');
@@ -28,10 +28,12 @@ serve(async req => {
       // Handle OAuth error
       if (error) {
         console.error('❌ OAuth error:', error);
-        const returnUrl = state ? JSON.parse(decodeURIComponent(state)).returnUrl : 'https://www.richyfesta.com';
+        const returnUrl = state
+          ? JSON.parse(decodeURIComponent(state)).returnUrl
+          : 'https://www.richyfesta.com';
         return new Response(null, {
           status: 302,
-          headers: { 'Location': `${returnUrl}?gmail_auth=error&error=${error}` },
+          headers: { Location: `${returnUrl}?gmail_auth=error&error=${error}` },
         });
       }
 
@@ -68,7 +70,7 @@ serve(async req => {
         console.error('❌ Token exchange failed:', error);
         return new Response(null, {
           status: 302,
-          headers: { 'Location': `${returnUrl}?gmail_auth=error&error=token_exchange_failed` },
+          headers: { Location: `${returnUrl}?gmail_auth=error&error=token_exchange_failed` },
         });
       }
 
@@ -83,6 +85,13 @@ serve(async req => {
 
       const expiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000);
 
+      // Get user email from Google
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${tokenData.access_token}` },
+      });
+      const userInfo = await userInfoResponse.json();
+      const email = userInfo.email || 'unknown@example.com';
+
       // Store tokens in Supabase
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -90,6 +99,7 @@ serve(async req => {
       const { error: dbError } = await supabase.from('gmail_credentials').upsert(
         {
           user_id: userId,
+          email: email,
           access_token: tokenData.access_token,
           refresh_token: tokenData.refresh_token || null,
           client_id: GMAIL_CLIENT_ID,
@@ -105,7 +115,7 @@ serve(async req => {
         console.error('❌ Database error:', dbError);
         return new Response(null, {
           status: 302,
-          headers: { 'Location': `${returnUrl}?gmail_auth=error&error=database_error` },
+          headers: { Location: `${returnUrl}?gmail_auth=error&error=database_error` },
         });
       }
 
@@ -114,7 +124,7 @@ serve(async req => {
       // Redirect back to app with success
       return new Response(null, {
         status: 302,
-        headers: { 'Location': `${returnUrl}?gmail_auth=success` },
+        headers: { Location: `${returnUrl}?gmail_auth=success` },
       });
     }
 
@@ -148,6 +158,13 @@ serve(async req => {
     const tokenData = await tokenResponse.json();
     const expiresAt = new Date(Date.now() + (tokenData.expires_in || 3600) * 1000);
 
+    // Get user email from Google
+    const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+      headers: { Authorization: `Bearer ${tokenData.access_token}` },
+    });
+    const userInfo = await userInfoResponse.json();
+    const email = userInfo.email || 'unknown@example.com';
+
     // Store tokens in Supabase
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -155,6 +172,7 @@ serve(async req => {
     const { error: dbError } = await supabase.from('gmail_credentials').upsert(
       {
         user_id: userId,
+        email: email,
         access_token: tokenData.access_token,
         refresh_token: tokenData.refresh_token || null,
         client_id: GMAIL_CLIENT_ID,
