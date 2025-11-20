@@ -1477,7 +1477,7 @@
       /* WHITE EMBOSS BUTTONS - GLASSMORPHISM DESIGN */
       /* OUTER CIRCLE */
       .btn-wrapper {
-        --size: 40px;
+        --size: 25px;
         --padding: 5px;
         --hue: 142deg;
 
@@ -1498,9 +1498,9 @@
           inset -2px -2px 6px rgba(0, 0, 0, 0.04);
       }
 
-      /* Active wrapper grows to 50px and adds neon glow */
+      /* Active wrapper grows to 30px and adds neon glow */
       .btn-wrapper:has(.btn.active) {
-        --size: 50px;
+        --size: 30px;
         box-shadow:
           0 0 15px hsla(var(--hue), 100%, 60%, 0.35),
           0 0 30px hsla(var(--hue), 100%, 60%, 0.21),
@@ -12372,9 +12372,9 @@
           // Update group button active states (buttons A-F)
           const allButtonContainers = card.querySelectorAll('.group-buttons');
           allButtonContainers.forEach(container => {
-            const buttons = container.querySelectorAll('.group-btn');
+            const buttons = container.querySelectorAll('.btn');
             buttons.forEach(btn => {
-              const btnText = btn.textContent.trim();
+              const btnText = btn.querySelector('.btn-txt')?.textContent.trim() || btn.textContent.trim();
 
               // Check if this is a group button (single letter A-F)
               if (btnText.length === 1 && /[A-F]/.test(btnText)) {
