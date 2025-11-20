@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.8.4 - Toggle Debug]</title>
+  <title>ARNOMA - Student Management [v2.9.0 - Gmail OAuth Auto-Refresh]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.8.4" />
+    <meta name="version" content="2.9.0" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -8322,12 +8322,43 @@
               // Save refreshed token
               saveGmailConnection(access_token, expiresIn);
               debugLog('✅ Gmail token refreshed successfully');
+              debugLog('New expiry:', new Date(expires_at).toLocaleString());
 
               return true;
             } catch (error) {
               console.error('❌ Token refresh failed:', error);
 
-              // Token refresh failed - need to re-authenticate
+              // Token refresh failed - try to fetch current token from DB
+              debugLog('🔄 Attempting to fetch token from database...');
+
+              try {
+                const fetchResponse = await fetch(`${SUPABASE_URL}/functions/v1/gmail-get-token`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+                  },
+                  body: JSON.stringify({ userId: 'admin' }),
+                });
+
+                if (fetchResponse.ok) {
+                  const data = await fetchResponse.json();
+
+                  if (data.success && !data.expired) {
+                    gmailAccessToken = data.access_token;
+                    gmailTokenExpiry = new Date(data.expires_at).getTime();
+
+                    saveGmailConnection(data.access_token, Math.floor((gmailTokenExpiry - Date.now()) / 1000));
+                    debugLog('✅ Token fetched from database');
+
+                    return true;
+                  }
+                }
+              } catch (fetchError) {
+                console.error('❌ Failed to fetch token from database:', fetchError);
+              }
+
+              // Both refresh and fetch failed - need to re-authenticate
               gmailAccessToken = null;
               localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
               localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);

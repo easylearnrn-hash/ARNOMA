@@ -1147,21 +1147,92 @@ ARNOMA Team"
           return;
         }
 
-        // Otherwise, initiate OAuth flow
-        const redirectUri = window.location.origin + window.location.pathname;
+        // ✅ NEW: Authorization Code Flow with offline access for refresh token
+        const redirectUri = `${SUPABASE_URL}/functions/v1/gmail-oauth-callback`;
+        const state = encodeURIComponent(
+          JSON.stringify({
+            userId: 'admin',
+            returnUrl: window.location.href,
+          })
+        );
+
         const authUrl =
           `https://accounts.google.com/o/oauth2/v2/auth?` +
           `client_id=${GMAIL_CLIENT_ID}&` +
           `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-          `response_type=token&` +
+          `response_type=code&` + // ✅ Authorization code flow (not token)
+          `access_type=offline&` + // ✅ Request refresh token
+          `prompt=consent&` + // ✅ Force consent to ensure refresh token
           `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
-          `prompt=consent`;
+          `state=${state}`;
+
+        console.log('🔐 Initiating Gmail OAuth with authorization code flow...');
+        console.log('Redirect URI:', redirectUri);
 
         window.location.href = authUrl;
       }
 
-      // Handle OAuth callback
-      function handleGmailOAuthCallback() {
+      // Handle OAuth callback (from Edge Function redirect)
+      async function handleGmailOAuthCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const authStatus = urlParams.get('gmail_auth');
+        const error = urlParams.get('error');
+
+        if (authStatus === 'success') {
+          console.log('✅ Gmail OAuth successful, fetching token from database...');
+
+          try {
+            // Fetch stored token from database via Edge Function
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/gmail-get-token`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+              },
+              body: JSON.stringify({ userId: 'admin' }),
+            });
+
+            if (!response.ok) {
+              throw new Error('Failed to fetch token from database');
+            }
+
+            const data = await response.json();
+
+            if (!data.success) {
+              throw new Error(data.message || 'Failed to get token');
+            }
+
+            gmailAccessToken = data.access_token;
+            gmailTokenExpiry = new Date(data.expires_at).getTime();
+
+            // Save to localStorage for faster access
+            const connection = {
+              access_token: gmailAccessToken,
+              expiry_date: gmailTokenExpiry,
+            };
+            localStorage.setItem(GMAIL_CONNECTION_KEY, JSON.stringify(connection));
+
+            console.log('✅ Token fetched and saved');
+            console.log('Has refresh token in DB:', data.has_refresh_token);
+
+            // Clear URL parameters
+            window.history.replaceState(null, null, window.location.pathname);
+
+            showNotification('✅ Gmail connected with auto-refresh enabled!', 'success');
+            updateGmailButtonState(true);
+          } catch (err) {
+            console.error('❌ Failed to fetch token:', err);
+            showNotification('❌ Failed to complete Gmail connection', 'error');
+          }
+        } else if (authStatus === 'error') {
+          console.error('❌ Gmail OAuth error:', error);
+          showNotification(`❌ Gmail connection failed: ${error}`, 'error');
+
+          // Clear URL parameters
+          window.history.replaceState(null, null, window.location.pathname);
+        }
+
+        // Legacy: Handle old implicit flow (hash-based) for backward compatibility
         const hash = window.location.hash;
         if (hash && hash.includes('access_token')) {
           const params = new URLSearchParams(hash.substring(1));
