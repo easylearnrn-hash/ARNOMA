@@ -18753,10 +18753,11 @@
             return;
           }
 
-          // Clear all notifications
-          const allNotifications = window.NotificationCenter._notifications || [];
+          // Get all notifications using the public API
+          const allNotifications = window.NotificationCenter.getAll();
           console.log(`[NotificationCenter] Deleting ${allNotifications.length} notifications...`);
 
+          // Delete each notification
           for (const notif of allNotifications) {
             await window.NotificationCenter.delete(notif.id);
           }
@@ -18767,7 +18768,7 @@
           await window.NotificationCenter.initialize();
           renderNotifications();
 
-          showNotificationSimple('🗑️ All notifications cleared', 'success');
+          showNotification('🗑️ All notifications cleared', 'success');
         }
 
         function renderNotifications() {
