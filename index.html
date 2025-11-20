@@ -1477,71 +1477,144 @@
       }
 
       .group-btn {
-        background: linear-gradient(135deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8));
-        border: 1px solid rgba(138, 180, 255, 0.2);
-        border-radius: 8px;
-        box-shadow:
-          0 2px 8px rgba(0, 0, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.05),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-        cursor: pointer;
         position: relative;
-        min-width: 52px;
-        height: 36px;
-        padding: 0 14px;
-        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-        flex-shrink: 0;
-        z-index: 50;
-        font-size: 13px;
-        font-weight: 700;
-        color: rgba(138, 180, 255, 0.85);
-        overflow: visible;
+        background: #ffffff;
+        border-radius: 50%;
+        border: none;
+        padding: 15px;
+        width: 60px;
+        height: 60px;
+        font-size: 20px;
+        font-weight: 600;
         display: flex;
-        align-items: center;
         justify-content: center;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(8px);
-        white-space: nowrap;
-        letter-spacing: 0.3px;
+        align-items: center;
+        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        color: #333;
+        flex-shrink: 0;
       }
 
-      .group-btn:hover {
-        transform: translateY(-1px);
-        border-color: rgba(174, 203, 250, 0.4);
-        box-shadow:
-          0 4px 12px rgba(174, 203, 250, 0.3),
-          0 0 20px rgba(174, 203, 250, 0.15),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        background: linear-gradient(135deg, rgba(174, 203, 250, 0.3), rgba(174, 203, 250, 0.4));
-        color: #ffffff;
+      /* Tooltip */
+      .group-btn .tooltip {
+        position: absolute;
+        top: 0;
+        background: #ffffff;
+        color: #333;
+        padding: 6px 10px;
+        font-size: 14px;
+        border-radius: 6px;
+        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        z-index: 1000;
       }
 
-      .group-btn:active {
-        transform: translateY(0);
-        box-shadow:
-          0 1px 4px rgba(0, 0, 0, 0.4),
-          inset 0 1px 2px rgba(0, 0, 0, 0.3);
+      .group-btn .tooltip::before {
+        content: '';
+        position: absolute;
+        height: 8px;
+        width: 8px;
+        background: #ffffff;
+        bottom: -4px;
+        left: 50%;
+        transform: translateX(-50%) rotate(45deg);
       }
 
-      /* Active state */
-      .group-btn.active {
-        background: linear-gradient(135deg, #C8B5FF, #B49EFF);
-        border-color: rgba(200, 181, 255, 0.8);
-        box-shadow:
-          0 4px 16px rgba(200, 181, 255, 0.5),
-          0 0 24px rgba(200, 181, 255, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2),
-          inset 0 -1px 0 rgba(0, 0, 0, 0.2);
-        color: #ffffff;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
-        transform: translateY(-1px);
+      .group-btn:hover .tooltip {
+        top: -45px;
+        opacity: 1;
       }
 
-      .group-btn.active:hover {
-        box-shadow:
-          0 6px 20px rgba(200, 181, 255, 0.6),
-          0 0 30px rgba(200, 181, 255, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.25);
+      /* Dynamic pastel colors per group */
+      .group-btn.group-A:hover {
+        background: #ffc7c7;
+        color: white;
+        transform: translateY(-4px);
+      }
+      .group-btn.group-B:hover {
+        background: #ffdfa0;
+        color: white;
+        transform: translateY(-4px);
+      }
+      .group-btn.group-C:hover {
+        background: #fff6a5;
+        color: white;
+        transform: translateY(-4px);
+      }
+      .group-btn.group-D:hover {
+        background: #c8f7c5;
+        color: white;
+        transform: translateY(-4px);
+      }
+      .group-btn.group-E:hover {
+        background: #c7e9ff;
+        color: white;
+        transform: translateY(-4px);
+      }
+      .group-btn.group-F:hover {
+        background: #dcc7ff;
+        color: white;
+        transform: translateY(-4px);
+      }
+
+      /* Active state - use the group's pastel color */
+      .group-btn.active.group-A {
+        background: #ffc7c7;
+        color: white;
+      }
+      .group-btn.active.group-B {
+        background: #ffdfa0;
+        color: white;
+      }
+      .group-btn.active.group-C {
+        background: #fff6a5;
+        color: white;
+      }
+      .group-btn.active.group-D {
+        background: #c8f7c5;
+        color: white;
+      }
+      .group-btn.active.group-E {
+        background: #c7e9ff;
+        color: white;
+      }
+      .group-btn.active.group-F {
+        background: #dcc7ff;
+        color: white;
+      }
+
+      /* Amount buttons - mint green pastel */
+      .amount-btn {
+        background: #c8f7c5 !important;
+        color: #333 !important;
+        position: relative;
+        border-radius: 50%;
+        border: none;
+        padding: 15px;
+        width: 60px;
+        height: 60px;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        flex-shrink: 0;
+      }
+
+      .amount-btn:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 15px 15px rgba(0, 0, 0, 0.15);
+      }
+
+      .amount-btn.active {
+        background: #a8d7a5 !important;
+        color: white !important;
       }
 
       /* END FEATURE 2 */
@@ -12010,27 +12083,30 @@
               <span style="font-size: 11px; color: rgba(200, 181, 255, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Switch Group</span>
               <span style="font-size: 10px; color: rgba(200, 181, 255, 0.5); font-weight: 600;">Current: ${escapeHtml(student.group || 'N/A')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
               ${['A', 'B', 'C', 'D', 'E', 'F']
                 .map(
                   g =>
-                    `<button class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">${g}</button>`
+                    `<button class="group-btn group-${g} ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')">
+                      <span class="tooltip">${g}</span>
+                      ${g}
+                    </button>`
                 )
                 .join('')}
             </div>
           </div>
 
           <!-- Amount Switcher -->
-          <div style="padding: 16px 20px; background: linear-gradient(135deg, rgba(174, 203, 250, 0.08), rgba(174, 203, 250, 0.12)); border-bottom: 1px solid rgba(174, 203, 250, 0.2);">
+          <div style="padding: 16px 20px; background: linear-gradient(135deg, rgba(200, 247, 197, 0.08), rgba(168, 215, 165, 0.12)); border-bottom: 1px solid rgba(200, 247, 197, 0.2);">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-              <span style="font-size: 11px; color: rgba(174, 203, 250, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
-              <span style="font-size: 10px; color: rgba(174, 203, 250, 0.5); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
+              <span style="font-size: 11px; color: rgba(100, 180, 100, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
+              <span style="font-size: 10px; color: rgba(100, 180, 100, 0.5); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;">
               ${[25, 50, 75, 100]
                 .map(
                   amount =>
-                    `<button class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})" title="Set pay to $${amount}">$${amount}</button>`
+                    `<button class="amount-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})">$${amount}</button>`
                 )
                 .join('')}
             </div>
