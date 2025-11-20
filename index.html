@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.6.8 🎨]</title>
+    <title>ARNOMA - Student Management [v2.6.9 🔘]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -92,7 +92,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🎨 ARNOMA v2.6.8 - Circular Pastel Group Buttons 🎨');
+      console.log('🔘 ARNOMA v2.6.9 - New Round Button Design 🔘');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -1476,133 +1476,133 @@
         border-radius: 2px;
       }
 
-      .group-btn {
-        position: relative;
-        background: #fff;
+      /* -----------------------------------
+         ROUND BUTTON WRAPPER
+      ------------------------------------*/
+      .btn-wrapper {
+        --size: 90px;
+        --padding: 10px;
+        --hue: 142deg;
+        --btn-color: #e4e4e4;
+
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background: #00000008;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        box-shadow:
+          1px 1px 2px 0 #fffd,
+          2px 2px 2px #0001 inset,
+          2px 2px 4px #0001 inset,
+          2px 2px 8px #0001 inset;
+      }
+
+      /* -----------------------------------
+         INNER BUTTON
+      ------------------------------------*/
+      .btn {
+        width: calc(100% - 2 * var(--padding));
+        height: calc(100% - 2 * var(--padding));
         border-radius: 50%;
         border: none;
-        width: 60px;
-        height: 60px;
-        padding: 0;
-        font-size: 20px;
-        font-weight: 600;
-        display: flex;
-        justify-content: center;
-        align-items: center;
         cursor: pointer;
-        transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        color: #333;
-        flex-shrink: 0;
-        z-index: 20;
-      }
 
-      /* Tooltip */
-      .group-btn .tooltip {
-        position: absolute;
-        top: 0;
-        padding: 6px 10px;
-        background: #fff;
-        border-radius: 6px;
-        box-shadow: 0 10px 12px rgba(0, 0, 0, 0.12);
-        font-size: 14px;
-        color: #333;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        z-index: 1000;
-      }
-
-      .group-btn .tooltip::before {
-        content: '';
-        position: absolute;
-        height: 8px;
-        width: 8px;
-        background: #ffffff;
-        bottom: -4px;
-        left: 50%;
-        transform: translateX(-50%) rotate(45deg);
-      }
-
-      .group-btn:hover .tooltip {
-        top: -45px;
-        opacity: 1;
-      }
-
-      /* Pastel Colors */
-      .group-A {
-        --group-color: #ffb5c8;
-      }
-      .group-B {
-        --group-color: #ffd9a8;
-      }
-      .group-C {
-        --group-color: #fff7a5;
-      }
-      .group-D {
-        --group-color: #c8f7c5;
-      }
-      .group-E {
-        --group-color: #c7e9ff;
-      }
-      .group-F {
-        --group-color: #dcc7ff;
-      }
-
-      /* Hover */
-      .group-btn:hover {
-        background: var(--group-color);
-        color: white;
-        box-shadow: 0 0 12px var(--group-color);
-        transform: translateY(-4px);
-        z-index: 50;
-      }
-
-      /* Selected State */
-      .group-btn.selected,
-      .group-btn.active {
-        background: var(--group-color);
-        color: white;
-        box-shadow: 0 0 18px var(--group-color);
-        transform: translateY(-4px) scale(1.04);
-        z-index: 50;
-      }
-
-      /* Amount buttons - mint green pastel */
-      .amount-btn {
-        position: relative;
-        background: #c8f7c5 !important;
-        color: #333 !important;
-        border-radius: 50%;
-        border: none;
-        padding: 0;
-        width: 60px;
-        height: 60px;
-        font-size: 16px;
-        font-weight: 600;
         display: flex;
-        justify-content: center;
         align-items: center;
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        cursor: pointer;
-        transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        flex-shrink: 0;
-        z-index: 20;
+        justify-content: center;
+
+        background: linear-gradient(#fff2, #0001), var(--btn-color);
+
+        box-shadow:
+          1px 1px 2px -1px #fff inset,
+          0 2px 1px #00000010,
+          0 4px 2px #00000010,
+          0 8px 4px #00000010,
+          0 16px 8px #00000010,
+          0 32px 16px #00000010;
+
+        transition: transform 0.15s ease, filter 0.2s ease;
       }
 
-      .amount-btn:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 0 12px #c8f7c5;
-        z-index: 50;
+      /* -----------------------------------
+         TEXT — PERFECT CENTER
+      ------------------------------------*/
+      .btn-txt {
+        font-size: 34px;
+        font-weight: 700;
+
+        line-height: 1;
+        display: flex;
+        align-items: center;
+
+        font-family: 'Montserrat', 'Manrope', sans-serif;
+        color: #222;
+        transition: all 0.15s ease;
       }
 
-      .amount-btn.active,
-      .amount-btn.selected {
-        background: #a8d7a5 !important;
-        color: white !important;
-        box-shadow: 0 0 18px #a8d7a5;
-        transform: translateY(-4px) scale(1.04);
-        z-index: 50;
+      /* -----------------------------------
+         ACTIVE (SAME FOR SELECTED)
+      ------------------------------------*/
+      .btn:active .btn-txt,
+      .btn.active .btn-txt,
+      .btn.selected .btn-txt {
+        background: linear-gradient(
+          180deg,
+          hsla(var(--hue), 100%, 70%, 1) 0%,
+          hsla(var(--hue), 90%, 55%, 1) 40%,
+          hsla(var(--hue), 80%, 40%, 1) 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+
+        filter: drop-shadow(0 0 8px hsla(var(--hue), 100%, 70%, 0.8))
+          drop-shadow(0 0 14px hsla(var(--hue), 100%, 60%, 0.6));
+      }
+
+      .btn:active {
+        transform: translateY(2px) scale(0.96);
+      }
+
+      .btn.active,
+      .btn.selected {
+        transform: translateY(2px) scale(0.96);
+      }
+
+      /* Button colors per group */
+      .btn-wrapper.group-A {
+        --btn-color: #ffb5c8;
+        --hue: 345deg;
+      }
+      .btn-wrapper.group-B {
+        --btn-color: #ffd9a8;
+        --hue: 30deg;
+      }
+      .btn-wrapper.group-C {
+        --btn-color: #fff7a5;
+        --hue: 55deg;
+      }
+      .btn-wrapper.group-D {
+        --btn-color: #c8f7c5;
+        --hue: 142deg;
+      }
+      .btn-wrapper.group-E {
+        --btn-color: #c7e9ff;
+        --hue: 200deg;
+      }
+      .btn-wrapper.group-F {
+        --btn-color: #dcc7ff;
+        --hue: 270deg;
+      }
+
+      /* Amount buttons - mint green */
+      .btn-wrapper.amount-btn {
+        --btn-color: #c8f7c5;
+        --hue: 142deg;
       }
 
       /* END FEATURE 2 */
@@ -5161,7 +5161,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              🎨 ARNOMA v2.6.8 - Circular Pastel Group Buttons 🎨
+              🔘 ARNOMA v2.6.9 - New Round Button Design 🔘
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -12075,10 +12075,11 @@
               ${['A', 'B', 'C', 'D', 'E', 'F']
                 .map(
                   g =>
-                    `<button class="group-btn group-${g} ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')">
-                      <span class="tooltip">${g}</span>
-                      ${g}
-                    </button>`
+                    `<div class="btn-wrapper group-${g}">
+                      <button class="btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')">
+                        <span class="btn-txt">${g}</span>
+                      </button>
+                    </div>`
                 )
                 .join('')}
             </div>
@@ -12094,7 +12095,11 @@
               ${[25, 50, 75, 100]
                 .map(
                   amount =>
-                    `<button class="amount-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})">$${amount}</button>`
+                    `<div class="btn-wrapper amount-btn">
+                      <button class="btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})">
+                        <span class="btn-txt">${amount}</span>
+                      </button>
+                    </div>`
                 )
                 .join('')}
             </div>
@@ -22574,7 +22579,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('🎨 ARNOMA v2.6.8 - Circular Pastel Group Buttons 🎨');
+          console.log('🔘 ARNOMA v2.6.9 - New Round Button Design 🔘');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
