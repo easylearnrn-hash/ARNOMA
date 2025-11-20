@@ -1149,10 +1149,11 @@ ARNOMA Team"
 
         // ✅ NEW: Authorization Code Flow with offline access for refresh token
         const redirectUri = `${SUPABASE_URL}/functions/v1/gmail-oauth-callback`;
+        const returnUrl = window.parent === window ? window.location.href : window.parent.location.href;
         const state = encodeURIComponent(
           JSON.stringify({
             userId: 'admin',
-            returnUrl: window.location.href,
+            returnUrl: returnUrl,
           })
         );
 
@@ -5939,7 +5940,7 @@ ARNOMA Team"
         if (window.studentsData && window.studentsData.length > 0) {
           return window.studentsData[0];
         }
-        
+
         // Return mock student for testing
         return {
           id: 'test-student-123',
@@ -5949,7 +5950,7 @@ ARNOMA Team"
           groupSchedule: 'Fri 8:00 PM, Sun 8:00 PM',
           payPerClass: 100,
           phone: '(555) 123-4567',
-          creditBalance: 50
+          creditBalance: 50,
         };
       }
 
@@ -5974,7 +5975,7 @@ ARNOMA Team"
         const testData = {
           mainStudent: { name: student.name, email: getTestEmail() },
           aliasAdded: 'Test Alias Name',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
 
         window.postMessage({ action: 'sendAliasAddedEmail', ...testData }, '*');
@@ -6001,15 +6002,15 @@ ARNOMA Team"
         if (!student) return;
 
         const testData = {
-          student: { 
-            name: student.name, 
-            email: getTestEmail(), 
+          student: {
+            name: student.name,
+            email: getTestEmail(),
             id: student.id,
-            payPerClass: student.payPerClass || 100
+            payPerClass: student.payPerClass || 100,
           },
           groupName: student.group || 'E',
           groupSchedule: student.groupSchedule || 'Fri 8:00 PM, Sun 8:00 PM',
-          payPerClass: student.payPerClass || 100
+          payPerClass: student.payPerClass || 100,
         };
 
         window.postMessage({ action: 'sendGroupEnrollmentEmail', ...testData }, '*');
