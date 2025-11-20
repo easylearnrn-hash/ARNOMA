@@ -3943,12 +3943,12 @@
 
           <div style="margin-bottom: 20px">
             <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Email
+              Email(s) <span style="color: #94a3b8; font-weight: 400; font-size: 12px">(comma-separated for multiple)</span>
             </label>
             <input
-              type="email"
+              type="text"
               id="studentEmail"
-              placeholder="student@example.com"
+              placeholder="email1@example.com, email2@example.com"
               style="
                 width: 100%;
                 padding: 12px;
@@ -3960,6 +3960,9 @@
               "
               onkeydown="if(event.key==='Enter'){saveStudent();}"
             />
+            <div style="color: #94a3b8; font-size: 11px; margin-top: 4px;">
+              💡 You can add multiple emails separated by commas. All emails will receive notifications.
+            </div>
           </div>
 
           <div style="margin-bottom: 20px">

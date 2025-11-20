@@ -3847,6 +3847,19 @@ ARNOMA Team"
               return;
             }
 
+            // Parse multiple emails (comma-separated)
+            const emailAddresses = student.email
+              .split(',')
+              .map(e => e.trim())
+              .filter(e => e.length > 0);
+
+            if (emailAddresses.length === 0) {
+              console.error('❌ No valid email addresses found:', student.name);
+              return;
+            }
+
+            console.log(`📧 Sending welcome email to ${emailAddresses.length} address(es):`, emailAddresses);
+
             // Find Welcome Email template
             const templates = emailSystem._templates || [];
             const welcomeTemplate = templates.find(t => t.name.toLowerCase().includes('welcome') && t.active);
@@ -3908,15 +3921,15 @@ ARNOMA Team"
                 .replace(/\{\{ClassTime\}\}/g, student.classTime || 'TBD');
             }
 
-            console.log('📤 Sending welcome email to:', student.email);
+            console.log('📤 Sending welcome email to:', emailAddresses);
             console.log('🔑 Using Supabase URL:', SUPABASE_URL);
             console.log('📬 Request payload:', {
-              to: student.email,
+              to: emailAddresses,
               subject: subject,
               htmlLength: body.length,
             });
 
-            // Send email via Supabase Edge Function
+            // Send email via Supabase Edge Function (supports array of emails)
             const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
               method: 'POST',
               headers: {
@@ -3924,7 +3937,7 @@ ARNOMA Team"
                 Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
               },
               body: JSON.stringify({
-                to: student.email,
+                to: emailAddresses,
                 subject: subject,
                 html: body,
               }),
