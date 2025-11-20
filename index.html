@@ -1368,30 +1368,29 @@
       /* Student Manager Styles */
       .student-card,
       .student-item {
-        background: linear-gradient(145deg, rgba(26, 32, 44, 0.95), rgba(17, 24, 39, 0.95));
-        border: 1px solid rgba(138, 180, 255, 0.15);
-        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
         padding: 0;
-        backdrop-filter: blur(40px);
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
         display: flex;
         flex-direction: column;
         position: relative;
         z-index: 1;
-        overflow: hidden;
-        box-shadow:
-          0 4px 16px rgba(0, 0, 0, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.05);
       }
 
       .student-card:hover,
       .student-item:hover {
-        transform: translateY(-2px);
-        border-color: rgba(138, 180, 255, 0.3);
+        transform: translateY(-8px);
         box-shadow:
-          0 8px 32px rgba(138, 180, 255, 0.2),
-          0 0 40px rgba(138, 180, 255, 0.1),
-          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+          0 20px 60px rgba(138, 180, 255, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border-color: rgba(138, 180, 255, 0.3);
       }
 
       .student-item.editing {
@@ -1452,12 +1451,11 @@
       /* BEGIN FEATURE 2 - Elite Group Switch Buttons */
       .group-buttons {
         display: flex;
-        gap: 8px;
-        justify-content: flex-start;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
         margin: 0;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: visible;
         position: relative;
         z-index: 50;
         padding: 2px 0;
@@ -1474,6 +1472,124 @@
       .group-buttons::-webkit-scrollbar-thumb {
         background: rgba(138, 180, 255, 0.3);
         border-radius: 2px;
+      }
+
+      /* WHITE EMBOSS BUTTONS - GLASSMORPHISM DESIGN */
+      /* OUTER CIRCLE */
+      .btn-wrapper {
+        --size: 40px;
+        --padding: 5px;
+        --hue: 142deg;
+
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background: #ffffff;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        /* soft background halo */
+        box-shadow:
+          0 10px 22px rgba(0, 0, 0, 0.12),
+          0 4px 10px rgba(0, 0, 0, 0.06),
+          inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+          inset -2px -2px 6px rgba(0, 0, 0, 0.04);
+      }
+
+      /* Active wrapper grows to 50px and adds neon glow */
+      .btn-wrapper:has(.btn.active) {
+        --size: 50px;
+        box-shadow:
+          0 0 15px hsla(var(--hue), 100%, 60%, 0.35),
+          0 0 30px hsla(var(--hue), 100%, 60%, 0.21),
+          0 0 45px hsla(var(--hue), 100%, 60%, 0.1),
+          0 10px 22px rgba(0, 0, 0, 0.12),
+          0 4px 10px rgba(0, 0, 0, 0.06),
+          inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+          inset -2px -2px 6px rgba(0, 0, 0, 0.04);
+      }
+
+      /* Group-specific colors */
+      .btn-wrapper.group-A { --hue: 346deg; } /* Pastel Pink */
+      .btn-wrapper.group-B { --hue: 23deg; }  /* Peach/Coral */
+      .btn-wrapper.group-C { --hue: 50deg; }  /* Soft Yellow */
+      .btn-wrapper.group-D { --hue: 145deg; } /* Mint Green */
+      .btn-wrapper.group-E { --hue: 204deg; } /* Baby Blue */
+      .btn-wrapper.group-F { --hue: 260deg; } /* Pastel Lavender */
+
+      /* Amount buttons - darker green */
+      .btn-wrapper.amount { --hue: 145deg; }
+      .btn-wrapper.amount .btn.active .btn-txt {
+        background: linear-gradient(180deg, hsla(145, 80%, 40%, 1), hsla(145, 75%, 28%, 1));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+        filter: drop-shadow(0 0 7px hsla(145, 80%, 35%, 0.85))
+          drop-shadow(0 0 12px hsla(145, 75%, 28%, 0.75));
+      }
+
+      /* INNER BUTTON (EMBOSSED) */
+      .btn {
+        width: calc(100% - 2 * var(--padding));
+        height: calc(100% - 2 * var(--padding));
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        background: #f5f5f5;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        /* ✨ EMBOSS EFFECT HERE ✨ */
+        box-shadow:
+          inset 3px 3px 6px rgba(0, 0, 0, 0.12), /* bottom-right shadow */
+          inset -3px -3px 7px rgba(255, 255, 255, 0.9), /* top-left highlight */
+          0 3px 6px rgba(0, 0, 0, 0.08); /* slight outer lift */
+
+        transition: transform 0.15s ease, box-shadow 0.25s ease;
+      }
+
+      /* TEXT + PERFECT CENTER */
+      .btn-txt {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        color: #333;
+        transition: all 0.3s ease;
+      }
+
+      .btn-txt.small {
+        font-size: 13px;
+      }
+
+      /* ACTIVE (CLICK) GLOW + BACKGROUND GLOSS */
+      .btn.active {
+        box-shadow:
+          inset 2px 2px 6px rgba(255, 255, 255, 0.9),
+          inset -4px -4px 12px rgba(0, 0, 0, 0.08),
+          0 0 18px hsla(var(--hue), 80%, 65%, 0.25);
+      }
+
+      .btn.active .btn-txt {
+        background: linear-gradient(180deg, hsla(var(--hue), 100%, 48%, 1), hsla(var(--hue), 90%, 35%, 1));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        color: transparent;
+
+        filter: drop-shadow(0 0 7px hsla(var(--hue), 100%, 48%, 0.95))
+          drop-shadow(0 0 12px hsla(var(--hue), 100%, 38%, 0.85));
+      }
+
+      /* CLICK PRESS */
+      .btn:active {
+        transform: scale(0.96);
       }
 
       .student-status {
@@ -1506,9 +1622,17 @@
       }
 
       .status-active {
-        background: rgba(76, 175, 80, 0.15);
-        border-color: rgba(76, 175, 80, 0.4);
-        color: #4caf50;
+        background: rgba(76, 175, 80, 0.25);
+        border: 2px solid #4caf50;
+        color: #5eff6c;
+        text-shadow: 
+          0 0 10px rgba(94, 255, 108, 0.5),
+          0 0 20px rgba(94, 255, 108, 0.32);
+        box-shadow:
+          0 0 15px rgba(76, 175, 80, 0.38),
+          0 0 30px rgba(76, 175, 80, 0.25),
+          0 0 45px rgba(76, 175, 80, 0.13),
+          inset 0 0 10px rgba(94, 255, 108, 0.13);
       }
 
       .status-active:hover {
@@ -1582,6 +1706,10 @@
       input:checked + .slider {
         background-color: #8ab4ff;
         border-color: #8ab4ff;
+        box-shadow:
+          0 0 10px hsla(145, 100%, 50%, 0.5),
+          0 0 20px hsla(145, 100%, 50%, 0.3),
+          0 0 30px hsla(145, 100%, 50%, 0.15);
       }
 
       input:checked + .slider:before {
@@ -11940,11 +12068,15 @@
               <span style="font-size: 11px; color: rgba(200, 181, 255, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Switch Group</span>
               <span style="font-size: 10px; color: rgba(200, 181, 255, 0.5); font-weight: 600;">Current: ${escapeHtml(student.group || 'N/A')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
               ${['A', 'B', 'C', 'D', 'E', 'F']
                 .map(
                   g =>
-                    `<button class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">${g}</button>`
+                    `<div class="btn-wrapper group-${g}">
+                      <button class="btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">
+                        <span class="btn-txt">${g}</span>
+                      </button>
+                    </div>`
                 )
                 .join('')}
             </div>
@@ -11956,11 +12088,15 @@
               <span style="font-size: 11px; color: rgba(174, 203, 250, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
               <span style="font-size: 10px; color: rgba(174, 203, 250, 0.5); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
               ${[25, 50, 75, 100]
                 .map(
                   amount =>
-                    `<button class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})" title="Set pay to $${amount}">$${amount}</button>`
+                    `<div class="btn-wrapper amount">
+                      <button class="btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})" title="Set pay to $${amount}">
+                        <span class="btn-txt small">$${amount}</span>
+                      </button>
+                    </div>`
                 )
                 .join('')}
             </div>
@@ -12002,7 +12138,6 @@
 
           <!-- Footer -->
           <div style="text-align: center; padding: 12px; color: rgba(138, 180, 255, 0.35); font-size: 11px; font-style: italic; background: rgba(0, 0, 0, 0.1);">
-            Click anywhere to edit
           </div>
         </div>
 
