@@ -1478,37 +1478,38 @@
 
       .group-btn {
         position: relative;
-        background: #ffffff;
+        background: #fff;
         border-radius: 50%;
         border: none;
-        padding: 15px;
         width: 60px;
         height: 60px;
+        padding: 0;
         font-size: 20px;
         font-weight: 600;
         display: flex;
         justify-content: center;
         align-items: center;
-        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
         cursor: pointer;
         transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         color: #333;
         flex-shrink: 0;
+        z-index: 20;
       }
 
       /* Tooltip */
       .group-btn .tooltip {
         position: absolute;
         top: 0;
-        background: #ffffff;
-        color: #333;
         padding: 6px 10px;
-        font-size: 14px;
+        background: #fff;
         border-radius: 6px;
-        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 10px 12px rgba(0, 0, 0, 0.12);
+        font-size: 14px;
+        color: #333;
         opacity: 0;
         pointer-events: none;
-        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         z-index: 1000;
       }
 
@@ -1528,72 +1529,53 @@
         opacity: 1;
       }
 
-      /* Dynamic pastel colors per group */
-      .group-btn.group-A:hover {
-        background: #ffc7c7;
-        color: white;
-        transform: translateY(-4px);
+      /* Pastel Colors */
+      .group-A {
+        --group-color: #ffb5c8;
       }
-      .group-btn.group-B:hover {
-        background: #ffdfa0;
-        color: white;
-        transform: translateY(-4px);
+      .group-B {
+        --group-color: #ffd9a8;
       }
-      .group-btn.group-C:hover {
-        background: #fff6a5;
-        color: white;
-        transform: translateY(-4px);
+      .group-C {
+        --group-color: #fff7a5;
       }
-      .group-btn.group-D:hover {
-        background: #c8f7c5;
-        color: white;
-        transform: translateY(-4px);
+      .group-D {
+        --group-color: #c8f7c5;
       }
-      .group-btn.group-E:hover {
-        background: #c7e9ff;
-        color: white;
-        transform: translateY(-4px);
+      .group-E {
+        --group-color: #c7e9ff;
       }
-      .group-btn.group-F:hover {
-        background: #dcc7ff;
-        color: white;
-        transform: translateY(-4px);
+      .group-F {
+        --group-color: #dcc7ff;
       }
 
-      /* Active state - use the group's pastel color */
-      .group-btn.active.group-A {
-        background: #ffc7c7;
+      /* Hover */
+      .group-btn:hover {
+        background: var(--group-color);
         color: white;
+        box-shadow: 0 0 12px var(--group-color);
+        transform: translateY(-4px);
+        z-index: 50;
       }
-      .group-btn.active.group-B {
-        background: #ffdfa0;
+
+      /* Selected State */
+      .group-btn.selected,
+      .group-btn.active {
+        background: var(--group-color);
         color: white;
-      }
-      .group-btn.active.group-C {
-        background: #fff6a5;
-        color: white;
-      }
-      .group-btn.active.group-D {
-        background: #c8f7c5;
-        color: white;
-      }
-      .group-btn.active.group-E {
-        background: #c7e9ff;
-        color: white;
-      }
-      .group-btn.active.group-F {
-        background: #dcc7ff;
-        color: white;
+        box-shadow: 0 0 18px var(--group-color);
+        transform: translateY(-4px) scale(1.04);
+        z-index: 50;
       }
 
       /* Amount buttons - mint green pastel */
       .amount-btn {
+        position: relative;
         background: #c8f7c5 !important;
         color: #333 !important;
-        position: relative;
         border-radius: 50%;
         border: none;
-        padding: 15px;
+        padding: 0;
         width: 60px;
         height: 60px;
         font-size: 16px;
@@ -1601,20 +1583,26 @@
         display: flex;
         justify-content: center;
         align-items: center;
-        box-shadow: 0 10px 10px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
         cursor: pointer;
         transition: all 0.25s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         flex-shrink: 0;
+        z-index: 20;
       }
 
       .amount-btn:hover {
         transform: translateY(-4px);
-        box-shadow: 0 15px 15px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 0 12px #c8f7c5;
+        z-index: 50;
       }
 
-      .amount-btn.active {
+      .amount-btn.active,
+      .amount-btn.selected {
         background: #a8d7a5 !important;
         color: white !important;
+        box-shadow: 0 0 18px #a8d7a5;
+        transform: translateY(-4px) scale(1.04);
+        z-index: 50;
       }
 
       /* END FEATURE 2 */
