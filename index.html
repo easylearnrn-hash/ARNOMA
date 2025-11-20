@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.6.4 ⚡⚡]</title>
+    <title>ARNOMA - Student Management [v2.6.5 ✨]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -92,7 +92,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('🔥 ARNOMA v2.6.4 - Extreme Performance ⚡⚡');
+      console.log('✨ ARNOMA v2.6.5 - Enhanced Visual Design ✨');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -5096,7 +5096,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              🔥 ARNOMA v2.6.4 - Extreme Performance ⚡⚡
+              ✨ ARNOMA v2.6.5 - Enhanced Visual Design ✨
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -11938,11 +11938,11 @@
         <!-- VIEW MODE -->
         <div class="student-view" onclick="toggleInlineEdit('${student.id}', event)">
           <!-- Header with Status and Toggle -->
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.1));">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(139, 92, 246, 0.1)); border-bottom: 1px solid rgba(138, 180, 255, 0.2); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
             <span class="status-pill-single status-${normalizeStatus(student.status)}"
                   onclick="event.stopPropagation(); cycleStatus('${student.id}')"
                   title="Click to cycle: Active → Paused → Graduated"
-                  style="cursor: pointer; user-select: none; transition: all 0.2s;">
+                  style="cursor: pointer; user-select: none; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);">
               ${statusDetails.label}
             </span>
             <label class="mini-toggle" title="${showInGrid ? 'Shown in calendar' : 'Hidden from calendar'}" onclick="event.stopPropagation()">
@@ -11955,30 +11955,30 @@
           <div class="student-name">${escapeHtml(student.name || 'N/A')}</div>
           
           <!-- Main Info Grid -->
-          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: rgba(255, 255, 255, 0.03); margin: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <div style="padding: 14px 20px; background: rgba(0, 0, 0, 0.2);">
-              <div style="font-size: 10px; color: rgba(138, 180, 255, 0.5); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Group</div>
-              <div style="font-size: 18px; color: #8ab4ff; font-weight: 800; letter-spacing: -0.5px;">G${escapeHtml(student.group || 'N/A')}</div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; padding: 20px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.8), rgba(17, 24, 39, 0.9));">
+            <div style="padding: 18px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.18), rgba(37, 99, 235, 0.12)); border-radius: 14px; border: 1px solid rgba(59, 130, 246, 0.3); box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
+              <div style="font-size: 11px; color: rgba(147, 197, 253, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 8px;">Group</div>
+              <div style="font-size: 26px; color: #60a5fa; font-weight: 900; letter-spacing: -0.8px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">G${escapeHtml(student.group || 'N/A')}</div>
             </div>
-            <div style="padding: 14px 20px; background: rgba(0, 0, 0, 0.25);">
-              <div style="font-size: 10px; color: rgba(34, 197, 94, 0.5); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Pay/Class</div>
-              <div style="font-size: 18px; color: #22c55e; font-weight: 800; letter-spacing: -0.5px;">${formatCurrency(student.payPerClass || 0, '$')}</div>
+            <div style="padding: 18px; background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(21, 128, 61, 0.12)); border-radius: 14px; border: 1px solid rgba(34, 197, 94, 0.3); box-shadow: 0 4px 12px rgba(34, 197, 94, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);">
+              <div style="font-size: 11px; color: rgba(134, 239, 172, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 8px;">Pay/Class</div>
+              <div style="font-size: 26px; color: #4ade80; font-weight: 900; letter-spacing: -0.8px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">${formatCurrency(student.payPerClass || 0, '$')}</div>
             </div>
-            <div style="padding: 14px 20px; background: rgba(0, 0, 0, 0.25);">
-              <div style="font-size: 10px; color: ${(student.balance || 0) >= 0 ? 'rgba(34, 197, 94, 0.5)' : 'rgba(239, 68, 68, 0.5)'}; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Credit</div>
-              <div style="font-size: 18px; color: ${(student.balance || 0) >= 0 ? '#22c55e' : '#ef4444'}; font-weight: 800; letter-spacing: -0.5px;">${formatCurrency(student.balance || 0, '$')}</div>
+            <div style="padding: 18px; background: linear-gradient(135deg, ${(student.balance || 0) >= 0 ? 'rgba(34, 197, 94, 0.18), rgba(21, 128, 61, 0.12)' : 'rgba(239, 68, 68, 0.18), rgba(185, 28, 28, 0.12)'}); border-radius: 14px; border: 1px solid ${(student.balance || 0) >= 0 ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}; box-shadow: 0 4px 12px ${(student.balance || 0) >= 0 ? 'rgba(34, 197, 94, 0.1)' : 'rgba(239, 68, 68, 0.1)'}, inset 0 1px 0 rgba(255, 255, 255, 0.1);">
+              <div style="font-size: 11px; color: ${(student.balance || 0) >= 0 ? 'rgba(134, 239, 172, 0.8)' : 'rgba(252, 165, 165, 0.8)'}; font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 8px;">Credit</div>
+              <div style="font-size: 26px; color: ${(student.balance || 0) >= 0 ? '#4ade80' : '#f87171'}; font-weight: 900; letter-spacing: -0.8px; text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);">${formatCurrency(student.balance || 0, '$')}</div>
             </div>
-            <div style="padding: 14px 20px; background: rgba(0, 0, 0, 0.2);">
-              <div style="font-size: 10px; color: rgba(148, 163, 184, 0.5); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Phone</div>
-              <div style="font-size: 13px; color: #cbd5e1; font-weight: 600;">${escapeHtml(student.phone || 'N/A')}</div>
+            <div style="padding: 18px; background: linear-gradient(135deg, rgba(148, 163, 184, 0.15), rgba(100, 116, 139, 0.1)); border-radius: 14px; border: 1px solid rgba(148, 163, 184, 0.25); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.08);">
+              <div style="font-size: 11px; color: rgba(203, 213, 225, 0.7); font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; margin-bottom: 8px;">Phone</div>
+              <div style="font-size: 15px; color: #e2e8f0; font-weight: 600; margin-top: 8px;">${escapeHtml(student.phone || 'N/A')}</div>
             </div>
           </div>
 
           <!-- Group Switcher -->
-          <div style="padding: 16px 20px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(37, 99, 235, 0.08)); border-bottom: 1px solid rgba(138, 180, 255, 0.1);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-              <span style="font-size: 11px; color: rgba(138, 180, 255, 0.7); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Switch Group</span>
-              <span style="font-size: 10px; color: rgba(138, 180, 255, 0.4); font-weight: 600;">Current: G${escapeHtml(student.group || 'N/A')}</span>
+          <div style="padding: 20px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(37, 99, 235, 0.12)); border-top: 1px solid rgba(59, 130, 246, 0.15); border-bottom: 1px solid rgba(59, 130, 246, 0.15); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+              <span style="font-size: 12px; color: rgba(147, 197, 253, 0.9); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">Switch Group</span>
+              <span style="font-size: 11px; color: rgba(96, 165, 250, 0.6); font-weight: 600; background: rgba(59, 130, 246, 0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">Current: G${escapeHtml(student.group || 'N/A')}</span>
             </div>
             <div class="group-buttons" onclick="event.stopPropagation()">
               ${['A', 'B', 'C', 'D', 'E', 'F']
@@ -11990,10 +11990,10 @@
           </div>
 
           <!-- Amount Switcher -->
-          <div style="padding: 16px 20px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.05), rgba(147, 51, 234, 0.08)); border-bottom: 1px solid rgba(168, 85, 247, 0.1);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
-              <span style="font-size: 11px; color: rgba(216, 180, 254, 0.7); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
-              <span style="font-size: 10px; color: rgba(216, 180, 254, 0.4); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
+          <div style="padding: 20px; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(147, 51, 234, 0.12)); border-top: 1px solid rgba(168, 85, 247, 0.15); border-bottom: 1px solid rgba(168, 85, 247, 0.15); box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.1);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+              <span style="font-size: 12px; color: rgba(216, 180, 254, 0.9); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);">Set Pay Amount</span>
+              <span style="font-size: 11px; color: rgba(192, 132, 252, 0.6); font-weight: 600; background: rgba(168, 85, 247, 0.15); padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(168, 85, 247, 0.2);">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
             </div>
             <div class="group-buttons" onclick="event.stopPropagation()">
               ${[25, 50, 75, 100]
@@ -12008,13 +12008,13 @@
             student.email || aliases.length > 0
               ? `
           <!-- Additional Info -->
-          <div style="padding: 16px 20px; background: rgba(0, 0, 0, 0.15); border-bottom: 1px solid rgba(255, 255, 255, 0.03);">
+          <div style="padding: 20px; background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(17, 24, 39, 0.8)); border-top: 1px solid rgba(255, 255, 255, 0.05);">
             ${
               student.email
                 ? `
-              <div style="margin-bottom: ${aliases.length > 0 ? '12px' : '0'};">
-                <div style="font-size: 10px; color: rgba(148, 163, 184, 0.5); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Email</div>
-                <div style="font-size: 12px; color: #cbd5e1; font-weight: 500; word-break: break-all;">${escapeHtml(student.email)}</div>
+              <div style="margin-bottom: ${aliases.length > 0 ? '16px' : '0'}; padding: 14px; background: rgba(0, 0, 0, 0.2); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                <div style="font-size: 11px; color: rgba(148, 163, 184, 0.7); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 8px;">Email</div>
+                <div style="font-size: 13px; color: #cbd5e1; font-weight: 500; word-break: break-all; line-height: 1.5;">${escapeHtml(student.email)}</div>
               </div>
             `
                 : ''
@@ -12022,8 +12022,8 @@
             ${
               aliases.length > 0
                 ? `
-              <div>
-                <div style="font-size: 10px; color: rgba(148, 163, 184, 0.5); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">Aliases</div>
+              <div style="padding: 14px; background: rgba(0, 0, 0, 0.2); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.05);">
+                <div style="font-size: 11px; color: rgba(148, 163, 184, 0.7); font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 10px;">Aliases</div>
                 <div class="aliases-container">
                   ${(Array.isArray(aliases) ? aliases : aliases ? String(aliases).split(',') : [])
                     .map(alias => `<span class="alias-badge">${escapeHtml(alias.trim())}</span>`)
@@ -12039,7 +12039,7 @@
           }
 
           <!-- Footer -->
-          <div style="text-align: center; padding: 12px; color: rgba(138, 180, 255, 0.35); font-size: 11px; font-style: italic; background: rgba(0, 0, 0, 0.1);">
+          <div style="text-align: center; padding: 14px; color: rgba(147, 197, 253, 0.4); font-size: 11px; font-style: italic; background: linear-gradient(135deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.15)); border-top: 1px solid rgba(255, 255, 255, 0.03); letter-spacing: 0.5px;">
             Click anywhere to edit
           </div>
         </div>
@@ -22476,7 +22476,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('⚡ ARNOMA v2.6.4 - Extreme Performance ⚡⚡');
+          console.log('✨ ARNOMA v2.6.5 - Enhanced Visual Design ✨');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
