@@ -5864,11 +5864,22 @@ ARNOMA Team"
       }
 
       function getTestStudent() {
-        if (!window.studentsData || window.studentsData.length === 0) {
-          alert('⚠️ No students loaded yet. Wait for data to sync.');
-          return null;
+        // Use real student data if available, otherwise use mock data
+        if (window.studentsData && window.studentsData.length > 0) {
+          return window.studentsData[0];
         }
-        return window.studentsData[0];
+        
+        // Return mock student for testing
+        return {
+          id: 'test-student-123',
+          name: 'Test Student',
+          email: getTestEmail(),
+          group: 'E',
+          groupSchedule: 'Fri 8:00 PM, Sun 8:00 PM',
+          payPerClass: 100,
+          phone: '(555) 123-4567',
+          creditBalance: 50
+        };
       }
 
       async function testProfileUpdate() {
@@ -5917,9 +5928,15 @@ ARNOMA Team"
         if (!student) return;
 
         const testData = {
-          student: { name: student.name, email: getTestEmail(), group: student.group || 'Test Group' },
-          groupName: student.group || 'Test Group',
-          schedule: 'Monday 6:00 PM',
+          student: { 
+            name: student.name, 
+            email: getTestEmail(), 
+            id: student.id,
+            payPerClass: student.payPerClass || 100
+          },
+          groupName: student.group || 'E',
+          groupSchedule: student.groupSchedule || 'Fri 8:00 PM, Sun 8:00 PM',
+          payPerClass: student.payPerClass || 100
         };
 
         window.postMessage({ action: 'sendGroupEnrollmentEmail', ...testData }, '*');
