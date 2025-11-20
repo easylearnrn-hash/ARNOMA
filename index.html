@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.7.2 💪 FORCE]</title>
+  <title>ARNOMA - Student Management [v2.7.3 ✨ Neutral Rounds]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
@@ -1483,12 +1483,12 @@
         --size: 90px;
         --padding: 10px;
         --hue: 142deg;
-        --btn-color: #e4e4e4;
+        --btn-color: #efe8de;
 
         width: var(--size) !important;
         height: var(--size) !important;
         border-radius: 50% !important;
-        background: #00000008 !important;
+        background: #08040a33 !important;
 
         display: flex !important;
         align-items: center !important;
@@ -1512,7 +1512,8 @@
         align-items: center !important;
         justify-content: center !important;
 
-        background: linear-gradient(#fff2, #0001), var(--btn-color) !important;
+        background: radial-gradient(circle at 30% 30%, #ffffff, rgba(255, 255, 255, 0.85)) !important;
+        background-color: var(--btn-color) !important;
 
         box-shadow:
           1px 1px 2px -1px #fff inset,
@@ -1554,39 +1555,45 @@
           drop-shadow(0 0 14px hsla(var(--hue), 100%, 60%, 0.6));
       }
 
+      .btn.active {
+        background: linear-gradient(
+          180deg,
+          hsla(var(--hue), 75%, 90%, 0.9) 0%,
+          hsla(var(--hue), 70%, 82%, 0.95) 60%,
+          hsla(var(--hue), 65%, 78%, 1) 100%
+        ) !important;
+        box-shadow:
+          0 6px 16px hsla(var(--hue), 60%, 45%, 0.25),
+          inset 0 1px 0 rgba(255, 255, 255, 0.85),
+          inset 0 -2px 4px rgba(0, 0, 0, 0.12) !important;
+      }
+
       .btn:active {
         transform: translateY(2px) scale(0.96);
       }
 
-      /* Pastel colors per group */
+      /* Accent hues per group */
       .btn-wrapper.group-A {
-        --btn-color: #ffb5c8;
         --hue: 345deg;
       }
       .btn-wrapper.group-B {
-        --btn-color: #ffd9a8;
         --hue: 30deg;
       }
       .btn-wrapper.group-C {
-        --btn-color: #fff7a5;
         --hue: 55deg;
       }
       .btn-wrapper.group-D {
-        --btn-color: #c8f7c5;
         --hue: 142deg;
       }
       .btn-wrapper.group-E {
-        --btn-color: #c7e9ff;
         --hue: 200deg;
       }
       .btn-wrapper.group-F {
-        --btn-color: #dcc7ff;
         --hue: 270deg;
       }
 
-      /* Amount button color - one mint green */
+      /* Amount buttons share mint hue accent */
       .btn-wrapper.amount {
-        --btn-color: #c8f7c5;
         --hue: 142deg;
       }
 
@@ -5156,7 +5163,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              💪 ARNOMA v2.7.2 - FORCE Cache Override 💪
+              ✨ ARNOMA v2.7.3 - Neutral Round Buttons ✨
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -22564,7 +22571,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.7.2 - FORCE CACHE OVERRIDE with !important ✅');
+          console.log('✅ ARNOMA v2.7.3 - Neutral Round Buttons enforced ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
