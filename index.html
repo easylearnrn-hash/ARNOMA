@@ -10097,6 +10097,32 @@
               showNotification(`✅ Payment linked to ${student.name}`, 'success');
             }
 
+            // ============================================================
+            // SEND PAYMENT RECEIPT EMAIL
+            // ============================================================
+            if (student.email) {
+              verboseLog('[PaymentReceipt] 📧 Sending payment receipt email...');
+              const paymentAmount = parseFloat(payment.amount) || 0;
+              const paymentDate = payment.emailDate || payment.transactionDate || payment.createdAt;
+              const currentBalance = parseFloat(student.balance) || 0;
+
+              const emailResult = await sendPaymentReceiptEmail(
+                student,
+                paymentAmount,
+                paymentDate,
+                currentBalance
+              );
+
+              if (emailResult.success) {
+                showNotification(`📧 Payment receipt sent to ${student.email}`, 'success');
+                verboseLog('[PaymentReceipt] ✅ Email sent successfully');
+              } else {
+                showNotification(`⚠️ Payment linked but receipt email failed: ${emailResult.error}`, 'warning');
+                console.error('[PaymentReceipt] ❌ Email failed:', emailResult.error);
+              }
+            }
+            // ============================================================
+
             // Clear persistent storage after successful link
             savedPaymentDataForLinking = null;
             debugLog('🧹 Cleared savedPaymentDataForLinking after successful link');
