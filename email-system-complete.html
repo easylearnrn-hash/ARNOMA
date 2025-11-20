@@ -3862,12 +3862,12 @@ ARNOMA Team"
               const bodyContent = `
               <p>Dear <strong>${student.name}</strong>,</p>
 
-              <div class="info-box" style="background-color: #faf5ff; border-left-color: #9333ea;">
-                <p style="margin: 4px 0; color: #7e22ce;"><strong>Group:</strong> ${student.group || 'Not assigned yet'}</p>
-                <p style="margin: 4px 0; color: #7e22ce;"><strong>Schedule:</strong> ${student.groupSchedule || 'To be determined'}</p>
+              <div class="info-box" style="background-color: #faf5ff; border-left: 4px solid #9333ea; padding: 16px; margin: 20px 0; border-radius: 8px;">
+                <p style="margin: 4px 0; color: #1f2937; font-size: 15px;"><strong>Group:</strong> ${student.group || 'Not assigned yet'}</p>
+                <p style="margin: 4px 0; color: #1f2937; font-size: 15px;"><strong>Schedule:</strong> ${student.groupSchedule || 'To be determined'}</p>
               </div>
 
-              <p>Welcome to your all-in-one nursing classroom! You are enrolled in <strong>${student.group || 'your group'}</strong>, and your group schedule is <strong>${student.groupSchedule || 'to be determined'}</strong>.</p>
+              <p>Welcome to your all-in-one nursing classroom! You are enrolled in <strong>${student.group || 'your group'} - ${student.groupSchedule ? student.groupSchedule.split('—')[0].trim() : 'TBD'}</strong>, and your group schedule is <strong>${student.groupSchedule || 'to be determined'}</strong>.</p>
 
               <p>Please make sure to complete your payment before class so that all your notes and materials will be accessible once the class ends.</p>
 
@@ -5395,10 +5395,10 @@ ARNOMA Team"
         window.studentsData = [];
       }
       let sentReminders = new Set(); // Track sent reminders to avoid duplicates
-  window.__automationDataReceived = window.__automationDataReceived || false; // Guard duplicate payloads
-  window.__automationDataReceivedAt = window.__automationDataReceivedAt || null;
-  window.__automationEngineInitialized = window.__automationEngineInitialized || false;
-  let automationDataRequestInterval = null;
+      window.__automationDataReceived = window.__automationDataReceived || false; // Guard duplicate payloads
+      window.__automationDataReceivedAt = window.__automationDataReceivedAt || null;
+      window.__automationEngineInitialized = window.__automationEngineInitialized || false;
+      let automationDataRequestInterval = null;
 
       // Listen for data from parent window (index.html)
       window.addEventListener('message', function (event) {
