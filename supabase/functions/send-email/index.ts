@@ -33,12 +33,34 @@ serve(async req => {
       });
     }
 
-    // Send email via Resend
+    // Generate plain text version from HTML (helps with spam filters)
+    const text = html
+      .replace(/<style[^>]*>.*?<\/style>/gi, '')
+      .replace(/<[^>]+>/g, '')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    // Send email via Resend with anti-spam headers
     const data = await resend.emails.send({
       from,
       to: Array.isArray(to) ? to : [to],
       subject,
       html,
+      text, // Plain text version improves deliverability
+      headers: {
+        'X-Entity-Ref-ID': `arnoma-${Date.now()}`,
+        'List-Unsubscribe': '<mailto:info@arnoma.us?subject=unsubscribe>',
+      },
+      tags: [
+        {
+          name: 'category',
+          value: 'transactional',
+        },
+      ],
     });
 
     return new Response(JSON.stringify({ success: true, data }), {
@@ -47,7 +69,8 @@ serve(async req => {
     });
   } catch (error) {
     console.error('Email sending error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
