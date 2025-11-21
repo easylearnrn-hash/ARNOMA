@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.4 - UI Cleanup]</title>
+  <title>ARNOMA - Student Management [v2.18.5 - Show One-Time in Manager]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.4" />
-  <meta name="build-timestamp" content="20251121-210000" />
+  <meta name="version" content="2.18.5" />
+  <meta name="build-timestamp" content="20251121-210500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -14644,6 +14644,7 @@
           </div>
           <div class="schedule-display">
             ${group.schedule ? renderScheduleSlots(group.schedule) : '<em style="color:#94a3b8;font-size:0.9rem;">No schedule set</em>'}
+            ${group.one_time_schedules && group.one_time_schedules.length > 0 ? renderOneTimeSlots(group.one_time_schedules) : ''}
           </div>
           <div class="group-actions">
             <button onclick="editGroupSchedule('${escapeHtml(group.name)}')">✏️ Edit Schedule</button>
@@ -14665,6 +14666,19 @@
               const time = parts.slice(1).join(' ') || '';
               return `<div class="schedule-item" data-day="${day}" data-time="${time}">
           <div>${slot.trim()}</div>
+        </div>`;
+            })
+            .join('');
+        }
+
+        // ===== RENDER ONE-TIME SCHEDULE CHIPS =====
+        function renderOneTimeSlots(oneTimeSchedules) {
+          return oneTimeSchedules
+            .map(override => {
+              const dateLabel = override.date ? new Date(override.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+              const displayText = `${override.day || ''} ${override.time || ''} (${dateLabel})`;
+              return `<div class="schedule-item" style="background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4);" title="One-time class on ${override.date}">
+          <div>📅 ${displayText}</div>
         </div>`;
             })
             .join('');
