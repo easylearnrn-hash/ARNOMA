@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.16.2 - Fix One-Time Date Format]</title>
+    <title>ARNOMA - Student Management [v2.17.0 - Final Canceled Visual]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.16.2" />
-    <meta name="build-timestamp" content="20251121-162000" />
+    <meta name="version" content="2.17.0" />
+    <meta name="build-timestamp" content="20251121-163000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.16.2 - Fix: Calendar Group Name Mismatch ✅');
+      console.log('✅ ARNOMA v2.17.0 - Fix: Calendar Group Name Mismatch ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -5174,7 +5174,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              v2.16.2
+              v2.17.0
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -20114,13 +20114,12 @@
                       transition: all 0.2s; position: relative; overflow: visible;"
                onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
                onmouseout="this.style.background='${cellBgColor}'; this.style.borderColor='${cellBorderColor}';">
-            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : hasCanceledClass ? 'rgba(150,150,150,0.9)' : 'white'}; margin-bottom: 8px; ${hasCanceledClass ? 'text-decoration: line-through;' : ''}">
+            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : 'white'}; margin-bottom: 8px;">
               ${dayData.day}
               ${isToday ? '<span style="font-size: 9px; color: #8ab4ff; margin-left: 4px;">TODAY</span>' : ''}
-              ${hasCanceledClass ? '<span style="font-size: 9px; color: rgba(239, 68, 68, 0.9); margin-left: 4px;">⚫ CANCELED</span>' : ''}
             </div>
             <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; position: relative; overflow: visible;">
-              ${hasClasses ? renderDayDots(dayData, dateStr) : ''}
+              ${hasClasses ? renderDayDots(dayData, dateStr, hasCanceledClass) : ''}
             </div>
             ${
               hasClasses
@@ -20138,8 +20137,13 @@
           grid.innerHTML = html;
         }
 
-        function renderDayDots(dayData, dateStr) {
+        function renderDayDots(dayData, dateStr, hasCanceledClass) {
           let html = '';
+          
+          // Add ⚫ symbol at the start if class is canceled
+          if (hasCanceledClass) {
+            html += `<div style="width: 8px; height: 8px; display: flex; align-items: center; justify-content: center; font-size: 8px;">⚫</div>`;
+          }
 
           // Group students by their group name
           const studentsByGroup = {};
@@ -20174,10 +20178,20 @@
                 window.SkipClassManager.isClassSkipped(groupNameForCheck, dateStr);
 
               let dotColor;
+              let dotStyle = '';
 
               if (isSkipped) {
-                dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped/canceled classes
+                // Class is canceled
+                if (status === 'unpaid') {
+                  // Red unpaid dots: keep RED but add strikethrough
+                  dotColor = '#ef4444';
+                  dotStyle = 'text-decoration: line-through;';
+                } else {
+                  // All other dots: turn GRAY
+                  dotColor = 'rgba(150, 150, 150, 0.4)';
+                }
               } else {
+                // Normal class - use regular colors
                 switch (status) {
                   case 'paid':
                   case 'deducted':
@@ -20214,7 +20228,24 @@
                         ? 'Absent'
                         : 'Unpaid';
 
-              html += `
+              // Render dot with optional scratch overlay for red unpaid dots
+              if (isSkipped && status === 'unpaid') {
+                // Red unpaid dot with scratch line
+                html += `
+          <div style="position: relative; width: 8px; height: 8px;">
+            <div class="calendar-dot"
+                 onclick="event.stopPropagation(); showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
+                 data-tooltip="${escapeHtml(student.name)} — ${statusText}"
+                 style="width: 8px; height: 8px; border-radius: 50%; background: ${dotColor};
+                        cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
+                 onmouseover="this.style.transform='scale(1.5)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.5)';"
+                 onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.3)';"></div>
+            <div style="position: absolute; top: 50%; left: -2px; right: -2px; height: 1px; background: rgba(0,0,0,0.8); transform: translateY(-50%); pointer-events: none;"></div>
+          </div>
+        `;
+              } else {
+                // Normal dot (gray or regular color)
+                html += `
           <div class="calendar-dot"
                onclick="event.stopPropagation(); showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
                data-tooltip="${escapeHtml(student.name)} — ${statusText}"
@@ -20223,6 +20254,7 @@
                onmouseover="this.style.transform='scale(1.5)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.5)';"
                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.3)';"></div>
         `;
+              }
             });
 
             // Add separator between groups (except after the last group)
@@ -23069,7 +23101,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.16.2 - Fix: Calendar Group Name Mismatch ✅');
+          console.log('✅ ARNOMA v2.17.0 - Fix: Calendar Group Name Mismatch ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
