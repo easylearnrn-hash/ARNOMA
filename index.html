@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.10.1 - Payment Email Date Fix]</title>
+    <title>ARNOMA - Student Management [v2.10.2 - Notifications Disabled]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.10.1" />
+    <meta name="version" content="2.10.2" />
     <meta name="build-timestamp" content="20251121-130000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -10688,42 +10688,8 @@
 
         // Global notification system (toast notifications)
         function showNotification(message, type = 'info') {
-          // Create notification element
-          const notification = document.createElement('div');
-
-          const colors = {
-            success: 'rgba(34, 197, 94, 0.95)',
-            error: 'rgba(239, 68, 68, 0.95)',
-            warning: 'rgba(251, 191, 36, 0.95)',
-            info: 'rgba(59, 130, 246, 0.95)',
-          };
-
-          notification.style.cssText = `
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: ${colors[type] || colors.info};
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            z-index: 100003;
-            font-size: 14px;
-            font-weight: 500;
-            animation: slideInRight 0.3s ease-out;
-            max-width: 350px;
-          `;
-          notification.textContent = message;
-
-          document.body.appendChild(notification);
-
-          // Auto-remove after 3 seconds
-          setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(400px)';
-            notification.style.transition = 'all 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
-          }, 3000);
+          // DISABLED - Notifications removed per user request
+          return;
         }
 
         // ============================================================================
@@ -17646,36 +17612,9 @@
             hideSkipDialog();
           }
 
-          // Show notification (simple version)
+          // Show notification (simple version) - DISABLED per user request
           function showNotification(message, type = 'info') {
-            // Create notification element
-            const notification = document.createElement('div');
-            notification.style.cssText = `
-          position: fixed;
-          top: 80px;
-          right: 20px;
-          background: ${type === 'success' ? 'rgba(34, 197, 94, 0.95)' : 'rgba(59, 130, 246, 0.95)'};
-          color: white;
-          padding: 16px 24px;
-          border-radius: 12px;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-          z-index: 100003;
-          font-size: 14px;
-          font-weight: 500;
-          animation: slideInRight 0.3s ease-out;
-          max-width: 350px;
-        `;
-            notification.textContent = message;
-
-            document.body.appendChild(notification);
-
-            // Auto-remove after 3 seconds
-            setTimeout(() => {
-              notification.style.opacity = '0';
-              notification.style.transform = 'translateX(400px)';
-              notification.style.transition = 'all 0.3s ease-out';
-              setTimeout(() => notification.remove(), 300);
-            }, 3000);
+            return; // Notifications disabled - no popups in upper right
           }
 
           // Initialize - attach double-click handlers to timer items
