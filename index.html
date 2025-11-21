@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.16.1 - Canceled: ⚫ Symbol]</title>
+    <title>ARNOMA - Student Management [v2.16.2 - Fix One-Time Date Format]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.16.1" />
-    <meta name="build-timestamp" content="20251121-161000" />
+    <meta name="version" content="2.16.2" />
+    <meta name="build-timestamp" content="20251121-162000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.16.1 - Fix: Calendar Group Name Mismatch ✅');
+      console.log('✅ ARNOMA v2.16.2 - Fix: Calendar Group Name Mismatch ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -5174,7 +5174,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              v2.16.1
+              v2.16.2
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -16428,6 +16428,18 @@
             },
           };
 
+          // Format a Date object as YYYY-MM-DD
+          function formatDateYYYYMMDD(date) {
+            if (!date || !(date instanceof Date) || isNaN(date.getTime())) {
+              console.error('[formatDateYYYYMMDD] Invalid date:', date);
+              return 'Invalid-Date';
+            }
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+          }
+
           // Time conversion helper (reuses existing convertLATimeToYerevan function)
           function ensureAMPMFormatLocal(timeStr) {
             if (!timeStr) return '';
@@ -23057,7 +23069,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.16.1 - Fix: Calendar Group Name Mismatch ✅');
+          console.log('✅ ARNOMA v2.16.2 - Fix: Calendar Group Name Mismatch ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
