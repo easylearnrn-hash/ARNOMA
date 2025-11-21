@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.3 - Yerevan Time Fix]</title>
+  <title>ARNOMA - Student Management [v2.18.4 - UI Cleanup]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.3" />
-  <meta name="build-timestamp" content="20251121-205500" />
+  <meta name="version" content="2.18.4" />
+  <meta name="build-timestamp" content="20251121-210000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -14812,7 +14812,6 @@
         <input type="time" value="${time24}" style="flex:1;" onkeydown="if(event.key==='Enter'){event.target.closest('.group-card').querySelector('button[onclick*=saveScheduleEdit]').click();}">
         <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.8);" title="Check for one-time temporary class">
           <input type="checkbox" class="one-time-checkbox" ${isOneTime ? 'checked' : ''} onchange="toggleOneTimeDate(this)">
-          <span style="font-size: 11px; opacity: 0.9;">📅 Temp</span>
         </label>
         <input type="date" class="one-time-date" value="${overrideDate}" style="flex:1;" placeholder="Select date for one-time class" title="Date for this one-time class">
         <button onclick="this.parentElement.remove()">🗑️</button>
