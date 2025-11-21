@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.15.0 - Critical Bug Fixes]</title>
+    <title>ARNOMA - Student Management [v2.15.1 - Show Canceled Classes]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.15.0" />
-    <meta name="build-timestamp" content="20251121-140000" />
+    <meta name="version" content="2.15.1" />
+    <meta name="build-timestamp" content="20251121-141500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.15.0 - Critical Bug Fixes: Canceled Classes & Absences ✅');
+      console.log('✅ ARNOMA v2.15.1 - Countdown Timer: Show Canceled Classes ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -17014,16 +17014,10 @@
               const yerevanData = convertLAToYerevanTime(classData.laTime);
               const countdown = formatCountdown(classData.secondsRemaining);
 
-              // Check if this class is CANCELED (not just skipped)
+              // Check if this class is CANCELED (show it grayed/scratched, don't hide it)
               const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
               const isCanceled =
                 window.SkipClassManager && window.SkipClassManager.isClassCanceled(classData.groupName, dateStr);
-
-              // Skip rendering canceled classes entirely - they should NOT appear in countdown timer
-              if (isCanceled) {
-                console.log(`[CountdownTimer] Skipping canceled class: ${classData.groupName} on ${dateStr}`);
-                return;
-              }
 
               // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "in-progress" state
               // Determine card tint class based on time remaining
@@ -17031,41 +17025,49 @@
               let stateClass = '';
               let stateIcon = '';
 
-              const hoursRemaining = classData.secondsRemaining / 3600;
-
-              // Apply per-class tinting based on urgency
-              if (hoursRemaining > 24) {
-                cardTintClass = 'class-safe'; // Green
-              } else if (hoursRemaining > 12) {
-                cardTintClass = 'class-upcoming'; // Yellow
-              } else if (hoursRemaining > 6) {
-                cardTintClass = 'class-warning'; // Orange
+              // If canceled, override all styling
+              if (isCanceled) {
+                cardTintClass = 'class-canceled'; // Gray, low opacity
+                stateIcon = '🚫';
+                stateClass = 'canceled';
+                console.log(`[CountdownTimer] Showing CANCELED class: ${classData.groupName} on ${dateStr}`);
               } else {
-                cardTintClass = 'class-critical'; // Red with pulse
-              }
+                const hoursRemaining = classData.secondsRemaining / 3600;
 
-              // State icons based on urgency
-              if (classData.secondsRemaining < 900) {
-                // <15m
-                stateClass = 'urgent';
-                stateIcon = '🔴';
-              } else if (classData.secondsRemaining < 3600) {
-                // <60m
-                stateClass = 'warning';
-                stateIcon = '🟡';
-              } else {
-                stateIcon = '⏱️';
+                // Apply per-class tinting based on urgency
+                if (hoursRemaining > 24) {
+                  cardTintClass = 'class-safe'; // Green
+                } else if (hoursRemaining > 12) {
+                  cardTintClass = 'class-upcoming'; // Yellow
+                } else if (hoursRemaining > 6) {
+                  cardTintClass = 'class-warning'; // Orange
+                } else {
+                  cardTintClass = 'class-critical'; // Red with pulse
+                }
+
+                // State icons based on urgency
+                if (classData.secondsRemaining < 900) {
+                  // <15m
+                  stateClass = 'urgent';
+                  stateIcon = '🔴';
+                } else if (classData.secondsRemaining < 3600) {
+                  // <60m
+                  stateClass = 'warning';
+                  stateIcon = '🟡';
+                } else {
+                  stateIcon = '⏱️';
+                }
               }
               // END CLASS COUNTDOWN TIMER FIX
 
               const isNext = index === 0;
 
               html += `
-            <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''}" data-group="${classData.groupName}" data-day="${classData.dayName}" data-time="${classData.laTime}">
+            <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''}" data-group="${classData.groupName}" data-day="${classData.dayName}" data-time="${classData.laTime}" style="${isCanceled ? 'opacity: 0.4; text-decoration: line-through;' : ''}">
               <div class="timer-class-header">
                 <span class="timer-class-icon">${stateIcon}</span>
-                <span class="timer-class-group">${classData.groupName}</span>
-                <span class="timer-class-countdown">${countdown}</span>
+                <span class="timer-class-group">${classData.groupName}${isCanceled ? ' (CANCELED)' : ''}</span>
+                <span class="timer-class-countdown">${isCanceled ? '🚫 CANCELED' : countdown}</span>
               </div>
               <div class="timer-class-details">
                 <span class="timer-class-day">${classData.dayName}</span>
@@ -23009,7 +23011,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.15.0 - Critical Bug Fixes: Canceled Classes & Absences ✅');
+          console.log('✅ ARNOMA v2.15.1 - Countdown Timer: Show Canceled Classes ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
