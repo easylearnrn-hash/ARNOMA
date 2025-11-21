@@ -3,13 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.10.2 - Notifications Disabled]</title>
+    <title>ARNOMA - Student Management [v2.11.0 - One-Time Schedules in Countdown]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.10.2" />
+    <meta name="version" content="2.11.0" />
     <meta name="build-timestamp" content="20251121-130000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -14798,10 +14798,11 @@
           ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => `<option ${d === day ? 'selected' : ''}>${d}</option>`).join('')}
         </select>
         <input type="time" value="${time24}" style="flex:1;" onkeydown="if(event.key==='Enter'){event.target.closest('.group-card').querySelector('button[onclick*=saveScheduleEdit]').click();}">
-        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.8);" title="One-Time Schedule Override">
+        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.8);" title="Check for one-time temporary class">
           <input type="checkbox" class="one-time-checkbox" ${isOneTime ? 'checked' : ''} onchange="toggleOneTimeDate(this)">
+          <span style="font-size: 11px; opacity: 0.9;">📅 Temp</span>
         </label>
-        <input type="date" class="one-time-date" value="${overrideDate}" style="flex:1; display: ${isOneTime ? 'block' : 'none'};" placeholder="Override Date">
+        <input type="date" class="one-time-date" value="${overrideDate}" style="flex:1;" placeholder="Select date for one-time class" title="Date for this one-time class">
         <button onclick="this.parentElement.remove()">🗑️</button>
       `;
           c.appendChild(div);
@@ -14809,15 +14810,14 @@
 
         // ===== TOGGLE ONE-TIME DATE INPUT =====
         function toggleOneTimeDate(checkbox) {
+          // When checked, just keep it checked to indicate one-time class
+          // Date picker doesn't auto-open - user can click it manually if needed
           const row = checkbox.closest('.slot-row');
           const dateInput = row.querySelector('.one-time-date');
-          if (dateInput) {
-            dateInput.style.display = checkbox.checked ? 'block' : 'none';
-            if (checkbox.checked && !dateInput.value) {
-              // Set default date to today if not already set
-              const today = new Date();
-              dateInput.value = formatDateYYYYMMDD(today);
-            }
+          if (dateInput && checkbox.checked && !dateInput.value) {
+            // Set default date to today only if checkbox is checked and date is empty
+            const today = new Date();
+            dateInput.value = formatDateYYYYMMDD(today);
           }
         }
 
@@ -16525,6 +16525,33 @@
             return sessions;
           }
 
+          // Get one-time schedule sessions for a specific date
+          function getOneTimeSessionsForDate(group, targetDate) {
+            const sessions = [];
+            if (!group.one_time_schedules || !Array.isArray(group.one_time_schedules)) {
+              return sessions;
+            }
+
+            // Format targetDate as YYYY-MM-DD
+            const targetDateStr =
+              typeof targetDate === 'string'
+                ? targetDate
+                : formatDateYYYYMMDD(targetDate);
+
+            group.one_time_schedules.forEach(override => {
+              if (override.date === targetDateStr) {
+                sessions.push({
+                  day: override.day,
+                  time: override.time,
+                  isOneTime: true,
+                  oneTimeDate: override.date,
+                });
+              }
+            });
+
+            return sessions;
+          }
+
           // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "Class in Progress" & Auto-Jump to Next Class
           // Find next class across all groups (up to 7 days ahead)
           // Classes last 2 hours - automatically skip to next class after 2-hour window ends
@@ -16551,22 +16578,35 @@
                 const checkDayIndex = (currentDayIndex + daysAhead) % 7;
                 const checkDayName = dayNames[checkDayIndex];
 
+                // Calculate the actual calendar date for this check
+                const checkDate = new Date(now);
+                checkDate.setDate(checkDate.getDate() + daysAhead);
+                const checkDateStr = formatDateYYYYMMDD(checkDate);
+
                 groups.forEach(group => {
                   let sessions = [];
 
-                  // Handle both old array format and new string format
-                  if (Array.isArray(group.schedule)) {
-                    // Legacy array format
-                    group.schedule.forEach(slot => {
-                      if (slot.days && slot.time) {
-                        slot.days.forEach(day => {
-                          sessions.push({ day, time: ensureAMPMFormatLocal(slot.time) });
-                        });
-                      }
-                    });
-                  } else if (typeof group.schedule === 'string') {
-                    // New string format
-                    sessions = parseScheduleString(group.schedule);
+                  // FIRST: Check for one-time schedule overrides for this specific date
+                  const oneTimeSessions = getOneTimeSessionsForDate(group, checkDateStr);
+                  if (oneTimeSessions.length > 0) {
+                    // One-time schedule exists for this date - use it instead of regular schedule
+                    sessions = oneTimeSessions;
+                  } else {
+                    // NO one-time override - use regular recurring schedule
+                    // Handle both old array format and new string format
+                    if (Array.isArray(group.schedule)) {
+                      // Legacy array format
+                      group.schedule.forEach(slot => {
+                        if (slot.days && slot.time) {
+                          slot.days.forEach(day => {
+                            sessions.push({ day, time: ensureAMPMFormatLocal(slot.time) });
+                          });
+                        }
+                      });
+                    } else if (typeof group.schedule === 'string') {
+                      // New string format
+                      sessions = parseScheduleString(group.schedule);
+                    }
                   }
 
                   sessions.forEach(session => {
@@ -16589,8 +16629,9 @@
                     let totalDiffSeconds;
                     if (daysAhead === 0) {
                       totalDiffSeconds = classTimeInSeconds - currentTime;
+                      const sessionLabel = session.isOneTime ? '📅 ONE-TIME' : 'REGULAR';
                       debugLog(
-                        `[ClassCountdownTimer] Checking ${group.name} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds / 3600).toFixed(1)}h)`
+                        `[ClassCountdownTimer] Checking ${group.name} ${sessionLabel} on ${checkDayName} at ${session.time}: totalDiff=${totalDiffSeconds}s (${(totalDiffSeconds / 3600).toFixed(1)}h)`
                       );
                       // Skip if more than 2 hours (7200 seconds) past - class is over
                       if (totalDiffSeconds < -7200) return;
@@ -16601,8 +16642,9 @@
                     // Skip classes currently in progress (started but not yet 2 hours past)
                     // Only count future classes (totalDiffSeconds > 0)
                     if (totalDiffSeconds > 0 && totalDiffSeconds < minDiffInSeconds) {
+                      const sessionLabel = session.isOneTime ? '📅 ONE-TIME' : '';
                       debugLog(
-                        `[ClassCountdownTimer] ✅ New next class: ${group.name} on ${checkDayName} at ${session.time} (${(totalDiffSeconds / 3600).toFixed(1)}h away)`
+                        `[ClassCountdownTimer] ✅ New next class: ${group.name} ${sessionLabel} on ${checkDayName} at ${session.time} (${(totalDiffSeconds / 3600).toFixed(1)}h away)`
                       );
                       minDiffInSeconds = totalDiffSeconds;
 
@@ -16616,13 +16658,16 @@
                         dayLabel = checkDayName;
                       }
 
+                      const groupDisplayName =
+                        group.name && group.name.length === 1 ? `Group ${group.name}` : group.name || 'Unknown Group';
+
                       nextClass = {
-                        groupName:
-                          group.name && group.name.length === 1 ? `Group ${group.name}` : group.name || 'Unknown Group',
+                        groupName: session.isOneTime ? `${groupDisplayName} (One-Time)` : groupDisplayName,
                         dayName: dayLabel,
                         laTime: session.time,
                         secondsRemaining: totalDiffSeconds,
                         actualDay: checkDayName,
+                        isOneTime: session.isOneTime || false,
                       };
                     }
                   });
@@ -16761,6 +16806,11 @@
                 const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
                 const checkDayName = dayNames[checkDayIndex];
 
+                // Calculate the actual calendar date for this check
+                const checkDate = new Date(nowLA);
+                checkDate.setDate(checkDate.getDate() + daysAhead);
+                const checkDateStr = formatDateYYYYMMDD(checkDate);
+
                 groups.forEach(group => {
                   let sessions = [];
 
@@ -16789,31 +16839,39 @@
                     return map[day.toLowerCase()] || day;
                   };
 
-                  if (Array.isArray(group.schedule)) {
-                    // Legacy array format with { days: [], time: '' }
-                    group.schedule.forEach(slot => {
-                      if (!slot || !slot.days || !slot.time) return;
-                      const timeFormatted = ensureAMPMFormatLocal(slot.time);
-                      slot.days.forEach(day => {
-                        if (day) {
-                          sessions.push({
-                            day: normalizeDay(day),
-                            time: timeFormatted,
-                          });
-                        }
+                  // FIRST: Check for one-time schedule overrides for this specific date
+                  const oneTimeSessions = getOneTimeSessionsForDate(group, checkDateStr);
+                  if (oneTimeSessions.length > 0) {
+                    // One-time schedule exists for this date - use it instead of regular schedule
+                    sessions = oneTimeSessions;
+                  } else {
+                    // NO one-time override - use regular recurring schedule
+                    if (Array.isArray(group.schedule)) {
+                      // Legacy array format with { days: [], time: '' }
+                      group.schedule.forEach(slot => {
+                        if (!slot || !slot.days || !slot.time) return;
+                        const timeFormatted = ensureAMPMFormatLocal(slot.time);
+                        slot.days.forEach(day => {
+                          if (day) {
+                            sessions.push({
+                              day: normalizeDay(day),
+                              time: timeFormatted,
+                            });
+                          }
+                        });
                       });
-                    });
-                  } else if (Array.isArray(group.sessions)) {
-                    // Some imports might store sessions separately
-                    sessions = group.sessions
-                      .filter(s => s && s.day && s.time)
-                      .map(s => ({
-                        day: normalizeDay(s.day),
-                        time: ensureAMPMFormatLocal(s.time),
-                      }));
-                  } else if (typeof group.schedule === 'string') {
-                    // Primary format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
-                    sessions = parseScheduleString(group.schedule);
+                    } else if (Array.isArray(group.sessions)) {
+                      // Some imports might store sessions separately
+                      sessions = group.sessions
+                        .filter(s => s && s.day && s.time)
+                        .map(s => ({
+                          day: normalizeDay(s.day),
+                          time: ensureAMPMFormatLocal(s.time),
+                        }));
+                    } else if (typeof group.schedule === 'string') {
+                      // Primary format: "Mon/Wed 8:00 AM, Fri 9:30 PM"
+                      sessions = parseScheduleString(group.schedule);
+                    }
                   }
 
                   if (!sessions.length) return;
@@ -16866,14 +16924,17 @@
                         dayLabel = checkDayName;
                       }
 
+                      const groupDisplayName =
+                        group.name && group.name.length === 1 ? `Group ${group.name}` : group.name || 'Unknown Group';
+
                       allClasses.push({
-                        groupName:
-                          group.name && group.name.length === 1 ? `Group ${group.name}` : group.name || 'Unknown Group',
+                        groupName: session.isOneTime ? `${groupDisplayName} (One-Time)` : groupDisplayName,
                         dayName: dayLabel,
                         laTime: session.time,
                         secondsRemaining: totalDiffSeconds,
                         actualDay: checkDayName,
                         sortTime: totalDiffSeconds,
+                        isOneTime: session.isOneTime || false,
                       });
                     }
                   });
