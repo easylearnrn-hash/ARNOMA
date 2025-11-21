@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.15.7 - Fix isClassSkipped Name Check]</title>
+    <title>ARNOMA - Student Management [v2.16.0 - Debug: One-Time Schedules]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.15.7" />
-    <meta name="build-timestamp" content="20251121-154000" />
+    <meta name="version" content="2.16.0" />
+    <meta name="build-timestamp" content="20251121-160000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.15.7 - Fix: Calendar Group Name Mismatch ✅');
+      console.log('✅ ARNOMA v2.16.0 - Fix: Calendar Group Name Mismatch ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -5174,7 +5174,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              v2.15.7
+              v2.16.0
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -6682,6 +6682,18 @@
 
           window.groupsCache = deduped;
           window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
+          
+          // DEBUG: Log one-time schedules on load
+          const groupsWithOneTime = deduped.filter(g => g.one_time_schedules && g.one_time_schedules.length > 0);
+          if (groupsWithOneTime.length > 0) {
+            console.log(`[loadGroups] 📅 Found ${groupsWithOneTime.length} groups with one-time schedules:`);
+            groupsWithOneTime.forEach(g => {
+              console.log(`  - ${g.name}:`, g.one_time_schedules);
+            });
+          } else {
+            console.log('[loadGroups] ℹ️ No groups have one-time schedules set');
+          }
+          
           return window.groupsCache;
         }
         async function saveGroup(groupData) {
@@ -16550,6 +16562,7 @@
 
             group.one_time_schedules.forEach(override => {
               if (override.date === targetDateStr) {
+                console.log(`[getOneTimeSessionsForDate] ✅ Found one-time class for ${group.name} on ${targetDateStr}:`, override);
                 sessions.push({
                   day: override.day,
                   time: override.time,
@@ -16558,6 +16571,10 @@
                 });
               }
             });
+            
+            if (sessions.length === 0 && group.one_time_schedules.length > 0) {
+              console.log(`[getOneTimeSessionsForDate] ℹ️ ${group.name} has ${group.one_time_schedules.length} one-time schedules, but none match ${targetDateStr}`);
+            }
 
             return sessions;
           }
@@ -23040,7 +23057,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.15.7 - Fix: Calendar Group Name Mismatch ✅');
+          console.log('✅ ARNOMA v2.16.0 - Fix: Calendar Group Name Mismatch ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
