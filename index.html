@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.13.0" />
+    <meta name="version" content="2.13.1" />
     <meta name="build-timestamp" content="20251121-130000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.13.0 - Manual Payment Email Fix ✅');
+      console.log('✅ ARNOMA v2.13.1 - Email Preview Fix ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -20378,6 +20378,7 @@
 
             // Show success notification
             const emailSubject = response.emailContent?.subject || 'Payment Reminder';
+            const emailBody = response.emailContent?.body || '';
             
             if (window.NotificationCenter) {
               await window.NotificationCenter.add(
@@ -20389,10 +20390,13 @@
                   metadata: {
                     recipientName: student.name,
                     recipientEmail: student.email,
+                    email: student.email,
                     unpaidClassCount: allUnpaidClasses.length,
                     emailType: 'payment_reminder',
                     clickedDate: clickedDateStr,
                     emailSubject: emailSubject,
+                    emailBody: emailBody, // CRITICAL: Include email body for preview
+                    date: new Date().toLocaleDateString(),
                   },
                 }
               );
@@ -22968,7 +22972,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.13.0 - Manual Payment Email Fix ✅');
+          console.log('✅ ARNOMA v2.13.1 - Email Preview Fix ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
