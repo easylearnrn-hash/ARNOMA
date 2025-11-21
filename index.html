@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.9 - Styling + Syntax Fix]</title>
+  <title>ARNOMA - Student Management [v2.18.9 - Pink Alert Icon]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
   <meta name="version" content="2.18.9" />
-  <meta name="build-timestamp" content="20251121-215000" />
+  <meta name="build-timestamp" content="20251121-215500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -2427,7 +2427,7 @@
       }
 
       #enhancedCountdownTimer .timer-class-item.skipped .timer-class-group::before {
-        content: '● ';
+        content: '❗';
         color: rgba(236, 72, 153, 0.9);
         font-size: 10px;
       }
@@ -20328,9 +20328,9 @@
               window.SkipClassManager &&
               window.SkipClassManager.isClassCanceled(groupName, dateStr);
 
-            // Add ● symbol ONLY if this group is canceled
+            // Add ❗ symbol ONLY if this group is canceled
             if (isGroupCanceled) {
-              html += `<div style="width: 10px; height: 10px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: rgba(236, 72, 153, 0.9);">●</div>`;
+              html += `<div style="width: 10px; height: 10px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: rgba(236, 72, 153, 0.9);">❗</div>`;
             }
 
             // Render dots for each student in this group
