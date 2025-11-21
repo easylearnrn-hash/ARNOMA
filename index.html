@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.15.2 - Debug Calendar & One-Time]</title>
+    <title>ARNOMA - Student Management [v2.15.3 - Fix Group Name Mismatch]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.15.2" />
-    <meta name="build-timestamp" content="20251121-143000" />
+    <meta name="version" content="2.15.3" />
+    <meta name="build-timestamp" content="20251121-145000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.15.2 - Debug: Calendar ARNOMA v2.15.1 - Countdown Timer: Show Canceled Classes One-Time Schedules ✅');
+      console.log('✅ ARNOMA v2.15.3 - Fix: Calendar Group Name Mismatch ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -16673,6 +16673,7 @@
 
                       nextClass = {
                         groupName: session.isOneTime ? `${groupDisplayName} (One-Time)` : groupDisplayName,
+                        actualGroupName: group.name, // CRITICAL: Store original group name for cancellation (e.g., "A" not "Group A")
                         dayName: dayLabel,
                         laTime: session.time,
                         secondsRemaining: totalDiffSeconds,
@@ -16940,6 +16941,7 @@
 
                       allClasses.push({
                         groupName: session.isOneTime ? `${groupDisplayName} (One-Time)` : groupDisplayName,
+                        actualGroupName: group.name, // CRITICAL: Store original group name for cancellation
                         dayName: dayLabel,
                         laTime: session.time,
                         secondsRemaining: totalDiffSeconds,
@@ -17379,18 +17381,26 @@
 
           // Check if a class is canceled (entire class)
           function isClassCanceled(groupName, dateStr) {
+            // CRITICAL FIX: Check both "A" and "Group A" formats
+            // Students might have group="A" but skippedClasses might be saved as "Group A"
+            const normalizedName = groupName;
+            const fullGroupName = groupName && groupName.length === 1 ? `Group ${groupName}` : groupName;
+            
             const result = (
-              skippedClasses[groupName] &&
-              skippedClasses[groupName][dateStr] &&
-              skippedClasses[groupName][dateStr].type === 'class-canceled'
+              (skippedClasses[normalizedName] &&
+                skippedClasses[normalizedName][dateStr] &&
+                skippedClasses[normalizedName][dateStr].type === 'class-canceled') ||
+              (skippedClasses[fullGroupName] &&
+                skippedClasses[fullGroupName][dateStr] &&
+                skippedClasses[fullGroupName][dateStr].type === 'class-canceled')
             );
             
             // DEBUG: Log check for Nov 25
             if (dateStr === '2025-11-25') {
               console.log(`[isClassCanceled] ${groupName} on ${dateStr}:`, {
-                hasGroup: !!skippedClasses[groupName],
-                hasDate: !!(skippedClasses[groupName] && skippedClasses[groupName][dateStr]),
-                type: skippedClasses[groupName] && skippedClasses[groupName][dateStr] && skippedClasses[groupName][dateStr].type,
+                checkedNames: [normalizedName, fullGroupName],
+                hasNormalized: !!skippedClasses[normalizedName],
+                hasFull: !!skippedClasses[fullGroupName],
                 result: result,
                 allSkippedClasses: skippedClasses
               });
@@ -17706,10 +17716,14 @@
             // CRITICAL FIX: Use the stored classDate instead of recalculating
             // The stored date is already in LA timezone and YYYY-MM-DD format
             const dateStr = pendingSkip.classDate || calculateClassDate(pendingSkip.dayName, pendingSkip.laTime);
+            
+            // CRITICAL FIX: Use actualGroupName (e.g., "A") not display name (e.g., "Group A")
+            const groupNameForCancel = pendingSkip.actualGroupName || pendingSkip.groupName;
 
             console.log('[CLASS CANCELLED] Initiating cancellation:', {
               source: 'COUNTDOWN_TIMER',
-              group: pendingSkip.groupName,
+              displayName: pendingSkip.groupName,
+              actualGroupName: groupNameForCancel,
               date: dateStr,
               dayName: pendingSkip.dayName,
               time: pendingSkip.laTime,
@@ -17726,12 +17740,12 @@
               return;
             }
 
-            // Cancel class for entire group
-            const success = cancelClass(pendingSkip.groupName, dateStr, reason);
+            // Cancel class for entire group - use ACTUAL group name
+            const success = cancelClass(groupNameForCancel, dateStr, reason);
             
             if (success) {
               console.log('[CLASS CANCELLED] ✅ Successfully canceled via COUNTDOWN_TIMER:', {
-                group: pendingSkip.groupName,
+                group: groupNameForCancel,
                 date: dateStr,
                 reason: reason || '(no reason provided)',
               });
@@ -23048,7 +23062,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.15.2 - Debug: Calendar ARNOMA v2.15.1 - Countdown Timer: Show Canceled Classes One-Time Schedules ✅');
+          console.log('✅ ARNOMA v2.15.3 - Fix: Calendar Group Name Mismatch ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
