@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.15.4 - Canceled Groups: Dots Only]</title>
+    <title>ARNOMA - Student Management [v2.15.5 - Canceled: Cell Gray + Dots Scratched]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.15.4" />
-    <meta name="build-timestamp" content="20251121-151500" />
+    <meta name="version" content="2.15.5" />
+    <meta name="build-timestamp" content="20251121-152000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.15.4 - Fix: Calendar Group Name Mismatch ✅');
+      console.log('✅ ARNOMA v2.15.5 - Fix: Calendar Group Name Mismatch ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -5174,7 +5174,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              v2.15.4
+              v2.15.5
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -20051,12 +20051,23 @@
             const hasClasses = dayData.studentsWithClass.length > 0;
             const dateStr = formatDateYYYYMMDD(dayData.date);
 
-            // Cell styling - NO gray background for canceled classes
-            // Canceled classes are indicated by grayed/scratched dots only
-            const cellBgColor = isToday 
+            // Check if any classes are CANCELED on this day
+            const hasCanceledClass =
+              hasClasses &&
+              dayData.studentsWithClass.some(classInfo => {
+                const groupName = classInfo.student.group;
+                return groupName && window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr);
+              });
+
+            // Cell styling - gray background if class is canceled
+            const cellBgColor = hasCanceledClass 
+              ? 'rgba(100,100,100,0.15)' 
+              : isToday 
                 ? 'rgba(138,180,255,0.08)' 
                 : 'rgba(255,255,255,0.02)';
-            const cellBorderColor = isToday 
+            const cellBorderColor = hasCanceledClass
+              ? 'rgba(100,100,100,0.3)'
+              : isToday 
                 ? 'rgba(138,180,255,0.3)' 
                 : 'rgba(255,255,255,0.05)';
 
@@ -20069,9 +20080,10 @@
                       transition: all 0.2s; position: relative; overflow: visible;"
                onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
                onmouseout="this.style.background='${cellBgColor}'; this.style.borderColor='${cellBorderColor}';">
-            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : 'white'}; margin-bottom: 8px;">
+            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : hasCanceledClass ? 'rgba(150,150,150,0.9)' : 'white'}; margin-bottom: 8px; ${hasCanceledClass ? 'text-decoration: line-through;' : ''}">
               ${dayData.day}
               ${isToday ? '<span style="font-size: 9px; color: #8ab4ff; margin-left: 4px;">TODAY</span>' : ''}
+              ${hasCanceledClass ? '<span style="font-size: 9px; color: rgba(239, 68, 68, 0.9); margin-left: 4px;">🚫 CANCELED</span>' : ''}
             </div>
             <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; position: relative; overflow: visible;">
               ${hasClasses ? renderDayDots(dayData, dateStr) : ''}
@@ -23034,7 +23046,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.15.4 - Fix: Calendar Group Name Mismatch ✅');
+          console.log('✅ ARNOMA v2.15.5 - Fix: Calendar Group Name Mismatch ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
