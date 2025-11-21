@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.15.6 - Restore Original Cancel Logic]</title>
+    <title>ARNOMA - Student Management [v2.15.7 - Fix isClassSkipped Name Check]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.15.6" />
-    <meta name="build-timestamp" content="20251121-153000" />
+    <meta name="version" content="2.15.7" />
+    <meta name="build-timestamp" content="20251121-154000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.15.6 - Fix: Calendar Group Name Mismatch ✅');
+      console.log('✅ ARNOMA v2.15.7 - Fix: Calendar Group Name Mismatch ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -5174,7 +5174,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              v2.15.6
+              v2.15.7
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -17376,7 +17376,12 @@
 
           // Check if a class is skipped (any type)
           function isClassSkipped(groupName, dateStr) {
-            return skippedClasses[groupName] && skippedClasses[groupName][dateStr];
+            // Check both "A" and "Group A" formats
+            const normalizedName = groupName;
+            const fullGroupName = groupName && groupName.length === 1 ? `Group ${groupName}` : groupName;
+            
+            return (skippedClasses[normalizedName] && skippedClasses[normalizedName][dateStr]) ||
+                   (skippedClasses[fullGroupName] && skippedClasses[fullGroupName][dateStr]);
           }
 
           // Check if a class is canceled (entire class)
@@ -23035,7 +23040,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.15.6 - Fix: Calendar Group Name Mismatch ✅');
+          console.log('✅ ARNOMA v2.15.7 - Fix: Calendar Group Name Mismatch ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
