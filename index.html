@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.18.10 - Console Cleanup ✅');
+      console.log('✅ ARNOMA v2.18.11 - Canceled Sidebar Fix ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -21046,8 +21046,8 @@
                 canceledCount > 0
                   ? `<div style="flex: 1; padding: 10px; background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.3); border-radius: 8px;">
                 <div style="font-size: 10px; color: rgba(148,163,184,0.7); font-weight: 600; margin-bottom: 3px;">CANCELED</div>
-                <div style="font-size: 18px; font-weight: 900; color: #94a3b8;">🚫</div>
-                <div style="font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 1px;">${canceledCount} class${canceledCount !== 1 ? 'es' : ''}</div>
+                <div style="font-size: 18px; font-weight: 900; color: #94a3b8;">⚠️</div>
+                <div style="font-size: 9px; color: rgba(255,255,255,0.3); margin-top: 1px;">${canceledCount} student${canceledCount !== 1 ? 's' : ''}</div>
               </div>`
                   : ''
               }
@@ -23286,7 +23286,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.18.10 - Console Cleanup ✅');
+          console.log('✅ ARNOMA v2.18.11 - Canceled Sidebar Fix ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
