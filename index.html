@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.17.0 - Final Canceled Visual]</title>
+  <title>ARNOMA - Student Management [v2.18.0 - One-Time Quick View]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.17.0" />
-    <meta name="build-timestamp" content="20251121-163000" />
+  <meta name="version" content="2.18.0" />
+  <meta name="build-timestamp" content="20251121-201500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -15711,6 +15711,60 @@
           return chips.join('');
         }
 
+        function formatQuickViewDate(dateStr) {
+          if (!dateStr) return '';
+          const parts = dateStr.split('-').map(Number);
+          if (parts.length !== 3 || parts.some(isNaN)) return dateStr;
+          const [year, month, day] = parts;
+          const dateObj = new Date(year, month - 1, day);
+          return dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function getWeekdayFromDateStr(dateStr) {
+          if (!dateStr) return '';
+          const parts = dateStr.split('-').map(Number);
+          if (parts.length !== 3 || parts.some(isNaN)) return '';
+          const [year, month, day] = parts;
+          const dateObj = new Date(year, month - 1, day);
+          return dateObj.toLocaleDateString('en-US', { weekday: 'long' });
+        }
+
+        function shiftWeekday(dayName, offset = 0) {
+          if (!dayName) return '';
+          const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+          const currentIndex = weekdays.indexOf(dayName);
+          if (currentIndex === -1) return dayName;
+          const normalizedIndex = ((currentIndex + offset) % 7 + 7) % 7;
+          return weekdays[normalizedIndex];
+        }
+
+        function getActiveOneTimeSchedules(group, options = {}) {
+          if (!group || !Array.isArray(group.one_time_schedules)) return [];
+
+          const { maxDaysAhead = 60 } = options;
+          const todayLA = typeof getLADate === 'function' ? getLADate() : new Date();
+          const todayStr = formatDateYYYYMMDD(todayLA);
+          const horizon = new Date(todayLA);
+          horizon.setDate(horizon.getDate() + maxDaysAhead);
+          const horizonStr = formatDateYYYYMMDD(horizon);
+
+          return group.one_time_schedules
+            .filter(override => {
+              if (!override || !override.date) return false;
+              return override.date >= todayStr && override.date <= horizonStr;
+            })
+            .map(override => {
+              const timeValue = ensureAMPMFormat(override.time);
+              return {
+                ...override,
+                time: timeValue,
+                day: override.day || getWeekdayFromDateStr(override.date),
+                isOneTime: true,
+              };
+            })
+            .sort((a, b) => a.date.localeCompare(b.date));
+        }
+
         // BEGIN QUICK VIEW FIX: Main render function
         function renderQuickView() {
           const contentEl = document.getElementById('quickViewContent');
@@ -15720,6 +15774,14 @@
             // Load groups from Supabase cache - only show active groups
             const allGroups = window.groupsCache || window.globalData?.groups || [];
             const groupsData = allGroups.filter(g => g.active !== false);
+
+            const activeOneTimeMap = new Map();
+            groupsData.forEach(group => {
+              const overrides = getActiveOneTimeSchedules(group, { maxDaysAhead: 90 });
+              if (overrides.length > 0) {
+                activeOneTimeMap.set(group.name, overrides);
+              }
+            });
 
             if (!Array.isArray(groupsData) || groupsData.length === 0) {
               contentEl.innerHTML =
@@ -15738,11 +15800,47 @@
                 // Ensure group name starts with "Group" prefix if it's just a letter
                 const groupName =
                   group.name && group.name.length === 1 ? `Group ${group.name}` : group.name || 'Unnamed Group';
+                const oneTimeOverrides = activeOneTimeMap.get(group.name) || [];
+                const oneTimeSection =
+                  oneTimeOverrides.length > 0
+                    ? `
+                <div style="margin-top: 14px;">
+                  <div style="font-size: 13px; color: rgba(255,255,255,0.6); margin-bottom: 6px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 14px;">📅</span>
+                    One-Time Classes (auto-clears)
+                  </div>
+                  <div>
+                    ${oneTimeOverrides
+                      .map(override => {
+                        const dateLabel = formatQuickViewDate(override.date);
+                        const laDayRaw = override.day || getWeekdayFromDateStr(override.date) || '';
+                        const laDay = escapeHtml(laDayRaw);
+                        const laTime = escapeHtml(override.time || '');
+                        const yerevanResult = convertLATimeToYerevan(override.time || '', true);
+                        const yerevanDay = escapeHtml(shiftWeekday(laDayRaw, yerevanResult.dayShift) || '');
+                        const dayShiftLabel =
+                          yerevanResult.dayShift === 1
+                            ? ' (+1d)'
+                            : yerevanResult.dayShift === -1
+                              ? ' (-1d)'
+                              : '';
+                        return `<span style="display: inline-flex; flex-direction: column; gap: 2px; padding: 10px 12px; margin: 4px; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.35); border-radius: 10px; font-size: 12px; color: #fbbf24; min-width: 140px;">
+                          <span style="font-weight: 700; color: #fde68a;">${escapeHtml(dateLabel)}</span>
+                          <span style="color: rgba(255,255,255,0.85); font-size: 12px;">${laDay} • ${laTime} (Los Angeles)</span>
+                          <span style="color: rgba(255,255,255,0.7); font-size: 11px;">🇦🇲 ${yerevanDay} • ${yerevanResult.time || ''}${dayShiftLabel}</span>
+                        </span>`;
+                      })
+                      .join('')}
+                  </div>
+                </div>
+              `
+                    : '';
                 html += `
               <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px; transition: all 0.2s;">
                 <div style="font-size: 18px; font-weight: 700; color: white; margin-bottom: 8px;">${escapeHtml(groupName)}</div>
                 <div style="font-size: 14px; color: rgba(255,255,255,0.5); margin-bottom: 8px; font-weight: 600;">Schedule:</div>
                 <div>${schedule}</div>
+                ${oneTimeSection}
               </div>
             `;
               });
@@ -15789,6 +15887,23 @@
                     daySchedule[fullDay].push({ group: escapeHtml(group.name), time: escapeHtml(timeAMPM) });
                   });
                 });
+
+                const oneTimeOverrides = activeOneTimeMap.get(group.name) || [];
+                if (oneTimeOverrides.length > 0) {
+                  const groupSafeName = group.name || 'Unnamed Group';
+                  oneTimeOverrides.forEach(override => {
+                    const overrideDay = override.day || getWeekdayFromDateStr(override.date);
+                    if (!overrideDay) return;
+                    if (!daySchedule[overrideDay]) daySchedule[overrideDay] = [];
+                    daySchedule[overrideDay].push({
+                      group: escapeHtml(groupSafeName),
+                      time: escapeHtml(override.time || ''),
+                      isOneTime: true,
+                      date: override.date,
+                      dateLabel: formatQuickViewDate(override.date),
+                    });
+                  });
+                }
               });
 
               // Sort sessions by time within each day
@@ -15826,7 +15941,14 @@
                             const yerevanTime = yerevanResult.time; // Clean time without markers
                             // Ensure group name starts with "Group" prefix if it's just a letter
                             const groupName = s.group.length === 1 ? `Group ${s.group}` : s.group;
-                            return `<span style="padding: 8px 14px; background: rgba(138,180,255,0.15); border: 1px solid rgba(138,180,255,0.3); border-radius: 8px; font-size: 12px; color: #8ab4ff;"><strong>${groupName}</strong> — ${s.time} (Los Angeles) <span style="opacity: 0.7;">(${yerevanTime} Yerevan Time)</span></span>`;
+                            const isOneTime = !!s.isOneTime;
+                            const chipStyle = isOneTime
+                              ? 'padding: 10px 14px; background: rgba(251,191,36,0.18); border: 1px solid rgba(251,191,36,0.35); border-radius: 10px; font-size: 12px; color: #fbbf24; display: inline-flex; flex-direction: column; gap: 4px; min-width: 180px;'
+                              : 'padding: 8px 14px; background: rgba(138,180,255,0.15); border: 1px solid rgba(138,180,255,0.3); border-radius: 8px; font-size: 12px; color: #8ab4ff; display: inline-flex; flex-direction: column; gap: 4px; min-width: 170px;';
+                            const dateBadge = isOneTime && s.dateLabel
+                              ? `<span style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(251,191,36,0.9);">One-Time • ${escapeHtml(s.dateLabel)}</span>`
+                              : '';
+                            return `<span style="${chipStyle}">${dateBadge}<span><strong>${groupName}</strong> — ${s.time} (Los Angeles)</span><span style="opacity: 0.7; font-size: 11px;">(${yerevanTime} Yerevan Time)</span></span>`;
                           })
                           .join('')
                   }
@@ -15837,26 +15959,6 @@
               html += '</div>';
             } else if (currentQuickViewTab === 'byWeekdayYerevan') {
               // BY WEEKDAY (YEREVAN) VIEW
-              // BEGIN DAY SHIFT FIX - Calculate next weekday helper
-              function getNextWeekday(weekday, offset) {
-                const weekdayIndex = {
-                  Monday: 0,
-                  Tuesday: 1,
-                  Wednesday: 2,
-                  Thursday: 3,
-                  Friday: 4,
-                  Saturday: 5,
-                  Sunday: 6,
-                };
-                const indexToDay = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
-
-                const currentIndex = weekdayIndex[weekday];
-                if (currentIndex === undefined) return weekday;
-
-                const newIndex = (currentIndex + offset + 7) % 7; // +7 to handle negative offsets
-                return indexToDay[newIndex];
-              }
-              // END DAY SHIFT FIX
 
               const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
               const dayMap = {
@@ -15897,7 +15999,7 @@
                     if (!laWeekday) return;
 
                     // Calculate actual Yerevan weekday based on day shift
-                    const yerevanWeekday = getNextWeekday(laWeekday, conversionResult.dayShift);
+                    const yerevanWeekday = shiftWeekday(laWeekday, conversionResult.dayShift);
 
                     if (!daySchedule[yerevanWeekday]) daySchedule[yerevanWeekday] = [];
                     daySchedule[yerevanWeekday].push({
@@ -15907,6 +16009,29 @@
                     });
                   });
                 });
+
+                const oneTimeOverrides = activeOneTimeMap.get(group.name) || [];
+                if (oneTimeOverrides.length > 0) {
+                  const groupSafeName = group.name || 'Unnamed Group';
+                  oneTimeOverrides.forEach(override => {
+                    const laTimeAMPM = ensureAMPMFormat(override.time || '');
+                    const laDay = override.day || getWeekdayFromDateStr(override.date);
+                    if (!laDay) return;
+                    const conversionResult = convertLATimeToYerevan(laTimeAMPM, true);
+                    const yerevanWeekday = shiftWeekday(laDay, conversionResult.dayShift);
+                    if (!daySchedule[yerevanWeekday]) daySchedule[yerevanWeekday] = [];
+                    daySchedule[yerevanWeekday].push({
+                      group: escapeHtml(groupSafeName),
+                      yerevanTime: escapeHtml(conversionResult.time || ''),
+                      laTime: escapeHtml(laTimeAMPM || ''),
+                      isOneTime: true,
+                      date: override.date,
+                      dateLabel: formatQuickViewDate(override.date),
+                      laDay: laDay,
+                      yerevanDayShift: conversionResult.dayShift,
+                    });
+                  });
+                }
               });
               // END DAY SHIFT FIX
 
@@ -15963,7 +16088,14 @@
                           .map(s => {
                             // Ensure group name starts with "Group" prefix if it's just a letter
                             const groupName = s.group.length === 1 ? `Group ${s.group}` : s.group;
-                            return `<span style="padding: 8px 14px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; font-size: 12px; color: #10b981;"><strong>${groupName}</strong> — ${s.yerevanTime} (Yerevan) <span style="opacity: 0.7;">(${s.laTime} Los Angeles Time)</span></span>`;
+                            const isOneTime = !!s.isOneTime;
+                            const chipStyle = isOneTime
+                              ? 'padding: 10px 14px; background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.4); border-radius: 10px; font-size: 12px; color: #c084fc; display: inline-flex; flex-direction: column; gap: 4px; min-width: 190px;'
+                              : 'padding: 8px 14px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; font-size: 12px; color: #10b981; display: inline-flex; flex-direction: column; gap: 4px; min-width: 170px;';
+                            const dateBadge = isOneTime && s.dateLabel
+                              ? `<span style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.85);">One-Time • ${escapeHtml(s.dateLabel)}${s.laDay ? ` · LA ${escapeHtml(s.laDay)}` : ''}</span>`
+                              : '';
+                            return `<span style="${chipStyle}">${dateBadge}<span><strong>${groupName}</strong> — ${s.yerevanTime} (Yerevan)</span><span style="opacity: 0.7; font-size: 11px;">(${s.laTime} Los Angeles Time)</span></span>`;
                           })
                           .join('')
                   }
@@ -17056,9 +17188,10 @@
               const countdown = formatCountdown(classData.secondsRemaining);
 
               // Check if this class is CANCELED (show it grayed/scratched, don't hide it)
-              const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
+              const dateStr = classData.classDate || calculateClassDateForTimer(classData.dayName, classData.laTime);
+              const cancelGroupName = classData.actualGroupName || classData.groupName;
               const isCanceled =
-                window.SkipClassManager && window.SkipClassManager.isClassCanceled(classData.groupName, dateStr);
+                window.SkipClassManager && window.SkipClassManager.isClassCanceled(cancelGroupName, dateStr);
 
               // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "in-progress" state
               // Determine card tint class based on time remaining
@@ -19727,17 +19860,11 @@
         // ===== CHECK FOR ONE-TIME SCHEDULE OVERRIDE =====
         function getScheduleForDate(group, dateStr) {
           // Check if there's a one-time schedule override for this specific date
-          if (group.one_time_schedules && Array.isArray(group.one_time_schedules)) {
-            // Filter out expired one-time schedules (dates before today)
-            const today = formatDateYYYYMMDD(new Date());
-            const activeOverrides = group.one_time_schedules.filter(override => override.date >= today);
-
-            // Find override for this specific date
-            const oneTimeOverride = activeOverrides.find(override => override.date === dateStr);
-            if (oneTimeOverride) {
-              // Return the one-time schedule day
-              return [oneTimeOverride.day];
-            }
+          const activeOverrides = getActiveOneTimeSchedules(group, { maxDaysAhead: 365 });
+          const oneTimeOverride = activeOverrides.find(override => override.date === dateStr);
+          if (oneTimeOverride) {
+            // Return the one-time schedule day (array to match regular schedule return type)
+            return [oneTimeOverride.day];
           }
 
           // Fall back to regular recurring schedule
