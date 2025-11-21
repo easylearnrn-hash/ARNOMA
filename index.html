@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.7 - Quick View Fix]</title>
+  <title>ARNOMA - Student Management [v2.18.8 - Console Cleanup]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.7" />
-  <meta name="build-timestamp" content="20251121-213500" />
+  <meta name="version" content="2.18.8" />
+  <meta name="build-timestamp" content="20251121-214000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.18.7 - One-Time Schedules + Quick View + Timezone Fixes ✅');
+      console.log('✅ ARNOMA v2.18.8 - Console Cleanup ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -6538,7 +6538,7 @@
           // Save show_in_grid to Supabase (controls calendar visibility)
           if (typeof studentData.showInGrid === 'boolean') {
             payload.show_in_grid = studentData.showInGrid;
-            console.log('✅ Adding show_in_grid to payload:', payload.show_in_grid);
+//             console.log('✅ Adding show_in_grid to payload:', payload.show_in_grid);
           } else {
             console.warn('⚠️ showInGrid is not a boolean:', typeof studentData.showInGrid, studentData.showInGrid);
           }
@@ -6563,7 +6563,7 @@
             delete payload.id;
           }
 
-          console.log('📤 Supabase payload:', isUpdate ? 'UPDATE' : 'INSERT', payload);
+//           console.log('📤 Supabase payload:', isUpdate ? 'UPDATE' : 'INSERT', payload);
 
           try {
             let result;
@@ -6683,16 +6683,16 @@
           window.groupsCache = deduped;
           window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
 
-          // DEBUG: Log one-time schedules on load
-          const groupsWithOneTime = deduped.filter(g => g.one_time_schedules && g.one_time_schedules.length > 0);
-          if (groupsWithOneTime.length > 0) {
-            console.log(`[loadGroups] 📅 Found ${groupsWithOneTime.length} groups with one-time schedules:`);
-            groupsWithOneTime.forEach(g => {
-              console.log(`  - ${g.name}:`, g.one_time_schedules);
-            });
-          } else {
-            console.log('[loadGroups] ℹ️ No groups have one-time schedules set');
-          }
+          // DEBUG: Log one-time schedules on load (commented out for cleaner console)
+          // const groupsWithOneTime = deduped.filter(g => g.one_time_schedules && g.one_time_schedules.length > 0);
+          // if (groupsWithOneTime.length > 0) {
+          //   console.log(`[loadGroups] 📅 Found ${groupsWithOneTime.length} groups with one-time schedules:`);
+          //   groupsWithOneTime.forEach(g => {
+          //     console.log(`  - ${g.name}:`, g.one_time_schedules);
+          //   });
+          // } else {
+          //   console.log('[loadGroups] ℹ️ No groups have one-time schedules set');
+          // }
 
           return window.groupsCache;
         }
@@ -12692,7 +12692,7 @@
             verboseLog('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
           }
 
-          console.log('📝 Total changes detected:', changes.length, changes);
+//           console.log('📝 Total changes detected:', changes.length, changes);
 
           student.name = name;
           student.group = group;
@@ -12885,7 +12885,7 @@
         }
 
         async function toggleVisibility(studentId, visible) {
-          console.log('🔄 toggleVisibility called:', { studentId, visible });
+//           console.log('🔄 toggleVisibility called:', { studentId, visible });
 
           // Handle both string and numeric IDs from Supabase
           const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
@@ -12894,11 +12894,11 @@
             return;
           }
 
-          console.log('📝 Before update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
+//           console.log('📝 Before update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
 
           student.showInGrid = visible;
 
-          console.log('📝 After update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
+//           console.log('📝 After update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
 
           // Save to Supabase
           const result = await saveStudent(student);
@@ -12909,7 +12909,7 @@
             return;
           }
 
-          console.log('✅ Saved to Supabase:', result);
+//           console.log('✅ Saved to Supabase:', result);
 
           // Update cache and invalidate TTL
           window.studentsCache = students;
@@ -13126,7 +13126,7 @@
                 verboseLog('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
               }
 
-              console.log('📝 Total changes detected:', changes.length, changes);
+//               console.log('📝 Total changes detected:', changes.length, changes);
             }
           }
 
@@ -17652,7 +17652,7 @@
 
           // Cancel a class (entire class canceled - applies to all students)
           function cancelClass(groupName, dateStr, note = null) {
-            console.log('[CLASS CANCELLED] cancelClass() called:', {
+//             console.log('[CLASS CANCELLED] cancelClass() called:', {
               groupName,
               dateStr,
               note: note || '(no note)',
@@ -17666,8 +17666,8 @@
               note: note,
             };
 
-            console.log('🚫 [SkipClassManager] Class canceled:', groupName, dateStr, note || '(no reason)');
-            console.log('[CLASS CANCELLED] ✅ Saved to skippedClasses:', {
+//             console.log('🚫 [SkipClassManager] Class canceled:', groupName, dateStr, note || '(no reason)');
+//             console.log('[CLASS CANCELLED] ✅ Saved to skippedClasses:', {
               groupName,
               dateStr,
               status: 'cancelled',
@@ -17681,7 +17681,7 @@
 
             // Refresh timer display
             if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
-              console.log('[CLASS CANCELLED] Refreshing countdown timer...');
+//               console.log('[CLASS CANCELLED] Refreshing countdown timer...');
               window.ClassCountdownTimer.destroy();
               setTimeout(() => {
                 window.ClassCountdownTimer.init();
@@ -17691,9 +17691,9 @@
             // Refresh calendar if visible
             if (typeof renderCalendar === 'function') {
               try {
-                console.log('[CLASS CANCELLED] Refreshing calendar display...');
+//                 console.log('[CLASS CANCELLED] Refreshing calendar display...');
                 renderCalendar();
-                console.log('[CLASS CANCELLED] ✅ Calendar refreshed - class should now appear grayed out');
+//                 console.log('[CLASS CANCELLED] ✅ Calendar refreshed - class should now appear grayed out');
               } catch (error) {
                 console.error('[CLASS CANCELLED] ❌ Error refreshing calendar:', error);
                 console.warn('[SkipClassManager] Could not refresh calendar:', error);
@@ -17706,7 +17706,7 @@
           // Forward payments made on a canceled date to the next active class
           async function forwardPaymentsForCanceledClass(groupName, canceledDateStr) {
             try {
-              console.log('💸 [PaymentForwarding] Checking for payments on canceled date:', groupName, canceledDateStr);
+//               console.log('💸 [PaymentForwarding] Checking for payments on canceled date:', groupName, canceledDateStr);
 
               // Get all students in this group
               const groupStudents = window.studentsCache
@@ -17714,7 +17714,7 @@
                 : students.filter(s => s.group && s.group.includes(groupName));
 
               if (!groupStudents || groupStudents.length === 0) {
-                console.log('💸 [PaymentForwarding] No students found in group:', groupName);
+//                 console.log('💸 [PaymentForwarding] No students found in group:', groupName);
                 return;
               }
 
@@ -17734,7 +17734,7 @@
               }
 
               if (!payments || payments.length === 0) {
-                console.log('💸 [PaymentForwarding] No payments found on canceled date');
+//                 console.log('💸 [PaymentForwarding] No payments found on canceled date');
                 return;
               }
 
@@ -17924,7 +17924,7 @@
             // CRITICAL FIX: Use actualGroupName (e.g., "A") not display name (e.g., "Group A")
             const groupNameForCancel = pendingSkip.actualGroupName || pendingSkip.groupName;
 
-            console.log('[CLASS CANCELLED] Initiating cancellation:', {
+//             console.log('[CLASS CANCELLED] Initiating cancellation:', {
               source: 'COUNTDOWN_TIMER',
               displayName: pendingSkip.groupName,
               actualGroupName: groupNameForCancel,
@@ -17939,7 +17939,7 @@
 
             // User clicked cancel
             if (reason === null) {
-              console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
+//               console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
               hideSkipDialog();
               return;
             }
@@ -17948,7 +17948,7 @@
             const success = cancelClass(groupNameForCancel, dateStr, reason);
 
             if (success) {
-              console.log('[CLASS CANCELLED] ✅ Successfully canceled via COUNTDOWN_TIMER:', {
+//               console.log('[CLASS CANCELLED] ✅ Successfully canceled via COUNTDOWN_TIMER:', {
                 group: groupNameForCancel,
                 date: dateStr,
                 reason: reason || '(no reason provided)',
@@ -19824,7 +19824,7 @@
                 const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
                 if (classDateStr < calendarStartStr) {
                   if (DEBUG_MODE) {
-                    console.log('[DayData] Hiding', classDateStr, 'for', student.name, '- before calendar start');
+//                     console.log('[DayData] Hiding', classDateStr, 'for', student.name, '- before calendar start');
                   }
                   return; // Don't show this class
                 }
@@ -20482,11 +20482,11 @@
         // @param {HTMLElement} buttonElement - The button that was clicked
         // @param {string} clickedDateStr - The EXACT date (YYYY-MM-DD) that was clicked in the calendar
         window.sendReminderNow = async function (studentId, buttonElement, clickedDateStr) {
-          console.log('[MANUAL][UNPAID EMAIL] ============================================');
-          console.log('[MANUAL][UNPAID EMAIL] Manual payment reminder triggered');
-          console.log('[MANUAL][UNPAID EMAIL] Student ID:', studentId);
-          console.log('[MANUAL][UNPAID EMAIL] Clicked Date:', clickedDateStr);
-          console.log('[MANUAL][UNPAID EMAIL] ============================================');
+//           console.log('[MANUAL][UNPAID EMAIL] ============================================');
+//           console.log('[MANUAL][UNPAID EMAIL] Manual payment reminder triggered');
+//           console.log('[MANUAL][UNPAID EMAIL] Student ID:', studentId);
+//           console.log('[MANUAL][UNPAID EMAIL] Clicked Date:', clickedDateStr);
+//           console.log('[MANUAL][UNPAID EMAIL] ============================================');
 
           // Store original button state for restoration
           const originalHTML = buttonElement.innerHTML;
@@ -20501,7 +20501,7 @@
               throw new Error('Date parameter is required for manual payment emails');
             }
 
-            console.log('[MANUAL][UNPAID EMAIL] ✅ Date validation passed:', clickedDateStr);
+//             console.log('[MANUAL][UNPAID EMAIL] ✅ Date validation passed:', clickedDateStr);
 
             // Show loading state immediately
             buttonElement.disabled = true;
@@ -20512,7 +20512,7 @@
 
             // Get students from cache
             const students = getCachedStudents();
-            console.log('[MANUAL][UNPAID EMAIL] Students in cache:', students?.length || 0);
+//             console.log('[MANUAL][UNPAID EMAIL] Students in cache:', students?.length || 0);
 
             if (!students || students.length === 0) {
               console.error('[MANUAL][UNPAID EMAIL] ❌ No students in cache');
@@ -20527,8 +20527,8 @@
               throw new Error('Student not found');
             }
 
-            console.log('[MANUAL][UNPAID EMAIL] ✅ Student found:', student.name);
-            console.log('[MANUAL][UNPAID EMAIL] Student email:', student.email);
+//             console.log('[MANUAL][UNPAID EMAIL] ✅ Student found:', student.name);
+//             console.log('[MANUAL][UNPAID EMAIL] Student email:', student.email);
 
             // Validate student email
             if (!student.email || student.email.trim() === '') {
@@ -20537,7 +20537,7 @@
             }
 
             // Find the EXACT unpaid class for the clicked date
-            console.log('[MANUAL][UNPAID EMAIL] Searching for unpaid class on:', clickedDateStr);
+//             console.log('[MANUAL][UNPAID EMAIL] Searching for unpaid class on:', clickedDateStr);
 
             const currentMonth =
               window.currentCalendarData || getMonthData(new Date().getFullYear(), new Date().getMonth());
@@ -20575,8 +20575,8 @@
               });
             });
 
-            console.log('[MANUAL][UNPAID EMAIL] Total unpaid classes found:', allUnpaidClasses.length);
-            console.log('[MANUAL][UNPAID EMAIL] Unpaid dates:', allUnpaidClasses.map(c => c.dateStr).join(', '));
+//             console.log('[MANUAL][UNPAID EMAIL] Total unpaid classes found:', allUnpaidClasses.length);
+//             console.log('[MANUAL][UNPAID EMAIL] Unpaid dates:', allUnpaidClasses.map(c => c.dateStr).join(', '));
 
             // CRITICAL VALIDATION: The clicked date MUST be unpaid
             if (!unpaidClassForDate) {
@@ -20586,11 +20586,11 @@
               throw new Error(`The selected date (${clickedDateStr}) is not unpaid. Cannot send payment reminder.`);
             }
 
-            console.log('[MANUAL][UNPAID EMAIL] ✅ Clicked date IS unpaid:', clickedDateStr);
-            console.log('[MANUAL][UNPAID EMAIL] Price for this class: $' + unpaidClassForDate.pricePerClass);
+//             console.log('[MANUAL][UNPAID EMAIL] ✅ Clicked date IS unpaid:', clickedDateStr);
+//             console.log('[MANUAL][UNPAID EMAIL] Price for this class: $' + unpaidClassForDate.pricePerClass);
 
             // Find email iframe
-            console.log('[MANUAL][UNPAID EMAIL] Searching for email system iframe...');
+//             console.log('[MANUAL][UNPAID EMAIL] Searching for email system iframe...');
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
 
             if (!emailFrame || !emailFrame.contentWindow) {
@@ -20603,8 +20603,8 @@
               throw new Error('Email system not available');
             }
 
-            console.log('[MANUAL][UNPAID EMAIL] ✅ Email iframe found');
-            console.log('[MANUAL][UNPAID EMAIL] Iframe src:', emailFrame.src);
+//             console.log('[MANUAL][UNPAID EMAIL] ✅ Email iframe found');
+//             console.log('[MANUAL][UNPAID EMAIL] Iframe src:', emailFrame.src);
 
             // Create promise for email send
             const sendPromise = new Promise((resolve, reject) => {
@@ -20619,7 +20619,7 @@
                   window.removeEventListener('message', handleMessage);
 
                   if (event.data.action === 'emailSent') {
-                    console.log('[MANUAL][UNPAID EMAIL] ✅ Email sent successfully');
+//                     console.log('[MANUAL][UNPAID EMAIL] ✅ Email sent successfully');
                     resolve(event.data);
                   } else {
                     console.error('[MANUAL][UNPAID EMAIL] ❌ Email error:', event.data.error);
@@ -20650,22 +20650,22 @@
               manual: true, // Bypass duplicate check
             };
 
-            console.log('[MANUAL][UNPAID EMAIL] Sending to email system via Supabase Resend:');
-            console.log('[MANUAL][UNPAID EMAIL]   Student:', student.name, '(' + student.email + ')');
-            console.log('[MANUAL][UNPAID EMAIL]   Primary date:', clickedDateStr);
-            console.log('[MANUAL][UNPAID EMAIL]   Total unpaid classes:', allUnpaidClasses.length);
-            console.log('[MANUAL][UNPAID EMAIL]   Service: SUPABASE RESEND (not Gmail)');
+//             console.log('[MANUAL][UNPAID EMAIL] Sending to email system via Supabase Resend:');
+//             console.log('[MANUAL][UNPAID EMAIL]   Student:', student.name, '(' + student.email + ')');
+//             console.log('[MANUAL][UNPAID EMAIL]   Primary date:', clickedDateStr);
+//             console.log('[MANUAL][UNPAID EMAIL]   Total unpaid classes:', allUnpaidClasses.length);
+//             console.log('[MANUAL][UNPAID EMAIL]   Service: SUPABASE RESEND (not Gmail)');
 
             // Send via postMessage to email iframe
             emailFrame.contentWindow.postMessage(payload, '*');
 
-            console.log('[MANUAL][UNPAID EMAIL] ⏳ Waiting for email system response...');
+//             console.log('[MANUAL][UNPAID EMAIL] ⏳ Waiting for email system response...');
 
             // Wait for response
             const response = await sendPromise;
 
-            console.log('[MANUAL][UNPAID EMAIL] ✅ SUCCESS - Email sent successfully');
-            console.log('[MANUAL][UNPAID EMAIL] Response:', response);
+//             console.log('[MANUAL][UNPAID EMAIL] ✅ SUCCESS - Email sent successfully');
+//             console.log('[MANUAL][UNPAID EMAIL] Response:', response);
 
             // Show success state
             buttonElement.innerHTML = '✓';
@@ -20703,10 +20703,10 @@
 
             // Log email details if available
             if (response.emailContent) {
-              console.log('[MANUAL][UNPAID EMAIL] Email details:');
-              console.log('[MANUAL][UNPAID EMAIL]   Subject:', emailSubject);
-              console.log('[MANUAL][UNPAID EMAIL]   Template: Payment Reminder');
-              console.log('[MANUAL][UNPAID EMAIL]   Delivery: Supabase Resend Edge Function');
+//               console.log('[MANUAL][UNPAID EMAIL] Email details:');
+//               console.log('[MANUAL][UNPAID EMAIL]   Subject:', emailSubject);
+//               console.log('[MANUAL][UNPAID EMAIL]   Template: Payment Reminder');
+//               console.log('[MANUAL][UNPAID EMAIL]   Delivery: Supabase Resend Edge Function');
             }
 
             // Restore button after 2 seconds
@@ -20719,9 +20719,9 @@
               buttonElement.title = 'Send payment reminder now';
             }, 2000);
 
-            console.log('[MANUAL][UNPAID EMAIL] ============================================');
-            console.log('[MANUAL][UNPAID EMAIL] Manual send completed successfully');
-            console.log('[MANUAL][UNPAID EMAIL] ============================================');
+//             console.log('[MANUAL][UNPAID EMAIL] ============================================');
+//             console.log('[MANUAL][UNPAID EMAIL] Manual send completed successfully');
+//             console.log('[MANUAL][UNPAID EMAIL] ============================================');
           } catch (error) {
             console.error('[MANUAL][UNPAID EMAIL] ❌ ERROR:', error.message);
             console.error('[MANUAL][UNPAID EMAIL] Stack:', error.stack);
@@ -20745,9 +20745,9 @@
               buttonElement.title = 'Send payment reminder now';
             }, 3000);
 
-            console.log('[MANUAL][UNPAID EMAIL] ============================================');
-            console.log('[MANUAL][UNPAID EMAIL] Manual send failed');
-            console.log('[MANUAL][UNPAID EMAIL] ============================================');
+//             console.log('[MANUAL][UNPAID EMAIL] ============================================');
+//             console.log('[MANUAL][UNPAID EMAIL] Manual send failed');
+//             console.log('[MANUAL][UNPAID EMAIL] ============================================');
           }
         };
 
@@ -21057,7 +21057,7 @@
 
         // Cancel class for a specific group from the sidebar
         function cancelGroupClassFromSidebar(groupName, dateStr) {
-          console.log('[CLASS CANCELLED] Initiating cancellation:', {
+//           console.log('[CLASS CANCELLED] Initiating cancellation:', {
             source: 'CALENDAR_SIDEBAR',
             group: groupName,
             date: dateStr,
@@ -21081,7 +21081,7 @@
 
           // User clicked Cancel
           if (reason === null) {
-            console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
+//             console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
             return;
           }
 
@@ -21090,7 +21090,7 @@
             const success = window.SkipClassManager.cancelClass(groupName, dateStr, reason || 'Class canceled');
 
             if (success) {
-              console.log('[CLASS CANCELLED] ✅ Successfully canceled via CALENDAR_SIDEBAR:', {
+//               console.log('[CLASS CANCELLED] ✅ Successfully canceled via CALENDAR_SIDEBAR:', {
                 group: groupName,
                 date: dateStr,
                 reason: reason || 'Class canceled',
@@ -23269,7 +23269,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.18.7 - One-Time Schedules + Quick View + Timezone Fixes ✅');
+          console.log('✅ ARNOMA v2.18.8 - Console Cleanup ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
