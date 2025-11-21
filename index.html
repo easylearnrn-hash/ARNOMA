@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.18.8 - Console Cleanup ✅');
+      console.log('✅ ARNOMA v2.18.10 - Console Cleanup ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -17601,16 +17601,16 @@
                 skippedClasses[fullGroupName][dateStr].type === 'class-canceled')
             );
 
-            // DEBUG: Log check for Nov 25
-            if (dateStr === '2025-11-25') {
-              console.log(`[isClassCanceled] ${groupName} on ${dateStr}:`, {
-                checkedNames: [normalizedName, fullGroupName],
-                hasNormalized: !!skippedClasses[normalizedName],
-                hasFull: !!skippedClasses[fullGroupName],
-                result: result,
-                allSkippedClasses: skippedClasses
-              });
-            }
+            // DEBUG: Log check for Nov 25 (commented out - too noisy)
+            // if (dateStr === '2025-11-25') {
+            //   console.log(`[isClassCanceled] ${groupName} on ${dateStr}:`, {
+            //     checkedNames: [normalizedName, fullGroupName],
+            //     hasNormalized: !!skippedClasses[normalizedName],
+            //     hasFull: !!skippedClasses[fullGroupName],
+            //     result: result,
+            //     allSkippedClasses: skippedClasses
+            //   });
+            // }
 
             return result;
           }
@@ -22059,22 +22059,20 @@
                 }
               }
 
-              console.log('\n═══════════════════════════════════════════════════════');
-              console.log('[PaymentReminderManager] 📊 SUMMARY');
-              console.log('  Total students checked:', studentsChecked);
-              console.log('  Students with paused reminders:', studentsPaused);
-              console.log('  Students with no unpaid classes:', studentsNoUnpaid);
-              console.log('  Total unpaid classes found:', classesChecked);
-              console.log('  Classes not ended yet:', studentsClassNotEnded);
-              console.log('  Classes with reminder already sent:', studentsAlreadySent);
-              console.log('  Reminders sent:', remindersSent);
+              // console.log('\n═══════════════════════════════════════════════════════');
+              // console.log('[PaymentReminderManager] 📊 SUMMARY');
+              // console.log('  Total students checked:', studentsChecked);
+              // console.log('  Students with paused reminders:', studentsPaused);
+              // console.log('  Students with no unpaid classes:', studentsNoUnpaid);
+              // console.log('  Total unpaid classes found:', classesChecked);
+              // console.log('  Classes not ended yet:', studentsClassNotEnded);
+              // console.log('  Classes with reminder already sent:', studentsAlreadySent);
+              // console.log('  Reminders sent:', remindersSent);
 
               if (remindersSent > 0) {
-                debugLog('✅ [PaymentReminderManager] Successfully sent', remindersSent, 'auto-reminder(s)');
-              } else {
-                debugLog('✅ [PaymentReminderManager] No reminders needed today');
+                console.log(`✅ [PaymentReminderManager] Sent ${remindersSent} auto-reminder(s)`);
               }
-              debugLog('═══════════════════════════════════════════════════════\n');
+              // debugLog('═══════════════════════════════════════════════════════\n');
             } catch (error) {
               console.error('[PaymentReminderManager] ❌ ERROR in checkAndSendReminders:', error);
               console.error('Stack trace:', error.stack);
@@ -22324,31 +22322,31 @@
               // Update last check time
               localStorage.setItem('class_reminder_last_check', new Date().toISOString());
 
-              console.log('\n═══════════════════════════════════════════════════════');
-              console.log('[ClassReminderManager] 🔍 STARTING CLASS REMINDER CHECK');
-              console.log('[ClassReminderManager] 📅 LA Date:', todayStr);
-              console.log(
-                '[ClassReminderManager] 🕐 LA Time:',
-                nowLA.toLocaleString('en-US', {
-                  timeZone: 'America/Los_Angeles',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: true,
-                })
-              );
+              // console.log('\n═══════════════════════════════════════════════════════');
+              // console.log('[ClassReminderManager] 🔍 STARTING CLASS REMINDER CHECK');
+              // console.log('[ClassReminderManager] 📅 LA Date:', todayStr);
+              // console.log(
+              //   '[ClassReminderManager] 🕐 LA Time:',
+              //   nowLA.toLocaleString('en-US', {
+              //     timeZone: 'America/Los_Angeles',
+              //     hour: '2-digit',
+              //     minute: '2-digit',
+              //     second: '2-digit',
+              //     hour12: true,
+              //   })
+              // );
 
               // Wait for calendar data
               if (!window.currentCalendarData) {
                 debugLog('[ClassReminderManager] ⏳ Calendar not initialized yet');
-                console.log('═══════════════════════════════════════════════════════\n');
+                // console.log('═══════════════════════════════════════════════════════\n');
                 return;
               }
 
               const calendarData = window.currentCalendarData;
               if (!calendarData || !calendarData.days) {
                 console.warn('[ClassReminderManager] ❌ No calendar data available');
-                console.log('═══════════════════════════════════════════════════════\n');
+                // console.log('═══════════════════════════════════════════════════════\n');
                 return;
               }
 
@@ -22429,10 +22427,13 @@
                 }
               }
 
-              console.log('\n[ClassReminderManager] 📊 SUMMARY');
-              console.log('  Classes checked:', classesChecked);
-              console.log('  Reminders sent:', remindersSent);
-              console.log('═══════════════════════════════════════════════════════\n');
+              // console.log('\n[ClassReminderManager] 📊 SUMMARY');
+              // console.log('  Classes checked:', classesChecked);
+              // console.log('  Reminders sent:', remindersSent);
+              // console.log('═══════════════════════════════════════════════════════\n');
+              if (remindersSent > 0) {
+                console.log(`✅ [ClassReminderManager] Sent ${remindersSent} reminder(s)`);
+              }
             } catch (error) {
               console.error('[ClassReminderManager] ❌ Error checking reminders:', error);
             }
@@ -22441,8 +22442,8 @@
           // Initialize
           async function initialize() {
             loadSentReminders();
-            console.log('[ClassReminderManager] 🚀 Class reminder system initialized');
-            console.log('[ClassReminderManager] 📅 Will send reminders 12 hours before each class');
+            // console.log('[ClassReminderManager] 🚀 Class reminder system initialized');
+            // console.log('[ClassReminderManager] 📅 Will send reminders 12 hours before each class');
 
             // Listen for email responses from iframe
             window.addEventListener('message', async event => {
@@ -22612,30 +22613,30 @@
               // Update last check time
               localStorage.setItem('class_starting_soon_last_check', new Date().toISOString());
 
-              console.log('\n═══════════════════════════════════════════════════════');
-              console.log('[ClassStartingSoonManager] 🔍 CHECKING 30-MIN REMINDERS');
-              console.log('[ClassStartingSoonManager] 📅 LA Date:', todayStr);
-              console.log(
-                '[ClassStartingSoonManager] 🕐 LA Time:',
-                nowLA.toLocaleString('en-US', {
-                  timeZone: 'America/Los_Angeles',
-                  hour: '2-digit',
-                  minute: '2-digit',
-                  second: '2-digit',
-                  hour12: true,
-                })
-              );
+              // console.log('\n═══════════════════════════════════════════════════════');
+              // console.log('[ClassStartingSoonManager] 🔍 CHECKING 30-MIN REMINDERS');
+              // console.log('[ClassStartingSoonManager] 📅 LA Date:', todayStr);
+              // console.log(
+              //   '[ClassStartingSoonManager] 🕐 LA Time:',
+              //   nowLA.toLocaleString('en-US', {
+              //     timeZone: 'America/Los_Angeles',
+              //     hour: '2-digit',
+              //     minute: '2-digit',
+              //     second: '2-digit',
+              //     hour12: true,
+              //   })
+              // );
 
               if (!window.currentCalendarData) {
                 debugLog('[ClassStartingSoonManager] ⏳ Calendar not initialized yet');
-                console.log('═══════════════════════════════════════════════════════\n');
+                // console.log('═══════════════════════════════════════════════════════\n');
                 return;
               }
 
               const calendarData = window.currentCalendarData;
               if (!calendarData || !calendarData.days) {
                 console.warn('[ClassStartingSoonManager] ❌ No calendar data available');
-                console.log('═══════════════════════════════════════════════════════\n');
+                // console.log('═══════════════════════════════════════════════════════\n');
                 return;
               }
 
@@ -22696,10 +22697,13 @@
                 }
               }
 
-              console.log('\n[ClassStartingSoonManager] 📊 SUMMARY');
-              console.log('  Classes checked:', classesChecked);
-              console.log('  Reminders sent:', remindersSent);
-              console.log('═══════════════════════════════════════════════════════\n');
+              // console.log('\n[ClassStartingSoonManager] 📊 SUMMARY');
+              // console.log('  Classes checked:', classesChecked);
+              // console.log('  Reminders sent:', remindersSent);
+              // console.log('═══════════════════════════════════════════════════════\n');
+              if (remindersSent > 0) {
+                console.log(`✅ [ClassStartingSoonManager] Sent ${remindersSent} 30-min reminder(s)`);
+              }
             } catch (error) {
               console.error('[ClassStartingSoonManager] ❌ Error:', error);
             }
@@ -22707,7 +22711,7 @@
 
           async function initialize() {
             loadSentReminders();
-            console.log('[ClassStartingSoonManager] 🚀 30-minute reminder system initialized');
+            // console.log('[ClassStartingSoonManager] 🚀 30-minute reminder system initialized');
 
             // Listen for email responses
             window.addEventListener('message', async event => {
@@ -23271,7 +23275,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.18.8 - Console Cleanup ✅');
+          console.log('✅ ARNOMA v2.18.10 - Console Cleanup ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
