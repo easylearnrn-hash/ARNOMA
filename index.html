@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.8 - Console Cleanup]</title>
+  <title>ARNOMA - Student Management [v2.18.9 - Styling + Syntax Fix]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.8" />
-  <meta name="build-timestamp" content="20251121-214000" />
+  <meta name="version" content="2.18.9" />
+  <meta name="build-timestamp" content="20251121-215000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -2421,12 +2421,15 @@
         box-shadow: none !important;
         animation: none !important;
         text-decoration: line-through;
+        text-decoration-thickness: 2px;
+        text-decoration-color: rgba(236, 72, 153, 0.8);
         pointer-events: none;
       }
 
       #enhancedCountdownTimer .timer-class-item.skipped .timer-class-group::before {
-        content: '⚫ ';
-        color: rgba(150, 150, 150, 0.7);
+        content: '● ';
+        color: rgba(236, 72, 153, 0.9);
+        font-size: 10px;
       }
 
       /* Skip Class Confirmation Dialog */
@@ -17652,11 +17655,11 @@
 
           // Cancel a class (entire class canceled - applies to all students)
           function cancelClass(groupName, dateStr, note = null) {
-//             console.log('[CLASS CANCELLED] cancelClass() called:', {
-              groupName,
-              dateStr,
-              note: note || '(no note)',
-            });
+            // console.log('[CLASS CANCELLED] cancelClass() called:', {
+            //   groupName,
+            //   dateStr,
+            //   note: note || '(no note)',
+            // });
 
             if (!skippedClasses[groupName]) {
               skippedClasses[groupName] = {};
@@ -17666,13 +17669,13 @@
               note: note,
             };
 
-//             console.log('🚫 [SkipClassManager] Class canceled:', groupName, dateStr, note || '(no reason)');
-//             console.log('[CLASS CANCELLED] ✅ Saved to skippedClasses:', {
-              groupName,
-              dateStr,
-              status: 'cancelled',
-              cancelled: true,
-            });
+            // console.log('🚫 [SkipClassManager] Class canceled:', groupName, dateStr, note || '(no reason)');
+            // console.log('[CLASS CANCELLED] ✅ Saved to skippedClasses:', {
+            //   groupName,
+            //   dateStr,
+            //   status: 'cancelled',
+            //   cancelled: true,
+            // });
 
             // Forward any payments made on this canceled date to next class
             forwardPaymentsForCanceledClass(groupName, dateStr);
@@ -17924,15 +17927,15 @@
             // CRITICAL FIX: Use actualGroupName (e.g., "A") not display name (e.g., "Group A")
             const groupNameForCancel = pendingSkip.actualGroupName || pendingSkip.groupName;
 
-//             console.log('[CLASS CANCELLED] Initiating cancellation:', {
-              source: 'COUNTDOWN_TIMER',
-              displayName: pendingSkip.groupName,
-              actualGroupName: groupNameForCancel,
-              date: dateStr,
-              dayName: pendingSkip.dayName,
-              time: pendingSkip.laTime,
-              actualDay: pendingSkip.actualDay,
-            });
+            // console.log('[CLASS CANCELLED] Initiating cancellation:', {
+            //   source: 'COUNTDOWN_TIMER',
+            //   displayName: pendingSkip.groupName,
+            //   actualGroupName: groupNameForCancel,
+            //   date: dateStr,
+            //   dayName: pendingSkip.dayName,
+            //   time: pendingSkip.laTime,
+            //   actualDay: pendingSkip.actualDay,
+            // });
 
             // Prompt for cancellation reason
             const reason = prompt('Cancellation reason (optional):');
@@ -17948,11 +17951,11 @@
             const success = cancelClass(groupNameForCancel, dateStr, reason);
 
             if (success) {
-//               console.log('[CLASS CANCELLED] ✅ Successfully canceled via COUNTDOWN_TIMER:', {
-                group: groupNameForCancel,
-                date: dateStr,
-                reason: reason || '(no reason provided)',
-              });
+              // console.log('[CLASS CANCELLED] ✅ Successfully canceled via COUNTDOWN_TIMER:', {
+              //   group: groupNameForCancel,
+              //   date: dateStr,
+              //   reason: reason || '(no reason provided)',
+              // });
             } else {
               console.error('[CLASS CANCELLED] ❌ Failed to cancel class');
             }
@@ -20325,9 +20328,9 @@
               window.SkipClassManager &&
               window.SkipClassManager.isClassCanceled(groupName, dateStr);
 
-            // Add ⚫ symbol ONLY if this group is canceled
+            // Add ● symbol ONLY if this group is canceled
             if (isGroupCanceled) {
-              html += `<div style="width: 8px; height: 8px; display: flex; align-items: center; justify-content: center; font-size: 8px;">⚫</div>`;
+              html += `<div style="width: 10px; height: 10px; display: flex; align-items: center; justify-content: center; font-size: 10px; color: rgba(236, 72, 153, 0.9);">●</div>`;
             }
 
             // Render dots for each student in this group
@@ -21057,11 +21060,11 @@
 
         // Cancel class for a specific group from the sidebar
         function cancelGroupClassFromSidebar(groupName, dateStr) {
-//           console.log('[CLASS CANCELLED] Initiating cancellation:', {
-            source: 'CALENDAR_SIDEBAR',
-            group: groupName,
-            date: dateStr,
-          });
+          // console.log('[CLASS CANCELLED] Initiating cancellation:', {
+          //   source: 'CALENDAR_SIDEBAR',
+          //   group: groupName,
+          //   date: dateStr,
+          // });
 
           const dateObj = new Date(dateStr);
           const dateDisplay = dateObj.toLocaleDateString('en-US', {
@@ -21090,11 +21093,11 @@
             const success = window.SkipClassManager.cancelClass(groupName, dateStr, reason || 'Class canceled');
 
             if (success) {
-//               console.log('[CLASS CANCELLED] ✅ Successfully canceled via CALENDAR_SIDEBAR:', {
-                group: groupName,
-                date: dateStr,
-                reason: reason || 'Class canceled',
-              });
+              // console.log('[CLASS CANCELLED] ✅ Successfully canceled via CALENDAR_SIDEBAR:', {
+              //   group: groupName,
+              //   date: dateStr,
+              //   reason: reason || 'Class canceled',
+              // });
             } else {
               console.error('[CLASS CANCELLED] ❌ Failed to cancel class');
             }
