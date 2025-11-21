@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.2 - Timer Date Fix]</title>
+  <title>ARNOMA - Student Management [v2.18.3 - Yerevan Time Fix]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.2" />
-  <meta name="build-timestamp" content="20251121-204000" />
+  <meta name="version" content="2.18.3" />
+  <meta name="build-timestamp" content="20251121-205500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -15990,7 +15990,7 @@
                   const laTime = match[2];
                   // Ensure LA time is in AM/PM format before converting
                   const laTimeAMPM = ensureAMPMFormat(laTime);
-                  const conversionResult = convertLATimeToYerevan(laTimeAMPM, true); // Get day shift info
+                  const conversionResult = TimezoneUtils.convertLATimeToYerevan(laTimeAMPM); // Use proper TimezoneUtils
 
                   // Handle slash-separated days: "mon/wed"
                   const dayTokens = daysStr.split('/').map(d => d.trim());
@@ -16017,7 +16017,7 @@
                     const laTimeAMPM = ensureAMPMFormat(override.time || '');
                     const laDay = override.day || getWeekdayFromDateStr(override.date);
                     if (!laDay) return;
-                    const conversionResult = convertLATimeToYerevan(laTimeAMPM, true);
+                    const conversionResult = TimezoneUtils.convertLATimeToYerevan(laTimeAMPM); // Use proper TimezoneUtils
                     const yerevanWeekday = shiftWeekday(laDay, conversionResult.dayShift);
                     if (!daySchedule[yerevanWeekday]) daySchedule[yerevanWeekday] = [];
                     daySchedule[yerevanWeekday].push({
