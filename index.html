@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.10.0 - One-Time Schedule Override]</title>
+    <title>ARNOMA - Student Management [v2.10.1 - Payment Email Date Fix]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.10.0" />
-    <meta name="build-timestamp" content="20251121-120000" />
+    <meta name="version" content="2.10.1" />
+    <meta name="build-timestamp" content="20251121-130000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -6152,12 +6152,11 @@
             }
 
             try {
-              // ⚡ FIX #6: CAP QUERY - Load only recent payments initially
+              // Load ALL payments from Supabase (no limit - we need accurate count)
               const { data, error } = await supabase
                 .from('payments')
                 .select('*')
-                .order('date', { ascending: false })
-                .limit(300); // Limit for performance
+                .order('date', { ascending: false });
 
               if (error) {
                 console.error('❌ Error loading payments from Supabase:', error);
@@ -14833,9 +14832,8 @@
           ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => `<option ${d === day ? 'selected' : ''}>${d}</option>`).join('')}
         </select>
         <input type="time" value="${time24}" style="flex:1;" onkeydown="if(event.key==='Enter'){event.target.closest('.group-card').querySelector('button[onclick*=saveScheduleEdit]').click();}">
-        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.8);">
+        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.8);" title="One-Time Schedule Override">
           <input type="checkbox" class="one-time-checkbox" ${isOneTime ? 'checked' : ''} onchange="toggleOneTimeDate(this)">
-          One-Time Only
         </label>
         <input type="date" class="one-time-date" value="${overrideDate}" style="flex:1; display: ${isOneTime ? 'block' : 'none'};" placeholder="Override Date">
         <button onclick="this.parentElement.remove()">🗑️</button>
@@ -20126,6 +20124,10 @@
         };
 
         // Send payment reminder immediately (GLOBAL SCOPE)
+        // CRITICAL FIX v2.10.1: ALWAYS use the exact clicked date from calendar
+        // - If clicked date is not unpaid, REJECT and show error
+        // - NO fallback to "most recent" or "last unpaid" dates
+        // - Email date MUST match the red dot on Smart Payment Calendar
         window.sendReminderNow = async function (studentId, buttonElement, clickedDateStr) {
           debugLog('🚀 Manual send triggered for student:', studentId, 'Clicked date:', clickedDateStr);
 
@@ -20209,25 +20211,42 @@
               return;
             }
 
-            // Check if the clicked date is actually unpaid
-            const clickedDateIsUnpaid = unpaidClasses.some(c => c.isClickedDate);
-            if (!clickedDateIsUnpaid) {
-              console.warn('⚠️ Clicked date is not unpaid, but sending reminder for all unpaid classes');
+            // CRITICAL FIX: Use ONLY the clicked date if provided, otherwise reject
+            let primaryDate = null;
+            
+            if (clickedDateStr) {
+              // Find the unpaid event for the exact clicked date
+              primaryDate = unpaidClasses.find(c => c.dateStr === clickedDateStr);
+              
+              if (!primaryDate) {
+                console.error('[EMAIL][PendingPayment] ❌ CRITICAL: Clicked date is NOT unpaid:', clickedDateStr);
+                console.log('[EMAIL][PendingPayment] Available unpaid dates:', unpaidClasses.map(c => c.dateStr));
+                showNotificationSimple('❌ The selected date (' + clickedDateStr + ') is not unpaid', 'error');
+                
+                // Restore button state
+                buttonElement.disabled = false;
+                buttonElement.innerHTML = originalHTML;
+                buttonElement.style.opacity = '1';
+                buttonElement.style.cursor = 'pointer';
+                return;
+              }
+              
+              console.log('[EMAIL][PendingPayment] ✅ Using unpaid event date:', primaryDate.dateStr);
+            } else {
+              // No clicked date provided - use most recent unpaid class
+              primaryDate = unpaidClasses.sort((a, b) => new Date(b.dateStr) - new Date(a.dateStr))[0];
+              console.log('[EMAIL][PendingPayment] ⚠️ No clicked date, using most recent unpaid:', primaryDate.dateStr);
             }
 
+            debugLog('📅 Primary reminder date:', primaryDate.dateStr);
+            
             // Show loading state
             const originalHTML = buttonElement.innerHTML;
             buttonElement.disabled = true;
             buttonElement.innerHTML = '⏳';
             buttonElement.style.opacity = '0.6';
             buttonElement.style.cursor = 'not-allowed';
-
-            // Sort by date to use clicked date (or most recent if clicked isn't unpaid)
-            const primaryDate = clickedDateIsUnpaid
-              ? unpaidClasses.find(c => c.isClickedDate)
-              : unpaidClasses.sort((a, b) => new Date(b.dateStr) - new Date(a.dateStr))[0];
-
-            debugLog('📅 Primary reminder date:', primaryDate.dateStr);
+            
             debugLog('📧 Including all unpaid classes in email');
 
             // Send message to email iframe
@@ -22863,7 +22882,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.10.0 - One-Time Schedule Override ✅');
+          console.log('✅ ARNOMA v2.10.1 - Payment Email Date Fix ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
