@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.13.1" />
+    <meta name="version" content="2.14.0" />
     <meta name="build-timestamp" content="20251121-130000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.13.1 - Email Preview Fix ✅');
+      console.log('✅ ARNOMA v2.14.0 - Canceled Class Calendar Fix ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -19994,19 +19994,27 @@
             const hasClasses = dayData.studentsWithClass.length > 0;
             const dateStr = formatDateYYYYMMDD(dayData.date);
 
-            // Check if any classes are skipped on this day
-            const hasSkippedClass =
+            // Check if any classes are CANCELED on this day (not just skipped)
+            const hasCanceledClass =
               hasClasses &&
               dayData.studentsWithClass.some(classInfo => {
-                const groupName = window.groupsCache?.find(g => g.name === classInfo.student.group)?.name;
+                const groupName = classInfo.student.group;
                 return (
-                  groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr)
+                  groupName && window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr)
                 );
               });
 
-            // Determine cell styling - don't gray out entire cell, only individual dots
-            const cellBgColor = isToday ? 'rgba(138,180,255,0.08)' : 'rgba(255,255,255,0.02)';
-            const cellBorderColor = isToday ? 'rgba(138,180,255,0.3)' : 'rgba(255,255,255,0.05)';
+            // Determine cell styling - GRAY OUT entire cell if class is canceled
+            const cellBgColor = hasCanceledClass 
+              ? 'rgba(100,100,100,0.15)' // Gray background for canceled classes
+              : isToday 
+                ? 'rgba(138,180,255,0.08)' 
+                : 'rgba(255,255,255,0.02)';
+            const cellBorderColor = hasCanceledClass
+              ? 'rgba(100,100,100,0.3)' // Gray border for canceled classes
+              : isToday 
+                ? 'rgba(138,180,255,0.3)' 
+                : 'rgba(255,255,255,0.05)';
 
             html += `
           <div onclick="openDayDetails('${dateStr}', ${JSON.stringify(dayData).replace(/"/g, '&quot;')})"
@@ -20017,10 +20025,10 @@
                       transition: all 0.2s; position: relative; overflow: visible;"
                onmouseover="if(${hasClasses}){this.style.background='rgba(138,180,255,0.12)'; this.style.borderColor='rgba(138,180,255,0.4)';}"
                onmouseout="this.style.background='${cellBgColor}'; this.style.borderColor='${cellBorderColor}';">
-            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : 'white'}; margin-bottom: 8px;">
+            <div style="font-size: 14px; font-weight: 700; color: ${isToday ? '#8ab4ff' : hasCanceledClass ? 'rgba(150,150,150,0.9)' : 'white'}; margin-bottom: 8px; ${hasCanceledClass ? 'text-decoration: line-through;' : ''}">
               ${dayData.day}
               ${isToday ? '<span style="font-size: 9px; color: #8ab4ff; margin-left: 4px;">TODAY</span>' : ''}
-              ${hasSkippedClass ? '<span style="font-size: 9px; color: rgba(150,150,150,0.7); margin-left: 4px;">⚫ CANCELED</span>' : ''}
+              ${hasCanceledClass ? '<span style="font-size: 9px; color: rgba(239, 68, 68, 0.9); margin-left: 4px;">🚫 CANCELED</span>' : ''}
             </div>
             <div style="flex: 1; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; position: relative; overflow: visible;">
               ${hasClasses ? renderDayDots(dayData, dateStr) : ''}
@@ -22972,7 +22980,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.13.1 - Email Preview Fix ✅');
+          console.log('✅ ARNOMA v2.14.0 - Canceled Class Calendar Fix ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
