@@ -20777,10 +20777,9 @@
           // Check for canceled classes
           const canceledGroups = [];
 
+          // First pass: identify all canceled groups
           dayData.studentsWithClass.forEach(classInfo => {
-            const { status, pricePerClass, student } = classInfo;
-            if (status === 'hidden') return;
-
+            const { student } = classInfo;
             const groupName = student.group || 'No Group';
 
             // Check if this class is canceled
@@ -20789,10 +20788,22 @@
               if (skipInfo && skipInfo.type === 'class-canceled') {
                 if (!canceledGroups.includes(groupName)) {
                   canceledGroups.push(groupName);
-                  canceledCount++;
                 }
-                return; // Don't count canceled classes in paid/unpaid totals
               }
+            }
+          });
+
+          // Second pass: count students by status (excluding canceled groups)
+          dayData.studentsWithClass.forEach(classInfo => {
+            const { status, pricePerClass, student } = classInfo;
+            if (status === 'hidden') return;
+
+            const groupName = student.group || 'No Group';
+
+            // If this student's group is canceled, count as canceled
+            if (canceledGroups.includes(groupName)) {
+              canceledCount++;
+              return; // Don't count in paid/unpaid
             }
 
             const price = parseFloat(pricePerClass) || 0;
