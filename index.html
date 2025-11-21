@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.0 - One-Time Quick View]</title>
+  <title>ARNOMA - Student Management [v2.18.1 - Canceled Visual Fix]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.0" />
-  <meta name="build-timestamp" content="20251121-201500" />
+  <meta name="version" content="2.18.1" />
+  <meta name="build-timestamp" content="20251121-202500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -20266,11 +20266,6 @@
 
         function renderDayDots(dayData, dateStr, hasCanceledClass) {
           let html = '';
-          
-          // Add ⚫ symbol at the start if class is canceled
-          if (hasCanceledClass) {
-            html += `<div style="width: 8px; height: 8px; display: flex; align-items: center; justify-content: center; font-size: 8px;">⚫</div>`;
-          }
 
           // Group students by their group name
           const studentsByGroup = {};
@@ -20287,6 +20282,16 @@
 
           groupNames.forEach((groupName, groupIndex) => {
             const studentsInGroup = studentsByGroup[groupName];
+
+            // Check if THIS specific group is canceled on this date
+            const isGroupCanceled = 
+              window.SkipClassManager && 
+              window.SkipClassManager.isClassCanceled(groupName, dateStr);
+
+            // Add ⚫ symbol ONLY if this group is canceled
+            if (isGroupCanceled) {
+              html += `<div style="width: 8px; height: 8px; display: flex; align-items: center; justify-content: center; font-size: 8px;">⚫</div>`;
+            }
 
             // Render dots for each student in this group
             studentsInGroup.forEach(classInfo => {
@@ -20312,9 +20317,8 @@
                 if (status === 'unpaid') {
                   // Red unpaid dots: keep RED but add strikethrough
                   dotColor = '#ef4444';
-                  dotStyle = 'text-decoration: line-through;';
                 } else {
-                  // All other dots: turn GRAY
+                  // All other dots: turn GRAY with scratch
                   dotColor = 'rgba(150, 150, 150, 0.4)';
                 }
               } else {
@@ -20355,9 +20359,9 @@
                         ? 'Absent'
                         : 'Unpaid';
 
-              // Render dot with optional scratch overlay for red unpaid dots
-              if (isSkipped && status === 'unpaid') {
-                // Red unpaid dot with scratch line
+              // Render dot with scratch line overlay for ALL canceled dots
+              if (isSkipped) {
+                // Canceled dot (red or gray) with scratch line
                 html += `
           <div style="position: relative; width: 8px; height: 8px;">
             <div class="calendar-dot"
