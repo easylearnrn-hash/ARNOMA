@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.12.0" />
+    <meta name="version" content="2.13.0" />
     <meta name="build-timestamp" content="20251121-130000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -20175,170 +20175,157 @@
         // - If clicked date is not unpaid, REJECT and show error
         // - NO fallback to "most recent" or "last unpaid" dates
         // - Email date MUST match the red dot on Smart Payment Calendar
+        // ==================================================================================
+        // MANUAL PAYMENT REMINDER - SUPABASE RESEND ONLY
+        // ==================================================================================
+        // CRITICAL: This function sends UNPAID payment reminders via Supabase Resend ONLY
+        // Gmail is NOT used for unpaid emails - only for payment praise and calendar summaries
+        // 
+        // @param {string} studentId - The student's ID
+        // @param {HTMLElement} buttonElement - The button that was clicked
+        // @param {string} clickedDateStr - The EXACT date (YYYY-MM-DD) that was clicked in the calendar
         window.sendReminderNow = async function (studentId, buttonElement, clickedDateStr) {
-          debugLog('🚀 Manual send triggered for student:', studentId, 'Clicked date:', clickedDateStr);
+          console.log('[MANUAL][UNPAID EMAIL] ============================================');
+          console.log('[MANUAL][UNPAID EMAIL] Manual payment reminder triggered');
+          console.log('[MANUAL][UNPAID EMAIL] Student ID:', studentId);
+          console.log('[MANUAL][UNPAID EMAIL] Clicked Date:', clickedDateStr);
+          console.log('[MANUAL][UNPAID EMAIL] ============================================');
+
+          // Store original button state for restoration
+          const originalHTML = buttonElement.innerHTML;
+          const originalBackground = buttonElement.style.background;
+          const originalCursor = buttonElement.style.cursor;
+          const originalOpacity = buttonElement.style.opacity;
 
           try {
+            // CRITICAL: clickedDateStr is REQUIRED - never fallback
+            if (!clickedDateStr || typeof clickedDateStr !== 'string' || clickedDateStr.trim() === '') {
+              console.error('[MANUAL][UNPAID EMAIL] ❌ CRITICAL: No clickedDateStr provided');
+              throw new Error('Date parameter is required for manual payment emails');
+            }
+
+            console.log('[MANUAL][UNPAID EMAIL] ✅ Date validation passed:', clickedDateStr);
+
+            // Show loading state immediately
+            buttonElement.disabled = true;
+            buttonElement.innerHTML = '⏳';
+            buttonElement.style.opacity = '0.6';
+            buttonElement.style.cursor = 'not-allowed';
+            buttonElement.title = 'Sending...';
+
             // Get students from cache
             const students = getCachedStudents();
-            debugLog('📋 Students in cache:', students.length);
+            console.log('[MANUAL][UNPAID EMAIL] Students in cache:', students?.length || 0);
 
             if (!students || students.length === 0) {
-              console.error('❌ No students in cache');
-              showNotificationSimple('❌ Error: Student data not loaded', 'error');
-              return;
+              console.error('[MANUAL][UNPAID EMAIL] ❌ No students in cache');
+              throw new Error('Student data not loaded');
             }
 
             // Find the student
             const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
             if (!student) {
-              console.error('❌ Student not found with ID:', studentId);
-              console.log('Available student IDs:', students.map(s => s.id).slice(0, 10));
-              showNotificationSimple('❌ Student not found', 'error');
-              return;
+              console.error('[MANUAL][UNPAID EMAIL] ❌ Student not found with ID:', studentId);
+              console.error('[MANUAL][UNPAID EMAIL] Available student IDs:', students.map(s => s.id).slice(0, 10));
+              throw new Error('Student not found');
             }
 
-            console.log('👤 Student found:', student.name, 'Email:', student.email);
+            console.log('[MANUAL][UNPAID EMAIL] ✅ Student found:', student.name);
+            console.log('[MANUAL][UNPAID EMAIL] Student email:', student.email);
 
-            // Check if student has email
+            // Validate student email
             if (!student.email || student.email.trim() === '') {
-              console.warn('⚠️ Student has no email:', student.name);
-              showNotificationSimple('❌ ' + student.name + ' has no email address', 'error');
-              return;
+              console.error('[MANUAL][UNPAID EMAIL] ❌ Student has no email:', student.name);
+              throw new Error(`${student.name} has no email address`);
             }
 
-            // Find ALL unpaid classes from calendar data (not just clicked date)
-            debugLog('🔍 Searching for ALL unpaid classes in calendar...');
+            // Find the EXACT unpaid class for the clicked date
+            console.log('[MANUAL][UNPAID EMAIL] Searching for unpaid class on:', clickedDateStr);
+            
             const currentMonth =
               window.currentCalendarData || getMonthData(new Date().getFullYear(), new Date().getMonth());
 
-            let unpaidClasses = [];
-            const today = getLADate();
+            let unpaidClassForDate = null;
+            let allUnpaidClasses = [];
 
-            // Get student's enrollment date for filtering
-            const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
-            if (studentCreatedAt) {
-              studentCreatedAt.setHours(0, 0, 0, 0); // Normalize to start of day
-            }
-
-            // Search through all days in current month for unpaid classes
+            // Search through all days to find unpaid classes
             currentMonth.days.forEach(dayData => {
-              const dayDate = new Date(dayData.date);
-              dayDate.setHours(0, 0, 0, 0); // Normalize to start of day
-
-              // Skip classes before student's enrollment date
-              if (studentCreatedAt && dayDate < studentCreatedAt) {
-                return; // Don't include classes before student was added to system
-              }
-
+              const dayDateStr = formatDateYYYYMMDD(dayData.date);
+              
               dayData.studentsWithClass.forEach(classInfo => {
-                if (
-                  (classInfo.student.id === studentId || classInfo.student.id === parseInt(studentId)) &&
-                  classInfo.status === 'unpaid' &&
-                  dayDate <= today
-                ) {
-                  // Only count classes up to today
-                  unpaidClasses.push({
-                    date: dayData.date,
-                    dateStr: dayData.date.toISOString().split('T')[0],
-                    pricePerClass: classInfo.pricePerClass,
-                    status: classInfo.status,
-                    isClickedDate: dayData.date.toISOString().split('T')[0] === clickedDateStr,
-                  });
+                if (classInfo.student.id === studentId || classInfo.student.id === parseInt(studentId)) {
+                  if (classInfo.status === 'unpaid') {
+                    allUnpaidClasses.push({
+                      date: dayData.date,
+                      dateStr: dayDateStr,
+                      pricePerClass: classInfo.pricePerClass,
+                      status: classInfo.status,
+                      isClickedDate: dayDateStr === clickedDateStr,
+                    });
+
+                    // Found the exact clicked date
+                    if (dayDateStr === clickedDateStr) {
+                      unpaidClassForDate = {
+                        date: dayData.date,
+                        dateStr: dayDateStr,
+                        pricePerClass: classInfo.pricePerClass,
+                        status: classInfo.status,
+                        isClickedDate: true,
+                      };
+                    }
+                  }
                 }
               });
             });
 
-            debugLog('💰 Total unpaid classes found:', unpaidClasses.length);
-            debugLog('📅 Unpaid dates:', unpaidClasses.map(c => c.dateStr).join(', '));
+            console.log('[MANUAL][UNPAID EMAIL] Total unpaid classes found:', allUnpaidClasses.length);
+            console.log('[MANUAL][UNPAID EMAIL] Unpaid dates:', allUnpaidClasses.map(c => c.dateStr).join(', '));
 
-            if (unpaidClasses.length === 0) {
-              console.log('ℹ️ No unpaid classes for:', student.name);
-              showNotificationSimple('✅ No unpaid classes for ' + student.name, 'info');
-              return;
+            // CRITICAL VALIDATION: The clicked date MUST be unpaid
+            if (!unpaidClassForDate) {
+              console.error('[MANUAL][UNPAID EMAIL] ❌ CRITICAL: Clicked date is NOT unpaid');
+              console.error('[MANUAL][UNPAID EMAIL] Clicked date:', clickedDateStr);
+              console.error('[MANUAL][UNPAID EMAIL] Available unpaid dates:', allUnpaidClasses.map(c => c.dateStr));
+              throw new Error(`The selected date (${clickedDateStr}) is not unpaid. Cannot send payment reminder.`);
             }
 
-            // CRITICAL FIX: Use ONLY the clicked date if provided, otherwise reject
-            let primaryDate = null;
-            
-            if (clickedDateStr) {
-              // Find the unpaid event for the exact clicked date
-              primaryDate = unpaidClasses.find(c => c.dateStr === clickedDateStr);
-              
-              if (!primaryDate) {
-                console.error('[EMAIL][PendingPayment] ❌ CRITICAL: Clicked date is NOT unpaid:', clickedDateStr);
-                console.log('[EMAIL][PendingPayment] Available unpaid dates:', unpaidClasses.map(c => c.dateStr));
-                showNotificationSimple('❌ The selected date (' + clickedDateStr + ') is not unpaid', 'error');
-                
-                // Restore button state
-                buttonElement.disabled = false;
-                buttonElement.innerHTML = originalHTML;
-                buttonElement.style.opacity = '1';
-                buttonElement.style.cursor = 'pointer';
-                return;
-              }
-              
-              console.log('[EMAIL][PendingPayment] ✅ Using unpaid event date:', primaryDate.dateStr);
-            } else {
-              // No clicked date provided - use most recent unpaid class
-              primaryDate = unpaidClasses.sort((a, b) => new Date(b.dateStr) - new Date(a.dateStr))[0];
-              console.log('[EMAIL][PendingPayment] ⚠️ No clicked date, using most recent unpaid:', primaryDate.dateStr);
-            }
+            console.log('[MANUAL][UNPAID EMAIL] ✅ Clicked date IS unpaid:', clickedDateStr);
+            console.log('[MANUAL][UNPAID EMAIL] Price for this class: $' + unpaidClassForDate.pricePerClass);
 
-            debugLog('📅 Primary reminder date:', primaryDate.dateStr);
-            
-            // Show loading state
-            const originalHTML = buttonElement.innerHTML;
-            buttonElement.disabled = true;
-            buttonElement.innerHTML = '⏳';
-            buttonElement.style.opacity = '0.6';
-            buttonElement.style.cursor = 'not-allowed';
-            
-            debugLog('📧 Including all unpaid classes in email');
-
-            // Send message to email iframe
-            debugLog('🔍 Searching for email iframe...');
+            // Find email iframe
+            console.log('[MANUAL][UNPAID EMAIL] Searching for email system iframe...');
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
-            console.log('📍 Email iframe found?', emailFrame ? 'YES' : 'NO');
-
-            if (emailFrame) {
-              console.log('📍 Iframe src:', emailFrame.src);
-              console.log('📍 Has contentWindow?', emailFrame.contentWindow ? 'YES' : 'NO');
-            } else {
-              // Try to find ANY iframes
-              const allIframes = document.querySelectorAll('iframe');
-              debugLog('🔍 Total iframes on page:', allIframes.length);
-              allIframes.forEach((iframe, idx) => {
-                debugLog(`  Iframe ${idx}:`, iframe.src || iframe.id || 'no src/id');
-              });
-            }
-
+            
             if (!emailFrame || !emailFrame.contentWindow) {
+              console.error('[MANUAL][UNPAID EMAIL] ❌ Email system iframe not found');
+              const allIframes = document.querySelectorAll('iframe');
+              console.error('[MANUAL][UNPAID EMAIL] Total iframes on page:', allIframes.length);
+              allIframes.forEach((iframe, idx) => {
+                console.error(`[MANUAL][UNPAID EMAIL]   Iframe ${idx}:`, iframe.src || iframe.id || 'no src/id');
+              });
               throw new Error('Email system not available');
             }
 
-            debugLog('📧 Email iframe found, sending postMessage...');
+            console.log('[MANUAL][UNPAID EMAIL] ✅ Email iframe found');
+            console.log('[MANUAL][UNPAID EMAIL] Iframe src:', emailFrame.src);
 
-            // Create a promise that resolves when we get a response
+            // Create promise for email send
             const sendPromise = new Promise((resolve, reject) => {
               const timeout = setTimeout(() => {
-                console.error('⏱️ Email send timeout after 30 seconds');
-                reject(new Error('Email send timeout'));
-              }, 30000); // 30 second timeout
+                console.error('[MANUAL][UNPAID EMAIL] ❌ Timeout after 30 seconds');
+                reject(new Error('Email send timeout - no response from email system'));
+              }, 30000);
 
-              // Listen for response
               const handleMessage = event => {
-                console.log('📩 Received message:', event.data.action);
-
                 if (event.data.action === 'emailSent' || event.data.action === 'emailError') {
                   clearTimeout(timeout);
                   window.removeEventListener('message', handleMessage);
 
                   if (event.data.action === 'emailSent') {
-                    debugLog('✅ Email sent successfully');
+                    console.log('[MANUAL][UNPAID EMAIL] ✅ Email sent successfully');
                     resolve(event.data);
                   } else {
-                    console.error('❌ Email error:', event.data.error);
+                    console.error('[MANUAL][UNPAID EMAIL] ❌ Email error:', event.data.error);
                     reject(new Error(event.data.error || 'Email send failed'));
                   }
                 }
@@ -20347,51 +20334,64 @@
               window.addEventListener('message', handleMessage);
             });
 
-            // Send the message
-            emailFrame.contentWindow.postMessage(
-              {
-                action: 'sendAutoReminder',
-                student: {
-                  id: student.id,
-                  name: student.name,
-                  email: student.email,
-                  balance: student.balance || 0,
-                },
-                classDate: primaryDate.dateStr,
-                unpaidClasses: unpaidClasses.map(c => ({
-                  date: c.dateStr,
-                  pricePerClass: c.pricePerClass,
-                  isClickedDate: c.isClickedDate,
-                })),
-                manual: true, // Flag to bypass "already sent" check
+            // Prepare payload for email system
+            const payload = {
+              action: 'sendAutoReminder',
+              student: {
+                id: student.id,
+                name: student.name,
+                email: student.email,
+                balance: student.balance || 0,
+                payPerClass: student.price_per_class || unpaidClassForDate.pricePerClass,
               },
-              '*'
-            );
+              classDate: clickedDateStr, // EXACT date that was clicked
+              unpaidClasses: allUnpaidClasses.map(c => ({
+                date: c.dateStr,
+                pricePerClass: c.pricePerClass,
+                isClickedDate: c.isClickedDate,
+              })),
+              manual: true, // Bypass duplicate check
+            };
 
-            debugLog('📧 Sent manual reminder request to email system');
+            console.log('[MANUAL][UNPAID EMAIL] Sending to email system via Supabase Resend:');
+            console.log('[MANUAL][UNPAID EMAIL]   Student:', student.name, '(' + student.email + ')');
+            console.log('[MANUAL][UNPAID EMAIL]   Primary date:', clickedDateStr);
+            console.log('[MANUAL][UNPAID EMAIL]   Total unpaid classes:', allUnpaidClasses.length);
+            console.log('[MANUAL][UNPAID EMAIL]   Service: SUPABASE RESEND (not Gmail)');
+
+            // Send via postMessage to email iframe
+            emailFrame.contentWindow.postMessage(payload, '*');
+
+            console.log('[MANUAL][UNPAID EMAIL] ⏳ Waiting for email system response...');
 
             // Wait for response
             const response = await sendPromise;
 
-            // Success
+            console.log('[MANUAL][UNPAID EMAIL] ✅ SUCCESS - Email sent successfully');
+            console.log('[MANUAL][UNPAID EMAIL] Response:', response);
+
+            // Show success state
             buttonElement.innerHTML = '✓';
             buttonElement.style.background = 'rgba(34, 197, 94, 0.3)';
+            buttonElement.style.borderColor = 'rgba(34, 197, 94, 0.5)';
+            buttonElement.title = 'Email sent ✓';
 
-            // Add notification with email content if available
+            // Show success notification
+            const emailSubject = response.emailContent?.subject || 'Payment Reminder';
+            
             if (window.NotificationCenter) {
-              const emailSubject = response.emailContent?.subject || 'Payment Reminder';
               await window.NotificationCenter.add(
                 window.NotificationCenter.NotificationType.EMAIL,
                 `Email Sent: ${emailSubject}`,
-                `Sent to ${student.name} (${student.email}) - ${unpaidClasses.length} unpaid class${unpaidClasses.length !== 1 ? 'es' : ''}`,
+                `Sent to ${student.name} (${student.email}) - ${allUnpaidClasses.length} unpaid class${allUnpaidClasses.length !== 1 ? 'es' : ''}`,
                 {
                   studentName: student.name,
                   metadata: {
                     recipientName: student.name,
                     recipientEmail: student.email,
-                    unpaidClassCount: unpaidClasses.length,
+                    unpaidClassCount: allUnpaidClasses.length,
                     emailType: 'payment_reminder',
-                    emailBody: response.emailContent?.body,
+                    clickedDate: clickedDateStr,
                     emailSubject: emailSubject,
                   },
                 }
@@ -20400,33 +20400,53 @@
               showNotificationSimple('✅ Payment reminder sent to ' + student.name, 'success');
             }
 
-            // Reset button after 2 seconds
-            setTimeout(() => {
-              buttonElement.innerHTML = originalHTML;
-              buttonElement.style.background = 'rgba(34, 197, 94, 0.2)';
-              buttonElement.style.opacity = '1';
-              buttonElement.style.cursor = 'pointer';
-              buttonElement.disabled = false;
-            }, 2000);
-          } catch (error) {
-            console.error('❌ Manual send error:', error);
-
-            // Error state
-            if (buttonElement) {
-              buttonElement.innerHTML = '✗';
-              buttonElement.style.background = 'rgba(239, 68, 68, 0.3)';
-
-              // Reset button after 3 seconds
-              setTimeout(() => {
-                buttonElement.innerHTML = '→';
-                buttonElement.style.background = 'rgba(34, 197, 94, 0.2)';
-                buttonElement.style.opacity = '1';
-                buttonElement.style.cursor = 'pointer';
-                buttonElement.disabled = false;
-              }, 3000);
+            // Log email details if available
+            if (response.emailContent) {
+              console.log('[MANUAL][UNPAID EMAIL] Email details:');
+              console.log('[MANUAL][UNPAID EMAIL]   Subject:', emailSubject);
+              console.log('[MANUAL][UNPAID EMAIL]   Template: Payment Reminder');
+              console.log('[MANUAL][UNPAID EMAIL]   Delivery: Supabase Resend Edge Function');
             }
 
-            showNotificationSimple('❌ Failed to send: ' + error.message, 'error');
+            // Restore button after 2 seconds
+            setTimeout(() => {
+              buttonElement.disabled = false;
+              buttonElement.innerHTML = originalHTML;
+              buttonElement.style.background = originalBackground;
+              buttonElement.style.opacity = originalOpacity;
+              buttonElement.style.cursor = originalCursor;
+              buttonElement.title = 'Send payment reminder now';
+            }, 2000);
+
+            console.log('[MANUAL][UNPAID EMAIL] ============================================');
+            console.log('[MANUAL][UNPAID EMAIL] Manual send completed successfully');
+            console.log('[MANUAL][UNPAID EMAIL] ============================================');
+          } catch (error) {
+            console.error('[MANUAL][UNPAID EMAIL] ❌ ERROR:', error.message);
+            console.error('[MANUAL][UNPAID EMAIL] Stack:', error.stack);
+
+            // Show error state
+            buttonElement.innerHTML = '✗';
+            buttonElement.style.background = 'rgba(239, 68, 68, 0.3)';
+            buttonElement.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+            buttonElement.title = 'Error - Check Console';
+
+            // Show error notification
+            showNotificationSimple('❌ ' + error.message, 'error');
+
+            // Restore button after 3 seconds
+            setTimeout(() => {
+              buttonElement.disabled = false;
+              buttonElement.innerHTML = originalHTML;
+              buttonElement.style.background = originalBackground;
+              buttonElement.style.opacity = originalOpacity;
+              buttonElement.style.cursor = originalCursor;
+              buttonElement.title = 'Send payment reminder now';
+            }, 3000);
+
+            console.log('[MANUAL][UNPAID EMAIL] ============================================');
+            console.log('[MANUAL][UNPAID EMAIL] Manual send failed');
+            console.log('[MANUAL][UNPAID EMAIL] ============================================');
           }
         };
 
