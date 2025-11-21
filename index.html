@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.15.5 - Canceled: Cell Gray + Dots Scratched]</title>
+    <title>ARNOMA - Student Management [v2.15.6 - Restore Original Cancel Logic]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.15.5" />
-    <meta name="build-timestamp" content="20251121-152000" />
+    <meta name="version" content="2.15.6" />
+    <meta name="build-timestamp" content="20251121-153000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.15.5 - Fix: Calendar Group Name Mismatch ✅');
+      console.log('✅ ARNOMA v2.15.6 - Fix: Calendar Group Name Mismatch ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -5174,7 +5174,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              v2.15.5
+              v2.15.6
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -20123,10 +20123,6 @@
           groupNames.forEach((groupName, groupIndex) => {
             const studentsInGroup = studentsByGroup[groupName];
 
-            // Check if this entire class is CANCELED
-            const isClassCanceled =
-              window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr);
-
             // Render dots for each student in this group
             studentsInGroup.forEach(classInfo => {
               const { student, status } = classInfo;
@@ -20136,7 +20132,7 @@
                 return;
               }
 
-              // Check if this class is skipped (student-level skip, not class-level cancel)
+              // Check if this class is skipped/canceled
               const groupNameForCheck = window.groupsCache?.find(g => g.name === student.group)?.name;
               const isSkipped =
                 groupNameForCheck &&
@@ -20144,14 +20140,9 @@
                 window.SkipClassManager.isClassSkipped(groupNameForCheck, dateStr);
 
               let dotColor;
-              let dotStyle = ''; // Additional styling for canceled classes
 
-              if (isClassCanceled) {
-                // Class canceled - show ALL dots as grayed out with strikethrough
-                dotColor = 'rgba(150, 150, 150, 0.4)';
-                dotStyle = 'text-decoration: line-through; opacity: 0.5;';
-              } else if (isSkipped) {
-                dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped classes
+              if (isSkipped) {
+                dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped/canceled classes
               } else {
                 switch (status) {
                   case 'paid':
@@ -20177,9 +20168,7 @@
                 }
               }
 
-              const statusText = isClassCanceled
-                ? 'Canceled'
-                : isSkipped
+              const statusText = isSkipped
                 ? 'Canceled'
                 : status === 'paid' || status === 'deducted'
                   ? 'Paid'
@@ -20196,7 +20185,7 @@
                onclick="event.stopPropagation(); showStudentClassDetails('${student.id}', '${dateStr}', ${JSON.stringify(classInfo).replace(/"/g, '&quot;')});"
                data-tooltip="${escapeHtml(student.name)} — ${statusText}"
                style="width: 8px; height: 8px; border-radius: 50%; background: ${dotColor};
-                      cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3); ${dotStyle}"
+                      cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"
                onmouseover="this.style.transform='scale(1.5)'; this.style.boxShadow='0 4px 8px rgba(0,0,0,0.5)';"
                onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.3)';"></div>
         `;
@@ -23046,7 +23035,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.15.5 - Fix: Calendar Group Name Mismatch ✅');
+          console.log('✅ ARNOMA v2.15.6 - Fix: Calendar Group Name Mismatch ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
