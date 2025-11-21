@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.6 - Date Picker Layout Fix]</title>
+  <title>ARNOMA - Student Management [v2.18.7 - Fix Quick View Timezone]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.6" />
-  <meta name="build-timestamp" content="20251121-211500" />
+  <meta name="version" content="2.18.7" />
+  <meta name="build-timestamp" content="20251121-213000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -15602,11 +15602,15 @@
           if (period === 'PM' && hours !== 12) hours += 12;
           if (period === 'AM' && hours === 12) hours = 0;
 
-          // LA to Yerevan offset: DST (UTC-7) = +11h, Standard (UTC-8) = +12h
-          // Check if DST is active (timezone offset is 420 minutes / 7 hours)
+          // Calculate LA's actual UTC offset dynamically
           const now = new Date();
-          const isDST = now.getTimezoneOffset() === 420;
-          const offsetHours = isDST ? 11 : 12;
+          const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
+          const laDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
+          const laOffset = (laDate - utcDate) / (1000 * 60 * 60); // LA offset in hours
+          
+          // Yerevan is typically UTC+4
+          const yerevanOffset = 4;
+          const offsetHours = yerevanOffset - laOffset; // Difference between Yerevan and LA
 
           let yerevanHours = hours + offsetHours;
 
@@ -15615,6 +15619,9 @@
           if (yerevanHours >= 24) {
             yerevanHours -= 24;
             dayShift = 1; // Next day
+          } else if (yerevanHours < 0) {
+            yerevanHours += 24;
+            dayShift = -1; // Previous day
           }
 
           // Convert back to 12-hour format
@@ -16017,7 +16024,7 @@
                   const laTime = match[2];
                   // Ensure LA time is in AM/PM format before converting
                   const laTimeAMPM = ensureAMPMFormat(laTime);
-                  const conversionResult = TimezoneUtils.convertLATimeToYerevan(laTimeAMPM); // Use proper TimezoneUtils
+                  const conversionResult = convertLATimeToYerevan(laTimeAMPM, true); // Use function defined earlier
 
                   // Handle slash-separated days: "mon/wed"
                   const dayTokens = daysStr.split('/').map(d => d.trim());
@@ -16044,7 +16051,7 @@
                     const laTimeAMPM = ensureAMPMFormat(override.time || '');
                     const laDay = override.day || getWeekdayFromDateStr(override.date);
                     if (!laDay) return;
-                    const conversionResult = TimezoneUtils.convertLATimeToYerevan(laTimeAMPM); // Use proper TimezoneUtils
+                    const conversionResult = convertLATimeToYerevan(laTimeAMPM, true); // Use function defined earlier
                     const yerevanWeekday = shiftWeekday(laDay, conversionResult.dayShift);
                     if (!daySchedule[yerevanWeekday]) daySchedule[yerevanWeekday] = [];
                     daySchedule[yerevanWeekday].push({
