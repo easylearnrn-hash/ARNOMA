@@ -1142,7 +1142,7 @@ ARNOMA Team"
       async function loadTokenFromDatabase() {
         try {
           console.log('🔍 Fetching Gmail token from database...');
-          
+
           const response = await fetch(`${SUPABASE_URL}/functions/v1/gmail-get-token`, {
             method: 'POST',
             headers: {
@@ -1178,7 +1178,7 @@ ARNOMA Team"
 
           showNotification('✅ Gmail connected with auto-refresh enabled!', 'success');
           updateGmailButtonState(true);
-          
+
           return true;
         } catch (err) {
           console.error('❌ Failed to load token from database:', err);

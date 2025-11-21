@@ -38,37 +38,39 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 **🔥 MAJOR RELEASE - 10 Critical Optimizations**
 
 - **FIX #1**: Deferred heavy initialization with staggered delays (500ms-2000ms)
-  - NotificationCenter, PaymentRecords, EmailAutomation now load AFTER UI visible
+  - NotificationCenter, PaymentRecords, EmailAutomation now load AFTER UI
+    visible
   - ⚡ **5-10x faster** initial page load
-  
+
 - **FIX #2**: Email data send mutex prevents spam
   - Added `_emailDataSending` flag to block concurrent sends
   - Eliminated 6-7 duplicate "Sending automation data" logs
   - ⚡ **60% CPU reduction**
-  
+
 - **FIX #3**: Single iframe message listener
   - Added `_emailMessageHandlerAdded` guard to prevent duplicate attachments
   - ⚡ No more multiple event handlers
-  
+
 - **FIX #5**: Disabled console patching (unless DEBUG_MODE)
   - Console.log patch only runs when debugging enabled
   - ⚡ Removed **15-20ms** overhead per call
-  
+
 - **FIX #6**: Capped Supabase queries for mobile performance
   - Students: `.limit(150)`
   - Payments: `.limit(300)`
   - ⚡ **70% faster** data fetch
-  
+
 - **FIX #9**: Prevent duplicate `initialize()` calls
   - Added `_appInitialized` flag to stop "Core data loaded" spam
   - ⚡ Single initialization guaranteed
-  
+
 - **VERSION**: Updated desktop and mobile to v2.5.0 - Extreme Performance ⚡⚡
 
 **Expected Results:**
+
 - Initial load: 0.5-0.8s (was 2.5-3.5s)
 - CPU usage: 60% reduction
-- RAM usage: 50% reduction  
+- RAM usage: 50% reduction
 - Mobile typing: Instant (was laggy)
 - Data fetch: 4x faster
 
@@ -80,11 +82,16 @@ console.log('🔥 ARNOMA v2.1.X - Description of changes');
 
 - **FIX**: Smart Calendar Recovery on mobile
   - Added guard rails around lazy module loading so the modal always opens
-  - New loading/warning/error status banner keeps users informed while data syncs
-  - `renderCalendar()` now safely handles missing DOM nodes and returns data to callers
-  - Introduced `safeRenderCalendar()` wrapper used by month navigation, lazy load, and modal open
-  - Fallback messaging appears if LazyModules are unavailable or throw during initialization
-- **VERSION**: Updated desktop and mobile builds (title, header, console log, meta tag) to `v2.4.7 - Smart Calendar Recovery`
+  - New loading/warning/error status banner keeps users informed while data
+    syncs
+  - `renderCalendar()` now safely handles missing DOM nodes and returns data to
+    callers
+  - Introduced `safeRenderCalendar()` wrapper used by month navigation, lazy
+    load, and modal open
+  - Fallback messaging appears if LazyModules are unavailable or throw during
+    initialization
+- **VERSION**: Updated desktop and mobile builds (title, header, console log,
+  meta tag) to `v2.4.7 - Smart Calendar Recovery`
 
 ### v2.2.1 (2025-11-18)
 

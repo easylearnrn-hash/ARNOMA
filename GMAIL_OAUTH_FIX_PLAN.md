@@ -2,7 +2,9 @@
 
 ## Problem Diagnosis
 
-Gmail OAuth is **NOT refreshing** because the current implementation uses the **OAuth 2.0 Implicit Flow** which:
+Gmail OAuth is **NOT refreshing** because the current implementation uses the
+**OAuth 2.0 Implicit Flow** which:
+
 - ❌ Only returns **access tokens** (expires in 1 hour)
 - ❌ Does **NOT** return **refresh tokens**
 - ❌ Requires user to manually re-authenticate every hour
@@ -10,12 +12,14 @@ Gmail OAuth is **NOT refreshing** because the current implementation uses the **
 ## Root Cause
 
 **File:** `email-system-complete.html` Line ~1157
+
 ```javascript
 // CURRENT (BROKEN):
-response_type=token  // ❌ Implicit flow - NO refresh token
+response_type = token; // ❌ Implicit flow - NO refresh token
 ```
 
 **What happens:**
+
 1. User clicks "Connect Gmail"
 2. Google OAuth returns **only** `access_token` (valid for 1 hour)
 3. No `refresh_token` is provided
@@ -30,31 +34,34 @@ response_type=token  // ❌ Implicit flow - NO refresh token
 #### 1. Frontend Changes (`email-system-complete.html`)
 
 **Change OAuth URL from:**
+
 ```javascript
 // OLD (BROKEN):
-response_type=token   // Implicit flow
+response_type = token; // Implicit flow
 ```
 
 **To:**
+
 ```javascript
 // NEW (WORKING):
-response_type=code    // Authorization code flow
-access_type=offline   // Required to get refresh token
-prompt=consent        // Force consent screen (ensures refresh token)
+response_type = code; // Authorization code flow
+access_type = offline; // Required to get refresh token
+prompt = consent; // Force consent screen (ensures refresh token)
 ```
 
 **Complete new OAuth flow:**
+
 ```javascript
 async function connectGmail() {
   const redirectUri = `${SUPABASE_URL}/functions/v1/gmail-oauth-callback`;
-  
+
   const authUrl =
     `https://accounts.google.com/o/oauth2/v2/auth?` +
     `client_id=${GMAIL_CLIENT_ID}&` +
     `redirect_uri=${encodeURIComponent(redirectUri)}&` +
-    `response_type=code&` +        // ✅ Authorization code flow
-    `access_type=offline&` +        // ✅ Get refresh token
-    `prompt=consent&` +             // ✅ Force consent screen
+    `response_type=code&` + // ✅ Authorization code flow
+    `access_type=offline&` + // ✅ Get refresh token
+    `prompt=consent&` + // ✅ Force consent screen
     `scope=${encodeURIComponent(GMAIL_SCOPES)}&` +
     `state=${encodeURIComponent(JSON.stringify({ userId: 'admin', returnUrl: window.location.href }))}`;
 
@@ -76,7 +83,7 @@ const returnUrl = stateData.returnUrl || 'https://www.richyfesta.com';
 return new Response(null, {
   status: 302,
   headers: {
-    'Location': `${returnUrl}?gmail_auth=success`,
+    Location: `${returnUrl}?gmail_auth=success`,
   },
 });
 ```
@@ -92,7 +99,7 @@ if (urlParams.get('gmail_auth') === 'success') {
   // Token is now in database, fetch it
   await fetchStoredGmailToken();
   showNotification('✅ Gmail connected with auto-refresh enabled!', 'success');
-  
+
   // Clean URL
   window.history.replaceState(null, null, window.location.pathname);
 }
@@ -102,21 +109,24 @@ async function fetchStoredGmailToken() {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
     },
     body: JSON.stringify({ userId: 'admin' }),
   });
-  
+
   const { access_token, expires_at } = await response.json();
-  
+
   gmailAccessToken = access_token;
   gmailTokenExpiry = new Date(expires_at).getTime();
-  
-  localStorage.setItem(GMAIL_CONNECTION_KEY, JSON.stringify({
-    access_token,
-    expiry_date: gmailTokenExpiry,
-  }));
-  
+
+  localStorage.setItem(
+    GMAIL_CONNECTION_KEY,
+    JSON.stringify({
+      access_token,
+      expiry_date: gmailTokenExpiry,
+    })
+  );
+
   updateGmailButtonState(true);
 }
 ```
@@ -124,15 +134,20 @@ async function fetchStoredGmailToken() {
 ## Implementation Steps
 
 ### Step 1: Update Edge Function (Optional Enhancement)
-Make `gmail-oauth-callback/index.ts` redirect back to app instead of returning JSON.
+
+Make `gmail-oauth-callback/index.ts` redirect back to app instead of returning
+JSON.
 
 ### Step 2: Update Frontend OAuth Flow
+
 Modify `email-system-complete.html` to use `response_type=code`.
 
 ### Step 3: Add Token Fetch Function
+
 Create function to fetch stored token from database after OAuth callback.
 
 ### Step 4: Test Flow
+
 1. Click "Connect Gmail"
 2. Authorize in Google
 3. Get redirected back to app
@@ -140,6 +155,7 @@ Create function to fetch stored token from database after OAuth callback.
 5. Check database - should have `refresh_token` saved
 
 ### Step 5: Verify Auto-Refresh
+
 1. Wait 55 minutes (or manually expire token in DB)
 2. `ensureGmailTokenValid()` should trigger
 3. New access token should be fetched using refresh token
@@ -147,7 +163,8 @@ Create function to fetch stored token from database after OAuth callback.
 
 ## Files to Modify
 
-1. ✅ `supabase/functions/gmail-oauth-callback/index.ts` - Already exists, needs redirect update
+1. ✅ `supabase/functions/gmail-oauth-callback/index.ts` - Already exists, needs
+   redirect update
 2. ❌ `email-system-complete.html` - Update OAuth flow
 3. ❌ `index.html` - Update `ensureGmailTokenValid()` to fetch from database
 
@@ -156,17 +173,20 @@ Create function to fetch stored token from database after OAuth callback.
 If you want to keep it simple and avoid database storage:
 
 **Use Google's Identity Services (GSI) Library:**
+
 ```html
 <script src="https://accounts.google.com/gsi/client"></script>
 <script>
-  google.accounts.oauth2.initTokenClient({
-    client_id: GMAIL_CLIENT_ID,
-    scope: GMAIL_SCOPES,
-    callback: (response) => {
-      gmailAccessToken = response.access_token;
-      // Save token
-    },
-  }).requestAccessToken();
+  google.accounts.oauth2
+    .initTokenClient({
+      client_id: GMAIL_CLIENT_ID,
+      scope: GMAIL_SCOPES,
+      callback: response => {
+        gmailAccessToken = response.access_token;
+        // Save token
+      },
+    })
+    .requestAccessToken();
 </script>
 ```
 

@@ -2,18 +2,21 @@
 
 ## ✅ Code Changes Complete (v2.9.0)
 
-All code has been pushed to GitHub. Now you need to deploy the Edge Functions to Supabase.
+All code has been pushed to GitHub. Now you need to deploy the Edge Functions to
+Supabase.
 
 ---
 
 ## 📋 Pre-Deployment Checklist
 
 Before deploying, ensure you have:
+
 - ✅ Supabase CLI installed (`npm install -g supabase`)
 - ✅ Logged into Supabase CLI (`supabase login`)
 - ✅ Linked to your project (`supabase link --project-ref zlvnxvrzotamhpezqedr`)
 - ✅ Gmail OAuth credentials (Client ID + Client Secret)
-- ✅ `gmail_credentials` table exists in Supabase (run `setup-gmail-table.sql` if not)
+- ✅ `gmail_credentials` table exists in Supabase (run `setup-gmail-table.sql`
+  if not)
 
 ---
 
@@ -30,7 +33,9 @@ supabase secrets set GMAIL_CLIENT_SECRET="YOUR_GMAIL_CLIENT_SECRET"
 ```
 
 **To get your credentials:**
-1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+
+1. Go to
+   [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
 2. Find your OAuth 2.0 Client ID
 3. Copy Client ID and Client Secret
 
@@ -55,7 +60,8 @@ supabase functions deploy gmail-refresh-token
 
 ⚠️ **CRITICAL**: Add the Edge Function URL to your Google OAuth config:
 
-1. Go to [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
+1. Go to
+   [Google Cloud Console → Credentials](https://console.cloud.google.com/apis/credentials)
 2. Click your OAuth 2.0 Client ID
 3. Under "Authorized redirect URIs", add:
    ```
@@ -68,12 +74,13 @@ supabase functions deploy gmail-refresh-token
 Run this in Supabase SQL Editor to check the table exists:
 
 ```sql
-SELECT column_name, data_type, column_default 
-FROM information_schema.columns 
+SELECT column_name, data_type, column_default
+FROM information_schema.columns
 WHERE table_name = 'gmail_credentials';
 ```
 
 Should show these columns:
+
 - `id` (uuid)
 - `user_id` (varchar)
 - `email` (varchar)
@@ -108,12 +115,14 @@ If table doesn't exist, run `setup-gmail-table.sql`.
 3. **Connect Gmail**:
    - Click "Connect Gmail" button
    - Should redirect to Google OAuth consent screen
-   - After approving, should redirect back to your app with `?gmail_auth=success`
+   - After approving, should redirect back to your app with
+     `?gmail_auth=success`
    - Should show notification: "✅ Gmail connected with auto-refresh enabled!"
 
 4. **Verify in Database**:
+
    ```sql
-   SELECT 
+   SELECT
      user_id,
      email,
      expires_at,
@@ -122,13 +131,12 @@ If table doesn't exist, run `setup-gmail-table.sql`.
    FROM gmail_credentials
    WHERE user_id = 'admin';
    ```
-   
+
    Should show:
    - ✅ `has_refresh_token`: true
    - ✅ `expires_at`: ~1 hour from now
 
-5. **Check Console Logs**:
-   Open DevTools Console, should see:
+5. **Check Console Logs**: Open DevTools Console, should see:
    ```
    ✅ Gmail OAuth successful, fetching token from database...
    ✅ Token fetched and saved
@@ -138,16 +146,17 @@ If table doesn't exist, run `setup-gmail-table.sql`.
 ### Test 2: Auto-Refresh (Manual Trigger)
 
 1. **Manually expire the token** in database:
+
    ```sql
-   UPDATE gmail_credentials 
+   UPDATE gmail_credentials
    SET expires_at = NOW() - INTERVAL '1 minute'
    WHERE user_id = 'admin';
    ```
 
 2. **Trigger a Gmail operation** (e.g., fetch payments or send email)
 
-3. **Watch Console Logs**:
-   Should see:
+3. **Watch Console Logs**: Should see:
+
    ```
    🔄 Gmail token expiring soon, refreshing via Supabase...
    ✅ Gmail token refreshed successfully
@@ -155,18 +164,20 @@ If table doesn't exist, run `setup-gmail-table.sql`.
    ```
 
 4. **Verify in Database**:
+
    ```sql
    SELECT expires_at, updated_at
    FROM gmail_credentials
    WHERE user_id = 'admin';
    ```
-   
+
    `expires_at` should be ~1 hour in the future, `updated_at` should be recent.
 
 ### Test 3: Auto-Refresh (Real-Time)
 
 1. **Wait 55 minutes** (or set a timer)
-2. The `setInterval` in `index.html` should automatically trigger `ensureGmailTokenValid()`
+2. The `setInterval` in `index.html` should automatically trigger
+   `ensureGmailTokenValid()`
 3. Token should refresh automatically
 4. No user interaction required
 5. Check console for refresh logs
@@ -180,8 +191,10 @@ If table doesn't exist, run `setup-gmail-table.sql`.
 **Cause**: Google didn't return a refresh token.
 
 **Solutions**:
+
 1. **Revoke access** and re-authenticate:
-   - Go to [Google Account Permissions](https://myaccount.google.com/permissions)
+   - Go to
+     [Google Account Permissions](https://myaccount.google.com/permissions)
    - Find "ARNOMA" app
    - Click "Remove access"
    - Reconnect Gmail in your app
@@ -195,6 +208,7 @@ If table doesn't exist, run `setup-gmail-table.sql`.
 **Cause**: refresh_token is null or invalid in database.
 
 **Solutions**:
+
 1. Check database:
    ```sql
    SELECT refresh_token FROM gmail_credentials WHERE user_id = 'admin';
@@ -207,6 +221,7 @@ If table doesn't exist, run `setup-gmail-table.sql`.
 **Cause**: Edge Function not deployed or secrets not set.
 
 **Solutions**:
+
 1. Verify Edge Function is deployed:
    ```bash
    supabase functions list
@@ -225,6 +240,7 @@ If table doesn't exist, run `setup-gmail-table.sql`.
 **Cause**: Google OAuth redirect URI not configured.
 
 **Solution**:
+
 1. Add to Google Cloud Console → Credentials:
    ```
    https://zlvnxvrzotamhpezqedr.supabase.co/functions/v1/gmail-oauth-callback
@@ -237,7 +253,7 @@ If table doesn't exist, run `setup-gmail-table.sql`.
 ### Check Token Status
 
 ```sql
-SELECT 
+SELECT
   user_id,
   email,
   expires_at,
@@ -252,7 +268,7 @@ WHERE user_id = 'admin';
 ### Check Recent Refreshes
 
 ```sql
-SELECT 
+SELECT
   user_id,
   updated_at,
   expires_at,
@@ -268,6 +284,7 @@ LIMIT 10;
 ## 🎯 Success Criteria
 
 ✅ **OAuth Flow**:
+
 - User clicks "Connect Gmail"
 - Redirects to Google
 - After auth, redirects back with `?gmail_auth=success`
@@ -275,17 +292,20 @@ LIMIT 10;
 - Notification shows "auto-refresh enabled"
 
 ✅ **Database**:
+
 - `refresh_token` is NOT NULL
 - `expires_at` is ~1 hour from connection time
 - `access_token` is populated
 
 ✅ **Auto-Refresh**:
+
 - Token refreshes automatically when near expiry
 - No user interaction required
 - Console shows refresh logs
 - New `expires_at` is updated in database
 
 ✅ **Email Operations**:
+
 - Sending emails works
 - Fetching payments works
 - No "Please reconnect" warnings

@@ -3,14 +3,13 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.10.0 - One-Time Schedule Override]</title>
+  <title>ARNOMA - Student Management [v2.7.5 ⏪ Original Buttons]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.10.0" />
-    <meta name="build-timestamp" content="20251121-120000" />
+    <meta name="version" content="2.6.4-redesigned-student-cards" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +92,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.9.1 - Gmail OAuth Refresh Token Support ✅');
+      console.log('✅ ARNOMA v2.7.1 - Clean Round Buttons with Data Attributes ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -1369,29 +1368,30 @@
       /* Student Manager Styles */
       .student-card,
       .student-item {
-        background: rgba(255, 255, 255, 0.05);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 24px;
+        background: linear-gradient(145deg, rgba(26, 32, 44, 0.95), rgba(17, 24, 39, 0.95));
+        border: 1px solid rgba(138, 180, 255, 0.15);
+        border-radius: 16px;
         padding: 0;
-        overflow: hidden;
-        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow:
-          0 8px 32px rgba(0, 0, 0, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(40px);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         display: flex;
         flex-direction: column;
         position: relative;
         z-index: 1;
+        overflow: hidden;
+        box-shadow:
+          0 4px 16px rgba(0, 0, 0, 0.4),
+          inset 0 1px 0 rgba(255, 255, 255, 0.05);
       }
 
       .student-card:hover,
       .student-item:hover {
-        transform: translateY(-8px);
-        box-shadow:
-          0 20px 60px rgba(138, 180, 255, 0.3),
-          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        transform: translateY(-2px);
         border-color: rgba(138, 180, 255, 0.3);
+        box-shadow:
+          0 8px 32px rgba(138, 180, 255, 0.2),
+          0 0 40px rgba(138, 180, 255, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
       }
 
       .student-item.editing {
@@ -1452,11 +1452,12 @@
       /* BEGIN FEATURE 2 - Elite Group Switch Buttons */
       .group-buttons {
         display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        justify-content: center;
-        align-items: center;
+        gap: 8px;
+        justify-content: flex-start;
         margin: 0;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: visible;
         position: relative;
         z-index: 50;
         padding: 2px 0;
@@ -1475,150 +1476,10 @@
         border-radius: 2px;
       }
 
-      /* WHITE EMBOSS BUTTONS - GLASSMORPHISM DESIGN */
-      /* OUTER CIRCLE */
-      .btn-wrapper {
-        --size: 40px;
-        --padding: 5px;
-        --hue: 142deg;
-
-        width: var(--size);
-        height: var(--size);
-        border-radius: 50%;
-        background: #ffffff;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        /* soft background halo */
-        box-shadow:
-          0 10px 22px rgba(0, 0, 0, 0.12),
-          0 4px 10px rgba(0, 0, 0, 0.06),
-          inset 2px 2px 5px rgba(255, 255, 255, 0.8),
-          inset -2px -2px 6px rgba(0, 0, 0, 0.04);
-      }
-
-      /* Active wrapper grows to 50px and adds neon glow */
-      .btn-wrapper:has(.btn.active) {
-        --size: 50px;
-        box-shadow:
-          0 0 15px hsla(var(--hue), 100%, 60%, 0.35),
-          0 0 30px hsla(var(--hue), 100%, 60%, 0.21),
-          0 0 45px hsla(var(--hue), 100%, 60%, 0.1),
-          0 10px 22px rgba(0, 0, 0, 0.12),
-          0 4px 10px rgba(0, 0, 0, 0.06),
-          inset 2px 2px 5px rgba(255, 255, 255, 0.8),
-          inset -2px -2px 6px rgba(0, 0, 0, 0.04);
-      }
-
-      /* Group-specific colors */
-      .btn-wrapper.group-A {
-        --hue: 346deg;
-      } /* Pastel Pink */
-      .btn-wrapper.group-B {
-        --hue: 23deg;
-      } /* Peach/Coral */
-      .btn-wrapper.group-C {
-        --hue: 50deg;
-      } /* Soft Yellow */
-      .btn-wrapper.group-D {
-        --hue: 145deg;
-      } /* Mint Green */
-      .btn-wrapper.group-E {
-        --hue: 204deg;
-      } /* Baby Blue */
-      .btn-wrapper.group-F {
-        --hue: 260deg;
-      } /* Pastel Lavender */
-
-      /* Amount buttons - darker green */
-      .btn-wrapper.amount {
-        --hue: 145deg;
-      }
-      .btn-wrapper.amount .btn.active .btn-txt {
-        background: linear-gradient(180deg, hsla(145, 80%, 40%, 1), hsla(145, 75%, 28%, 1));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        color: transparent;
-        filter: drop-shadow(0 0 7px hsla(145, 80%, 35%, 0.85)) drop-shadow(0 0 12px hsla(145, 75%, 28%, 0.75));
-      }
-
-      /* INNER BUTTON (EMBOSSED) */
-      .btn {
-        width: calc(100% - 2 * var(--padding));
-        height: calc(100% - 2 * var(--padding));
-        border-radius: 50%;
-        border: none;
-        cursor: pointer;
-        background: #f5f5f5;
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-
-        /* ✨ EMBOSS EFFECT HERE ✨ */
-        box-shadow:
-          inset 3px 3px 6px rgba(0, 0, 0, 0.12),
-          /* bottom-right shadow */ inset -3px -3px 7px rgba(255, 255, 255, 0.9),
-          /* top-left highlight */ 0 3px 6px rgba(0, 0, 0, 0.08); /* slight outer lift */
-
-        transition:
-          transform 0.15s ease,
-          box-shadow 0.25s ease;
-      }
-
-      /* TEXT + PERFECT CENTER */
-      .btn-txt {
-        font-size: 18px;
-        font-weight: 700;
-        line-height: 1;
-        display: flex;
-        align-items: center;
-        color: #333;
-        transition: all 0.3s ease;
-      }
-
-      .btn-txt.small {
-        font-size: 13px;
-      }
-
-      /* ACTIVE (CLICK) GLOW + BACKGROUND GLOSS */
-      .btn.active {
-        box-shadow:
-          inset 2px 2px 6px rgba(255, 255, 255, 0.9),
-          inset -4px -4px 12px rgba(0, 0, 0, 0.08),
-          0 0 18px hsla(var(--hue), 80%, 65%, 0.25);
-      }
-
-      .btn.active .btn-txt {
-        background: linear-gradient(180deg, hsla(var(--hue), 100%, 48%, 1), hsla(var(--hue), 90%, 35%, 1));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        color: transparent;
-
-        filter: drop-shadow(0 0 7px hsla(var(--hue), 100%, 48%, 0.95))
-          drop-shadow(0 0 12px hsla(var(--hue), 100%, 38%, 0.85));
-      }
-
-      /* CLICK PRESS */
-      .btn:active {
-        transform: scale(0.96);
-      }
-
       .student-status {
         font-size: 0.85rem;
         opacity: 0.8;
         margin-bottom: 4px;
-      }
-
-      /* Quick View - Today Highlight */
-      .quickview-today-stroke {
-        border: 2px solid rgba(255, 255, 255, 0.65) !important;
-        border-radius: 12px;
-        box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
       }
 
       .price-pill {
@@ -1645,17 +1506,9 @@
       }
 
       .status-active {
-        background: rgba(76, 175, 80, 0.25);
-        border: 2px solid #4caf50;
-        color: #5eff6c;
-        text-shadow:
-          0 0 10px rgba(94, 255, 108, 0.5),
-          0 0 20px rgba(94, 255, 108, 0.32);
-        box-shadow:
-          0 0 15px rgba(76, 175, 80, 0.38),
-          0 0 30px rgba(76, 175, 80, 0.25),
-          0 0 45px rgba(76, 175, 80, 0.13),
-          inset 0 0 10px rgba(94, 255, 108, 0.13);
+        background: rgba(76, 175, 80, 0.15);
+        border-color: rgba(76, 175, 80, 0.4);
+        color: #4caf50;
       }
 
       .status-active:hover {
@@ -1729,10 +1582,6 @@
       input:checked + .slider {
         background-color: #8ab4ff;
         border-color: #8ab4ff;
-        box-shadow:
-          0 0 10px hsla(145, 100%, 50%, 0.5),
-          0 0 20px hsla(145, 100%, 50%, 0.3),
-          0 0 30px hsla(145, 100%, 50%, 0.15);
       }
 
       input:checked + .slider:before {
@@ -2675,34 +2524,41 @@
 
     <!-- Main App Container (hidden until authenticated) -->
     <div id="mainApp" style="display: none">
-      <!-- ========== CANCEL CLASS DIALOG ========== -->
+      <!-- ========== SKIP CLASS DIALOG ========== -->
       <div id="skipClassOverlay"></div>
       <div id="skipClassDialog">
         <div class="dialog-header">
           <span>⚠️</span>
-          <span>Cancel Class Session</span>
+          <span>Skip Class Session</span>
         </div>
-        <div class="dialog-message">Are you sure you want to cancel this class for all students?</div>
+        <div class="dialog-message">What would you like to do with this class?</div>
         <div class="dialog-class-info">
           <div class="dialog-class-name" id="skipDialogClassName"></div>
           <div class="dialog-class-time" id="skipDialogClassTime"></div>
         </div>
         <div class="dialog-warning">ℹ️ Payments will automatically roll over to the next scheduled class.</div>
-        <div class="dialog-actions" style="display: flex; gap: 12px; justify-content: center">
+        <div class="dialog-actions" style="display: flex; gap: 8px; justify-content: center">
           <button
             class="dialog-btn dialog-btn-cancel"
             id="skipDialogCancelBtn"
-            style="flex: 0 0 auto; min-width: 120px"
+            style="flex: 0 0 auto; min-width: 100px"
           >
             Cancel
           </button>
           <button
+            class="dialog-btn dialog-btn-confirm"
+            id="skipDialogConfirmBtn"
+            style="flex: 0 0 auto; min-width: 120px"
+          >
+            Skip Class
+          </button>
+          <button
             class="dialog-btn"
             id="cancelClassBtn"
-            onclick="window.SkipClassManager.confirmCancelClass()"
+            onclick="confirmCancelClass()"
             style="
               flex: 0 0 auto;
-              min-width: 180px;
+              min-width: 160px;
               background: linear-gradient(135deg, #ef4444, #dc2626);
               border: 1px solid rgba(239, 68, 68, 0.4);
             "
@@ -2711,7 +2567,7 @@
           </button>
         </div>
       </div>
-      <!-- ========== END CANCEL CLASS DIALOG ========== -->
+      <!-- ========== END SKIP CLASS DIALOG ========== -->
 
       <!-- ========== BEGIN NOTIFICATION CENTER PANEL ========== -->
       <!-- Notification Center Overlay -->
@@ -5174,7 +5030,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              🔄 ARNOMA v2.9.1 - Gmail OAuth Auto-Refresh 🔄
+              ⏪ ARNOMA v2.7.5 - Original Buttons Restored ⏪
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -6467,7 +6323,7 @@
             payPerClass: record.price_per_class ?? record.payPerClass ?? null,
             balance: record.balance ?? 0,
             status: normalizeStudentStatusValue(record.status),
-            showInGrid: record.show_in_grid ?? record.showInGrid ?? true, // Default true only for legacy records
+            showInGrid: record.show_in_grid ?? record.showInGrid ?? true,
             isActive: record.is_active ?? record.isActive ?? true,
             statusChangedDate: record.status_changed_date ?? record.statusChangedDate ?? null,
             created_at: record.created_at ?? null, // Preserve creation timestamp for calendar logic
@@ -6536,13 +6392,10 @@
           if (studentData.phone) payload.phone = studentData.phone;
           if (studentData.notes) payload.notes = studentData.notes;
 
-          // Save show_in_grid to Supabase (controls calendar visibility)
-          if (typeof studentData.showInGrid === 'boolean') {
-            payload.show_in_grid = studentData.showInGrid;
-            console.log('✅ Adding show_in_grid to payload:', payload.show_in_grid);
-          } else {
-            console.warn('⚠️ showInGrid is not a boolean:', typeof studentData.showInGrid, studentData.showInGrid);
-          }
+          // NOTE: show_in_grid and is_active are NOT in Supabase schema
+          // They are only used locally in the frontend
+          // if (typeof studentData.showInGrid === 'boolean') payload.show_in_grid = studentData.showInGrid;
+          // if (typeof studentData.isActive === 'boolean') payload.is_active = studentData.isActive;
 
           // Handle aliases - convert array to delimited string using ||| separator
           // This prevents aliases with commas (like "Company, Inc.") from being split incorrectly
@@ -6563,8 +6416,6 @@
           if (payload.id) {
             delete payload.id;
           }
-
-          console.log('📤 Supabase payload:', isUpdate ? 'UPDATE' : 'INSERT', payload);
 
           try {
             let result;
@@ -6658,8 +6509,6 @@
             name: group.group_name,
             schedule: group.schedule,
             color: group.color,
-            active: group.active ?? true, // Default true for legacy records
-            one_time_schedules: group.one_time_schedules || [],
             created_at: group.created_at,
             updated_at: group.updated_at,
           }));
@@ -6692,16 +6541,6 @@
             schedule: groupData.schedule,
             color: groupData.color,
           };
-
-          // Save active field if provided
-          if (typeof groupData.active === 'boolean') {
-            payload.active = groupData.active;
-          }
-
-          // Save one-time schedules if provided
-          if (groupData.one_time_schedules !== undefined) {
-            payload.one_time_schedules = groupData.one_time_schedules;
-          }
 
           // Track old schedule for email notification
           let oldSchedule = null;
@@ -8344,43 +8183,12 @@
               // Save refreshed token
               saveGmailConnection(access_token, expiresIn);
               debugLog('✅ Gmail token refreshed successfully');
-              debugLog('New expiry:', new Date(expires_at).toLocaleString());
 
               return true;
             } catch (error) {
               console.error('❌ Token refresh failed:', error);
 
-              // Token refresh failed - try to fetch current token from DB
-              debugLog('🔄 Attempting to fetch token from database...');
-
-              try {
-                const fetchResponse = await fetch(`${SUPABASE_URL}/functions/v1/gmail-get-token`, {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-                  },
-                  body: JSON.stringify({ userId: 'admin' }),
-                });
-
-                if (fetchResponse.ok) {
-                  const data = await fetchResponse.json();
-
-                  if (data.success && !data.expired) {
-                    gmailAccessToken = data.access_token;
-                    gmailTokenExpiry = new Date(data.expires_at).getTime();
-
-                    saveGmailConnection(data.access_token, Math.floor((gmailTokenExpiry - Date.now()) / 1000));
-                    debugLog('✅ Token fetched from database');
-
-                    return true;
-                  }
-                }
-              } catch (fetchError) {
-                console.error('❌ Failed to fetch token from database:', fetchError);
-              }
-
-              // Both refresh and fetch failed - need to re-authenticate
+              // Token refresh failed - need to re-authenticate
               gmailAccessToken = null;
               localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
               localStorage.removeItem(STORAGE_KEYS.GMAIL_EXPIRY);
@@ -10228,7 +10036,12 @@
               const paymentDate = payment.emailDate || payment.transactionDate || payment.createdAt;
               const currentBalance = parseFloat(student.balance) || 0;
 
-              const emailResult = await sendPaymentReceiptEmail(student, paymentAmount, paymentDate, currentBalance);
+              const emailResult = await sendPaymentReceiptEmail(
+                student,
+                paymentAmount,
+                paymentDate,
+                currentBalance
+              );
 
               if (emailResult.success) {
                 showNotification(`📧 Payment receipt sent to ${student.email}`, 'success');
@@ -10687,44 +10500,9 @@
         // NOTIFICATIONS SYSTEM
         // ============================================================================
 
-        // Global notification system (toast notifications)
+        // Notification stub (removed notification center)
         function showNotification(message, type = 'info') {
-          // Create notification element
-          const notification = document.createElement('div');
-
-          const colors = {
-            success: 'rgba(34, 197, 94, 0.95)',
-            error: 'rgba(239, 68, 68, 0.95)',
-            warning: 'rgba(251, 191, 36, 0.95)',
-            info: 'rgba(59, 130, 246, 0.95)',
-          };
-
-          notification.style.cssText = `
-            position: fixed;
-            top: 80px;
-            right: 20px;
-            background: ${colors[type] || colors.info};
-            color: white;
-            padding: 16px 24px;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-            z-index: 100003;
-            font-size: 14px;
-            font-weight: 500;
-            animation: slideInRight 0.3s ease-out;
-            max-width: 350px;
-          `;
-          notification.textContent = message;
-
-          document.body.appendChild(notification);
-
-          // Auto-remove after 3 seconds
-          setTimeout(() => {
-            notification.style.opacity = '0';
-            notification.style.transform = 'translateX(400px)';
-            notification.style.transition = 'all 0.3s ease-out';
-            setTimeout(() => notification.remove(), 300);
-          }, 3000);
+          const icon = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' }[type] || 'ℹ️';
         }
 
         // ============================================================================
@@ -11991,17 +11769,14 @@
           grid.innerHTML = '';
           const activeStudents = students.filter(s => s.isActive !== false);
 
-          // Populate group filter dropdown - only show active groups
-          const activeGroups = window.groupsCache?.filter(g => g.active !== false) || [];
+          // Populate group filter dropdown
           const uniqueGroups = [...new Set(activeStudents.map(s => s.group).filter(g => g))].sort();
-          // Filter to only include groups that are active
-          const visibleUniqueGroups = uniqueGroups.filter(groupName => activeGroups.some(g => g.name === groupName));
           const groupFilter = document.getElementById('filterGroup');
           if (groupFilter) {
             groupFilter.innerHTML =
               '<option value="">All Groups</option>' +
               '<option value="no-group">No Group</option>' +
-              visibleUniqueGroups.map(g => `<option value="${escapeHtml(g)}">Group ${escapeHtml(g)}</option>`).join('');
+              uniqueGroups.map(g => `<option value="${escapeHtml(g)}">Group ${escapeHtml(g)}</option>`).join('');
           }
 
           // Sort students
@@ -12108,8 +11883,7 @@
           card.setAttribute('data-balance', student.balance || 0);
 
           const statusDetails = getStatusDetails(student.status);
-          // Respect the exact saved value - default to true only if undefined/null (legacy records)
-          const showInGrid = student.showInGrid ?? true;
+          const showInGrid = student.showInGrid !== false;
           const aliases =
             student.aliases && typeof student.aliases === 'string'
               ? student.aliases
@@ -12166,21 +11940,13 @@
               <span style="font-size: 11px; color: rgba(200, 181, 255, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Switch Group</span>
               <span style="font-size: 10px; color: rgba(200, 181, 255, 0.5); font-weight: 600;">Current: ${escapeHtml(student.group || 'N/A')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
-              ${(() => {
-                const activeGroups = (window.groupsCache || []).filter(g => g.active !== false).map(g => g.name);
-                return ['A', 'B', 'C', 'D', 'E', 'F']
-                  .filter(g => activeGroups.includes(g))
-                  .map(
-                    g =>
-                      `<div class="btn-wrapper group-${g}">
-                        <button class="btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">
-                          <span class="btn-txt">${g}</span>
-                        </button>
-                      </div>`
-                  )
-                  .join('');
-              })()}
+            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
+              ${['A', 'B', 'C', 'D', 'E', 'F']
+                .map(
+                  g =>
+                    `<button class="group-btn ${(student.group || '').toUpperCase() === g ? 'active' : ''}" onclick="changeStudentGroup('${student.id}', '${g}')" title="Switch to Group ${g}">${g}</button>`
+                )
+                .join('')}
             </div>
           </div>
 
@@ -12190,15 +11956,11 @@
               <span style="font-size: 11px; color: rgba(174, 203, 250, 0.8); font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">Set Pay Amount</span>
               <span style="font-size: 10px; color: rgba(174, 203, 250, 0.5); font-weight: 600;">Current: ${formatCurrency(student.payPerClass || 0, '$')}</span>
             </div>
-            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div class="group-buttons" onclick="event.stopPropagation()" style="display: flex; justify-content: center; align-items: center; gap: 8px; flex-wrap: wrap;">
               ${[25, 50, 75, 100]
                 .map(
                   amount =>
-                    `<div class="btn-wrapper amount">
-                      <button class="btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})" title="Set pay to $${amount}">
-                        <span class="btn-txt small">$${amount}</span>
-                      </button>
-                    </div>`
+                    `<button class="group-btn ${Number(student.payPerClass) === amount ? 'active' : ''}" onclick="changeStudentPayAmount('${student.id}', ${amount})" title="Set pay to $${amount}">$${amount}</button>`
                 )
                 .join('')}
             </div>
@@ -12240,6 +12002,7 @@
 
           <!-- Footer -->
           <div style="text-align: center; padding: 12px; color: rgba(138, 180, 255, 0.35); font-size: 11px; font-style: italic; background: rgba(0, 0, 0, 0.1);">
+            Click anywhere to edit
           </div>
         </div>
 
@@ -12474,9 +12237,9 @@
           // Update group button active states (buttons A-F)
           const allButtonContainers = card.querySelectorAll('.group-buttons');
           allButtonContainers.forEach(container => {
-            const buttons = container.querySelectorAll('.btn');
+            const buttons = container.querySelectorAll('.group-btn');
             buttons.forEach(btn => {
-              const btnText = btn.querySelector('.btn-txt')?.textContent.trim() || btn.textContent.trim();
+              const btnText = btn.textContent.trim();
 
               // Check if this is a group button (single letter A-F)
               if (btnText.length === 1 && /[A-F]/.test(btnText)) {
@@ -12908,42 +12671,17 @@
         }
 
         async function toggleVisibility(studentId, visible) {
-          console.log('🔄 toggleVisibility called:', { studentId, visible });
-
           // Handle both string and numeric IDs from Supabase
           const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
-          if (!student) {
-            console.error('❌ Student not found:', studentId);
-            return;
-          }
-
-          console.log('📝 Before update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
+          if (!student) return;
 
           student.showInGrid = visible;
 
-          console.log('📝 After update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
+          // Save only this student to Supabase
+          await saveStudent(student);
 
-          // Save to Supabase
-          const result = await saveStudent(student);
-
-          if (!result) {
-            console.error('❌ Failed to save student visibility');
-            showNotificationSimple('Failed to update visibility', 'error');
-            return;
-          }
-
-          console.log('✅ Saved to Supabase:', result);
-
-          // Update cache and invalidate TTL
+          // Update cache
           window.studentsCache = students;
-          window.studentsCacheTimestamp = Date.now();
-
-          // Dispatch event for calendar refresh
-          window.dispatchEvent(
-            new CustomEvent('students:updated', {
-              detail: { source: 'toggle-visibility' },
-            })
-          );
 
           showNotificationSimple(visible ? 'Student shown in calendar' : 'Student hidden from calendar', 'success');
         }
@@ -12964,14 +12702,6 @@
 
           // Clear group selections
           document.querySelectorAll('.group-select-btn').forEach(btn => btn.classList.remove('selected'));
-
-          // Hide inactive group buttons
-          const activeGroups = (window.groupsCache || []).filter(g => g.active !== false);
-          document.querySelectorAll('.group-select-btn').forEach(btn => {
-            const groupLetter = btn.textContent.trim();
-            const isActive = activeGroups.some(g => g.name === groupLetter);
-            btn.style.display = isActive ? 'inline-block' : 'none';
-          });
 
           // Clear pay amount selections
           document.querySelectorAll('.pay-select-btn').forEach(btn => {
@@ -14656,14 +14386,9 @@
           sortedGroups.forEach(group => {
             const card = document.createElement('div');
             card.className = 'group-card';
-            const isActive = group.active ?? true;
             card.innerHTML = `
-          <div class="group-title" style="display: flex; justify-content: space-between; align-items: center;">
+          <div class="group-title">
             <span>${escapeHtml(group.name)}</span>
-            <label class="mini-toggle" title="${isActive ? 'Group visible' : 'Group hidden'}" onclick="event.stopPropagation()" style="margin: 0;">
-              <input type="checkbox" ${isActive ? 'checked' : ''} onchange="toggleGroupVisibility('${escapeHtml(group.name)}', this.checked)">
-              <span class="slider"></span>
-            </label>
           </div>
           <div class="schedule-display">
             ${group.schedule ? renderScheduleSlots(group.schedule) : '<em style="color:#94a3b8;font-size:0.9rem;">No schedule set</em>'}
@@ -14758,27 +14483,6 @@
           renderGroups();
         }
 
-        // ===== TOGGLE GROUP VISIBILITY =====
-        async function toggleGroupVisibility(groupName, visible) {
-          const group = groups.find(g => g.name === groupName);
-          if (!group) return;
-
-          group.active = visible;
-
-          // Save to Supabase
-          await saveGroup(group);
-
-          // Update cache and invalidate TTL
-          window.groupsCache = groups;
-          window.groupsCacheTimestamp = Date.now();
-
-          // Dispatch events for UI updates
-          window.dispatchEvent(new CustomEvent('groups:updated', { detail: groups }));
-          window.dispatchEvent(new CustomEvent('schedules:updated', { detail: groups }));
-
-          showToast(visible ? '✅ Group visible' : '👁️‍🗨️ Group hidden');
-        }
-
         // ===== EDIT SCHEDULE =====
         function editGroupSchedule(groupName) {
           const grid = document.getElementById('groupGrid');
@@ -14809,17 +14513,10 @@
           const container = editor.querySelector('#scheduleItems');
           const slots = group.schedule ? parseSchedule(group.schedule) : [{ day: 'Monday', time: '10:00 AM' }];
           slots.forEach(s => addScheduleItem(s.day, s.time, container));
-
-          // Add one-time schedule overrides if they exist
-          if (group.one_time_schedules && Array.isArray(group.one_time_schedules)) {
-            group.one_time_schedules.forEach(override => {
-              addScheduleItem(override.day, override.time, container, true, override.date);
-            });
-          }
         }
 
         // ===== ADD SCHEDULE ITEM =====
-        function addScheduleItem(day = 'Monday', time = '10:00 AM', container, isOneTime = false, overrideDate = '') {
+        function addScheduleItem(day = 'Monday', time = '10:00 AM', container) {
           const c = container || document.querySelector('#scheduleItems');
           if (!c) return;
 
@@ -14833,28 +14530,9 @@
           ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => `<option ${d === day ? 'selected' : ''}>${d}</option>`).join('')}
         </select>
         <input type="time" value="${time24}" style="flex:1;" onkeydown="if(event.key==='Enter'){event.target.closest('.group-card').querySelector('button[onclick*=saveScheduleEdit]').click();}">
-        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.8);">
-          <input type="checkbox" class="one-time-checkbox" ${isOneTime ? 'checked' : ''} onchange="toggleOneTimeDate(this)">
-          One-Time Only
-        </label>
-        <input type="date" class="one-time-date" value="${overrideDate}" style="flex:1; display: ${isOneTime ? 'block' : 'none'};" placeholder="Override Date">
         <button onclick="this.parentElement.remove()">🗑️</button>
       `;
           c.appendChild(div);
-        }
-
-        // ===== TOGGLE ONE-TIME DATE INPUT =====
-        function toggleOneTimeDate(checkbox) {
-          const row = checkbox.closest('.slot-row');
-          const dateInput = row.querySelector('.one-time-date');
-          if (dateInput) {
-            dateInput.style.display = checkbox.checked ? 'block' : 'none';
-            if (checkbox.checked && !dateInput.value) {
-              // Set default date to today if not already set
-              const today = new Date();
-              dateInput.value = formatDateYYYYMMDD(today);
-            }
-          }
         }
 
         // ===== CONVERT 12H AM/PM TO 24H =====
@@ -14904,42 +14582,15 @@
           if (!card) return;
 
           const rows = card.querySelectorAll('.slot-row');
-          let schedule = []; // Regular recurring schedule
-          let oneTimeSchedules = []; // One-time schedule overrides
+          let schedule = []; // Clear and rebuild schedule array
 
           rows.forEach(r => {
             const d = r.querySelector('select').value.slice(0, 3);
-            const t = r.querySelector('input[type="time"]').value;
-            const isOneTime = r.querySelector('.one-time-checkbox')?.checked || false;
-            const overrideDate = r.querySelector('.one-time-date')?.value || '';
-
+            const t = r.querySelector('input').value;
             if (d && t) {
               // Convert 24-hour time to 12-hour AM/PM format
               const time12 = convert24to12(t);
-
-              if (isOneTime && overrideDate) {
-                // This is a one-time override
-                const dayMap = {
-                  Mon: 'Monday',
-                  Tue: 'Tuesday',
-                  Wed: 'Wednesday',
-                  Thu: 'Thursday',
-                  Fri: 'Friday',
-                  Sat: 'Saturday',
-                  Sun: 'Sunday',
-                };
-                const fullDayName = dayMap[d] || d;
-
-                oneTimeSchedules.push({
-                  date: overrideDate,
-                  day: fullDayName,
-                  time: time12,
-                  oneTime: true,
-                });
-              } else {
-                // Regular recurring schedule
-                schedule.push(`${d} ${time12}`);
-              }
+              schedule.push(`${d} ${time12}`);
             }
           });
 
@@ -14955,13 +14606,11 @@
             group: groupName,
             oldSchedule: oldSchedule,
             newSchedule: newSchedule,
-            oneTimeSchedules: oneTimeSchedules,
             changed: scheduleChanged,
           });
 
           // CRITICAL FIX: Replace old schedule entirely (no appending)
           group.schedule = newSchedule;
-          group.one_time_schedules = oneTimeSchedules;
 
           // Save only this group (not all groups)
           const savedGroup = await saveGroup(group);
@@ -15731,13 +15380,12 @@
           if (!contentEl) return;
 
           try {
-            // Load groups from Supabase cache - only show active groups
-            const allGroups = window.groupsCache || window.globalData?.groups || [];
-            const groupsData = allGroups.filter(g => g.active !== false);
+            // Load groups from Supabase cache
+            const groupsData = window.groupsCache || window.globalData?.groups || [];
 
             if (!Array.isArray(groupsData) || groupsData.length === 0) {
               contentEl.innerHTML =
-                '<div style="text-align: center; padding: 60px; color: rgba(255,255,255,0.5); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">📚</div><p>No active groups found.<br>Add groups in Group Manager to see schedules here.</p></div>';
+                '<div style="text-align: center; padding: 60px; color: rgba(255,255,255,0.5); font-size: 16px;"><div style="font-size: 64px; margin-bottom: 16px;">📚</div><p>No groups found.<br>Add groups in Group Manager to see schedules here.</p></div>';
               return;
             }
 
@@ -15814,20 +15462,11 @@
                 });
               });
 
-              // Get today's weekday in LA timezone
-              const todayLA = new Date().toLocaleString('en-US', {
-                timeZone: 'America/Los_Angeles',
-                weekday: 'long',
-              });
-
               html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
               weekdays.forEach(day => {
                 const sessions = daySchedule[day] || [];
-                const isTodayLA = day === todayLA;
-                const todayClass = isTodayLA ? ' quickview-today-stroke' : '';
-
                 html += `
-              <div class="${todayClass}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
                 <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                   ${
@@ -15954,20 +15593,11 @@
                 });
               });
 
-              // Get today's weekday in Yerevan timezone
-              const todayYerevan = new Date().toLocaleString('en-US', {
-                timeZone: 'Asia/Yerevan',
-                weekday: 'long',
-              });
-
               html = '<div style="display: flex; flex-direction: column; gap: 24px;">';
               weekdays.forEach(day => {
                 const sessions = daySchedule[day] || [];
-                const isTodayYerevan = day === todayYerevan;
-                const todayClass = isTodayYerevan ? ' quickview-today-stroke' : '';
-
                 html += `
-              <div class="${todayClass}" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
+              <div style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 18px;">
                 <div style="font-size: 20px; font-weight: 700; color: white; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px;">${day}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                   ${
@@ -17697,10 +17327,15 @@
 
             // Attach button event listeners
             const cancelBtn = document.getElementById('skipDialogCancelBtn');
+            const confirmBtn = document.getElementById('skipDialogConfirmBtn');
             const overlay = document.getElementById('skipClassOverlay');
 
             if (cancelBtn) {
               cancelBtn.addEventListener('click', cancelSkip);
+            }
+
+            if (confirmBtn) {
+              confirmBtn.addEventListener('click', confirmSkip);
             }
 
             if (overlay) {
@@ -17780,7 +17415,6 @@
             cancelClass,
             unskipClass,
             confirmSkip,
-            confirmCancelClass,
             cancelSkip,
             findNextActiveClassDate,
             getSkippedClasses: () => ({ ...skippedClasses }),
@@ -18803,11 +18437,10 @@
             return;
           }
 
-          // Get all notifications using the public API
-          const allNotifications = window.NotificationCenter.getAll();
+          // Clear all notifications
+          const allNotifications = window.NotificationCenter._notifications || [];
           console.log(`[NotificationCenter] Deleting ${allNotifications.length} notifications...`);
 
-          // Delete each notification
           for (const notif of allNotifications) {
             await window.NotificationCenter.delete(notif.id);
           }
@@ -18818,7 +18451,7 @@
           await window.NotificationCenter.initialize();
           renderNotifications();
 
-          showNotification('🗑️ All notifications cleared', 'success');
+          showNotificationSimple('🗑️ All notifications cleared', 'success');
         }
 
         function renderNotifications() {
@@ -19338,11 +18971,10 @@
           const groups = window.groupsCache || window.globalData?.groups || [];
           const payments = PaymentStore.getAll();
 
-          // Filter active students who are shown in calendar
+          // Filter active students
           const activeStudents = students.filter(s => {
             const status = (s.status || 'active').toLowerCase();
-            const showInGrid = s.showInGrid ?? s.show_in_grid ?? true;
-            return status === 'active' && s.isActive !== false && showInGrid === true;
+            return status === 'active' && s.isActive !== false;
           });
 
           // Map students to their schedules
@@ -19356,10 +18988,13 @@
             const group = groups.find(g => g.name === groupName);
             if (!group || !group.schedule) return;
 
+            // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
+            const scheduleDays = parseScheduleDays(group.schedule);
+
             if (!scheduleMap[student.id]) {
               scheduleMap[student.id] = {
                 student: student,
-                group: group, // Store the full group object for one-time schedule checks
+                scheduleDays: scheduleDays,
                 pricePerClass: parseFloat(student.payPerClass) || 0,
               };
             }
@@ -19374,15 +19009,11 @@
             const date = new Date(year, month, day);
             const dayOfWeek = date.getDay();
             const dayName = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'][dayOfWeek];
-            const dateStr = formatDateYYYYMMDD(date);
 
             // Check which students have class on this day
             const studentsWithClass = [];
 
-            Object.values(scheduleMap).forEach(({ student, group, pricePerClass }) => {
-              // Get schedule for this specific date (checks one-time overrides first)
-              const scheduleDays = getScheduleForDate(group, dateStr);
-
+            Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
               if (scheduleDays.includes(dayName)) {
                 // FILTER: Only show classes on or after student's creation date
                 const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
@@ -19486,10 +19117,13 @@
             const group = groups.find(g => g.name === groupName);
             if (!group || !group.schedule) return;
 
+            // Parse schedule (e.g., "Monday 8:00 PM, Wednesday 8:00 PM")
+            const scheduleDays = parseScheduleDays(group.schedule);
+
             if (!scheduleMap[student.id]) {
               scheduleMap[student.id] = {
                 student: student,
-                group: group, // Store the full group object for one-time schedule checks
+                scheduleDays: scheduleDays,
                 pricePerClass: parseFloat(student.payPerClass) || 0,
               };
             }
@@ -19497,10 +19131,7 @@
 
           // Check which students have class on this day
           const studentsWithClass = [];
-          Object.values(scheduleMap).forEach(({ student, group, pricePerClass }) => {
-            // Get schedule for this specific date (checks one-time overrides first)
-            const scheduleDays = getScheduleForDate(group, dateStr);
-
+          Object.values(scheduleMap).forEach(({ student, scheduleDays, pricePerClass }) => {
             if (scheduleDays.includes(dayName)) {
               // FILTER: Only show classes on or after student's creation date
               const studentCreatedAt = student.created_at ? new Date(student.created_at) : null;
@@ -19599,60 +19230,6 @@
           });
 
           return days;
-        }
-
-        // ===== CHECK FOR ONE-TIME SCHEDULE OVERRIDE =====
-        function getScheduleForDate(group, dateStr) {
-          // Check if there's a one-time schedule override for this specific date
-          if (group.one_time_schedules && Array.isArray(group.one_time_schedules)) {
-            // Filter out expired one-time schedules (dates before today)
-            const today = formatDateYYYYMMDD(new Date());
-            const activeOverrides = group.one_time_schedules.filter(override => override.date >= today);
-
-            // Find override for this specific date
-            const oneTimeOverride = activeOverrides.find(override => override.date === dateStr);
-            if (oneTimeOverride) {
-              // Return the one-time schedule day
-              return [oneTimeOverride.day];
-            }
-          }
-
-          // Fall back to regular recurring schedule
-          return parseScheduleDays(group.schedule);
-        }
-
-        // ===== CLEANUP EXPIRED ONE-TIME SCHEDULES =====
-        async function cleanupExpiredOneTimeSchedules() {
-          const groups = window.groupsCache || [];
-          const today = formatDateYYYYMMDD(new Date());
-          let cleaned = false;
-
-          for (const group of groups) {
-            if (group.one_time_schedules && Array.isArray(group.one_time_schedules)) {
-              const originalCount = group.one_time_schedules.length;
-
-              // Filter out expired one-time schedules
-              const activeOverrides = group.one_time_schedules.filter(override => override.date >= today);
-
-              if (activeOverrides.length < originalCount) {
-                // Some schedules were expired, update the group
-                group.one_time_schedules = activeOverrides;
-                await saveGroup(group);
-                cleaned = true;
-                debugLog(
-                  `🧹 Cleaned ${originalCount - activeOverrides.length} expired one-time schedules from group ${group.name}`
-                );
-              }
-            }
-          }
-
-          if (cleaned) {
-            // Reload groups from Supabase to ensure consistency
-            await loadGroupsFromSupabase();
-            window.dispatchEvent(new CustomEvent('groups:updated', { detail: window.groupsCache }));
-          }
-
-          return cleaned;
         }
 
         function checkPaymentStatus(student, classDate, pricePerClass, payments) {
@@ -22863,7 +22440,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.10.0 - One-Time Schedule Override ✅');
+          console.log('✅ ARNOMA v2.7.5 - Original Buttons Restored ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
@@ -22913,15 +22490,6 @@
           runTask(() => setTimeout(initializePreferenceSync, 1000));
           runTask(() => setTimeout(initializeGmailSystems, 1200));
           runTask(() => setTimeout(initializeEmailAutomation, 1500));
-
-          // Cleanup expired one-time schedules on startup and daily
-          runTask(() =>
-            setTimeout(async () => {
-              await cleanupExpiredOneTimeSchedules();
-              // Run cleanup once per day (24 hours)
-              setInterval(cleanupExpiredOneTimeSchedules, 24 * 60 * 60 * 1000);
-            }, 2000)
-          );
           runTask(() => setTimeout(initializeAutomationManagers, 2000)); // Last priority
 
           // Calendar and other heavy UI sections lazy load when tabs are opened

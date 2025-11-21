@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hyper Modern Header - ARNOMA</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --dark-bg: #0a0a1f;
+        --card-bg: rgba(255, 255, 255, 0.04);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.65);
+        --shadow-glow: 0 8px 32px 0 rgba(102, 126, 234, 0.37);
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: var(--dark-bg);
+        min-height: 100vh;
+        padding: 0;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* Animated background gradient */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.2) 0%, transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.18) 0%, transparent 50%),
+          radial-gradient(circle at 40% 90%, rgba(79, 172, 254, 0.12) 0%, transparent 50%);
+        animation: gradientShift 20s ease infinite;
+        z-index: -1;
+      }
+
+      @keyframes gradientShift {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1) rotate(0deg);
+        }
+        50% {
+          opacity: 0.85;
+          transform: scale(1.15) rotate(2deg);
+        }
+      }
+
+      .demo-wrapper {
+        max-width: 1400px;
+        margin: 60px auto;
+        padding: 0 20px;
+      }
+
+      .demo-label {
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        margin-bottom: 30px;
+        opacity: 0.7;
+      }
+
+      /* ============================================
+         HYPER MODERN HEADER
+         ============================================ */
+
+      .hyper-header {
+        position: relative;
+        background: rgba(13, 17, 43, 0.75);
+        backdrop-filter: blur(40px);
+        -webkit-backdrop-filter: blur(40px);
+        border: 1px solid var(--card-border);
+        border-radius: 28px;
+        padding: 32px 36px;
+        overflow: hidden;
+        box-shadow:
+          var(--shadow-glow),
+          0 20px 60px rgba(0, 0, 0, 0.6),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .hyper-header:hover {
+        transform: translateY(-2px);
+        box-shadow:
+          0 0 20px rgba(102, 126, 234, 0.5),
+          0 25px 70px rgba(0, 0, 0, 0.7),
+          inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      }
+
+      .hyper-header.expanded {
+        cursor: default;
+        transform: translateY(0);
+      }
+
+      /* Animated corner accents */
+      .hyper-header::before,
+      .hyper-header::after {
+        content: '';
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.4;
+        animation: pulse 8s ease-in-out infinite;
+      }
+
+      .hyper-header::before {
+        top: -80px;
+        right: -80px;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(118, 75, 162, 0.6), transparent);
+      }
+
+      .hyper-header::after {
+        bottom: -60px;
+        left: -60px;
+        width: 180px;
+        height: 180px;
+        background: radial-gradient(circle, rgba(79, 172, 254, 0.5), transparent);
+        animation-delay: 4s;
+      }
+
+      @keyframes pulse {
+        0%,
+        100% {
+          transform: scale(1);
+          opacity: 0.4;
+        }
+        50% {
+          transform: scale(1.2);
+          opacity: 0.6;
+        }
+      }
+
+      /* Top accent line */
+      .hyper-header-accent {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--primary-gradient);
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+      }
+
+      /* Header Grid Layout */
+      .hyper-header-grid {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        gap: 32px;
+        align-items: center;
+      }
+
+      /* ============================================
+         LEFT SECTION: Avatar + Identity
+         ============================================ */
+
+      .header-identity {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .avatar-container {
+        position: relative;
+      }
+
+      /* Orbital ring animation */
+      .avatar-orbit {
+        position: absolute;
+        inset: -10px;
+        border-radius: 28px;
+        border: 2px solid transparent;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.6), rgba(118, 75, 162, 0.4)) border-box;
+        -webkit-mask:
+          linear-gradient(#fff 0 0) padding-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        animation: rotate 12s linear infinite;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .avatar-main {
+        position: relative;
+        width: 88px;
+        height: 88px;
+        border-radius: 24px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2rem;
+        font-weight: 800;
+        color: white;
+        box-shadow:
+          0 12px 30px rgba(102, 126, 234, 0.5),
+          inset 0 2px 4px rgba(255, 255, 255, 0.2);
+        border: 3px solid rgba(255, 255, 255, 0.15);
+      }
+
+      /* Status badge on avatar */
+      .avatar-status-badge {
+        position: absolute;
+        bottom: -6px;
+        right: -6px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--success-gradient);
+        border: 4px solid rgba(13, 17, 43, 0.95);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+        animation: statusPulse 3s ease-in-out infinite;
+      }
+
+      /* Paused status badge */
+      .avatar-status-badge.paused {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.6);
+        animation: statusPulsePaused 3s ease-in-out infinite;
+      }
+
+      /* Graduated status badge */
+      .avatar-status-badge.graduated {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+        animation: statusPulseGraduated 3s ease-in-out infinite;
+      }
+
+      @keyframes statusPulse {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+        }
+        50% {
+          transform: scale(1.1);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.9);
+        }
+      }
+
+      @keyframes statusPulsePaused {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 12px rgba(251, 191, 36, 0.6);
+        }
+        50% {
+          transform: scale(1.1);
+          box-shadow: 0 6px 20px rgba(251, 191, 36, 0.9);
+        }
+      }
+
+      @keyframes statusPulseGraduated {
+        0%,
+        100% {
+          transform: scale(1);
+          box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+        }
+        50% {
+          transform: scale(1.1);
+          box-shadow: 0 6px 20px rgba(139, 92, 246, 0.9);
+        }
+      }
+
+      .identity-info {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .identity-label {
+        font-size: 0.7rem;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 600;
+      }
+
+      .identity-name {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        pointer-events: none;
+      }
+
+      .identity-name input {
+        border: none;
+        outline: none;
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.8) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        line-height: 1.2;
+        width: 100%;
+        pointer-events: auto;
+        display: none;
+      }
+
+      .hyper-header.editing .identity-name input {
+        display: block;
+      }
+
+      .hyper-header.editing .identity-name span:first-child {
+        display: none;
+      }
+
+      .verified-badge {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: var(--success-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.75rem;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+        transition: all 0.3s ease;
+      }
+
+      /* Paused status verified badge */
+      .verified-badge.paused {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.6);
+      }
+
+      /* Graduated status verified badge */
+      .verified-badge.graduated {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+      }
+
+      .identity-meta {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+
+      .meta-badge {
+        padding: 6px 14px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+      }
+
+      .meta-badge.group {
+        background: rgba(102, 126, 234, 0.25);
+        border: 1px solid rgba(102, 126, 234, 0.4);
+        color: #c7d2fe;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+      }
+
+      .meta-badge.group:hover {
+        background: rgba(102, 126, 234, 0.35);
+        box-shadow: 0 6px 24px rgba(102, 126, 234, 0.5);
+        transform: translateY(-2px);
+      }
+
+      .meta-badge.timezone {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px dashed rgba(255, 255, 255, 0.15);
+        color: var(--text-secondary);
+      }
+
+      .meta-badge.price {
+        background: rgba(79, 172, 254, 0.2);
+        border: 1px solid rgba(79, 172, 254, 0.4);
+        color: #bfdbfe;
+      }
+
+      /* ============================================
+         CENTER SECTION: Quick Stats
+         ============================================ */
+
+      .header-stats {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+        padding: 0 24px;
+        justify-content: center;
+      }
+
+      .button-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      /* NEUMORPHIC PURPLE CIRCLE BUTTON */
+      .circle-btn {
+        --on-color1: #8e5cf4;
+        --on-color2: #6a3df0;
+        --glow: #9d6cff;
+
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        cursor: pointer;
+        border: none;
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        background: #1b1e35;
+        box-shadow:
+          6px 6px 15px rgba(0, 0, 0, 0.5),
+          -6px -6px 15px rgba(255, 255, 255, 0.05);
+
+        transition: all 0.3s ease-out;
+      }
+
+      .circle-btn span {
+        font-size: 18px;
+        font-weight: 700;
+        color: #d8d8d8;
+        transition: 0.25s ease;
+        user-select: none;
+      }
+
+      /* Smaller text for amount buttons */
+      .button-row:last-child .circle-btn span {
+        font-size: 13px;
+      }
+
+      .circle-btn.active {
+        background: linear-gradient(180deg, var(--on-color1), var(--on-color2));
+        box-shadow:
+          0 0 25px var(--glow),
+          0 0 40px rgba(157, 108, 255, 0.35),
+          inset 0 0 10px rgba(255, 255, 255, 0.2),
+          inset 0 0 15px rgba(255, 255, 255, 0.1);
+      }
+
+      .circle-btn.active span {
+        color: white;
+        text-shadow:
+          0 0 12px var(--glow),
+          0 0 22px var(--glow),
+          0 0 35px var(--glow);
+      }
+
+      .circle-btn:active {
+        transform: scale(0.95);
+      }
+
+      /* ============================================
+         RIGHT SECTION: Actions + Status
+         ============================================ */
+
+      .header-controls {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      /* Expandable Edit Section */
+      .edit-section {
+        max-height: 0;
+        overflow: hidden;
+        opacity: 0;
+        transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-top: 0;
+      }
+
+      .hyper-header.expanded .edit-section {
+        max-height: 800px;
+        opacity: 1;
+        margin-top: 32px;
+        padding-top: 32px;
+        border-top: 1px solid var(--card-border);
+      }
+
+      .edit-form-group {
+        margin-bottom: 24px;
+      }
+
+      .edit-label {
+        display: block;
+        font-size: 0.75rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 10px;
+        font-weight: 600;
+      }
+
+      .edit-input {
+        width: 100%;
+        padding: 14px 18px;
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        font-size: 0.95rem;
+        font-family: inherit;
+        transition: all 0.3s ease;
+      }
+
+      .edit-input:focus {
+        outline: none;
+        border-color: rgba(102, 126, 234, 0.5);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 20px rgba(102, 126, 234, 0.2);
+      }
+
+      .edit-input::placeholder {
+        color: rgba(255, 255, 255, 0.3);
+      }
+
+      textarea.edit-input {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      .edit-actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      .save-btn,
+      .cancel-btn {
+        flex: 1;
+        padding: 14px 24px;
+        border-radius: 16px;
+        border: none;
+        font-weight: 700;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      .save-btn {
+        background: var(--primary-gradient);
+        color: white;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+      }
+
+      .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 24px rgba(102, 126, 234, 0.6);
+      }
+
+      .cancel-btn {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-secondary);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .cancel-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: var(--text-primary);
+      }
+
+      .status-pill-modern {
+        padding: 12px 24px;
+        border-radius: 999px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .status-pill-modern::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .status-pill-modern:hover::before {
+        opacity: 1;
+      }
+
+      .status-pill-modern.active {
+        background: rgba(16, 185, 129, 0.25);
+        border: 2px solid rgba(16, 185, 129, 0.5);
+        color: #6ee7b7;
+        box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4);
+      }
+
+      .status-pill-modern.paused {
+        background: rgba(251, 191, 36, 0.2);
+        border: 2px solid rgba(251, 191, 36, 0.4);
+        color: #fde047;
+        box-shadow: 0 4px 20px rgba(251, 191, 36, 0.3);
+      }
+
+      .status-pill-modern.graduated {
+        background: rgba(139, 92, 246, 0.2);
+        border: 2px solid rgba(139, 92, 246, 0.4);
+        color: #c4b5fd;
+        box-shadow: 0 4px 20px rgba(139, 92, 246, 0.3);
+      }
+
+      .action-btn-group {
+        display: flex;
+        gap: 10px;
+      }
+
+      .action-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 16px;
+        border: 1px solid var(--card-border);
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        transition: all 0.3s ease;
+        position: relative;
+      }
+
+      .action-btn:hover {
+        background: var(--primary-gradient);
+        border-color: transparent;
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.6);
+      }
+
+      .action-btn.close:hover {
+        background: var(--secondary-gradient);
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 8px 24px rgba(240, 147, 251, 0.6);
+      }
+
+      /* Toggle switch */
+      .toggle-switch-modern {
+        position: relative;
+        width: 64px;
+        height: 32px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .toggle-switch-modern.active {
+        background: var(--primary-gradient);
+        border-color: transparent;
+        box-shadow: 0 4px 16px rgba(102, 126, 234, 0.6);
+      }
+
+      .toggle-slider-modern {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: white;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+
+      .toggle-switch-modern.active .toggle-slider-modern {
+        transform: translateX(32px);
+      }
+
+      /* ============================================
+         RESPONSIVE BEHAVIOR
+         ============================================ */
+
+      @media (max-width: 1200px) {
+        .hyper-header-grid {
+          grid-template-columns: 1fr;
+          gap: 28px;
+        }
+
+        .header-stats {
+          justify-content: flex-start;
+          padding: 0;
+        }
+
+        .header-controls {
+          justify-content: flex-end;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .hyper-header {
+          padding: 24px 20px;
+          border-radius: 20px;
+        }
+
+        .header-identity {
+          gap: 16px;
+        }
+
+        .avatar-main {
+          width: 64px;
+          height: 64px;
+          font-size: 1.5rem;
+        }
+
+        .identity-name {
+          font-size: 1.5rem;
+        }
+
+        .header-stats {
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+
+        .stat-card {
+          min-width: 90px;
+          padding: 12px 14px;
+        }
+
+        .stat-icon {
+          font-size: 1.4rem;
+        }
+
+        .stat-value {
+          font-size: 1.2rem;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .identity-meta {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 8px;
+        }
+
+        .header-controls {
+          flex-wrap: wrap;
+          width: 100%;
+        }
+
+        .status-pill-modern {
+          flex: 1;
+          text-align: center;
+        }
+      }
+
+      /* ============================================
+         DEMO CONTROLS
+         ============================================ */
+
+      .demo-controls {
+        margin-top: 40px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        text-align: center;
+      }
+
+      .demo-controls h3 {
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        font-size: 1.1rem;
+      }
+
+      .demo-btn {
+        padding: 12px 28px;
+        margin: 8px;
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        background: var(--primary-gradient);
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-size: 0.9rem;
+      }
+
+      .demo-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="demo-wrapper">
+      <div class="demo-label">ARNOMA Student Management System</div>
+
+      <!-- HYPER MODERN HEADER -->
+      <div class="hyper-header" id="studentCard" onclick="toggleExpand()">
+        <div class="hyper-header-accent"></div>
+
+        <div class="hyper-header-grid">
+          <!-- LEFT: Avatar + Identity -->
+          <div class="header-identity">
+            <div class="avatar-container">
+              <div class="avatar-orbit"></div>
+              <div class="avatar-main" id="avatarMain">JD</div>
+              <div class="avatar-status-badge">✓</div>
+            </div>
+
+            <div class="identity-info">
+              <div class="identity-label">Student Profile</div>
+              <div class="identity-name">
+                <span id="studentName">John Doe</span>
+                <span class="verified-badge">✓</span>
+              </div>
+              <div class="identity-meta">
+                <span class="meta-badge group" id="groupBadge">
+                  <span>👥</span>
+                  <span>Group A</span>
+                </span>
+                <span class="meta-badge price" id="priceBadge">
+                  <span>💰</span>
+                  <span>$50</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- CENTER: Quick Stats -->
+          <div class="header-stats" onclick="event.stopPropagation()">
+            <!-- Group Buttons (Top Row) -->
+            <div class="button-row">
+              <button class="circle-btn active" onclick="selectGroup('A')"><span>A</span></button>
+              <button class="circle-btn" onclick="selectGroup('B')"><span>B</span></button>
+              <button class="circle-btn" onclick="selectGroup('C')"><span>C</span></button>
+              <button class="circle-btn" onclick="selectGroup('D')"><span>D</span></button>
+            </div>
+
+            <!-- Amount Buttons (Bottom Row) -->
+            <div class="button-row">
+              <button class="circle-btn" onclick="selectAmount(25)"><span>$25</span></button>
+              <button class="circle-btn" onclick="selectAmount(50)"><span>$50</span></button>
+              <button class="circle-btn" onclick="selectAmount(75)"><span>$75</span></button>
+              <button class="circle-btn" onclick="selectAmount(100)"><span>$100</span></button>
+            </div>
+          </div>
+
+          <!-- RIGHT: Status + Actions -->
+          <div class="header-controls" onclick="event.stopPropagation()">
+            <div class="status-pill-modern active" id="statusPill" onclick="cycleStatus()">ACTIVE</div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 8px">
+              <div class="toggle-switch-modern active" id="visibilityToggle" onclick="toggleVisibility()">
+                <div class="toggle-slider-modern"></div>
+              </div>
+              <div
+                style="font-size: 0.7rem; color: rgba(255, 255, 255, 0.6); font-weight: 600; letter-spacing: 0.05em"
+                id="toggleText"
+              >
+                Calendar Visible
+              </div>
+            </div>
+
+            <div class="action-btn-group">
+              <button class="action-btn close" onclick="closeCard()" title="Close">×</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EXPANDABLE EDIT SECTION -->
+        <div class="edit-section" onclick="event.stopPropagation()">
+          <div class="edit-form-group">
+            <label class="edit-label">Student Name</label>
+            <input type="text" class="edit-input" id="editName" placeholder="John Doe" value="John Doe" />
+          </div>
+
+          <div class="edit-form-group">
+            <label class="edit-label">Email Address</label>
+            <input
+              type="email"
+              class="edit-input"
+              id="editEmail"
+              placeholder="student@example.com"
+              value="john@example.com"
+            />
+          </div>
+
+          <div class="edit-form-group">
+            <label class="edit-label">Phone Number</label>
+            <input type="tel" class="edit-input" id="editPhone" placeholder="+1 (555) 000-0000" value="" />
+          </div>
+
+          <div class="edit-form-group">
+            <label class="edit-label">Notes</label>
+            <textarea class="edit-input" id="editNotes" placeholder="Additional notes about the student..."></textarea>
+          </div>
+
+          <div class="edit-actions">
+            <button class="save-btn" onclick="saveChanges()">💾 Save Changes</button>
+            <button class="cancel-btn" onclick="toggleExpand()">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- DEMO CONTROLS -->
+      <div class="demo-controls">
+        <h3>🎨 Interactive Demo Controls</h3>
+        <button class="demo-btn" onclick="toggleExpand()">Toggle Edit Mode</button>
+        <button class="demo-btn" onclick="cycleStatus()">Cycle Status</button>
+        <button class="demo-btn" onclick="toggleVisibility()">Toggle Visibility</button>
+        <button class="demo-btn" onclick="changeStudent()">Change Student</button>
+      </div>
+    </div>
+
+    <script>
+      let currentStatus = 'active';
+      let showInCalendar = true;
+      let isExpanded = false;
+
+      // Toggle expand/collapse card
+      function toggleExpand(event) {
+        // Prevent toggle if clicking interactive elements
+        if (
+          event &&
+          (event.target.closest('.status-pill-modern') ||
+            event.target.closest('.toggle-switch-modern') ||
+            event.target.closest('.action-btn') ||
+            event.target.closest('.edit-section'))
+        ) {
+          return;
+        }
+
+        const card = document.getElementById('studentCard');
+        isExpanded = !isExpanded;
+
+        if (isExpanded) {
+          card.classList.add('expanded');
+        } else {
+          card.classList.remove('expanded');
+        }
+
+        console.log(isExpanded ? '📝 Card expanded for editing' : '📋 Card collapsed');
+      }
+
+      // Close card
+      function closeCard() {
+        const card = document.getElementById('studentCard');
+        card.classList.remove('expanded');
+        isExpanded = false;
+        console.log('✖️ Card closed');
+      }
+
+      // Save changes
+      function saveChanges() {
+        const name = document.getElementById('editName').value;
+        const email = document.getElementById('editEmail').value;
+        const phone = document.getElementById('editPhone').value;
+        const notes = document.getElementById('editNotes').value;
+
+        // Update display
+        document.getElementById('studentName').textContent = name;
+
+        // Update avatar
+        const initials = name
+          ? name
+              .split(' ')
+              .map(n => n[0])
+              .join('')
+              .toUpperCase()
+              .substring(0, 2)
+          : 'NA';
+        document.getElementById('avatarMain').textContent = initials;
+
+        console.log('💾 Saved:', { name, email, phone, notes });
+
+        // Collapse card
+        toggleExpand();
+      }
+
+      // Cycle through status states
+      function cycleStatus() {
+        const statusCycle = {
+          active: 'paused',
+          paused: 'graduated',
+          graduated: 'active',
+        };
+
+        const statusTexts = {
+          active: 'ACTIVE',
+          paused: 'PAUSED',
+          graduated: 'GRADUATED',
+        };
+
+        currentStatus = statusCycle[currentStatus];
+
+        const statusPill = document.getElementById('statusPill');
+        statusPill.className = `status-pill-modern ${currentStatus}`;
+        statusPill.textContent = statusTexts[currentStatus];
+
+        // Update avatar status badge
+        const avatarBadge = document.querySelector('.avatar-status-badge');
+        avatarBadge.className = `avatar-status-badge ${currentStatus}`;
+
+        // Update verified badge
+        const verifiedBadge = document.querySelector('.verified-badge');
+        verifiedBadge.className = `verified-badge ${currentStatus}`;
+
+        console.log('✅ Status changed to:', currentStatus);
+      }
+
+      // Toggle visibility
+      function toggleVisibility() {
+        showInCalendar = !showInCalendar;
+        const toggle = document.getElementById('visibilityToggle');
+        const toggleText = document.getElementById('toggleText');
+
+        if (showInCalendar) {
+          toggle.classList.add('active');
+          toggleText.textContent = 'Calendar Visible';
+        } else {
+          toggle.classList.remove('active');
+          toggleText.textContent = 'Calendar Not Visible';
+        }
+
+        console.log('📅 Show in calendar:', showInCalendar);
+      }
+
+      // Select group button
+      function selectGroup(group) {
+        // Remove active class from all group buttons
+        const groupButtons = document.querySelectorAll('.button-row:first-child .circle-btn');
+        groupButtons.forEach(btn => btn.classList.remove('active'));
+
+        // Add active class to clicked button
+        event.target.closest('.circle-btn').classList.add('active');
+
+        // Update group badge
+        document.getElementById('groupBadge').innerHTML = `<span>👥</span><span>Group ${group}</span>`;
+
+        console.log('👥 Group selected:', group);
+      }
+
+      // Select amount button
+      function selectAmount(amount) {
+        // Remove active class from all amount buttons
+        const amountButtons = document.querySelectorAll('.button-row:last-child .circle-btn');
+        amountButtons.forEach(btn => btn.classList.remove('active'));
+
+        // Add active class to clicked button
+        event.target.closest('.circle-btn').classList.add('active');
+
+        // Update price badge
+        document.getElementById('priceBadge').innerHTML = `<span>💰</span><span>$${amount}</span>`;
+
+        console.log('💰 Amount selected:', amount);
+      }
+
+      // Change student demo
+      function changeStudent() {
+        const students = [
+          { name: 'John Doe', initials: 'JD', group: 'A', price: 50 },
+          { name: 'Sarah Smith', initials: 'SS', group: 'B', price: 75 },
+          { name: 'Mike Johnson', initials: 'MJ', group: 'C', price: 100 },
+          { name: 'Emma Wilson', initials: 'EW', group: 'D', price: 25 },
+        ];
+
+        const randomStudent = students[Math.floor(Math.random() * students.length)];
+
+        document.getElementById('studentName').textContent = randomStudent.name;
+        document.getElementById('avatarMain').textContent = randomStudent.initials;
+
+        // Update group and amount selections
+        selectGroup(randomStudent.group);
+
+        // Manually trigger amount selection
+        const amountButtons = document.querySelectorAll('.button-row:last-child .circle-btn');
+        amountButtons.forEach(btn => {
+          btn.classList.remove('active');
+          const btnText = btn.querySelector('span').textContent;
+          if (btnText === '$' + randomStudent.price) {
+            btn.classList.add('active');
+          }
+        });
+
+        document.getElementById('priceBadge').innerHTML = `<span>💰</span><span>$${randomStudent.price}</span>`;
+
+        console.log('👤 Student changed to:', randomStudent.name);
+      }
+    </script>
+  </body>
+</html>

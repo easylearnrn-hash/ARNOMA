@@ -1,0 +1,2215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hyper Modern Calendar - ARNOMA Design</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        --accent-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --dark-bg: #0f0f23;
+        --card-bg: rgba(255, 255, 255, 0.05);
+        --card-border: rgba(255, 255, 255, 0.1);
+        --text-primary: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --shadow-glow: 0 8px 32px 0 rgba(102, 126, 234, 0.37);
+        --shadow-soft: 0 4px 16px rgba(0, 0, 0, 0.2);
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        background: var(--dark-bg);
+        min-height: 100vh;
+        padding: 40px 20px;
+        overflow-x: hidden;
+        position: relative;
+      }
+
+      /* Animated background gradient */
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 80%, rgba(118, 75, 162, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 40% 80%, rgba(79, 172, 254, 0.1) 0%, transparent 50%);
+        animation: gradientShift 20s ease infinite;
+        z-index: -1;
+      }
+
+      @keyframes gradientShift {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.8;
+          transform: scale(1.1);
+        }
+      }
+
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 60px;
+        gap: 30px;
+        transition: grid-template-columns 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .container.sidebar-expanded {
+        grid-template-columns: 1fr 320px;
+      } /* Sidebar */
+      .sidebar {
+        background: transparent;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        border: none;
+        border-radius: 24px;
+        padding: 20px 15px;
+        box-shadow: none;
+        max-height: calc(100vh - 80px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: sticky;
+        top: 20px;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        width: 60px;
+      }
+
+      .sidebar.expanded {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow-glow);
+        padding: 30px;
+        width: 320px;
+      }
+
+      .sidebar .sidebar-content {
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(20px);
+      }
+
+      .sidebar.expanded .sidebar-content {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(0);
+      }
+
+      .sidebar-content {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .sidebar-toggle {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.3rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        margin-bottom: 0;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sidebar.expanded .sidebar-toggle {
+        margin-bottom: 20px;
+      }
+
+      .sidebar-toggle::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        transition: left 0.4s ease;
+        z-index: -1;
+      }
+
+      .sidebar-toggle:hover::before {
+        left: 0;
+      }
+
+      .sidebar-toggle:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-glow);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      .toggle-icon {
+        transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .sidebar.expanded .toggle-icon {
+        transform: rotate(180deg);
+      }
+
+      .sidebar::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .sidebar::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+        margin: 10px 0;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 10px;
+        transition: background 0.3s ease;
+      }
+
+      .sidebar::-webkit-scrollbar-thumb:hover {
+        background: var(--accent-gradient);
+      }
+
+      .sidebar-section {
+        margin-bottom: 30px;
+      }
+
+      .sidebar-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .sidebar-title {
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: var(--text-secondary);
+        margin-bottom: 15px;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .filter-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 16px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .filter-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0.1;
+        transition: left 0.3s ease;
+      }
+
+      .filter-item:hover::before {
+        left: 0;
+      }
+
+      .filter-item:hover {
+        border-color: rgba(102, 126, 234, 0.5);
+        transform: translateX(4px);
+      }
+
+      .filter-item.active {
+        background: rgba(102, 126, 234, 0.15);
+        border-color: rgba(102, 126, 234, 0.6);
+      }
+
+      .filter-label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: var(--text-primary);
+      }
+
+      .filter-checkbox {
+        width: 20px;
+        height: 20px;
+        border-radius: 6px;
+        border: 2px solid var(--card-border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+      }
+
+      .filter-item.active .filter-checkbox {
+        background: var(--primary-gradient);
+        border-color: transparent;
+      }
+
+      .filter-checkbox::after {
+        content: '✓';
+        color: white;
+        font-size: 0.75rem;
+        font-weight: 700;
+        opacity: 0;
+        transform: scale(0);
+        transition: all 0.2s ease;
+      }
+
+      .filter-item.active .filter-checkbox::after {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      .filter-count {
+        background: rgba(255, 255, 255, 0.1);
+        padding: 4px 10px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+
+      .stat-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 16px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      .stat-number {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .stat-label {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .quick-actions {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .action-btn {
+        width: 100%;
+        padding: 12px 20px;
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        font-size: 0.9rem;
+      }
+
+      .action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--accent-gradient);
+        transition: left 0.4s ease;
+        z-index: -1;
+      }
+
+      .action-btn:hover::before {
+        left: 0;
+      }
+
+      .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.3);
+      }
+
+      .calendar-wrapper {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      /* Header */
+      .calendar-header {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        padding: 30px 40px;
+        margin-bottom: 30px;
+        box-shadow: var(--shadow-glow);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .calendar-header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--primary-gradient);
+      }
+
+      .month-year {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .month-year h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+      }
+
+      .year-badge {
+        background: var(--accent-gradient);
+        padding: 8px 20px;
+        border-radius: 12px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+        box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+      }
+
+      .nav-controls {
+        display: flex;
+        gap: 15px;
+      }
+
+      .nav-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 15px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .nav-btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: var(--primary-gradient);
+        transition:
+          width 0.6s,
+          height 0.6s,
+          top 0.6s,
+          left 0.6s;
+        transform: translate(-50%, -50%);
+        z-index: -1;
+      }
+
+      .nav-btn:hover::before {
+        width: 200%;
+        height: 200%;
+      }
+
+      .nav-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: var(--shadow-glow);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      .nav-btn:active {
+        transform: translateY(0);
+      }
+
+      .today-btn {
+        padding: 12px 24px;
+        border-radius: 15px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .today-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--accent-gradient);
+        transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: -1;
+      }
+
+      .today-btn:hover::before {
+        left: 0;
+      }
+
+      .today-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(79, 172, 254, 0.4);
+      }
+
+      /* Calendar Grid */
+      .calendar-grid {
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        padding: 30px;
+        box-shadow: var(--shadow-glow);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .calendar-grid::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 2px;
+        background: var(--accent-gradient);
+      }
+
+      /* Weekday Headers */
+      .weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+
+      .weekday {
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        padding: 15px 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      /* Days Grid */
+      .days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 10px;
+      }
+
+      .day {
+        aspect-ratio: 1;
+        border-radius: 20px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        backdrop-filter: blur(10px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+
+      .day::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: 0;
+      }
+
+      .day:hover::before {
+        opacity: 0.1;
+      }
+
+      .day:hover {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: var(--shadow-glow);
+        border-color: rgba(102, 126, 234, 0.5);
+      }
+
+      .day-number {
+        font-size: 1.2rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        z-index: 1;
+        margin-bottom: 8px;
+        position: relative;
+        padding-bottom: 8px;
+      }
+
+      .day-number::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 4px;
+        height: 4px;
+        background: var(--text-secondary);
+        border-radius: 50%;
+        opacity: 0.3;
+      }
+
+      .day.today .day-number::after {
+        background: white;
+        opacity: 0.8;
+        box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+      }
+
+      .day.has-class .day-number::after,
+      .day.has-payment .day-number::after,
+      .day.has-absence .day-number::after {
+        opacity: 0.6;
+      }
+
+      .day-indicator {
+        display: flex;
+        gap: 4px;
+        z-index: 1;
+      }
+
+      .indicator-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        transition: transform 0.2s ease;
+      }
+
+      .day:hover .indicator-dot {
+        transform: scale(1.3);
+      }
+
+      .dot-class {
+        background: #3b82f6;
+        box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+      }
+
+      .dot-payment {
+        background: #10b981;
+        box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+      }
+      .dot-absent {
+        background: #ef4444;
+        box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+      }
+
+      /* Special Day States */
+      .day.other-month {
+        opacity: 0.3;
+      }
+
+      .day.today {
+        background: var(--primary-gradient);
+        border-color: transparent;
+        box-shadow: 0 8px 32px rgba(102, 126, 234, 0.5);
+      }
+
+      .day.today .day-number {
+        color: white;
+        font-weight: 700;
+      }
+
+      .day.today::before {
+        opacity: 0;
+      }
+
+      .day.has-class {
+        border-color: rgba(59, 130, 246, 0.4);
+        background: rgba(59, 130, 246, 0.05);
+      }
+
+      .day.has-payment {
+        border-color: rgba(16, 185, 129, 0.4);
+        background: rgba(16, 185, 129, 0.05);
+      }
+      .day.has-absence {
+        border-color: rgba(239, 68, 68, 0.4);
+        background: rgba(239, 68, 68, 0.05);
+      }
+
+      .day.skipped {
+        background: rgba(100, 100, 100, 0.1);
+        border-color: rgba(100, 100, 100, 0.3);
+      }
+
+      .day.skipped .day-number {
+        text-decoration: line-through;
+        opacity: 0.5;
+      }
+
+      /* Legend */
+      .legend {
+        display: flex;
+        justify-content: center;
+        gap: 30px;
+        margin-top: 30px;
+        padding: 25px;
+        background: var(--card-bg);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--card-border);
+        border-radius: 20px;
+        flex-wrap: wrap;
+      }
+
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+
+      .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+      }
+
+      /* Modal Styles */
+      .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal-overlay.active {
+        display: flex;
+        opacity: 1;
+      }
+
+      .modal {
+        background: var(--card-bg);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border: 1px solid var(--card-border);
+        border-radius: 24px;
+        max-width: 600px;
+        width: 90%;
+        max-height: 80vh;
+        overflow: hidden;
+        box-shadow:
+          var(--shadow-glow),
+          0 20px 60px rgba(0, 0, 0, 0.5);
+        transform: scale(0.9) translateY(20px);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+      }
+
+      .modal-overlay.active .modal {
+        transform: scale(1) translateY(0);
+      }
+
+      .modal::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: var(--primary-gradient);
+      }
+
+      .modal-header {
+        padding: 30px 30px 20px;
+        border-bottom: 1px solid var(--card-border);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-title {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .modal-title h2 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        background: var(--primary-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+      }
+
+      .modal-subtitle {
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+      }
+
+      .modal-close {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        transition: all 0.3s ease;
+        flex-shrink: 0;
+      }
+
+      .modal-close:hover {
+        background: var(--secondary-gradient);
+        border-color: transparent;
+        transform: rotate(90deg);
+      }
+
+      .modal-body {
+        padding: 30px;
+        max-height: calc(80vh - 180px);
+        overflow-y: auto;
+      }
+
+      .modal-body::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .modal-body::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 10px;
+      }
+
+      .modal-body::-webkit-scrollbar-thumb {
+        background: var(--primary-gradient);
+        border-radius: 10px;
+      }
+
+      .group-section {
+        margin-bottom: 25px;
+      }
+
+      .group-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .group-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 15px;
+        padding: 15px 20px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 16px;
+      }
+
+      .group-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+        background: var(--accent-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+      }
+
+      .group-info h3 {
+        font-size: 1.1rem;
+        color: var(--text-primary);
+        margin: 0 0 4px;
+      }
+
+      .group-time {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      }
+
+      .students-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .student-card {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 14px;
+        padding: 16px 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .student-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: var(--primary-gradient);
+        opacity: 0.1;
+        transition: left 0.3s ease;
+      }
+
+      .student-card:hover::before {
+        left: 0;
+      }
+
+      .student-card:hover {
+        border-color: rgba(102, 126, 234, 0.5);
+        transform: translateX(4px);
+      }
+
+      .student-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .student-avatar {
+        width: 45px;
+        height: 45px;
+        border-radius: 12px;
+        background: var(--primary-gradient);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: white;
+      }
+
+      .student-details {
+        display: flex;
+        flex-direction: column;
+      }
+
+      .student-name {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 4px;
+      }
+
+      .student-status {
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+      }
+
+      .student-badges {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .student-actions {
+        display: flex;
+        gap: 6px;
+        margin-left: 0;
+        flex-shrink: 0;
+      }
+
+      .action-icon-btn {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        color: var(--text-primary);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.9rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .action-icon-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        opacity: 0.2;
+        transition: left 0.3s ease;
+      }
+
+      .action-icon-btn.pause::before {
+        background: linear-gradient(135deg, #f59e0b 0%, #f97316 100%);
+      }
+
+      .action-icon-btn.send::before {
+        background: var(--accent-gradient);
+      }
+
+      .action-icon-btn:hover::before {
+        left: 0;
+      }
+
+      .action-icon-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      }
+
+      .action-icon-btn.pause:hover {
+        border-color: rgba(245, 158, 11, 0.5);
+      }
+
+      .action-icon-btn.send:hover {
+        border-color: rgba(79, 172, 254, 0.5);
+      }
+
+      .action-icon-btn.paused {
+        background: rgba(245, 158, 11, 0.2);
+        border-color: rgba(245, 158, 11, 0.4);
+      }
+
+      .action-icon-btn:active {
+        transform: translateY(0);
+      }
+
+      /* Tooltip */
+      .action-icon-btn {
+        position: relative;
+      }
+
+      .action-icon-btn::after {
+        content: attr(data-tooltip);
+        position: absolute;
+        bottom: 100%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-5px);
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 6px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s ease;
+        z-index: 1000;
+      }
+
+      .action-icon-btn:hover::after {
+        opacity: 1;
+        transform: translateX(-50%) translateY(-8px);
+      }
+
+      .badge {
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      .badge.paid {
+        background: rgba(16, 185, 129, 0.2);
+        color: #10b981;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+      }
+
+      .badge.unpaid {
+        background: rgba(239, 68, 68, 0.2);
+        color: #ef4444;
+        border: 1px solid rgba(239, 68, 68, 0.3);
+      }
+
+      .badge.absent {
+        background: rgba(245, 158, 11, 0.2);
+        color: #f59e0b;
+        border: 1px solid rgba(245, 158, 11, 0.3);
+      }
+
+      .empty-state {
+        text-align: center;
+        padding: 40px 20px;
+      }
+
+      .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 15px;
+        opacity: 0.5;
+      }
+
+      .empty-state-text {
+        color: var(--text-secondary);
+        font-size: 1rem;
+      }
+
+      /* Student Details Modal */
+      .student-modal {
+        max-width: 500px;
+      }
+
+      .student-detail-section {
+        margin-bottom: 20px;
+      }
+
+      .student-detail-section:last-child {
+        margin-bottom: 0;
+      }
+
+      .section-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-secondary);
+        margin-bottom: 8px;
+      }
+
+      .section-content {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid var(--card-border);
+        border-radius: 12px;
+        padding: 15px;
+        font-size: 1rem;
+        color: var(--text-primary);
+      }
+
+      .section-content.highlight {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.3);
+      }
+
+      .section-content.balance {
+        background: rgba(245, 158, 11, 0.15);
+        border-color: rgba(245, 158, 11, 0.3);
+        font-size: 1.5rem;
+        font-weight: 700;
+      }
+
+      .balance-note {
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+        margin-top: 6px;
+        font-weight: 400;
+      }
+
+      .quick-actions-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .quick-action-btn {
+        padding: 14px 20px;
+        border-radius: 12px;
+        border: 1px solid var(--card-border);
+        background: var(--card-bg);
+        color: var(--text-primary);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .quick-action-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        transition: left 0.4s ease;
+        z-index: -1;
+      }
+
+      .quick-action-btn.primary::before {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      }
+
+      .quick-action-btn.secondary::before {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      }
+
+      .quick-action-btn.tertiary::before {
+        background: var(--accent-gradient);
+      }
+
+      .quick-action-btn:hover::before {
+        left: 0;
+      }
+
+      .quick-action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .quick-action-btn:active {
+        transform: translateY(0);
+      }
+
+      .student-name-clickable {
+        cursor: pointer;
+        transition: color 0.2s ease;
+      }
+
+      .student-name-clickable:hover {
+        color: #667eea;
+      }
+
+      /* Loading Animation */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.5;
+        }
+      }
+
+      .loading .day {
+        animation: pulse 1.5s ease-in-out infinite;
+      }
+
+      /* Responsive Design */
+      @media (max-width: 1024px) {
+        .container {
+          grid-template-columns: 1fr;
+        }
+
+        .sidebar {
+          position: relative;
+          top: 0;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .calendar-header {
+          flex-direction: column;
+          gap: 20px;
+          padding: 20px;
+        }
+
+        .month-year h1 {
+          font-size: 1.8rem;
+        }
+
+        .calendar-grid {
+          padding: 15px;
+        }
+
+        .day-number {
+          font-size: 1rem;
+        }
+
+        .legend {
+          gap: 15px;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      /* Fade-in animation */
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .calendar-grid {
+        animation: fadeIn 0.6s ease-out;
+      }
+
+      .day {
+        animation: fadeIn 0.4s ease-out backwards;
+      }
+
+      .day:nth-child(1) {
+        animation-delay: 0.05s;
+      }
+      .day:nth-child(2) {
+        animation-delay: 0.1s;
+      }
+      .day:nth-child(3) {
+        animation-delay: 0.15s;
+      }
+      .day:nth-child(4) {
+        animation-delay: 0.2s;
+      }
+      .day:nth-child(5) {
+        animation-delay: 0.25s;
+      }
+      .day:nth-child(6) {
+        animation-delay: 0.3s;
+      }
+      .day:nth-child(7) {
+        animation-delay: 0.35s;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Main Calendar Area -->
+      <div class="calendar-wrapper">
+        <!-- Header -->
+        <div class="calendar-header">
+          <div class="month-year">
+            <h1 id="currentMonth">November</h1>
+            <span class="year-badge" id="currentYear">2025</span>
+          </div>
+          <div class="nav-controls">
+            <button class="nav-btn" id="prevMonth" title="Previous Month">‹</button>
+            <button class="today-btn" id="todayBtn">Today</button>
+            <button class="nav-btn" id="nextMonth" title="Next Month">›</button>
+          </div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="calendar-grid">
+          <!-- Weekday Headers -->
+          <div class="weekdays">
+            <div class="weekday">Sun</div>
+            <div class="weekday">Mon</div>
+            <div class="weekday">Tue</div>
+            <div class="weekday">Wed</div>
+            <div class="weekday">Thu</div>
+            <div class="weekday">Fri</div>
+            <div class="weekday">Sat</div>
+          </div>
+
+          <!-- Days -->
+          <div class="days" id="calendarDays"></div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+          <div class="legend-item">
+            <div class="legend-dot dot-class"></div>
+            <span>Class Scheduled</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot dot-payment"></div>
+            <span>Payment Received</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot dot-absent"></div>
+            <span>Student Absent</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)"></div>
+            <span>Today</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar" id="sidebar">
+        <button class="sidebar-toggle" id="sidebarToggle">
+          <span class="toggle-icon">›</span>
+        </button>
+
+        <div class="sidebar-content">
+          <!-- Stats Section -->
+          <div class="sidebar-section">
+            <h3 class="sidebar-title">Overview</h3>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <span class="stat-number" id="totalClasses">12</span>
+                <span class="stat-label">Classes</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number" id="totalPayments">8</span>
+                <span class="stat-label">Payments</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number" id="totalAbsences">3</span>
+                <span class="stat-label">Absences</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number" id="totalSkipped">2</span>
+                <span class="stat-label">Skipped</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filters Section -->
+          <div class="sidebar-section">
+            <h3 class="sidebar-title">Filters</h3>
+            <div class="filter-group">
+              <div class="filter-item active" data-filter="classes">
+                <div class="filter-label">
+                  <div class="filter-checkbox"></div>
+                  <span>Show Classes</span>
+                </div>
+                <span class="filter-count">12</span>
+              </div>
+              <div class="filter-item active" data-filter="payments">
+                <div class="filter-label">
+                  <div class="filter-checkbox"></div>
+                  <span>Show Payments</span>
+                </div>
+                <span class="filter-count">8</span>
+              </div>
+              <div class="filter-item active" data-filter="absences">
+                <div class="filter-label">
+                  <div class="filter-checkbox"></div>
+                  <span>Show Absences</span>
+                </div>
+                <span class="filter-count">3</span>
+              </div>
+              <div class="filter-item active" data-filter="skipped">
+                <div class="filter-label">
+                  <div class="filter-checkbox"></div>
+                  <span>Show Skipped</span>
+                </div>
+                <span class="filter-count">2</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions Section -->
+          <div class="sidebar-section">
+            <h3 class="sidebar-title">Quick Actions</h3>
+            <div class="quick-actions">
+              <button class="action-btn">📅 Add Event</button>
+              <button class="action-btn">💰 Record Payment</button>
+              <button class="action-btn">📊 View Reports</button>
+              <button class="action-btn">⚙️ Settings</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-overlay" id="dayModal">
+      <div class="modal">
+        <div class="modal-header">
+          <div class="modal-title">
+            <h2 id="modalDate">November 20, 2025</h2>
+            <span class="modal-subtitle" id="modalDayOfWeek">Wednesday</span>
+          </div>
+          <button class="modal-close" id="closeModal">×</button>
+        </div>
+        <div class="modal-body" id="modalBody">
+          <!-- Content will be dynamically inserted here -->
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Calendar State
+      let currentDate = new Date();
+      const monthNames = [
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
+      ];
+
+      // Sample data for demonstration
+      const sampleData = {
+        classes: [3, 5, 10, 12, 17, 19, 24, 26],
+        payments: [5, 12, 19, 26],
+        absences: [10, 24],
+        skipped: [17],
+      };
+
+      // Sample groups and students data
+      const groupsData = {
+        3: [
+          {
+            group: 'Advanced JavaScript',
+            time: '6:00 PM - 7:30 PM',
+            students: [
+              { name: 'John Smith', paid: true, absent: false, groupName: 'Group A', balance: 0, pricePerClass: 50 },
+              { name: 'Sarah Johnson', paid: true, absent: false, groupName: 'Group A', balance: 0, pricePerClass: 50 },
+              {
+                name: 'Michael Brown',
+                paid: false,
+                absent: false,
+                groupName: 'Group A',
+                balance: 600,
+                pricePerClass: 50,
+              },
+            ],
+          },
+        ],
+        5: [
+          {
+            group: 'React Fundamentals',
+            time: '8:00 PM - 9:30 PM',
+            students: [
+              { name: 'Emma Wilson', paid: true, absent: false, groupName: 'Group B', balance: 0, pricePerClass: 45 },
+              { name: 'David Lee', paid: true, absent: false, groupName: 'Group B', balance: 150, pricePerClass: 45 },
+            ],
+          },
+        ],
+        10: [
+          {
+            group: 'Advanced JavaScript',
+            time: '6:00 PM - 7:30 PM',
+            students: [
+              { name: 'John Smith', paid: true, absent: true, groupName: 'Group A', balance: 0, pricePerClass: 50 },
+              { name: 'Sarah Johnson', paid: true, absent: false, groupName: 'Group A', balance: 0, pricePerClass: 50 },
+              {
+                name: 'Michael Brown',
+                paid: false,
+                absent: false,
+                groupName: 'Group A',
+                balance: 600,
+                pricePerClass: 50,
+              },
+            ],
+          },
+        ],
+        12: [
+          {
+            group: 'Python for Beginners',
+            time: '5:00 PM - 6:30 PM',
+            students: [
+              { name: 'Alex Martinez', paid: true, absent: false, groupName: 'Group C', balance: 0, pricePerClass: 40 },
+              {
+                name: 'Jessica Taylor',
+                paid: true,
+                absent: false,
+                groupName: 'Group C',
+                balance: 0,
+                pricePerClass: 40,
+              },
+              {
+                name: 'Chris Anderson',
+                paid: true,
+                absent: false,
+                groupName: 'Group C',
+                balance: 0,
+                pricePerClass: 40,
+              },
+            ],
+          },
+          {
+            group: 'React Fundamentals',
+            time: '8:00 PM - 9:30 PM',
+            students: [
+              { name: 'Emma Wilson', paid: true, absent: false, groupName: 'Group B', balance: 0, pricePerClass: 45 },
+              { name: 'David Lee', paid: true, absent: false, groupName: 'Group B', balance: 150, pricePerClass: 45 },
+            ],
+          },
+        ],
+        17: [{ group: 'Advanced JavaScript', time: 'Class Canceled', students: [] }],
+        19: [
+          {
+            group: 'React Fundamentals',
+            time: '8:00 PM - 9:30 PM',
+            students: [
+              { name: 'Emma Wilson', paid: true, absent: false, groupName: 'Group B', balance: 0, pricePerClass: 45 },
+              { name: 'David Lee', paid: true, absent: false, groupName: 'Group B', balance: 150, pricePerClass: 45 },
+            ],
+          },
+        ],
+        24: [
+          {
+            group: 'Advanced JavaScript',
+            time: '6:00 PM - 7:30 PM',
+            students: [
+              { name: 'John Smith', paid: true, absent: true, groupName: 'Group A', balance: 0, pricePerClass: 50 },
+              { name: 'Sarah Johnson', paid: true, absent: false, groupName: 'Group A', balance: 0, pricePerClass: 50 },
+              {
+                name: 'Michael Brown',
+                paid: false,
+                absent: false,
+                groupName: 'Group A',
+                balance: 600,
+                pricePerClass: 50,
+              },
+            ],
+          },
+        ],
+        26: [
+          {
+            group: 'Python for Beginners',
+            time: '5:00 PM - 6:30 PM',
+            students: [
+              { name: 'Alex Martinez', paid: true, absent: false, groupName: 'Group C', balance: 0, pricePerClass: 40 },
+              {
+                name: 'Jessica Taylor',
+                paid: true,
+                absent: false,
+                groupName: 'Group C',
+                balance: 0,
+                pricePerClass: 40,
+              },
+              {
+                name: 'Chris Anderson',
+                paid: true,
+                absent: false,
+                groupName: 'Group C',
+                balance: 0,
+                pricePerClass: 40,
+              },
+            ],
+          },
+          {
+            group: 'React Fundamentals',
+            time: '8:00 PM - 9:30 PM',
+            students: [
+              { name: 'Emma Wilson', paid: true, absent: false, groupName: 'Group B', balance: 0, pricePerClass: 45 },
+              { name: 'David Lee', paid: true, absent: false, groupName: 'Group B', balance: 150, pricePerClass: 45 },
+            ],
+          },
+        ],
+      };
+
+      // Filter state
+      const filters = {
+        classes: true,
+        payments: true,
+        absences: true,
+        skipped: true,
+      };
+
+      // Initialize Calendar
+      function initCalendar() {
+        renderCalendar();
+        attachEventListeners();
+        updateStats();
+      }
+
+      // Update Stats
+      function updateStats() {
+        document.getElementById('totalClasses').textContent = sampleData.classes.length;
+        document.getElementById('totalPayments').textContent = sampleData.payments.length;
+        document.getElementById('totalAbsences').textContent = sampleData.absences.length;
+        document.getElementById('totalSkipped').textContent = sampleData.skipped.length;
+      }
+
+      // Render Calendar
+      function renderCalendar() {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+
+        // Update header
+        document.getElementById('currentMonth').textContent = monthNames[month];
+        document.getElementById('currentYear').textContent = year;
+
+        // Get calendar data
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+        const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+        const calendarDays = document.getElementById('calendarDays');
+        calendarDays.innerHTML = '';
+
+        const today = new Date();
+        const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
+        const todayDate = today.getDate();
+
+        // Previous month days
+        for (let i = firstDay - 1; i >= 0; i--) {
+          const day = daysInPrevMonth - i;
+          const dayEl = createDayElement(day, true);
+          calendarDays.appendChild(dayEl);
+        }
+
+        // Current month days
+        for (let day = 1; day <= daysInMonth; day++) {
+          const dayEl = createDayElement(day, false, isCurrentMonth && day === todayDate);
+
+          // Add sample indicators based on active filters
+          const indicators = [];
+          if (filters.classes && sampleData.classes.includes(day)) {
+            indicators.push('class');
+            dayEl.classList.add('has-class');
+          }
+          if (filters.payments && sampleData.payments.includes(day)) {
+            indicators.push('payment');
+            dayEl.classList.add('has-payment');
+          }
+          if (filters.absences && sampleData.absences.includes(day)) {
+            indicators.push('absent');
+            dayEl.classList.add('has-absence');
+          }
+          if (filters.skipped && sampleData.skipped.includes(day)) {
+            dayEl.classList.add('skipped');
+          }
+
+          addIndicators(dayEl, indicators);
+          calendarDays.appendChild(dayEl);
+        }
+
+        // Next month days
+        const totalCells = calendarDays.children.length;
+        const remainingCells = 42 - totalCells; // 6 rows × 7 days
+        for (let day = 1; day <= remainingCells; day++) {
+          const dayEl = createDayElement(day, true);
+          calendarDays.appendChild(dayEl);
+        }
+      }
+
+      // Create Day Element
+      function createDayElement(day, isOtherMonth = false, isToday = false) {
+        const dayEl = document.createElement('div');
+        dayEl.className = 'day';
+        if (isOtherMonth) dayEl.classList.add('other-month');
+        if (isToday) dayEl.classList.add('today');
+
+        const dayNumber = document.createElement('div');
+        dayNumber.className = 'day-number';
+        dayNumber.textContent = day;
+        dayEl.appendChild(dayNumber);
+
+        const indicatorContainer = document.createElement('div');
+        indicatorContainer.className = 'day-indicator';
+        dayEl.appendChild(indicatorContainer);
+
+        // Add click handler
+        dayEl.addEventListener('click', () => {
+          if (!isOtherMonth) {
+            openDayModal(day);
+          }
+        });
+
+        return dayEl;
+      }
+
+      // Add Indicators to Day
+      function addIndicators(dayEl, indicators) {
+        const indicatorContainer = dayEl.querySelector('.day-indicator');
+        indicators.forEach(type => {
+          const dot = document.createElement('div');
+          dot.className = `indicator-dot dot-${type}`;
+          indicatorContainer.appendChild(dot);
+        });
+      }
+
+      // Event Listeners
+      function attachEventListeners() {
+        // Navigation
+        document.getElementById('prevMonth').addEventListener('click', () => {
+          currentDate.setMonth(currentDate.getMonth() - 1);
+          renderCalendar();
+        });
+
+        document.getElementById('nextMonth').addEventListener('click', () => {
+          currentDate.setMonth(currentDate.getMonth() + 1);
+          renderCalendar();
+        });
+
+        document.getElementById('todayBtn').addEventListener('click', () => {
+          currentDate = new Date();
+          renderCalendar();
+        });
+
+        // Filters
+        document.querySelectorAll('.filter-item').forEach(item => {
+          item.addEventListener('click', () => {
+            const filterType = item.getAttribute('data-filter');
+            filters[filterType] = !filters[filterType];
+            item.classList.toggle('active');
+            renderCalendar();
+          });
+        });
+
+        // Quick Actions
+        document.querySelectorAll('.action-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            console.log('Action clicked:', btn.textContent.trim());
+            // Add your action handlers here
+          });
+        });
+
+        // Modal close handlers
+        document.getElementById('closeModal').addEventListener('click', closeDayModal);
+        document.getElementById('dayModal').addEventListener('click', e => {
+          if (e.target.id === 'dayModal') {
+            closeDayModal();
+          }
+        });
+
+        // ESC key to close modal
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            closeDayModal();
+          }
+        });
+
+        // Sidebar toggle
+        document.getElementById('sidebarToggle').addEventListener('click', toggleSidebar);
+      }
+
+      // Toggle Sidebar
+      function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        const container = document.querySelector('.container');
+
+        sidebar.classList.toggle('expanded');
+        container.classList.toggle('sidebar-expanded');
+      }
+
+      // Open Day Modal
+      function openDayModal(day) {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth();
+        const date = new Date(year, month, day);
+
+        // Get day of week
+        const dayOfWeek = date.toLocaleDateString('en-US', { weekday: 'long' });
+
+        // Format date
+        const formattedDate = date.toLocaleDateString('en-US', {
+          month: 'long',
+          day: 'numeric',
+          year: 'numeric',
+        });
+
+        // Update modal header
+        document.getElementById('modalDate').textContent = formattedDate;
+        document.getElementById('modalDayOfWeek').textContent = dayOfWeek;
+
+        // Get groups for this day
+        const dayGroups = groupsData[day] || [];
+
+        // Build modal content
+        const modalBody = document.getElementById('modalBody');
+
+        if (dayGroups.length === 0) {
+          modalBody.innerHTML = `
+            <div class="empty-state">
+              <div class="empty-state-icon">📅</div>
+              <div class="empty-state-text">No classes scheduled for this day</div>
+            </div>
+          `;
+        } else {
+          let content = '';
+
+          dayGroups.forEach(group => {
+            const studentsHtml =
+              group.students.length > 0
+                ? group.students
+                    .map((student, index) => {
+                      const initials = student.name
+                        .split(' ')
+                        .map(n => n[0])
+                        .join('');
+                      const studentId = `${day}-${group.group.replace(/\s/g, '-')}-${index}`;
+                      let badges = '';
+
+                      if (student.paid) {
+                        badges += '<span class="badge paid">✓ Paid</span>';
+                      } else {
+                        badges += '<span class="badge unpaid">✗ Unpaid</span>';
+                      }
+
+                      if (student.absent) {
+                        badges += '<span class="badge absent">Absent</span>';
+                      }
+
+                      // Only show action buttons if student is unpaid
+                      const actionButtons = !student.paid
+                        ? `
+                    <div class="student-actions">
+                      <button class="action-icon-btn pause ${student.autoPaused ? 'paused' : ''}"
+                              data-student-id="${studentId}"
+                              data-tooltip="${student.autoPaused ? 'Resume Auto Reminder' : 'Pause Auto Reminder'}"
+                              onclick="event.stopPropagation(); toggleAutoReminder('${studentId}', '${student.name}')">
+                        ${student.autoPaused ? '▶' : '⏸'}
+                      </button>
+                      <button class="action-icon-btn send"
+                              data-student-id="${studentId}"
+                              data-tooltip="Send Manual Reminder"
+                              onclick="event.stopPropagation(); sendManualReminder('${studentId}', '${student.name}')">
+                        ✉
+                      </button>
+                    </div>
+                  `
+                        : '';
+
+                      return `
+                    <div class="student-card">
+                      <div class="student-info">
+                        <div class="student-avatar">${initials}</div>
+                        <div class="student-details">
+                          <div class="student-name student-name-clickable" onclick="openStudentDetails(${JSON.stringify(student).replace(/"/g, '&quot;')}, '${formattedDate}')">${student.name}</div>
+                          <div class="student-status">${student.absent ? 'Marked absent' : 'Active student'}</div>
+                        </div>
+                      </div>
+                      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                        ${actionButtons}
+                        <div class="student-badges">
+                          ${badges}
+                        </div>
+                      </div>
+                    </div>
+                  `;
+                    })
+                    .join('')
+                : '<div class="empty-state"><div class="empty-state-text">Class canceled - no students</div></div>';
+
+            content += `
+              <div class="group-section">
+                <div class="group-header">
+                  <div class="group-icon">👥</div>
+                  <div class="group-info">
+                    <h3>${group.group}</h3>
+                    <div class="group-time">${group.time}</div>
+                  </div>
+                </div>
+                <div class="students-list">
+                  ${studentsHtml}
+                </div>
+              </div>
+            `;
+          });
+
+          modalBody.innerHTML = content;
+        }
+
+        // Show modal
+        const modal = document.getElementById('dayModal');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      // Close Day Modal
+      function closeDayModal() {
+        const modal = document.getElementById('dayModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      // Toggle Auto Reminder
+      function toggleAutoReminder(studentId, studentName) {
+        const button = document.querySelector(`[data-student-id="${studentId}"].pause`);
+        const isPaused = button.classList.contains('paused');
+
+        button.classList.toggle('paused');
+        button.innerHTML = isPaused ? '⏸' : '▶';
+        button.setAttribute('data-tooltip', isPaused ? 'Pause Auto Reminder' : 'Resume Auto Reminder');
+
+        console.log(`${isPaused ? 'Resumed' : 'Paused'} auto reminder for ${studentName}`);
+
+        // Here you would make an API call to update the student's auto-reminder status
+        // Example: await updateAutoReminder(studentId, !isPaused);
+      }
+
+      // Send Manual Reminder
+      function sendManualReminder(studentId, studentName) {
+        const button = document.querySelector(`[data-student-id="${studentId}"].send`);
+
+        // Animate button
+        button.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          button.style.transform = '';
+        }, 200);
+
+        console.log(`Sending manual payment reminder to ${studentName}`);
+
+        // Here you would make an API call to send the reminder email
+        // Example: await sendPaymentReminder(studentId);
+
+        // Show success feedback (you could use a toast notification instead)
+        alert(`Payment reminder sent to ${studentName}!`);
+      }
+
+      // Open Student Details Modal
+      function openStudentDetails(student, classDate) {
+        const modalBody = document.getElementById('modalBody');
+        const modalTitle = document.getElementById('modalDate');
+        const modalSubtitle = document.getElementById('modalDayOfWeek');
+
+        // Update modal header
+        modalTitle.textContent = student.name;
+        modalSubtitle.textContent = student.groupName;
+
+        // Calculate classes remaining
+        const classesRemaining = Math.floor(student.balance / student.pricePerClass);
+
+        // Build student details content
+        const content = `
+          <div class="student-detail-section">
+            <div class="section-label">Class Date</div>
+            <div class="section-content">${classDate}</div>
+          </div>
+
+          <div class="student-detail-section">
+            <div class="section-label">Status</div>
+            <div class="section-content ${student.balance > 0 ? 'highlight' : ''}">
+              ${student.balance > 0 ? `Unpaid (${student.balance} $ balance)` : 'Paid'}
+            </div>
+          </div>
+
+          <div class="student-detail-section">
+            <div class="section-label">Price Per Class</div>
+            <div class="section-content">${student.pricePerClass} $</div>
+          </div>
+
+          <div class="student-detail-section">
+            <div class="section-label">Balance</div>
+            <div class="section-content balance">
+              ${student.balance} $
+              ${student.balance > 0 ? `<div class="balance-note">≈ ${classesRemaining} classes remaining</div>` : ''}
+            </div>
+          </div>
+
+          <div class="student-detail-section">
+            <div class="section-label">Quick Actions:</div>
+            <div class="quick-actions-grid">
+              <button class="quick-action-btn primary" onclick="addPayment('${student.name}')">
+                💰 Add Payment
+              </button>
+              <button class="quick-action-btn secondary" onclick="applyCredit('${student.name}')">
+                💳 Apply from Credit
+              </button>
+              <button class="quick-action-btn tertiary" onclick="markAbsent('${student.name}', '${classDate}')">
+                ⭕ Mark Absent
+              </button>
+            </div>
+          </div>
+        `;
+
+        modalBody.innerHTML = content;
+      }
+
+      // Quick Action Handlers
+      function addPayment(studentName) {
+        console.log(`Adding payment for ${studentName}`);
+
+        const amount = prompt(`Enter payment amount for ${studentName}:`, '50');
+        if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+          console.log(`Payment of $${amount} recorded for ${studentName}`);
+          showSuccessToast(`✅ Payment of $${amount} added for ${studentName}`);
+
+          // In production: await PaymentStore.add({ student_id, amount, date, ... });
+          // Then refresh calendar and close modal
+        } else if (amount !== null) {
+          showErrorToast('❌ Invalid amount entered');
+        }
+      }
+
+      function applyCredit(studentName) {
+        console.log(`Applying credit for ${studentName}`);
+
+        const amount = prompt(`Enter credit amount to apply for ${studentName}:`, '50');
+        if (amount && !isNaN(amount) && parseFloat(amount) > 0) {
+          const confirmed = confirm(`Apply $${amount} credit to ${studentName}'s balance?`);
+          if (confirmed) {
+            console.log(`Credit of $${amount} applied for ${studentName}`);
+            showSuccessToast(`✅ Credit of $${amount} applied for ${studentName}`);
+
+            // In production: await CreditPaymentManager.add({ student_id, amount, class_date, ... });
+            // Then refresh calendar and update student balance
+          }
+        } else if (amount !== null) {
+          showErrorToast('❌ Invalid amount entered');
+        }
+      }
+
+      function markAbsent(studentName, classDate) {
+        console.log(`Marking ${studentName} as absent for ${classDate}`);
+
+        const confirmed = confirm(`Mark ${studentName} as absent for ${classDate}?`);
+        if (confirmed) {
+          console.log(`${studentName} marked as absent for ${classDate}`);
+          showSuccessToast(`✅ ${studentName} marked as absent for ${classDate}`);
+
+          // In production: await AbsentManager.markAbsent(student_id, class_date);
+          // Then refresh calendar to show gray dot
+          // And dispatch absence:updated event
+        }
+      }
+
+      // Toast Notifications
+      function showSuccessToast(message) {
+        showToast(message, '#22c55e');
+      }
+
+      function showErrorToast(message) {
+        showToast(message, '#ef4444');
+      }
+
+      function showToast(message, color) {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: ${color};
+          color: white;
+          padding: 16px 24px;
+          border-radius: 12px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+          z-index: 100000;
+          animation: slideIn 0.3s ease-out;
+          max-width: 400px;
+        `;
+        toast.textContent = message;
+
+        // Add animation keyframes if not exists
+        if (!document.getElementById('toast-animations')) {
+          const style = document.createElement('style');
+          style.id = 'toast-animations';
+          style.textContent = `
+            @keyframes slideIn {
+              from { transform: translateX(400px); opacity: 0; }
+              to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+              from { transform: translateX(0); opacity: 1; }
+              to { transform: translateX(400px); opacity: 0; }
+            }
+          `;
+          document.head.appendChild(style);
+        }
+
+        document.body.appendChild(toast);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+          toast.style.animation = 'slideOut 0.3s ease-out';
+          setTimeout(() => toast.remove(), 300);
+        }, 3000);
+      }
+
+      // Initialize on load
+      document.addEventListener('DOMContentLoaded', initCalendar);
+    </script>
+  </body>
+</html>

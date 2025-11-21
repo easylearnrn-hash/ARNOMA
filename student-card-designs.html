@@ -1,0 +1,1061 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Card Design Options</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        min-height: 100vh;
+        padding: 40px 20px;
+        color: white;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      h1 {
+        text-align: center;
+        font-size: 2.5rem;
+        margin-bottom: 20px;
+        background: linear-gradient(135deg, #8ab4ff, #a855f7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .subtitle {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 50px;
+        font-size: 1.1rem;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        gap: 40px;
+        margin-bottom: 40px;
+      }
+
+      .design-section {
+        text-align: center;
+      }
+
+      .design-title {
+        font-size: 1.5rem;
+        margin-bottom: 15px;
+        color: #8ab4ff;
+        font-weight: 700;
+      }
+
+      .design-description {
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 20px;
+        font-size: 0.9rem;
+      }
+
+      /* Common elements */
+      .status-badge {
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+      }
+
+      .status-active {
+        background: rgba(76, 175, 80, 0.15);
+        border: 1px solid rgba(76, 175, 80, 0.4);
+        color: #4caf50;
+      }
+
+      .toggle {
+        position: relative;
+        display: inline-block;
+        width: 44px;
+        height: 24px;
+      }
+
+      .toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: rgba(255, 255, 255, 0.1);
+        transition: 0.3s;
+        border-radius: 24px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .toggle-slider:before {
+        position: absolute;
+        content: '';
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: 0.3s;
+        border-radius: 50%;
+      }
+
+      input:checked + .toggle-slider {
+        background-color: #8ab4ff;
+        border-color: #8ab4ff;
+      }
+
+      input:checked + .toggle-slider:before {
+        transform: translateX(20px);
+      }
+
+      .group-btn {
+        padding: 10px 18px;
+        border-radius: 12px;
+        border: 2px solid;
+        background: rgba(255, 255, 255, 0.05);
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .group-btn.active {
+        background: linear-gradient(135deg, #ec4899, #f472b6);
+        border-color: #ec4899;
+        color: white;
+        box-shadow: 0 4px 20px rgba(236, 72, 153, 0.4);
+      }
+
+      /* DESIGN 1: Modern Glassmorphism */
+      .card-glass {
+        background: rgba(255, 255, 255, 0.05);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 0;
+        overflow: hidden;
+        transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      }
+
+      .card-glass:hover {
+        transform: translateY(-8px);
+        box-shadow:
+          0 20px 60px rgba(138, 180, 255, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        border-color: rgba(138, 180, 255, 0.3);
+      }
+
+      .glass-header {
+        padding: 24px;
+        background: linear-gradient(135deg, rgba(138, 180, 255, 0.15), rgba(168, 85, 247, 0.15));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .glass-name {
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff, #8ab4ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .glass-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .glass-stat {
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        text-align: center;
+      }
+
+      .glass-stat-label {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+
+      .glass-stat-value {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #8ab4ff;
+      }
+
+      .glass-actions {
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.15);
+      }
+
+      .glass-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      /* DESIGN 2: Left Accent Bar */
+      .card-accent {
+        background: linear-gradient(145deg, rgba(26, 32, 44, 0.95), rgba(17, 24, 39, 0.95));
+        border-radius: 16px;
+        overflow: hidden;
+        transition: all 0.3s;
+        position: relative;
+        border: 1px solid rgba(138, 180, 255, 0.15);
+      }
+
+      .card-accent::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 6px;
+        background: linear-gradient(180deg, #ec4899, #f472b6, #ec4899);
+        animation: shimmer 3s ease-in-out infinite;
+      }
+
+      @keyframes shimmer {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+
+      .card-accent:hover {
+        transform: translateX(4px);
+        box-shadow: -4px 0 20px rgba(236, 72, 153, 0.3);
+      }
+
+      .accent-content {
+        padding-left: 20px;
+      }
+
+      .accent-header {
+        padding: 24px 24px 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .accent-name {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: white;
+      }
+
+      .accent-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 1px;
+        background: rgba(255, 255, 255, 0.05);
+        margin: 0 16px 16px;
+      }
+
+      .accent-item {
+        padding: 16px 12px;
+        background: rgba(0, 0, 0, 0.2);
+        text-align: center;
+      }
+
+      .accent-item-label {
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 6px;
+      }
+
+      .accent-item-value {
+        font-size: 1.1rem;
+        font-weight: 700;
+      }
+
+      .accent-buttons {
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.15);
+      }
+
+      /* DESIGN 3: Minimalist Clean */
+      .card-minimal {
+        background: white;
+        color: #1f2937;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+      }
+
+      .card-minimal:hover {
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+        transform: translateY(-4px);
+      }
+
+      .minimal-header {
+        padding: 28px;
+        background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+        border-bottom: 2px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .minimal-name {
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: #0f172a;
+      }
+
+      .minimal-status {
+        background: #22c55e;
+        color: white;
+        padding: 6px 14px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+
+      .minimal-body {
+        padding: 28px;
+      }
+
+      .minimal-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 0;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .minimal-row:last-child {
+        border-bottom: none;
+      }
+
+      .minimal-label {
+        font-size: 12px;
+        color: #64748b;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .minimal-value {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: #0f172a;
+      }
+
+      .minimal-buttons {
+        padding: 0 28px 28px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .minimal-btn {
+        padding: 10px 18px;
+        border-radius: 10px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .minimal-btn.active {
+        background: #8ab4ff;
+        border-color: #8ab4ff;
+        color: white;
+      }
+
+      /* DESIGN 4: Neumorphic */
+      .card-neuro {
+        background: #1e293b;
+        border-radius: 24px;
+        padding: 0;
+        box-shadow:
+          12px 12px 24px rgba(0, 0, 0, 0.5),
+          -12px -12px 24px rgba(255, 255, 255, 0.03);
+        transition: all 0.4s;
+      }
+
+      .card-neuro:hover {
+        box-shadow:
+          16px 16px 32px rgba(0, 0, 0, 0.6),
+          -16px -16px 32px rgba(255, 255, 255, 0.04);
+      }
+
+      .neuro-header {
+        padding: 28px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .neuro-name {
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: white;
+        margin-bottom: 12px;
+      }
+
+      .neuro-meta {
+        display: flex;
+        gap: 16px;
+        align-items: center;
+      }
+
+      .neuro-body {
+        padding: 28px;
+      }
+
+      .neuro-stat {
+        margin-bottom: 24px;
+        padding: 20px;
+        background: #1e293b;
+        border-radius: 16px;
+        box-shadow:
+          inset 4px 4px 8px rgba(0, 0, 0, 0.4),
+          inset -4px -4px 8px rgba(255, 255, 255, 0.02);
+      }
+
+      .neuro-stat:last-child {
+        margin-bottom: 0;
+      }
+
+      .neuro-stat-label {
+        font-size: 11px;
+        color: rgba(138, 180, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+
+      .neuro-stat-value {
+        font-size: 1.4rem;
+        font-weight: 800;
+        color: #8ab4ff;
+      }
+
+      .neuro-buttons {
+        padding: 0 28px 28px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      .neuro-btn {
+        padding: 12px 20px;
+        border-radius: 12px;
+        border: none;
+        background: #1e293b;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow:
+          4px 4px 8px rgba(0, 0, 0, 0.4),
+          -4px -4px 8px rgba(255, 255, 255, 0.02);
+        transition: all 0.3s;
+      }
+
+      .neuro-btn.active {
+        color: white;
+        box-shadow:
+          inset 2px 2px 4px rgba(0, 0, 0, 0.4),
+          inset -2px -2px 4px rgba(138, 180, 255, 0.1);
+        background: linear-gradient(135deg, #8ab4ff, #a855f7);
+      }
+
+      /* DESIGN 5: Gradient Border */
+      .card-gradient {
+        position: relative;
+        background: linear-gradient(145deg, #1a1f2e, #0f1419);
+        border-radius: 20px;
+        padding: 2px;
+        overflow: hidden;
+      }
+
+      .card-gradient::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        border-radius: 20px;
+        padding: 2px;
+        background: linear-gradient(135deg, #8ab4ff, #ec4899, #a855f7, #8ab4ff);
+        -webkit-mask:
+          linear-gradient(#fff 0 0) content-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        animation: borderRotate 3s linear infinite;
+        background-size: 200% 200%;
+      }
+
+      @keyframes borderRotate {
+        0% {
+          background-position: 0% 50%;
+        }
+        50% {
+          background-position: 100% 50%;
+        }
+        100% {
+          background-position: 0% 50%;
+        }
+      }
+
+      .gradient-inner {
+        background: linear-gradient(145deg, #1a1f2e, #0f1419);
+        border-radius: 18px;
+        overflow: hidden;
+      }
+
+      .gradient-header {
+        padding: 24px;
+        background: rgba(138, 180, 255, 0.05);
+        border-bottom: 1px solid rgba(138, 180, 255, 0.1);
+      }
+
+      .gradient-name {
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8ab4ff, #ec4899);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 12px;
+      }
+
+      .gradient-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+        padding: 24px;
+      }
+
+      .gradient-box {
+        padding: 20px;
+        background: rgba(138, 180, 255, 0.05);
+        border: 1px solid rgba(138, 180, 255, 0.15);
+        border-radius: 12px;
+        text-align: center;
+        transition: all 0.3s;
+      }
+
+      .gradient-box:hover {
+        background: rgba(138, 180, 255, 0.1);
+        border-color: rgba(138, 180, 255, 0.3);
+      }
+
+      .gradient-box-label {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+
+      .gradient-box-value {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: white;
+      }
+
+      .gradient-actions {
+        padding: 0 24px 24px;
+      }
+
+      .gradient-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+
+      /* DESIGN 6: Split Panel */
+      .card-split {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        background: linear-gradient(145deg, rgba(26, 32, 44, 0.95), rgba(17, 24, 39, 0.95));
+        border-radius: 20px;
+        overflow: hidden;
+        border: 1px solid rgba(138, 180, 255, 0.15);
+        transition: all 0.3s;
+      }
+
+      .card-split:hover {
+        border-color: rgba(138, 180, 255, 0.3);
+        box-shadow: 0 10px 40px rgba(138, 180, 255, 0.2);
+      }
+
+      .split-left {
+        padding: 28px;
+        background: linear-gradient(135deg, rgba(138, 180, 255, 0.08), rgba(168, 85, 247, 0.08));
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .split-right {
+        padding: 28px;
+        background: rgba(0, 0, 0, 0.2);
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .split-name {
+        font-size: 1.6rem;
+        font-weight: 900;
+        color: white;
+        margin-bottom: 20px;
+      }
+
+      .split-info {
+        margin-bottom: 20px;
+      }
+
+      .split-info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .split-info-label {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+      }
+
+      .split-info-value {
+        font-size: 14px;
+        font-weight: 700;
+        color: #8ab4ff;
+      }
+
+      .split-title {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+      }
+
+      .split-buttons {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+
+      .split-btn {
+        padding: 10px 16px;
+        border-radius: 10px;
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 13px;
+      }
+
+      .split-btn.active {
+        background: linear-gradient(135deg, #8ab4ff, #a855f7);
+        border-color: #8ab4ff;
+        color: white;
+      }
+
+      .footer-note {
+        text-align: center;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 60px;
+        font-size: 0.9rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🎨 Student Card Design Options</h1>
+      <p class="subtitle">Choose your favorite design - All maintain existing functionality</p>
+
+      <div class="grid">
+        <!-- DESIGN 1: Glassmorphism -->
+        <div class="design-section">
+          <h2 class="design-title">1. Modern Glassmorphism</h2>
+          <p class="design-description">Frosted glass effect with subtle gradients and blur</p>
+
+          <div class="card-glass">
+            <div class="glass-header">
+              <div>
+                <div class="glass-name">Ana Nshanyan</div>
+                <div style="font-size: 12px; color: rgba(138, 180, 255, 0.7); margin-top: 4px">Group A</div>
+              </div>
+              <div style="display: flex; gap: 12px; align-items: center">
+                <span class="status-badge status-active">ACTIVE</span>
+                <label class="toggle">
+                  <input type="checkbox" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="glass-stats">
+              <div class="glass-stat">
+                <div class="glass-stat-label">Pay/Class</div>
+                <div class="glass-stat-value">$100</div>
+              </div>
+              <div class="glass-stat">
+                <div class="glass-stat-label">Credit</div>
+                <div class="glass-stat-value" style="color: #fbbf24">$0</div>
+              </div>
+              <div class="glass-stat">
+                <div class="glass-stat-label">Phone</div>
+                <div class="glass-stat-value" style="font-size: 0.9rem; color: #c084fc">N/A</div>
+              </div>
+              <div class="glass-stat">
+                <div class="glass-stat-label">Email</div>
+                <div class="glass-stat-value" style="font-size: 0.8rem; color: #94a3b8">Not set</div>
+              </div>
+            </div>
+
+            <div class="glass-actions">
+              <div
+                style="
+                  font-size: 10px;
+                  color: rgba(255, 255, 255, 0.5);
+                  text-transform: uppercase;
+                  letter-spacing: 1px;
+                  margin-bottom: 10px;
+                  text-align: center;
+                "
+              >
+                Switch Group
+              </div>
+              <div class="glass-buttons">
+                <button class="group-btn active">A</button>
+                <button class="group-btn">B</button>
+                <button class="group-btn">C</button>
+                <button class="group-btn">D</button>
+                <button class="group-btn">E</button>
+                <button class="group-btn">F</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESIGN 2: Left Accent Bar -->
+        <div class="design-section">
+          <h2 class="design-title">2. Left Accent Bar</h2>
+          <p class="design-description">Colored vertical bar on the left with clean layout</p>
+
+          <div class="card-accent">
+            <div class="accent-content">
+              <div class="accent-header">
+                <div>
+                  <div class="accent-name">Ana Nshanyan</div>
+                  <div style="font-size: 12px; color: rgba(138, 180, 255, 0.7); margin-top: 4px">Group A</div>
+                </div>
+                <div style="display: flex; gap: 12px; align-items: center">
+                  <span class="status-badge status-active">ACTIVE</span>
+                  <label class="toggle">
+                    <input type="checkbox" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="accent-grid">
+                <div class="accent-item">
+                  <div class="accent-item-label">Pay/Class</div>
+                  <div class="accent-item-value" style="color: #4ade80">$100</div>
+                </div>
+                <div class="accent-item">
+                  <div class="accent-item-label">Credit</div>
+                  <div class="accent-item-value" style="color: #fbbf24">$0</div>
+                </div>
+                <div class="accent-item">
+                  <div class="accent-item-label">Phone</div>
+                  <div class="accent-item-value" style="color: #c084fc; font-size: 0.9rem">N/A</div>
+                </div>
+                <div class="accent-item">
+                  <div class="accent-item-label">Email</div>
+                  <div class="accent-item-value" style="color: #94a3b8; font-size: 0.8rem">Not set</div>
+                </div>
+              </div>
+
+              <div class="accent-buttons">
+                <div
+                  style="
+                    font-size: 10px;
+                    color: rgba(255, 255, 255, 0.5);
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin-bottom: 10px;
+                  "
+                >
+                  Switch Group
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center">
+                  <button class="group-btn active">A</button>
+                  <button class="group-btn">B</button>
+                  <button class="group-btn">C</button>
+                  <button class="group-btn">D</button>
+                  <button class="group-btn">E</button>
+                  <button class="group-btn">F</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESIGN 3: Minimalist Clean -->
+        <div class="design-section">
+          <h2 class="design-title">3. Minimalist Clean</h2>
+          <p class="design-description">Ultra-clean white card with subtle shadows</p>
+
+          <div class="card-minimal">
+            <div class="minimal-header">
+              <div>
+                <div class="minimal-name">Ana Nshanyan</div>
+                <div style="font-size: 12px; color: #64748b; margin-top: 4px; font-weight: 600">Group A</div>
+              </div>
+              <div class="minimal-status">ACTIVE</div>
+            </div>
+
+            <div class="minimal-body">
+              <div class="minimal-row">
+                <span class="minimal-label">Pay/Class</span>
+                <span class="minimal-value" style="color: #22c55e">$100</span>
+              </div>
+              <div class="minimal-row">
+                <span class="minimal-label">Credit</span>
+                <span class="minimal-value" style="color: #eab308">$0</span>
+              </div>
+              <div class="minimal-row">
+                <span class="minimal-label">Phone</span>
+                <span class="minimal-value" style="color: #a855f7">N/A</span>
+              </div>
+              <div class="minimal-row">
+                <span class="minimal-label">Email</span>
+                <span class="minimal-value" style="font-size: 0.9rem; color: #64748b">Not set</span>
+              </div>
+            </div>
+
+            <div class="minimal-buttons">
+              <button class="minimal-btn active">A</button>
+              <button class="minimal-btn">B</button>
+              <button class="minimal-btn">C</button>
+              <button class="minimal-btn">D</button>
+              <button class="minimal-btn">E</button>
+              <button class="minimal-btn">F</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESIGN 4: Neumorphic -->
+        <div class="design-section">
+          <h2 class="design-title">4. Neumorphic</h2>
+          <p class="design-description">Soft shadows for a modern 3D embossed look</p>
+
+          <div class="card-neuro">
+            <div class="neuro-header">
+              <div class="neuro-name">Ana Nshanyan</div>
+              <div class="neuro-meta">
+                <span class="status-badge status-active">ACTIVE</span>
+                <span style="font-size: 12px; color: rgba(138, 180, 255, 0.7)">Group A</span>
+                <label class="toggle">
+                  <input type="checkbox" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="neuro-body">
+              <div class="neuro-stat">
+                <div class="neuro-stat-label">Pay Per Class</div>
+                <div class="neuro-stat-value">$100</div>
+              </div>
+              <div class="neuro-stat">
+                <div class="neuro-stat-label">Credit Balance</div>
+                <div class="neuro-stat-value" style="color: #fbbf24">$0</div>
+              </div>
+              <div class="neuro-stat">
+                <div class="neuro-stat-label">Phone Number</div>
+                <div class="neuro-stat-value" style="color: #c084fc; font-size: 1.1rem">N/A</div>
+              </div>
+            </div>
+
+            <div class="neuro-buttons">
+              <button class="neuro-btn active">A</button>
+              <button class="neuro-btn">B</button>
+              <button class="neuro-btn">C</button>
+              <button class="neuro-btn">D</button>
+              <button class="neuro-btn">E</button>
+              <button class="neuro-btn">F</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESIGN 5: Gradient Border -->
+        <div class="design-section">
+          <h2 class="design-title">5. Gradient Border</h2>
+          <p class="design-description">Animated gradient borders with dark center</p>
+
+          <div class="card-gradient">
+            <div class="gradient-inner">
+              <div class="gradient-header">
+                <div class="gradient-name">Ana Nshanyan</div>
+                <div style="display: flex; gap: 12px; align-items: center">
+                  <span class="status-badge status-active">ACTIVE</span>
+                  <span style="font-size: 12px; color: rgba(138, 180, 255, 0.7)">Group A</span>
+                  <label class="toggle">
+                    <input type="checkbox" checked />
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="gradient-grid">
+                <div class="gradient-box">
+                  <div class="gradient-box-label">Pay/Class</div>
+                  <div class="gradient-box-value">$100</div>
+                </div>
+                <div class="gradient-box">
+                  <div class="gradient-box-label">Credit</div>
+                  <div class="gradient-box-value" style="color: #fbbf24">$0</div>
+                </div>
+                <div class="gradient-box">
+                  <div class="gradient-box-label">Phone</div>
+                  <div class="gradient-box-value" style="font-size: 1rem; color: #c084fc">N/A</div>
+                </div>
+                <div class="gradient-box">
+                  <div class="gradient-box-label">Email</div>
+                  <div class="gradient-box-value" style="font-size: 0.9rem; color: #94a3b8">Not set</div>
+                </div>
+              </div>
+
+              <div class="gradient-actions">
+                <div
+                  style="
+                    font-size: 10px;
+                    color: rgba(255, 255, 255, 0.5);
+                    text-transform: uppercase;
+                    letter-spacing: 1px;
+                    margin-bottom: 12px;
+                    text-align: center;
+                  "
+                >
+                  Switch Group
+                </div>
+                <div class="gradient-buttons">
+                  <button class="group-btn active">A</button>
+                  <button class="group-btn">B</button>
+                  <button class="group-btn">C</button>
+                  <button class="group-btn">D</button>
+                  <button class="group-btn">E</button>
+                  <button class="group-btn">F</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- DESIGN 6: Split Panel -->
+        <div class="design-section">
+          <h2 class="design-title">6. Split Panel</h2>
+          <p class="design-description">Two-tone design with info on left, actions on right</p>
+
+          <div class="card-split">
+            <div class="split-left">
+              <div class="split-name">Ana Nshanyan</div>
+
+              <div class="split-info">
+                <div class="split-info-item">
+                  <span class="split-info-label">Group</span>
+                  <span class="split-info-value">A</span>
+                </div>
+                <div class="split-info-item">
+                  <span class="split-info-label">Pay/Class</span>
+                  <span class="split-info-value" style="color: #4ade80">$100</span>
+                </div>
+                <div class="split-info-item">
+                  <span class="split-info-label">Credit</span>
+                  <span class="split-info-value" style="color: #fbbf24">$0</span>
+                </div>
+                <div class="split-info-item">
+                  <span class="split-info-label">Phone</span>
+                  <span class="split-info-value" style="color: #c084fc">N/A</span>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 12px; align-items: center">
+                <span class="status-badge status-active">ACTIVE</span>
+                <label class="toggle">
+                  <input type="checkbox" checked />
+                  <span class="toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="split-right">
+              <div>
+                <div class="split-title">Switch Group</div>
+                <div class="split-buttons">
+                  <button class="split-btn active">A</button>
+                  <button class="split-btn">B</button>
+                  <button class="split-btn">C</button>
+                  <button class="split-btn">D</button>
+                  <button class="split-btn">E</button>
+                  <button class="split-btn">F</button>
+                </div>
+              </div>
+
+              <div>
+                <div class="split-title">Set Amount</div>
+                <div class="split-buttons">
+                  <button class="split-btn">$25</button>
+                  <button class="split-btn">$50</button>
+                  <button class="split-btn">$75</button>
+                  <button class="split-btn active">$100</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <p class="footer-note">💡 All designs maintain the same functionality - only visual styling changes</p>
+    </div>
+  </body>
+</html>
