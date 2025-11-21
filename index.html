@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.12.0 - Cancel Sync Fixed]</title>
+    <title>ARNOMA - Student Management [v2.15.0 - Critical Bug Fixes]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.14.0" />
-    <meta name="build-timestamp" content="20251121-130000" />
+    <meta name="version" content="2.15.0" />
+    <meta name="build-timestamp" content="20251121-140000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.14.0 - Canceled Class Calendar Fix ✅');
+      console.log('✅ ARNOMA v2.15.0 - Critical Bug Fixes: Canceled Classes & Absences ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -17014,10 +17014,16 @@
               const yerevanData = convertLAToYerevanTime(classData.laTime);
               const countdown = formatCountdown(classData.secondsRemaining);
 
-              // Check if this class is skipped
+              // Check if this class is CANCELED (not just skipped)
               const dateStr = calculateClassDateForTimer(classData.dayName, classData.laTime);
-              const isSkipped =
-                window.SkipClassManager && window.SkipClassManager.isClassSkipped(classData.groupName, dateStr);
+              const isCanceled =
+                window.SkipClassManager && window.SkipClassManager.isClassCanceled(classData.groupName, dateStr);
+
+              // Skip rendering canceled classes entirely - they should NOT appear in countdown timer
+              if (isCanceled) {
+                console.log(`[CountdownTimer] Skipping canceled class: ${classData.groupName} on ${dateStr}`);
+                return;
+              }
 
               // BEGIN CLASS COUNTDOWN TIMER FIX - Remove "in-progress" state
               // Determine card tint class based on time remaining
@@ -17053,10 +17059,9 @@
               // END CLASS COUNTDOWN TIMER FIX
 
               const isNext = index === 0;
-              const skippedClass = isSkipped ? 'skipped' : '';
 
               html += `
-            <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''} ${skippedClass}" data-group="${classData.groupName}" data-day="${classData.dayName}" data-time="${classData.laTime}">
+            <div class="timer-class-item ${cardTintClass} ${stateClass} ${isNext ? 'next-class' : ''}" data-group="${classData.groupName}" data-day="${classData.dayName}" data-time="${classData.laTime}">
               <div class="timer-class-header">
                 <span class="timer-class-icon">${stateIcon}</span>
                 <span class="timer-class-group">${classData.groupName}</span>
@@ -19706,6 +19711,20 @@
           const laToday = getLADate();
           const todayStr = formatDateYYYYMMDD(laToday);
 
+          // ⚠️ CRITICAL CHECK FIRST: Is this class CANCELED?
+          // MUST check BEFORE absences to prevent showing absent students on canceled classes
+          const groupName = student.group;
+          if (groupName && window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr)) {
+            return {
+              status: 'canceled',
+              paid: false,
+              amount: 0,
+              balance: student.balance || 0,
+              message: 'Class Canceled',
+              showActions: false, // No actions allowed on canceled classes
+            };
+          }
+
           // CHECK 1: Is this student marked absent?
           if (window.AbsentManager && window.AbsentManager.isAbsent(studentId, dateStr)) {
             debugLog('Absent check - Student is marked absent:', { studentId, dateStr });
@@ -19732,8 +19751,7 @@
             };
           }
 
-          // CHECK 2: Is this class skipped?
-          const groupName = student.group;
+          // CHECK 2: Is this class skipped by student?
           if (groupName && window.SkipClassManager && window.SkipClassManager.isClassSkipped(groupName, dateStr)) {
             return {
               status: 'skipped',
@@ -20068,6 +20086,17 @@
           groupNames.forEach((groupName, groupIndex) => {
             const studentsInGroup = studentsByGroup[groupName];
 
+            // ⚠️ CRITICAL: Check if this entire class is CANCELED
+            // If class is canceled, DO NOT render ANY dots (no absent, no paid, NOTHING)
+            const isClassCanceled =
+              window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr);
+
+            if (isClassCanceled) {
+              // Class is canceled - skip rendering all dots for this group
+              console.log(`[Calendar] Class canceled on ${dateStr} for ${groupName} - skipping all dots`);
+              return;
+            }
+
             // Render dots for each student in this group
             studentsInGroup.forEach(classInfo => {
               const { student, status } = classInfo;
@@ -20077,7 +20106,7 @@
                 return;
               }
 
-              // Check if this class is skipped/canceled
+              // Check if this class is skipped (student-level skip, not class-level cancel)
               const groupNameForCheck = window.groupsCache?.find(g => g.name === student.group)?.name;
               const isSkipped =
                 groupNameForCheck &&
@@ -20087,7 +20116,7 @@
               let dotColor;
 
               if (isSkipped) {
-                dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped/canceled classes
+                dotColor = 'rgba(150, 150, 150, 0.4)'; // Gray for skipped classes
               } else {
                 switch (status) {
                   case 'paid':
@@ -22980,7 +23009,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.14.0 - Canceled Class Calendar Fix ✅');
+          console.log('✅ ARNOMA v2.15.0 - Critical Bug Fixes: Canceled Classes & Absences ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
