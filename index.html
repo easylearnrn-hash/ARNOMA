@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.1 - Canceled Visual Fix]</title>
+  <title>ARNOMA - Student Management [v2.18.2 - Timer Date Fix]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.1" />
-  <meta name="build-timestamp" content="20251121-202500" />
+  <meta name="version" content="2.18.2" />
+  <meta name="build-timestamp" content="20251121-204000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -16972,6 +16972,9 @@
               // Get current time in seconds since midnight LA time
               const currentTimeInSeconds = nowLA.hours * 3600 + nowLA.minutes * 60 + nowLA.seconds;
 
+              // Construct a proper Date object from nowLA properties
+              const nowLADate = new Date(nowLA.year, nowLA.month - 1, nowLA.day, nowLA.hours, nowLA.minutes, nowLA.seconds);
+
               // Check each day for the next 7 days
               for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
                 // Calculate the day we're checking
@@ -16980,7 +16983,7 @@
                 const checkDayName = dayNames[checkDayIndex];
 
                 // Calculate the actual calendar date for this check
-                const checkDate = new Date(nowLA);
+                const checkDate = new Date(nowLADate);
                 checkDate.setDate(checkDate.getDate() + daysAhead);
                 const checkDateStr = formatDateYYYYMMDD(checkDate);
 
