@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.5 - Show One-Time in Manager]</title>
+  <title>ARNOMA - Student Management [v2.18.6 - Date Picker Layout Fix]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.5" />
-  <meta name="build-timestamp" content="20251121-210500" />
+  <meta name="version" content="2.18.6" />
+  <meta name="build-timestamp" content="20251121-211500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -6682,7 +6682,7 @@
 
           window.groupsCache = deduped;
           window.groupsCacheTimestamp = Date.now(); // PERFORMANCE: Track cache freshness
-          
+
           // DEBUG: Log one-time schedules on load
           const groupsWithOneTime = deduped.filter(g => g.one_time_schedules && g.one_time_schedules.length > 0);
           if (groupsWithOneTime.length > 0) {
@@ -6693,7 +6693,7 @@
           } else {
             console.log('[loadGroups] ℹ️ No groups have one-time schedules set');
           }
-          
+
           return window.groupsCache;
         }
         async function saveGroup(groupData) {
@@ -14818,31 +14818,41 @@
           const time24 = convert12to24(time);
 
           const div = document.createElement('div');
-          div.className = 'slot-row';
+          div.style.cssText = 'margin-bottom: 12px;';
           div.innerHTML = `
-        <select style="flex:1;">
-          ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => `<option ${d === day ? 'selected' : ''}>${d}</option>`).join('')}
-        </select>
-        <input type="time" value="${time24}" style="flex:1;" onkeydown="if(event.key==='Enter'){event.target.closest('.group-card').querySelector('button[onclick*=saveScheduleEdit]').click();}">
-        <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.8);" title="Check for one-time temporary class">
-          <input type="checkbox" class="one-time-checkbox" ${isOneTime ? 'checked' : ''} onchange="toggleOneTimeDate(this)">
-        </label>
-        <input type="date" class="one-time-date" value="${overrideDate}" style="flex:1;" placeholder="Select date for one-time class" title="Date for this one-time class">
-        <button onclick="this.parentElement.remove()">🗑️</button>
+        <div class="slot-row">
+          <select style="flex:1;">
+            ${['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(d => `<option ${d === day ? 'selected' : ''}>${d}</option>`).join('')}
+          </select>
+          <input type="time" value="${time24}" style="flex:1;" onkeydown="if(event.key==='Enter'){event.target.closest('.group-card').querySelector('button[onclick*=saveScheduleEdit]').click();}">
+          <label style="display: flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 12px; color: rgba(255, 255, 255, 0.8);" title="Check for one-time temporary class">
+            <input type="checkbox" class="one-time-checkbox" ${isOneTime ? 'checked' : ''} onchange="toggleOneTimeDate(this)">
+          </label>
+          <button onclick="this.closest('div').parentElement.remove()">🗑️</button>
+        </div>
+        <div class="slot-row" style="margin-top: 4px; ${isOneTime ? '' : 'display: none;'}">
+          <input type="date" class="one-time-date" value="${overrideDate}" style="flex:1;" placeholder="Select date for one-time class" title="Date for this one-time class">
+        </div>
       `;
           c.appendChild(div);
         }
 
         // ===== TOGGLE ONE-TIME DATE INPUT =====
         function toggleOneTimeDate(checkbox) {
-          // When checked, just keep it checked to indicate one-time class
-          // Date picker doesn't auto-open - user can click it manually if needed
-          const row = checkbox.closest('.slot-row');
-          const dateInput = row.querySelector('.one-time-date');
-          if (dateInput && checkbox.checked && !dateInput.value) {
-            // Set default date to today only if checkbox is checked and date is empty
-            const today = new Date();
-            dateInput.value = formatDateYYYYMMDD(today);
+          // Show/hide the date picker row based on checkbox state
+          const container = checkbox.closest('div').parentElement;
+          const dateRow = container.querySelector('.slot-row:last-child');
+          
+          if (checkbox.checked) {
+            dateRow.style.display = 'flex';
+            const dateInput = dateRow.querySelector('.one-time-date');
+            if (dateInput && !dateInput.value) {
+              // Set default date to today only if checkbox is checked and date is empty
+              const today = new Date();
+              dateInput.value = formatDateYYYYMMDD(today);
+            }
+          } else {
+            dateRow.style.display = 'none';
           }
         }
 
@@ -14892,15 +14902,19 @@
           const card = event.target.closest('.group-card');
           if (!card) return;
 
-          const rows = card.querySelectorAll('.slot-row');
+          const scheduleItems = card.querySelector('#scheduleItems');
+          const itemContainers = Array.from(scheduleItems.children); // Each has 2 slot-rows inside
           let schedule = []; // Regular recurring schedule
           let oneTimeSchedules = []; // One-time schedule overrides
 
-          rows.forEach(r => {
-            const d = r.querySelector('select').value.slice(0, 3);
-            const t = r.querySelector('input[type="time"]').value;
-            const isOneTime = r.querySelector('.one-time-checkbox')?.checked || false;
-            const overrideDate = r.querySelector('.one-time-date')?.value || '';
+          itemContainers.forEach(container => {
+            const firstRow = container.querySelector('.slot-row:first-child');
+            const secondRow = container.querySelector('.slot-row:last-child');
+            
+            const d = firstRow.querySelector('select').value.slice(0, 3);
+            const t = firstRow.querySelector('input[type="time"]').value;
+            const isOneTime = firstRow.querySelector('.one-time-checkbox')?.checked || false;
+            const overrideDate = secondRow.querySelector('.one-time-date')?.value || '';
 
             if (d && t) {
               // Convert 24-hour time to 12-hour AM/PM format
@@ -16728,7 +16742,7 @@
                 });
               }
             });
-            
+
             if (sessions.length === 0 && group.one_time_schedules.length > 0) {
               console.log(`[getOneTimeSessionsForDate] ℹ️ ${group.name} has ${group.one_time_schedules.length} one-time schedules, but none match ${targetDateStr}`);
             }
@@ -17557,7 +17571,7 @@
             // Check both "A" and "Group A" formats
             const normalizedName = groupName;
             const fullGroupName = groupName && groupName.length === 1 ? `Group ${groupName}` : groupName;
-            
+
             return (skippedClasses[normalizedName] && skippedClasses[normalizedName][dateStr]) ||
                    (skippedClasses[fullGroupName] && skippedClasses[fullGroupName][dateStr]);
           }
@@ -17568,7 +17582,7 @@
             // Students might have group="A" but skippedClasses might be saved as "Group A"
             const normalizedName = groupName;
             const fullGroupName = groupName && groupName.length === 1 ? `Group ${groupName}` : groupName;
-            
+
             const result = (
               (skippedClasses[normalizedName] &&
                 skippedClasses[normalizedName][dateStr] &&
@@ -17577,7 +17591,7 @@
                 skippedClasses[fullGroupName][dateStr] &&
                 skippedClasses[fullGroupName][dateStr].type === 'class-canceled')
             );
-            
+
             // DEBUG: Log check for Nov 25
             if (dateStr === '2025-11-25') {
               console.log(`[isClassCanceled] ${groupName} on ${dateStr}:`, {
@@ -17588,7 +17602,7 @@
                 allSkippedClasses: skippedClasses
               });
             }
-            
+
             return result;
           }
 
@@ -17899,7 +17913,7 @@
             // CRITICAL FIX: Use the stored classDate instead of recalculating
             // The stored date is already in LA timezone and YYYY-MM-DD format
             const dateStr = pendingSkip.classDate || calculateClassDate(pendingSkip.dayName, pendingSkip.laTime);
-            
+
             // CRITICAL FIX: Use actualGroupName (e.g., "A") not display name (e.g., "Group A")
             const groupNameForCancel = pendingSkip.actualGroupName || pendingSkip.groupName;
 
@@ -17925,7 +17939,7 @@
 
             // Cancel class for entire group - use ACTUAL group name
             const success = cancelClass(groupNameForCancel, dateStr, reason);
-            
+
             if (success) {
               console.log('[CLASS CANCELLED] ✅ Successfully canceled via COUNTDOWN_TIMER:', {
                 group: groupNameForCancel,
@@ -20237,15 +20251,15 @@
               });
 
             // Cell styling - gray background if class is canceled
-            const cellBgColor = hasCanceledClass 
-              ? 'rgba(100,100,100,0.15)' 
-              : isToday 
-                ? 'rgba(138,180,255,0.08)' 
+            const cellBgColor = hasCanceledClass
+              ? 'rgba(100,100,100,0.15)'
+              : isToday
+                ? 'rgba(138,180,255,0.08)'
                 : 'rgba(255,255,255,0.02)';
             const cellBorderColor = hasCanceledClass
               ? 'rgba(100,100,100,0.3)'
-              : isToday 
-                ? 'rgba(138,180,255,0.3)' 
+              : isToday
+                ? 'rgba(138,180,255,0.3)'
                 : 'rgba(255,255,255,0.05)';
 
             html += `
@@ -20300,8 +20314,8 @@
             const studentsInGroup = studentsByGroup[groupName];
 
             // Check if THIS specific group is canceled on this date
-            const isGroupCanceled = 
-              window.SkipClassManager && 
+            const isGroupCanceled =
+              window.SkipClassManager &&
               window.SkipClassManager.isClassCanceled(groupName, dateStr);
 
             // Add ⚫ symbol ONLY if this group is canceled
@@ -20456,7 +20470,7 @@
         // ==================================================================================
         // CRITICAL: This function sends UNPAID payment reminders via Supabase Resend ONLY
         // Gmail is NOT used for unpaid emails - only for payment praise and calendar summaries
-        // 
+        //
         // @param {string} studentId - The student's ID
         // @param {HTMLElement} buttonElement - The button that was clicked
         // @param {string} clickedDateStr - The EXACT date (YYYY-MM-DD) that was clicked in the calendar
@@ -20517,7 +20531,7 @@
 
             // Find the EXACT unpaid class for the clicked date
             console.log('[MANUAL][UNPAID EMAIL] Searching for unpaid class on:', clickedDateStr);
-            
+
             const currentMonth =
               window.currentCalendarData || getMonthData(new Date().getFullYear(), new Date().getMonth());
 
@@ -20527,7 +20541,7 @@
             // Search through all days to find unpaid classes
             currentMonth.days.forEach(dayData => {
               const dayDateStr = formatDateYYYYMMDD(dayData.date);
-              
+
               dayData.studentsWithClass.forEach(classInfo => {
                 if (classInfo.student.id === studentId || classInfo.student.id === parseInt(studentId)) {
                   if (classInfo.status === 'unpaid') {
@@ -20571,7 +20585,7 @@
             // Find email iframe
             console.log('[MANUAL][UNPAID EMAIL] Searching for email system iframe...');
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
-            
+
             if (!emailFrame || !emailFrame.contentWindow) {
               console.error('[MANUAL][UNPAID EMAIL] ❌ Email system iframe not found');
               const allIframes = document.querySelectorAll('iframe');
@@ -20655,7 +20669,7 @@
             // Show success notification
             const emailSubject = response.emailContent?.subject || 'Payment Reminder';
             const emailBody = response.emailContent?.body || '';
-            
+
             if (window.NotificationCenter) {
               await window.NotificationCenter.add(
                 window.NotificationCenter.NotificationType.EMAIL,
