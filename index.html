@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.15.1 - Show Canceled Classes]</title>
+    <title>ARNOMA - Student Management [v2.15.2 - Debug Calendar & One-Time]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.15.1" />
-    <meta name="build-timestamp" content="20251121-141500" />
+    <meta name="version" content="2.15.2" />
+    <meta name="build-timestamp" content="20251121-143000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.15.1 - Countdown Timer: Show Canceled Classes ✅');
+      console.log('✅ ARNOMA v2.15.2 - Debug: Calendar ARNOMA v2.15.1 - Countdown Timer: Show Canceled Classes One-Time Schedules ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -5174,7 +5174,7 @@
           <h1>
             Payment Records
             <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              🔄 ARNOMA v2.15.1 - Show Canceled Classes 🔄
+              🔄 ARNOMA v2.15.2 - Debug: Calendar ARNOMA v2.15.1 - Show Canceled Classes One-Time 🔄
             </span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
@@ -14927,11 +14927,21 @@
           group.schedule = newSchedule;
           group.one_time_schedules = oneTimeSchedules;
 
+          // DEBUG: Log one-time schedule save
+          if (oneTimeSchedules.length > 0) {
+            console.log(`[GroupManager] 📅 Saving ONE-TIME schedules for ${groupName}:`, oneTimeSchedules);
+          }
+
           // Save only this group (not all groups)
           const savedGroup = await saveGroup(group);
           if (savedGroup && savedGroup.id) {
             group.id = savedGroup.id;
             group.name = savedGroup.group_name || group.name;
+          }
+
+          // DEBUG: Verify save
+          if (oneTimeSchedules.length > 0) {
+            console.log(`[GroupManager] ✅ Group saved, verifying one_time_schedules:`, savedGroup?.one_time_schedules);
           }
 
           // Update cache and notify
@@ -17369,11 +17379,24 @@
 
           // Check if a class is canceled (entire class)
           function isClassCanceled(groupName, dateStr) {
-            return (
+            const result = (
               skippedClasses[groupName] &&
               skippedClasses[groupName][dateStr] &&
               skippedClasses[groupName][dateStr].type === 'class-canceled'
             );
+            
+            // DEBUG: Log check for Nov 25
+            if (dateStr === '2025-11-25') {
+              console.log(`[isClassCanceled] ${groupName} on ${dateStr}:`, {
+                hasGroup: !!skippedClasses[groupName],
+                hasDate: !!(skippedClasses[groupName] && skippedClasses[groupName][dateStr]),
+                type: skippedClasses[groupName] && skippedClasses[groupName][dateStr] && skippedClasses[groupName][dateStr].type,
+                result: result,
+                allSkippedClasses: skippedClasses
+              });
+            }
+            
+            return result;
           }
 
           // Get skip info (type and note)
@@ -20019,10 +20042,24 @@
               hasClasses &&
               dayData.studentsWithClass.some(classInfo => {
                 const groupName = classInfo.student.group;
-                return (
-                  groupName && window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr)
-                );
+                const isCanceled = groupName && window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr);
+                
+                // DEBUG: Log cancelation check for Nov 25
+                if (dateStr === '2025-11-25') {
+                  console.log(`[Calendar Debug] Checking ${groupName} on ${dateStr}:`, {
+                    hasSkipClassManager: !!window.SkipClassManager,
+                    isCanceled: isCanceled,
+                    groupName: groupName
+                  });
+                }
+                
+                return isCanceled;
               });
+
+            // DEBUG: Log final result for Nov 25
+            if (dateStr === '2025-11-25') {
+              console.log(`[Calendar Debug] ${dateStr} hasCanceledClass:`, hasCanceledClass);
+            }
 
             // Determine cell styling - GRAY OUT entire cell if class is canceled
             const cellBgColor = hasCanceledClass 
@@ -23011,7 +23048,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.15.1 - Countdown Timer: Show Canceled Classes ✅');
+          console.log('✅ ARNOMA v2.15.2 - Debug: Calendar ARNOMA v2.15.1 - Countdown Timer: Show Canceled Classes One-Time Schedules ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
