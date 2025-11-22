@@ -2639,23 +2639,121 @@
       .smn-header {
         max-width: 1400px;
         margin: 0 auto 40px;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .smn-header-row-1 {
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .smn-header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .smn-header-row-2 {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
         align-items: center;
       }
 
       .smn-title {
-        font-size: 32px;
-        font-weight: 700;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8ab4ff, #a855f7);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
+        margin: 0;
+      }
+
+      .smn-btn-primary {
+        padding: 10px 18px;
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .smn-btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+      }
+
+      .smn-btn-secondary {
+        padding: 10px 18px;
+        background: linear-gradient(135deg, #3b82f6, #2563eb);
+        border: none;
+        border-radius: 10px;
+        color: white;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .smn-btn-secondary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+      }
+
+      .smn-btn-outline-purple {
+        padding: 10px 18px;
+        background: rgba(168, 85, 247, 0.15);
+        border: 2px solid rgba(168, 85, 247, 0.5);
+        border-radius: 10px;
+        color: #c4b5fd;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .smn-btn-outline-purple:hover {
+        background: rgba(168, 85, 247, 0.25);
+        border-color: #a855f7;
+      }
+
+      .smn-btn-outline-orange {
+        padding: 10px 18px;
+        background: rgba(251, 146, 60, 0.15);
+        border: 2px solid rgba(251, 146, 60, 0.5);
+        border-radius: 10px;
+        color: #fdba74;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .smn-btn-outline-orange:hover {
+        background: rgba(251, 146, 60, 0.25);
+        border-color: #fb923c;
       }
 
       .smn-close-btn {
-        width: 44px;
-        height: 44px;
-        border-radius: 12px;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.15);
         color: white;
@@ -2665,11 +2763,79 @@
         display: flex;
         align-items: center;
         justify-content: center;
+        flex-shrink: 0;
       }
 
       .smn-close-btn:hover {
-        background: rgba(255, 255, 255, 0.15);
+        background: rgba(255, 59, 48, 0.2);
+        border-color: rgba(255, 59, 48, 0.4);
         transform: rotate(90deg);
+      }
+
+      .smn-search-input {
+        flex: 1;
+        min-width: 280px;
+        padding: 11px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+
+      .smn-search-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .smn-search-input:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow: 0 0 0 3px rgba(138, 180, 255, 0.1);
+      }
+
+      .smn-filter-select {
+        padding: 11px 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        min-width: 160px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .smn-filter-select:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow: 0 0 0 3px rgba(138, 180, 255, 0.1);
+      }
+
+      .smn-filter-select option {
+        background: #1e293b;
+        color: white;
+      }
+
+      .smn-btn-clear {
+        padding: 11px 16px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        white-space: nowrap;
+      }
+
+      .smn-btn-clear:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
       }
 
       .smn-students-grid {
@@ -5845,8 +6011,59 @@
            ============================================ -->
       <div id="studentManagerNewContainer">
         <div class="smn-header">
-          <h1 class="smn-title">Student Manager (NEW)</h1>
-          <button class="smn-close-btn" onclick="closeStudentManagerNew()">×</button>
+          <!-- Row 1: Title and Action Buttons -->
+          <div class="smn-header-row-1">
+            <h1 class="smn-title">👥 Student Manager (NEW)</h1>
+            <div class="smn-header-actions">
+              <button class="smn-btn-primary" onclick="openAddStudent()">
+                + Add Student
+              </button>
+              <button class="smn-btn-secondary" onclick="openBulkAddStudents()">
+                📋 Bulk Add
+              </button>
+              <button class="smn-btn-outline-purple" onclick="openWaitingList()">
+                Waiting List
+              </button>
+              <button class="smn-btn-outline-orange" onclick="findDuplicates()">
+                Find Duplicates
+              </button>
+              <button class="smn-close-btn" onclick="closeStudentManagerNew()">×</button>
+            </div>
+          </div>
+
+          <!-- Row 2: Search and Filters -->
+          <div class="smn-header-row-2">
+            <input
+              type="text"
+              id="smnSearchInput"
+              class="smn-search-input"
+              placeholder="🔍 Search by name, group, phone, email, notes..."
+              oninput="smnFilterStudents()"
+            />
+            <select id="smnFilterGroup" class="smn-filter-select" onchange="smnFilterStudents()">
+              <option value="">All Groups</option>
+              <option value="no-group">No Group</option>
+            </select>
+            <select id="smnFilterStatus" class="smn-filter-select" onchange="smnFilterStudents()">
+              <option value="">All Statuses</option>
+              <option value="active">Active</option>
+              <option value="paused">Paused</option>
+              <option value="graduated">Graduated</option>
+            </select>
+            <select id="smnFilterPayment" class="smn-filter-select" onchange="smnFilterStudents()">
+              <option value="">All Payment Status</option>
+              <option value="unpaid">Unpaid Classes</option>
+              <option value="credit">Has Credit Balance</option>
+            </select>
+            <select id="smnSortPrice" class="smn-filter-select" onchange="smnFilterStudents()">
+              <option value="">Sort by Price</option>
+              <option value="highest">Price: Highest First</option>
+              <option value="lowest">Price: Lowest First</option>
+            </select>
+            <button class="smn-btn-clear" onclick="smnClearFilters()">
+              Clear Filters
+            </button>
+          </div>
         </div>
         <div class="smn-students-grid" id="smnStudentsGrid"></div>
       </div>
@@ -17023,6 +17240,9 @@
           // Show the container
           container.style.display = 'block';
 
+          // Populate groups filter dropdown
+          await smnPopulateGroupsFilter();
+
           // Load students from Supabase
           await smnLoadStudents();
         }
@@ -17578,6 +17798,123 @@
             closeSmnModal();
           }
         });
+
+        /**
+         * Filter students based on search and filter criteria
+         */
+        function smnFilterStudents() {
+          if (!window.studentsCache) return;
+
+          const searchTerm = document.getElementById('smnSearchInput')?.value.toLowerCase() || '';
+          const filterGroup = document.getElementById('smnFilterGroup')?.value || '';
+          const filterStatus = document.getElementById('smnFilterStatus')?.value || '';
+          const filterPayment = document.getElementById('smnFilterPayment')?.value || '';
+          const sortPrice = document.getElementById('smnSortPrice')?.value || '';
+
+          let filtered = [...window.studentsCache];
+
+          // Search filter
+          if (searchTerm) {
+            filtered = filtered.filter(student => {
+              const searchableText = [
+                student.name,
+                student.group_name,
+                student.group,
+                student.phone,
+                student.notes,
+                ...(Array.isArray(student.email) ? student.email : [student.email]),
+                ...(Array.isArray(student.aliases) ? student.aliases : [student.aliases])
+              ].filter(Boolean).join(' ').toLowerCase();
+              
+              return searchableText.includes(searchTerm);
+            });
+          }
+
+          // Group filter
+          if (filterGroup) {
+            if (filterGroup === 'no-group') {
+              filtered = filtered.filter(s => !s.group_name && !s.group);
+            } else {
+              filtered = filtered.filter(s => 
+                (s.group_name || '').toLowerCase() === filterGroup.toLowerCase() ||
+                (s.group || '').toLowerCase() === filterGroup.toLowerCase()
+              );
+            }
+          }
+
+          // Status filter
+          if (filterStatus) {
+            filtered = filtered.filter(s => (s.status || 'active').toLowerCase() === filterStatus.toLowerCase());
+          }
+
+          // Payment filter
+          if (filterPayment === 'unpaid') {
+            filtered = filtered.filter(s => {
+              const balance = parseFloat(s.balance) || 0;
+              return balance < 0;
+            });
+          } else if (filterPayment === 'credit') {
+            filtered = filtered.filter(s => {
+              const balance = parseFloat(s.balance) || 0;
+              return balance > 0;
+            });
+          }
+
+          // Sort by price
+          if (sortPrice === 'highest') {
+            filtered.sort((a, b) => (parseFloat(b.price_per_class) || 0) - (parseFloat(a.price_per_class) || 0));
+          } else if (sortPrice === 'lowest') {
+            filtered.sort((a, b) => (parseFloat(a.price_per_class) || 0) - (parseFloat(b.price_per_class) || 0));
+          }
+
+          console.log(`🔍 Filtered ${filtered.length} students from ${window.studentsCache.length} total`);
+          smnRenderStudentCards(filtered);
+        }
+
+        /**
+         * Clear all filters and reset view
+         */
+        function smnClearFilters() {
+          document.getElementById('smnSearchInput').value = '';
+          document.getElementById('smnFilterGroup').value = '';
+          document.getElementById('smnFilterStatus').value = '';
+          document.getElementById('smnFilterPayment').value = '';
+          document.getElementById('smnSortPrice').value = '';
+          
+          console.log('🧹 Filters cleared');
+          smnFilterStudents();
+        }
+
+        /**
+         * Populate groups dropdown dynamically
+         */
+        async function smnPopulateGroupsFilter() {
+          try {
+            const { data: groups, error } = await supabase
+              .from('groups')
+              .select('name')
+              .order('name');
+
+            if (error) throw error;
+
+            const groupSelect = document.getElementById('smnFilterGroup');
+            if (!groupSelect) return;
+
+            // Keep existing options
+            const existingOptions = groupSelect.innerHTML;
+            
+            // Add group options
+            const groupOptions = groups.map(g => 
+              `<option value="${smnEscapeHtml(g.name)}">${smnEscapeHtml(g.name)}</option>`
+            ).join('');
+
+            groupSelect.innerHTML = existingOptions + groupOptions;
+            
+            console.log(`✅ Populated ${groups.length} groups in filter dropdown`);
+          } catch (error) {
+            console.error('❌ Failed to populate groups filter:', error);
+          }
+        }
 
         // ============================
         // END STUDENT MANAGER (NEW)
