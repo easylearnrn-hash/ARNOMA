@@ -17062,7 +17062,14 @@
           const grid = document.getElementById('smnStudentsGrid');
           if (!grid) return;
 
-          grid.innerHTML = students.map(student => {
+          // Sort students by group alphabetically (Group A, B, C, D, E, F)
+          const sortedStudents = [...students].sort((a, b) => {
+            const groupA = (a.group_name || a.group || '').toUpperCase();
+            const groupB = (b.group_name || b.group || '').toUpperCase();
+            return groupA.localeCompare(groupB);
+          });
+
+          grid.innerHTML = sortedStudents.map(student => {
             const groupLetter = smnGetGroupLetter(student.group_name || student.group || '');
             const statusClass = (student.status || 'active').toLowerCase();
             const showInGrid = student.show_in_grid !== false;
