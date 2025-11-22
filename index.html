@@ -12913,10 +12913,14 @@
 
           // Find student from cache or load from Supabase
           // Handle both string and number IDs by comparing with type coercion
+          console.log('🔍 Looking for student ID:', studentId, 'Type:', typeof studentId);
+          console.log('📦 Cache exists?', !!window.studentsCache);
+          console.log('📦 Cache length:', window.studentsCache?.length);
+          
           const student = window.studentsCache?.find(s => s.id == studentId);
           if (!student) {
             console.error('❌ Student not found:', studentId);
-            console.error('Available student IDs:', window.studentsCache?.map(s => s.id));
+            console.error('📋 Available student IDs:', window.studentsCache?.map(s => ({ id: s.id, type: typeof s.id, name: s.name })));
             return;
           }
 
