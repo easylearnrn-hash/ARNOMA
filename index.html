@@ -15315,7 +15315,10 @@
           const duplicateGroups = [];
           const processed = new Set();
 
-          students
+          // Use cached students to ensure it works from both old and new Student Manager
+          const studentsList = getCachedStudents();
+
+          studentsList
             .filter(s => s.isActive !== false)
             .forEach((student, index, arr) => {
               if (processed.has(student.id)) return;
