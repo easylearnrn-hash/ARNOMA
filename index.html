@@ -2815,6 +2815,10 @@
         line-height: 1.2;
         margin-bottom: 12px;
         color: white;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 100%;
       }
 
       .smn-meta-badges {
@@ -17221,7 +17225,14 @@
 
           // Populate modal
           document.getElementById('smnModalName').textContent = smnCurrentStudent.name || '';
-          document.getElementById('smnModalGroup').textContent = smnCurrentStudent.group_name || smnCurrentStudent.group || '';
+          
+          // Ensure group name always shows "Group X" format
+          let groupDisplay = smnCurrentStudent.group_name || smnCurrentStudent.group || '';
+          if (groupDisplay && !groupDisplay.toLowerCase().startsWith('group')) {
+            groupDisplay = 'Group ' + groupDisplay;
+          }
+          document.getElementById('smnModalGroup').textContent = groupDisplay;
+          
           document.getElementById('smnModalPrice').textContent = smnCurrentStudent.price_per_class || '0 $';
           document.getElementById('smnModalCredit').value = smnCurrentStudent.balance || '0 $';
           document.getElementById('smnModalPhone').value = smnCurrentStudent.phone || '';
