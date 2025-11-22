@@ -2818,10 +2818,21 @@
         line-height: 1.2;
         margin-bottom: 12px;
         color: white;
+        max-width: 100%;
+      }
+
+      .smn-student-name-first {
+        display: block;
+        white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+
+      .smn-student-name-last {
+        display: block;
         white-space: nowrap;
-        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .smn-meta-badges {
@@ -17065,6 +17076,25 @@
         }
 
         /**
+         * Split student name into first and last name with proper formatting
+         */
+        function smnSplitName(fullName) {
+          if (!fullName) return { first: 'N/A', last: '' };
+          
+          const parts = fullName.trim().split(/\s+/);
+          
+          if (parts.length === 1) {
+            return { first: parts[0], last: '' };
+          }
+          
+          // First word is first name, rest is last name
+          return {
+            first: parts[0],
+            last: parts.slice(1).join(' ')
+          };
+        }
+
+        /**
          * Render student cards in the grid
          */
         function smnRenderStudentCards(students) {
@@ -17082,6 +17112,7 @@
             const groupLetter = smnGetGroupLetter(student.group_name || student.group || '');
             const statusClass = (student.status || 'active').toLowerCase();
             const showInGrid = student.show_in_grid !== false;
+            const nameParts = smnSplitName(student.name);
 
             return `
               <div class="smn-student-card" onclick="smnOpenModal(${student.id})">
@@ -17101,7 +17132,10 @@
                   </div>
                   <div class="smn-identity-section">
                     <div class="smn-profile-label">STUDENT PROFILE</div>
-                    <div class="smn-student-name">${smnEscapeHtml(student.name || 'N/A')}</div>
+                    <div class="smn-student-name">
+                      <span class="smn-student-name-first">${smnEscapeHtml(nameParts.first)}</span>
+                      ${nameParts.last ? `<span class="smn-student-name-last">${smnEscapeHtml(nameParts.last)}</span>` : ''}
+                    </div>
                     <div class="smn-meta-badges">
                       <div class="smn-meta-badge group">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
