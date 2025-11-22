@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.18.9 - Pink Alert Icon]</title>
+  <title>ARNOMA - Student Management [v2.19.0 - Auto Schedule Emails]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.18.9" />
-  <meta name="build-timestamp" content="20251121-215500" />
+  <meta name="version" content="2.19.0" />
+  <meta name="build-timestamp" content="20251122-120000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.18.11 - Canceled Sidebar Fix ✅');
+      console.log('✅ ARNOMA v2.19.0 - Automatic Schedule Change Emails ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -15044,6 +15044,52 @@
             }
           }
 
+          // AUTO-SEND: One-Time Class Emails (if one-time schedules were added)
+          if (oneTimeSchedules.length > 0) {
+            debugLog('📧 One-time classes added, sending notification emails to all students in', groupName);
+
+            // Get all students in this group
+            const studentsInGroup =
+              window.studentsCache?.filter(student => {
+                if (!student.group) return false;
+                const studentGroups = student.group.split(',').map(g => g.trim());
+                return studentGroups.includes(groupName);
+              }) || [];
+
+            if (studentsInGroup.length > 0) {
+              const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+              if (emailFrame && emailFrame.contentWindow) {
+                // Send email for each one-time class
+                oneTimeSchedules.forEach(oneTimeClass => {
+                  studentsInGroup.forEach(student => {
+                    if (student.email) {
+                      emailFrame.contentWindow.postMessage(
+                        {
+                          action: 'sendOneTimeClassEmail',
+                          student: {
+                            name: student.name,
+                            email: student.email,
+                          },
+                          groupName: groupName,
+                          oneTimeClass: oneTimeClass, // { date, day, time, oneTime: true }
+                        },
+                        '*'
+                      );
+                    }
+                  });
+                });
+
+                debugLog('✅ One-time class email requests sent to email system');
+                showNotificationSimple(
+                  `📧 One-time class emails sent to ${studentsInGroup.length} student${studentsInGroup.length !== 1 ? 's' : ''}`,
+                  'success'
+                );
+              } else {
+                console.warn('⚠️ Email iframe not found, cannot send one-time class emails');
+              }
+            }
+          }
+
           // Flash save confirmation
           const saveBtn = card.querySelector('button[onclick*="saveScheduleEdit"]');
           if (saveBtn) {
@@ -17680,6 +17726,45 @@
             forwardPaymentsForCanceledClass(groupName, dateStr);
 
             saveSkippedClasses();
+
+            // AUTO-SEND: Class Cancellation Email to all students in this group
+            const studentsInGroup = window.studentsCache
+              ? window.studentsCache.filter(s => s.group && s.group.includes(groupName))
+              : [];
+
+            if (studentsInGroup.length > 0) {
+              console.log(`📧 [AUTO-EMAIL] Sending cancellation emails to ${studentsInGroup.length} students in ${groupName}`);
+
+              const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+              if (emailFrame && emailFrame.contentWindow) {
+                studentsInGroup.forEach(student => {
+                  if (student.email) {
+                    emailFrame.contentWindow.postMessage(
+                      {
+                        action: 'sendClassCancellationEmail',
+                        student: {
+                          name: student.name,
+                          email: student.email,
+                        },
+                        groupName: groupName,
+                        canceledDate: dateStr,
+                        reason: note || 'Schedule adjustment',
+                      },
+                      '*'
+                    );
+                  }
+                });
+
+                if (window.showNotificationSimple) {
+                  showNotificationSimple(
+                    `📧 Cancellation emails sent to ${studentsInGroup.length} student${studentsInGroup.length !== 1 ? 's' : ''}`,
+                    'success'
+                  );
+                }
+              } else {
+                console.warn('⚠️ Email iframe not found, cannot send cancellation emails');
+              }
+            }
 
             // Refresh timer display
             if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
@@ -23286,7 +23371,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.18.11 - Canceled Sidebar Fix ✅');
+          console.log('✅ ARNOMA v2.19.0 - Automatic Schedule Change Emails ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();

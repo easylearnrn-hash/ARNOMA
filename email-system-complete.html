@@ -5314,7 +5314,170 @@ ARNOMA Team"
           }
         }
 
-        // HANDLER 6: Group Enrollment
+        // HANDLER 6: Class Cancellation
+        if (action === 'sendClassCancellationEmail') {
+          try {
+            const student = event.data.student;
+            const groupName = event.data.groupName;
+            const canceledDate = event.data.canceledDate;
+            const reason = event.data.reason || 'Schedule adjustment';
+
+            // Format the date nicely (e.g., "Monday, November 25, 2025")
+            const dateObj = new Date(canceledDate + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+
+            const subject = '⚠️ Class Canceled - ' + formattedDate;
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1)); border-left: 4px solid #f59e0b; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  ⚠️ Class Canceled
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 12px;">
+                  Please note that your <strong>Group ${groupName}</strong> class has been canceled.
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.7); padding: 16px; border-radius: 6px; margin: 12px 0;">
+                  <div style="margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Canceled Date:</div>
+                    <div style="font-size: 16px; color: #dc2626; font-weight: 700;">${formattedDate}</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Reason:</div>
+                    <div style="font-size: 14px; color: #555; font-style: italic;">${reason}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #1e40af; font-weight: 600; margin-bottom: 12px;">
+                  What This Means:
+                </div>
+                <ul style="margin: 0; padding-left: 20px; color: #1e3a8a; font-size: 13px;">
+                  <li style="margin-bottom: 8px;">No class will take place on this date</li>
+                  <li style="margin-bottom: 8px;">Your next regular class will proceed as scheduled</li>
+                  <li>Any payment made for this date will be credited to your next class</li>
+                </ul>
+              </div>
+
+              <p style="font-size: 14px; color: #666;">
+                If you have any questions, please don't hesitate to reach out.
+              </p>
+
+              <p style="margin-top: 24px;">Thank you for your understanding,<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('Class Canceled', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
+            });
+
+            if (!response.ok) throw new Error('Failed to send cancellation email');
+
+            await trackSentEmail(student.email, subject, 'Class Cancellation', body, {
+              recipientName: student.name,
+              groupName: groupName,
+              canceledDate: formattedDate,
+              reason,
+            });
+
+            window.parent.postMessage({ action: 'classCancellationEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'classCancellationEmailError', error: error.message }, '*');
+          }
+        }
+
+        // HANDLER 7: One-Time Class Addition
+        if (action === 'sendOneTimeClassEmail') {
+          try {
+            const student = event.data.student;
+            const groupName = event.data.groupName;
+            const oneTimeClass = event.data.oneTimeClass; // { date, day, time }
+
+            // Format the date nicely
+            const dateObj = new Date(oneTimeClass.date + 'T00:00:00');
+            const formattedDate = dateObj.toLocaleDateString('en-US', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            });
+
+            const subject = '📅 Special Class Scheduled - ' + formattedDate;
+            const bodyContent = `
+              <p>Dear <strong>${student.name}</strong>,</p>
+
+              <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(124, 58, 237, 0.1)); border-left: 4px solid #8b5cf6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 16px; color: #333; font-weight: 600; margin-bottom: 12px;">
+                  📅 One-Time Class Scheduled
+                </div>
+                <div style="font-size: 15px; color: #555; margin-bottom: 12px;">
+                  A special one-time class has been scheduled for <strong>Group ${groupName}</strong>.
+                </div>
+
+                <div style="background: rgba(255, 255, 255, 0.7); padding: 16px; border-radius: 6px; margin: 12px 0;">
+                  <div style="margin-bottom: 12px;">
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Date:</div>
+                    <div style="font-size: 16px; color: #8b5cf6; font-weight: 700;">${formattedDate}</div>
+                  </div>
+                  <div>
+                    <div style="font-size: 12px; color: #666; margin-bottom: 4px;">Time:</div>
+                    <div style="font-size: 16px; color: #8b5cf6; font-weight: 700;">${oneTimeClass.time}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 16px; border-radius: 8px; margin: 20px 0;">
+                <div style="font-size: 14px; color: #1e40af; font-weight: 600; margin-bottom: 12px;">
+                  Important Notes:
+                </div>
+                <ul style="margin: 0; padding-left: 20px; color: #1e3a8a; font-size: 13px;">
+                  <li style="margin-bottom: 8px;">This is a <strong>one-time</strong> class in addition to your regular schedule</li>
+                  <li style="margin-bottom: 8px;">Your regular recurring classes remain unchanged</li>
+                  <li>Standard payment and attendance policies apply</li>
+                </ul>
+              </div>
+
+              <p style="font-size: 14px; color: #666;">
+                We look forward to seeing you in class!
+              </p>
+
+              <p style="margin-top: 24px;">Best regards,<br><strong>ARNOMA Learning Center</strong></p>
+            `;
+
+            const body = generateEmailHTML('One-Time Class', bodyContent);
+
+            const response = await fetch(`${SUPABASE_URL}/functions/v1/send-email`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${SUPABASE_ANON_KEY}` },
+              body: JSON.stringify({ to: student.email, subject: subject, html: body }),
+            });
+
+            if (!response.ok) throw new Error('Failed to send one-time class email');
+
+            await trackSentEmail(student.email, subject, 'One-Time Class', body, {
+              recipientName: student.name,
+              groupName: groupName,
+              classDate: formattedDate,
+              classTime: oneTimeClass.time,
+            });
+
+            window.parent.postMessage({ action: 'oneTimeClassEmailSent', success: true }, '*');
+          } catch (error) {
+            window.parent.postMessage({ action: 'oneTimeClassEmailError', error: error.message }, '*');
+          }
+        }
+
+        // HANDLER 8: Group Enrollment
         if (action === 'sendGroupEnrollmentEmail') {
           try {
             const student = event.data.student;
