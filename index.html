@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ARNOMA - Student Management [v2.19.0 - Auto Schedule Emails]</title>
+    <title>ARNOMA - Student Management [v2.20.4 - Body Scroll Lock Fix]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-  <meta name="version" content="2.19.0" />
-  <meta name="build-timestamp" content="20251122-120000" />
+    <meta name="version" content="2.20.4" />
+    <meta name="build-timestamp" content="20251122-144000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -2597,7 +2597,7 @@
       /* ============================================
          STUDENT MANAGER (NEW) - GLASSMORPHISM SYSTEM
          ============================================ */
-      
+
       #studentManagerNewContainer {
         display: none;
         position: fixed;
@@ -2626,7 +2626,8 @@
       }
 
       @keyframes gradientShiftNew {
-        0%, 100% {
+        0%,
+        100% {
           opacity: 1;
           transform: scale(1);
         }
@@ -2645,6 +2646,8 @@
         border-radius: 20px;
         padding: 24px;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 100;
       }
 
       .smn-header-row-1 {
@@ -2679,17 +2682,17 @@
       .smn-btn-primary {
         position: relative;
         padding: 11px 24px;
-        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-        border: none;
+        background: rgba(16, 185, 129, 0.15);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(16, 185, 129, 0.4);
         border-radius: 12px;
-        color: white;
+        color: #6ee7b7;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 
-          0 0 20px rgba(16, 185, 129, 0.3),
-          0 4px 12px rgba(5, 150, 105, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        box-shadow:
+          0 0 15px rgba(16, 185, 129, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
         overflow: hidden;
@@ -2700,24 +2703,29 @@
         content: '';
         position: absolute;
         top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        transition: left 0.5s;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+        opacity: 0;
+        transition: opacity 0.3s;
+        border-radius: 10px;
         z-index: -1;
       }
 
       .smn-btn-primary:hover::before {
-        left: 100%;
+        opacity: 1;
       }
 
       .smn-btn-primary:hover {
+        background: rgba(16, 185, 129, 0.25);
+        border-color: #10b981;
+        color: #d1fae5;
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 
-          0 0 30px rgba(16, 185, 129, 0.5),
-          0 8px 20px rgba(5, 150, 105, 0.5),
-          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        box-shadow:
+          0 0 25px rgba(16, 185, 129, 0.4),
+          0 4px 12px rgba(16, 185, 129, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
 
       .smn-btn-primary:active {
@@ -2727,17 +2735,17 @@
       .smn-btn-secondary {
         position: relative;
         padding: 11px 24px;
-        background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-        border: none;
+        background: rgba(59, 130, 246, 0.15);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(59, 130, 246, 0.4);
         border-radius: 12px;
-        color: white;
+        color: #93c5fd;
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 
-          0 0 20px rgba(59, 130, 246, 0.3),
-          0 4px 12px rgba(29, 78, 216, 0.4),
-          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        box-shadow:
+          0 0 15px rgba(59, 130, 246, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
         overflow: hidden;
@@ -2748,24 +2756,29 @@
         content: '';
         position: absolute;
         top: 0;
-        left: -100%;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-        transition: left 0.5s;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(29, 78, 216, 0.2));
+        opacity: 0;
+        transition: opacity 0.3s;
+        border-radius: 10px;
         z-index: -1;
       }
 
       .smn-btn-secondary:hover::before {
-        left: 100%;
+        opacity: 1;
       }
 
       .smn-btn-secondary:hover {
+        background: rgba(59, 130, 246, 0.25);
+        border-color: #3b82f6;
+        color: #dbeafe;
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 
-          0 0 30px rgba(59, 130, 246, 0.5),
-          0 8px 20px rgba(29, 78, 216, 0.5),
-          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        box-shadow:
+          0 0 25px rgba(59, 130, 246, 0.4),
+          0 4px 12px rgba(59, 130, 246, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
       }
 
       .smn-btn-secondary:active {
@@ -2783,7 +2796,7 @@
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 
+        box-shadow:
           0 0 15px rgba(168, 85, 247, 0.2),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2815,7 +2828,7 @@
         border-color: #a855f7;
         color: #f3e8ff;
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 
+        box-shadow:
           0 0 25px rgba(168, 85, 247, 0.4),
           0 4px 12px rgba(168, 85, 247, 0.3),
           inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -2836,7 +2849,7 @@
         font-size: 14px;
         font-weight: 700;
         cursor: pointer;
-        box-shadow: 
+        box-shadow:
           0 0 15px rgba(251, 146, 60, 0.2),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -2868,7 +2881,7 @@
         border-color: #fb923c;
         color: #ffedd5;
         transform: translateY(-2px) scale(1.02);
-        box-shadow: 
+        box-shadow:
           0 0 25px rgba(251, 146, 60, 0.4),
           0 4px 12px rgba(251, 146, 60, 0.3),
           inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -2894,7 +2907,7 @@
         align-items: center;
         justify-content: center;
         flex-shrink: 0;
-        box-shadow: 
+        box-shadow:
           0 0 10px rgba(0, 0, 0, 0.2),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         position: relative;
@@ -2906,7 +2919,7 @@
         border-color: rgba(239, 68, 68, 0.5);
         color: #fca5a5;
         transform: rotate(90deg) scale(1.1);
-        box-shadow: 
+        box-shadow:
           0 0 20px rgba(239, 68, 68, 0.3),
           0 4px 12px rgba(239, 68, 68, 0.2),
           inset 0 1px 0 rgba(255, 255, 255, 0.2);
@@ -2927,7 +2940,7 @@
         color: white;
         font-size: 14px;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 
+        box-shadow:
           inset 0 2px 4px rgba(0, 0, 0, 0.1),
           0 0 0 0 rgba(138, 180, 255, 0);
         background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
@@ -2946,7 +2959,7 @@
         outline: none;
         background-color: rgba(255, 255, 255, 0.06);
         border-color: rgba(138, 180, 255, 0.5);
-        box-shadow: 
+        box-shadow:
           inset 0 2px 4px rgba(0, 0, 0, 0.1),
           0 0 0 4px rgba(138, 180, 255, 0.15),
           0 0 20px rgba(138, 180, 255, 0.2);
@@ -2964,7 +2977,7 @@
         min-width: 170px;
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 
+        box-shadow:
           inset 0 2px 4px rgba(0, 0, 0, 0.1),
           0 0 0 0 rgba(138, 180, 255, 0);
         appearance: none;
@@ -2985,7 +2998,7 @@
         outline: none;
         background-color: rgba(255, 255, 255, 0.06);
         border-color: rgba(138, 180, 255, 0.5);
-        box-shadow: 
+        box-shadow:
           inset 0 2px 4px rgba(0, 0, 0, 0.1),
           0 0 0 4px rgba(138, 180, 255, 0.15),
           0 0 20px rgba(138, 180, 255, 0.2);
@@ -3009,7 +3022,7 @@
         cursor: pointer;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
-        box-shadow: 
+        box-shadow:
           0 0 10px rgba(0, 0, 0, 0.1),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
         position: relative;
@@ -3021,7 +3034,7 @@
         border-color: rgba(255, 255, 255, 0.2);
         color: white;
         transform: translateY(-1px);
-        box-shadow: 
+        box-shadow:
           0 0 15px rgba(255, 255, 255, 0.1),
           0 4px 8px rgba(0, 0, 0, 0.2),
           inset 0 1px 0 rgba(255, 255, 255, 0.15);
@@ -3048,12 +3061,12 @@
         border-radius: 24px;
         padding: 28px;
         cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
       }
 
       .smn-student-card:hover {
-        transform: translateY(-4px);
+        transform: scale(1.02);
         box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
         border-color: rgba(102, 126, 234, 0.3);
       }
@@ -3093,8 +3106,12 @@
       }
 
       @keyframes rotateOrbit {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
       }
 
       .smn-avatar {
@@ -3146,7 +3163,8 @@
       }
 
       @keyframes statusPulseNew {
-        0%, 100% {
+        0%,
+        100% {
           transform: scale(1);
           box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
         }
@@ -3197,7 +3215,7 @@
       .smn-meta-badges {
         display: flex;
         gap: 8px;
-        flex-wrap: wrap;
+        flex-shrink: 0;
       }
 
       .smn-meta-badge {
@@ -3210,15 +3228,24 @@
         padding: 6px 12px;
         font-size: 13px;
         font-weight: 600;
+        flex-shrink: 0;
+        white-space: nowrap;
       }
 
       .smn-meta-badge.group {
         color: #ffd700;
         text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+        min-width: 80px;
+        max-width: 80px;
       }
 
       .smn-meta-badge.price {
         color: #86efac;
+        background: rgba(16, 185, 129, 0.12);
+        border-color: rgba(16, 185, 129, 0.25);
+        text-shadow: 0 0 8px rgba(134, 239, 172, 0.4);
+        min-width: 80px;
+        max-width: 80px;
       }
 
       .smn-meta-badge svg {
@@ -3251,7 +3278,9 @@
         transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 22px;
         border: 1.5px solid rgba(255, 255, 255, 0.15);
-        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+        box-shadow:
+          inset 0 2px 4px rgba(0, 0, 0, 0.2),
+          0 2px 8px rgba(0, 0, 0, 0.1);
       }
 
       .smn-elegant-toggle-slider:before {
@@ -3264,18 +3293,25 @@
         background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
         transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         border-radius: 50%;
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+        box-shadow:
+          0 2px 6px rgba(0, 0, 0, 0.3),
+          inset 0 1px 2px rgba(255, 255, 255, 0.8);
       }
 
       .smn-elegant-toggle input:checked + .smn-elegant-toggle-slider {
         background: linear-gradient(135deg, #8ab4ff 0%, #667eea 100%);
         border-color: rgba(138, 180, 255, 0.5);
-        box-shadow: 0 0 12px rgba(138, 180, 255, 0.6), 0 0 24px rgba(138, 180, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+        box-shadow:
+          0 0 12px rgba(138, 180, 255, 0.6),
+          0 0 24px rgba(138, 180, 255, 0.4),
+          inset 0 1px 2px rgba(255, 255, 255, 0.2);
       }
 
       .smn-elegant-toggle input:checked + .smn-elegant-toggle-slider:before {
         transform: translateX(18px);
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+        box-shadow:
+          0 2px 8px rgba(0, 0, 0, 0.4),
+          inset 0 1px 2px rgba(255, 255, 255, 0.9);
       }
 
       .smn-status-pill {
@@ -3298,29 +3334,39 @@
       }
 
       .smn-status-pill:hover {
-        transform: scale(1.05);
+        transform: translateY(-50%) scale(1.05);
       }
 
       .smn-status-pill.active {
         background: rgba(16, 185, 129, 0.15);
         color: #6ee7b7;
         border: 1px solid rgba(16, 185, 129, 0.3);
-        text-shadow: 0 0 10px rgba(94, 255, 108, 0.5), 0 0 20px rgba(94, 255, 108, 0.32);
-        box-shadow: 0 0 15px rgba(76, 175, 80, 0.38), 0 0 30px rgba(76, 175, 80, 0.25), 0 0 45px rgba(76, 175, 80, 0.13), inset 0 0 10px rgba(94, 255, 108, 0.13);
+        text-shadow:
+          0 0 8px rgba(94, 255, 108, 0.4),
+          0 0 16px rgba(94, 255, 108, 0.256);
+        box-shadow:
+          0 0 12px rgba(76, 175, 80, 0.304),
+          0 0 24px rgba(76, 175, 80, 0.2),
+          0 0 36px rgba(76, 175, 80, 0.104),
+          inset 0 0 8px rgba(94, 255, 108, 0.104);
       }
 
       .smn-status-pill.paused {
         background: rgba(251, 191, 36, 0.15);
         color: #fde047;
         border: 1px solid rgba(251, 191, 36, 0.3);
-        text-shadow: 0 0 10px rgba(253, 224, 71, 0.5), 0 0 20px rgba(253, 224, 71, 0.32);
+        text-shadow:
+          0 0 8px rgba(253, 224, 71, 0.4),
+          0 0 16px rgba(253, 224, 71, 0.256);
       }
 
       .smn-status-pill.graduated {
         background: rgba(168, 85, 247, 0.15);
         color: #c4b5fd;
         border: 1px solid rgba(168, 85, 247, 0.3);
-        text-shadow: 0 0 10px rgba(196, 181, 253, 0.5), 0 0 20px rgba(196, 181, 253, 0.32);
+        text-shadow:
+          0 0 8px rgba(196, 181, 253, 0.4),
+          0 0 16px rgba(196, 181, 253, 0.256);
       }
 
       /* Modal System */
@@ -3342,8 +3388,12 @@
       }
 
       @keyframes fadeInNew {
-        from { opacity: 0; }
-        to { opacity: 1; }
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
       }
 
       .smn-modal-card {
@@ -3354,9 +3404,35 @@
         max-width: 600px;
         width: 100%;
         max-height: 90vh;
-        overflow-y: auto;
+        overflow: hidden;
         box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
         animation: slideUpNew 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      .smn-modal-scroll {
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: 100%;
+      }
+
+      .smn-modal-scroll::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .smn-modal-scroll::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 0 32px 32px 0;
+      }
+
+      .smn-modal-scroll::-webkit-scrollbar-thumb {
+        background: rgba(138, 180, 255, 0.3);
+        border-radius: 10px;
+      }
+
+      .smn-modal-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(138, 180, 255, 0.5);
       }
 
       @keyframes slideUpNew {
@@ -3448,24 +3524,42 @@
         background: rgba(76, 175, 80, 0.25);
         border: 2px solid #4caf50;
         color: #5eff6c;
-        text-shadow: 0 0 10px rgba(94, 255, 108, 0.5), 0 0 20px rgba(94, 255, 108, 0.32);
-        box-shadow: 0 0 15px rgba(76, 175, 80, 0.38), 0 0 30px rgba(76, 175, 80, 0.25), 0 0 45px rgba(76, 175, 80, 0.13), inset 0 0 10px rgba(94, 255, 108, 0.13);
+        text-shadow:
+          0 0 10px rgba(94, 255, 108, 0.5),
+          0 0 20px rgba(94, 255, 108, 0.32);
+        box-shadow:
+          0 0 15px rgba(76, 175, 80, 0.38),
+          0 0 30px rgba(76, 175, 80, 0.25),
+          0 0 45px rgba(76, 175, 80, 0.13),
+          inset 0 0 10px rgba(94, 255, 108, 0.13);
       }
 
       .smn-status-badge-modal.paused {
         background: rgba(251, 191, 36, 0.25);
         border: 2px solid #fbbf24;
         color: #fde047;
-        text-shadow: 0 0 10px rgba(253, 224, 71, 0.5), 0 0 20px rgba(253, 224, 71, 0.32);
-        box-shadow: 0 0 15px rgba(251, 191, 36, 0.38), 0 0 30px rgba(251, 191, 36, 0.25), 0 0 45px rgba(251, 191, 36, 0.13), inset 0 0 10px rgba(253, 224, 71, 0.13);
+        text-shadow:
+          0 0 10px rgba(253, 224, 71, 0.5),
+          0 0 20px rgba(253, 224, 71, 0.32);
+        box-shadow:
+          0 0 15px rgba(251, 191, 36, 0.38),
+          0 0 30px rgba(251, 191, 36, 0.25),
+          0 0 45px rgba(251, 191, 36, 0.13),
+          inset 0 0 10px rgba(253, 224, 71, 0.13);
       }
 
       .smn-status-badge-modal.graduated {
         background: rgba(139, 92, 246, 0.25);
         border: 2px solid #8b5cf6;
         color: #c4b5fd;
-        text-shadow: 0 0 10px rgba(196, 181, 253, 0.5), 0 0 20px rgba(196, 181, 253, 0.32);
-        box-shadow: 0 0 15px rgba(139, 92, 246, 0.38), 0 0 30px rgba(139, 92, 246, 0.25), 0 0 45px rgba(139, 92, 246, 0.13), inset 0 0 10px rgba(196, 181, 253, 0.13);
+        text-shadow:
+          0 0 10px rgba(196, 181, 253, 0.5),
+          0 0 20px rgba(196, 181, 253, 0.32);
+        box-shadow:
+          0 0 15px rgba(139, 92, 246, 0.38),
+          0 0 30px rgba(139, 92, 246, 0.25),
+          0 0 45px rgba(139, 92, 246, 0.13),
+          inset 0 0 10px rgba(196, 181, 253, 0.13);
       }
 
       .smn-glass-stats {
@@ -3480,7 +3574,9 @@
         background: rgba(0, 0, 0, 0.2);
         backdrop-filter: blur(10px);
         text-align: center;
-        box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.15), inset -2px -2px 4px rgba(255, 255, 255, 0.05);
+        box-shadow:
+          inset 2px 2px 4px rgba(0, 0, 0, 0.15),
+          inset -2px -2px 4px rgba(255, 255, 255, 0.05);
       }
 
       .smn-glass-stat-label {
@@ -3545,6 +3641,174 @@
         margin-bottom: 0;
       }
 
+      /* ========== GLASSMORPHISM MODAL FORM ELEMENTS ========== */
+      
+      .smn-modal-body {
+        padding: 28px 32px;
+      }
+
+      .smn-form-group {
+        margin-bottom: 24px;
+      }
+
+      .smn-form-label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .smn-form-input,
+      .smn-form-textarea {
+        width: 100%;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: white;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+      }
+
+      .smn-form-input::placeholder,
+      .smn-form-textarea::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .smn-form-input:focus,
+      .smn-form-textarea:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow: 0 0 0 4px rgba(138, 180, 255, 0.1), 0 0 20px rgba(138, 180, 255, 0.2);
+      }
+
+      .smn-form-textarea {
+        min-height: 120px;
+        resize: vertical;
+      }
+
+      .smn-button-group {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+      }
+
+      .smn-toggle-btn {
+        padding: 10px 18px;
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+      }
+
+      .smn-toggle-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(138, 180, 255, 0.3);
+        color: rgba(255, 255, 255, 0.75);
+        transform: translateY(-2px);
+      }
+
+      .smn-toggle-btn.active {
+        background: rgba(138, 180, 255, 0.25);
+        border-color: rgba(138, 180, 255, 0.6);
+        color: #8ab4ff;
+        box-shadow: 0 0 15px rgba(138, 180, 255, 0.3), inset 0 1px 3px rgba(138, 180, 255, 0.2);
+      }
+
+      .smn-modal-footer {
+        padding: 24px 32px;
+        background: rgba(0, 0, 0, 0.15);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .smn-btn-save {
+        padding: 12px 28px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(16, 185, 129, 0.5);
+        border-radius: 12px;
+        color: #6ee7b7;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+      }
+
+      .smn-btn-save:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.4));
+        border-color: rgba(16, 185, 129, 0.7);
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .smn-btn-cancel {
+        padding: 12px 28px;
+        background: rgba(255, 255, 255, 0.04);
+        backdrop-filter: blur(10px);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+      }
+
+      .smn-btn-cancel:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.25);
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      .smn-info-box {
+        padding: 14px 16px;
+        background: rgba(59, 130, 246, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 10px;
+        color: rgba(147, 197, 253, 0.9);
+        font-size: 13px;
+        line-height: 1.6;
+        margin-bottom: 20px;
+      }
+
+      .smn-info-box strong {
+        color: #60a5fa;
+        font-weight: 700;
+      }
+
+      .smn-info-box code {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: #e5e7eb;
+        font-size: 12px;
+        font-family: 'Monaco', 'Courier New', monospace;
+      }
+
+      /* ========== END GLASSMORPHISM MODAL FORM ELEMENTS ========== */
+
       /* White Emboss Buttons */
       .smn-btn-wrapper {
         --size: 50px;
@@ -3557,22 +3821,47 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06), inset 2px 2px 5px rgba(255, 255, 255, 0.8), inset -2px -2px 6px rgba(0, 0, 0, 0.04);
+        box-shadow:
+          0 10px 22px rgba(0, 0, 0, 0.12),
+          0 4px 10px rgba(0, 0, 0, 0.06),
+          inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+          inset -2px -2px 6px rgba(0, 0, 0, 0.04);
         transition: all 0.3s ease;
       }
 
       .smn-btn-wrapper:has(.smn-btn.active) {
         --size: 60px;
-        box-shadow: 0 0 15px hsla(var(--hue), 100%, 60%, 0.35), 0 0 30px hsla(var(--hue), 100%, 60%, 0.21), 0 0 45px hsla(var(--hue), 100%, 60%, 0.1), 0 10px 22px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06), inset 2px 2px 5px rgba(255, 255, 255, 0.8), inset -2px -2px 6px rgba(0, 0, 0, 0.04);
+        box-shadow:
+          0 0 15px hsla(var(--hue), 100%, 60%, 0.35),
+          0 0 30px hsla(var(--hue), 100%, 60%, 0.21),
+          0 0 45px hsla(var(--hue), 100%, 60%, 0.1),
+          0 10px 22px rgba(0, 0, 0, 0.12),
+          0 4px 10px rgba(0, 0, 0, 0.06),
+          inset 2px 2px 5px rgba(255, 255, 255, 0.8),
+          inset -2px -2px 6px rgba(0, 0, 0, 0.04);
       }
 
-      .smn-btn-wrapper.group-A { --hue: 346deg; }
-      .smn-btn-wrapper.group-B { --hue: 23deg; }
-      .smn-btn-wrapper.group-C { --hue: 50deg; }
-      .smn-btn-wrapper.group-D { --hue: 145deg; }
-      .smn-btn-wrapper.group-E { --hue: 204deg; }
-      .smn-btn-wrapper.group-F { --hue: 260deg; }
-      .smn-btn-wrapper.amount { --hue: 145deg; }
+      .smn-btn-wrapper.group-A {
+        --hue: 346deg;
+      }
+      .smn-btn-wrapper.group-B {
+        --hue: 23deg;
+      }
+      .smn-btn-wrapper.group-C {
+        --hue: 50deg;
+      }
+      .smn-btn-wrapper.group-D {
+        --hue: 145deg;
+      }
+      .smn-btn-wrapper.group-E {
+        --hue: 204deg;
+      }
+      .smn-btn-wrapper.group-F {
+        --hue: 260deg;
+      }
+      .smn-btn-wrapper.amount {
+        --hue: 145deg;
+      }
 
       .smn-btn {
         width: calc(100% - 2 * var(--padding));
@@ -3584,8 +3873,13 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.12), inset -3px -3px 7px rgba(255, 255, 255, 0.9), 0 3px 6px rgba(0, 0, 0, 0.08);
-        transition: transform 0.15s ease, box-shadow 0.25s ease;
+        box-shadow:
+          inset 3px 3px 6px rgba(0, 0, 0, 0.12),
+          inset -3px -3px 7px rgba(255, 255, 255, 0.9),
+          0 3px 6px rgba(0, 0, 0, 0.08);
+        transition:
+          transform 0.15s ease,
+          box-shadow 0.25s ease;
       }
 
       .smn-btn-txt {
@@ -3603,7 +3897,10 @@
       }
 
       .smn-btn.active {
-        box-shadow: inset 2px 2px 6px rgba(255, 255, 255, 0.9), inset -4px -4px 12px rgba(0, 0, 0, 0.08), 0 0 18px hsla(var(--hue), 80%, 65%, 0.25);
+        box-shadow:
+          inset 2px 2px 6px rgba(255, 255, 255, 0.9),
+          inset -4px -4px 12px rgba(0, 0, 0, 0.08),
+          0 0 18px hsla(var(--hue), 80%, 65%, 0.25);
       }
 
       .smn-btn.active .smn-btn-txt {
@@ -3611,7 +3908,8 @@
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-        filter: drop-shadow(0 0 7px hsla(var(--hue), 100%, 48%, 0.95)) drop-shadow(0 0 12px hsla(var(--hue), 100%, 38%, 0.85));
+        filter: drop-shadow(0 0 7px hsla(var(--hue), 100%, 48%, 0.95))
+          drop-shadow(0 0 12px hsla(var(--hue), 100%, 38%, 0.85));
       }
 
       .smn-btn:active {
@@ -3893,7 +4191,14 @@
         </button>
         <button id="navTimerBtn" class="nav-btn" title="Class Countdown Timer">◷</button>
         <button id="navQuickViewBtn" class="nav-btn" title="Quick View – Group Schedules">◈</button>
-        <button id="navStudentManagerNewBtn" class="nav-btn" title="Student Manager (NEW)" onclick="openStudentManagerNew()">👥</button>
+        <button
+          id="navStudentManagerNewBtn"
+          class="nav-btn"
+          title="Student Manager (NEW)"
+          onclick="openStudentManagerNew()"
+        >
+          👥
+        </button>
       </div>
       <!-- ========== END FLOATING NAV HTML ========== -->
 
@@ -4706,934 +5011,368 @@
       </div>
 
       <!-- Add/Edit Student Modal -->
-      <div
-        id="studentModal"
-        onclick="if(event.target.id==='studentModal'){closeStudentModal();}"
-        style="
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          z-index: 25000;
-          backdrop-filter: blur(4px);
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        "
-      >
-        <div
-          onclick="event.stopPropagation()"
-          style="
-            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
-            border: 2px solid rgba(138, 180, 255, 0.3);
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-          "
-        >
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
-            <h2 id="modalTitle" style="margin: 0; font-size: 24px; color: var(--primary)">Add New Student</h2>
-            <span
-              onclick="closeStudentModal()"
-              style="font-size: 28px; color: #6b7280; cursor: pointer; transition: all 0.2s"
-            >
-              &times;
-            </span>
-          </div>
-
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Student Name *
-            </label>
-            <input
-              type="text"
-              id="studentName"
-              placeholder="Enter full name"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveStudent();}"
-            />
-          </div>
-
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Group(s)
-            </label>
-            <div id="groupBtns" style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px">
-              <button
-                class="group-select-btn"
-                onclick="toggleGroup(this, 'A')"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                A
-              </button>
-              <button
-                class="group-select-btn"
-                onclick="toggleGroup(this, 'B')"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                B
-              </button>
-              <button
-                class="group-select-btn"
-                onclick="toggleGroup(this, 'C')"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                C
-              </button>
-              <button
-                class="group-select-btn"
-                onclick="toggleGroup(this, 'D')"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                D
-              </button>
-              <button
-                class="group-select-btn"
-                onclick="toggleGroup(this, 'E')"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                E
-              </button>
-              <button
-                class="group-select-btn"
-                onclick="toggleGroup(this, 'F')"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                F
-              </button>
+      <div id="studentModal" class="smn-modal-backdrop" onclick="if(event.target.id==='studentModal'){closeStudentModal();}">
+        <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 600px">
+          <!-- Header -->
+          <div class="smn-glass-header-modal">
+            <div>
+              <h2 id="modalTitle" class="smn-glass-name" style="font-size: 1.5rem">Add New Student</h2>
             </div>
-            <input
-              type="text"
-              id="customGroups"
-              placeholder="Or enter custom groups (comma-separated, optional)"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveStudent();}"
-            />
+            <button class="smn-modal-close" onclick="closeStudentModal()">&times;</button>
           </div>
 
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Pay Per Class
-            </label>
-            <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px">
-              <button
-                class="pay-select-btn"
-                onclick="selectPayAmount(this, 25)"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                $25
-              </button>
-              <button
-                class="pay-select-btn"
-                onclick="selectPayAmount(this, 50)"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                $50
-              </button>
-              <button
-                class="pay-select-btn"
-                onclick="selectPayAmount(this, 75)"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                $75
-              </button>
-              <button
-                class="pay-select-btn"
-                onclick="selectPayAmount(this, 100)"
-                style="
-                  padding: 8px 16px;
-                  background: rgba(255, 255, 255, 0.05);
-                  color: #6b7280;
-                  border: 2px solid rgba(255, 255, 255, 0.2);
-                  border-radius: 8px;
-                  font-weight: 700;
-                  cursor: pointer;
-                  transition: all 0.2s;
-                  font-size: 14px;
-                "
-              >
-                $100
-              </button>
-            </div>
-            <input
-              type="number"
-              id="studentPay"
-              placeholder="Or enter custom amount"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveStudent();}"
-            />
-          </div>
-
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #eab308; font-size: 14px">
-              💰 Credit Balance
-            </label>
-            <div style="margin-bottom: 8px; font-size: 12px; color: #94a3b8; line-height: 1.4">
-              Credit will auto-apply to upcoming classes until it reaches $0
-            </div>
-            <div style="position: relative">
-              <span
-                style="
-                  position: absolute;
-                  left: 12px;
-                  top: 50%;
-                  transform: translateY(-50%);
-                  color: #eab308;
-                  font-weight: 700;
-                  font-size: 16px;
-                "
-              >
-                $
-              </span>
+          <!-- Scrollable Content Wrapper -->
+          <div class="smn-modal-scroll">
+            <!-- Body -->
+            <div class="smn-modal-body">
+            <!-- Student Name -->
+            <div class="smn-form-group">
+              <label class="smn-form-label">Student Name *</label>
               <input
-                type="number"
-                id="studentBalance"
-                placeholder="0.00"
-                step="0.01"
-                min="0"
-                style="
-                  width: 100%;
-                  padding: 12px 12px 12px 32px;
-                  background: rgba(234, 179, 8, 0.1);
-                  border: 2px solid rgba(234, 179, 8, 0.3);
-                  border-radius: 8px;
-                  color: #eab308;
-                  font-size: 16px;
-                  font-weight: 700;
-                "
+                type="text"
+                id="studentName"
+                class="smn-form-input"
+                placeholder="Enter full name"
                 onkeydown="if(event.key==='Enter'){saveStudent();}"
               />
             </div>
-            <div id="currentBalanceDisplay" style="margin-top: 8px; font-size: 11px; color: #6b7280"></div>
-          </div>
 
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Phone
-            </label>
-            <input
-              type="tel"
-              id="studentPhone"
-              placeholder="(555) 123-4567"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveStudent();}"
-            />
-          </div>
+            <!-- Group Selection -->
+            <div class="smn-form-group">
+              <label class="smn-form-label">Group(s)</label>
+              <div class="smn-button-group">
+                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'A')">A</button>
+                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'B')">B</button>
+                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'C')">C</button>
+                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'D')">D</button>
+                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'E')">E</button>
+                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'F')">F</button>
+              </div>
+              <input
+                type="text"
+                id="customGroups"
+                class="smn-form-input"
+                placeholder="Or enter custom groups (comma-separated, optional)"
+                onkeydown="if(event.key==='Enter'){saveStudent();}"
+              />
+            </div>
 
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Email(s)
-              <span style="color: #94a3b8; font-weight: 400; font-size: 12px">(comma-separated for multiple)</span>
-            </label>
-            <input
-              type="text"
-              id="studentEmail"
-              placeholder="email1@example.com, email2@example.com"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveStudent();}"
-            />
-            <div style="color: #94a3b8; font-size: 11px; margin-top: 4px">
-              💡 You can add multiple emails separated by commas. All emails will receive notifications.
+            <!-- Pay Per Class -->
+            <div class="smn-form-group">
+              <label class="smn-form-label">Pay Per Class</label>
+              <div class="smn-button-group">
+                <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 25)">$25</button>
+                <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 50)">$50</button>
+                <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 75)">$75</button>
+                <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 100)">$100</button>
+              </div>
+              <input
+                type="number"
+                id="studentPay"
+                class="smn-form-input"
+                placeholder="Or enter custom amount"
+                onkeydown="if(event.key==='Enter'){saveStudent();}"
+              />
+            </div>
+
+            <!-- Credit Balance -->
+            <div class="smn-form-group">
+              <label class="smn-form-label" style="color: #eab308">💰 Credit Balance</label>
+              <div style="margin-bottom: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.5); line-height: 1.4">
+                Credit will auto-apply to upcoming classes until it reaches $0
+              </div>
+              <div style="position: relative">
+                <span
+                  style="
+                    position: absolute;
+                    left: 16px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #eab308;
+                    font-weight: 700;
+                    font-size: 16px;
+                    pointer-events: none;
+                  "
+                >
+                  $
+                </span>
+                <input
+                  type="number"
+                  id="studentBalance"
+                  class="smn-form-input"
+                  placeholder="0.00"
+                  step="0.01"
+                  min="0"
+                  style="
+                    padding-left: 38px;
+                    background: rgba(234, 179, 8, 0.1);
+                    border-color: rgba(234, 179, 8, 0.3);
+                    color: #eab308;
+                    font-weight: 700;
+                  "
+                  onkeydown="if(event.key==='Enter'){saveStudent();}"
+                />
+              </div>
+              <div id="currentBalanceDisplay" style="margin-top: 8px; font-size: 11px; color: rgba(255, 255, 255, 0.4)"></div>
+            </div>
+
+            <!-- Phone -->
+            <div class="smn-form-group">
+              <label class="smn-form-label">Phone</label>
+              <input
+                type="tel"
+                id="studentPhone"
+                class="smn-form-input"
+                placeholder="(555) 123-4567"
+                onkeydown="if(event.key==='Enter'){saveStudent();}"
+              />
+            </div>
+
+            <!-- Email -->
+            <div class="smn-form-group">
+              <label class="smn-form-label">
+                Email(s)
+                <span style="color: rgba(255, 255, 255, 0.4); font-weight: 400; font-size: 11px; text-transform: none">
+                  (comma-separated for multiple)
+                </span>
+              </label>
+              <input
+                type="text"
+                id="studentEmail"
+                class="smn-form-input"
+                placeholder="email1@example.com, email2@example.com"
+                onkeydown="if(event.key==='Enter'){saveStudent();}"
+              />
+              <div style="color: rgba(255, 255, 255, 0.4); font-size: 11px; margin-top: 8px">
+                💡 You can add multiple emails separated by commas. All emails will receive notifications.
+              </div>
+            </div>
+
+            <!-- Aliases -->
+            <div class="smn-form-group">
+              <label class="smn-form-label">Aliases (comma-separated)</label>
+              <input
+                type="text"
+                id="studentAliases"
+                class="smn-form-input"
+                placeholder="Nick, Nickname"
+                onkeydown="if(event.key==='Enter'){saveStudent();}"
+              />
+            </div>
+
+            <!-- Notes -->
+            <div class="smn-form-group">
+              <label class="smn-form-label">Notes</label>
+              <textarea
+                id="studentNotes"
+                class="smn-form-textarea"
+                placeholder="Additional notes..."
+              ></textarea>
             </div>
           </div>
-
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Aliases (comma-separated)
-            </label>
-            <input
-              type="text"
-              id="studentAliases"
-              placeholder="Nick, Nickname"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveStudent();}"
-            />
           </div>
 
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Notes
-            </label>
-            <textarea
-              id="studentNotes"
-              placeholder="Additional notes..."
-              style="
-                width: 100%;
-                min-height: 100px;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-                resize: vertical;
-              "
-            ></textarea>
-          </div>
-
-          <div style="display: flex; gap: 12px; margin-top: 24px">
-            <button
-              onclick="saveStudentFromModal()"
-              style="
-                flex: 1;
-                padding: 12px;
-                background: linear-gradient(135deg, #22c55e, #16a34a);
-                border: none;
-                border-radius: 10px;
-                color: white;
-                font-weight: 700;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
-              "
-            >
-              Save Student
-            </button>
-            <button
-              onclick="closeStudentModal()"
-              style="
-                flex: 1;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 10px;
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
-              "
-            >
-              Cancel
-            </button>
+          <!-- Footer -->
+          <div class="smn-modal-footer">
+            <button class="smn-btn-cancel" onclick="closeStudentModal()">Cancel</button>
+            <button class="smn-btn-save" onclick="saveStudentFromModal()">Save Student</button>
           </div>
         </div>
       </div>
 
       <!-- BEGIN BULK ADD STUDENTS FEATURE -->
       <!-- Bulk Add Students Modal -->
-      <div
-        id="bulkAddStudentsModal"
-        onclick="if(event.target.id==='bulkAddStudentsModal'){closeBulkAddStudents();}"
-        style="
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          z-index: 25000;
-          backdrop-filter: blur(4px);
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        "
-      >
-        <div
-          onclick="event.stopPropagation()"
-          style="
-            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
-            border: 2px solid rgba(59, 130, 246, 0.4);
-            border-radius: 18px;
-            padding: 30px;
-            max-width: 700px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-          "
-        >
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
-            <h2
-              style="
-                margin: 0;
-                font-size: 24px;
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
-                -webkit-background-clip: text;
-                background-clip: text;
-                -webkit-text-fill-color: transparent;
-                font-weight: 900;
-              "
-            >
-              📋 Bulk Add Students — Paste or Type Below
-            </h2>
-            <span
-              onclick="closeBulkAddStudents()"
-              style="font-size: 28px; color: #6b7280; cursor: pointer; transition: color 0.2s"
-              onmouseover="this.style.color='white'"
-              onmouseout="this.style.color='#6b7280'"
-            >
-              &times;
-            </span>
+      <div id="bulkAddStudentsModal" class="smn-modal-backdrop" onclick="if(event.target.id==='bulkAddStudentsModal'){closeBulkAddStudents();}">
+        <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 750px">
+          <!-- Header -->
+          <div class="smn-glass-header-modal">
+            <div>
+              <h2 class="smn-glass-name" style="font-size: 1.5rem">📋 Bulk Add Students</h2>
+              <div class="smn-glass-subtitle">Paste or Type Below</div>
+            </div>
+            <button class="smn-modal-close" onclick="closeBulkAddStudents()">&times;</button>
           </div>
 
-          <div
-            style="
-              margin-bottom: 16px;
-              padding: 12px;
-              background: rgba(59, 130, 246, 0.1);
-              border: 1px solid rgba(59, 130, 246, 0.3);
-              border-radius: 8px;
-              color: #94a3b8;
-              font-size: 13px;
-              line-height: 1.6;
-            "
-          >
-            <strong style="color: #3b82f6">Flexible Format:</strong>
-            One student per line — comma-separated or labeled
-            <br />
-            <code
-              style="
-                background: rgba(0, 0, 0, 0.3);
-                padding: 2px 6px;
-                border-radius: 4px;
-                color: #e5e7eb;
-                font-size: 12px;
-              "
-            >
-              Name, Email, Phone, Group, $Amount
-            </code>
-            <br />
-            <code
-              style="
-                background: rgba(0, 0, 0, 0.3);
-                padding: 2px 6px;
-                border-radius: 4px;
-                color: #e5e7eb;
-                font-size: 12px;
-              "
-            >
-              Name (Alias), Email, Phone, Group, $Amount
-            </code>
+          <!-- Scrollable Content Wrapper -->
+          <div class="smn-modal-scroll">
+            <!-- Body -->
+            <div class="smn-modal-body">
+            <div class="smn-info-box">
+              <strong>Flexible Format:</strong> One student per line — comma-separated or labeled
+              <br />
+              <code>Name, Email, Phone, Group, $Amount</code>
+              <br />
+              <code>Name (Alias), Email, Phone, Group, $Amount</code>
+            </div>
+
+            <div style="margin-bottom: 16px; padding: 10px; background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(10px); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.5); font-size: 12px">
+              <strong style="color: rgba(255, 255, 255, 0.7)">Examples:</strong>
+              <br />
+              <span style="font-family: monospace; color: #8ab4ff">
+                Hasmik Antonova (Level Up), Hasmik.Antonova@gmail.com, 909-555-4321, A, $100
+              </span>
+              <br />
+              <span style="font-family: monospace; color: #8ab4ff">
+                Varduni Nerseyan, Varduni1982@yahoo.com, (818)299-7867, E, $100
+              </span>
+            </div>
+
+            <textarea
+              id="bulkStudentInput"
+              class="smn-form-textarea"
+              placeholder="Paste student records here (one per line)..."
+              style="min-height: 280px; font-family: monospace; line-height: 1.8"
+            ></textarea>
+
+            <div
+              id="bulkAddValidationMessage"
+              style="margin-top: 12px; padding: 10px; border-radius: 8px; display: none"
+            ></div>
+          </div>
           </div>
 
-          <div
-            style="
-              margin-bottom: 12px;
-              padding: 10px;
-              background: rgba(255, 255, 255, 0.03);
-              border-radius: 6px;
-              color: #6b7280;
-              font-size: 12px;
-            "
-          >
-            <strong style="color: #94a3b8">Examples:</strong>
-            <br />
-            <span style="font-family: monospace; color: #8ab4ff">
-              Hasmik Antonova (Level Up), Hasmik.Antonova@gmail.com, 909-555-4321, A, $100
-            </span>
-            <br />
-            <span style="font-family: monospace; color: #8ab4ff">
-              Varduni Nerseyan, Varduni1982@yahoo.com, (818)299-7867, E, $100
-            </span>
-          </div>
-
-          <textarea
-            id="bulkStudentInput"
-            placeholder="Paste student records here (one per line)..."
-            style="
-              width: 100%;
-              min-height: 250px;
-              padding: 14px;
-              background: rgba(255, 255, 255, 0.05);
-              backdrop-filter: blur(10px);
-              border: 2px solid rgba(255, 255, 255, 0.15);
-              border-radius: 10px;
-              color: white;
-              font-size: 13px;
-              font-family: monospace;
-              resize: vertical;
-              line-height: 1.8;
-            "
-          ></textarea>
-
-          <div
-            id="bulkAddValidationMessage"
-            style="margin-top: 12px; padding: 10px; border-radius: 8px; display: none"
-          ></div>
-
-          <div style="display: flex; gap: 12px; margin-top: 20px">
-            <button
-              onclick="processBulkAddStudents()"
-              style="
-                flex: 1;
-                padding: 14px;
-                background: linear-gradient(135deg, #3b82f6, #2563eb);
-                border: none;
-                border-radius: 10px;
-                color: white;
-                font-weight: 700;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
-                transition: all 0.2s;
-              "
-              onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 16px rgba(59, 130, 246, 0.4)'"
-              onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px rgba(59, 130, 246, 0.3)'"
-            >
-              Add Students
-            </button>
-            <button
-              onclick="closeBulkAddStudents()"
-              style="
-                flex: 1;
-                padding: 14px;
-                background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 10px;
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-              "
-              onmouseover="this.style.background='rgba(255,255,255,0.12)'"
-              onmouseout="this.style.background='rgba(255,255,255,0.08)'"
-            >
-              Cancel
-            </button>
+          <!-- Footer -->
+          <div class="smn-modal-footer">
+            <button class="smn-btn-cancel" onclick="closeBulkAddStudents()">Cancel</button>
+            <button class="smn-btn-save" onclick="processBulkAddStudents()">Add Students</button>
           </div>
         </div>
       </div>
       <!-- END BULK ADD STUDENTS FEATURE -->
 
       <!-- Waiting List Modal -->
-      <div
-        id="waitingListModal"
-        onclick="if(event.target.id==='waitingListModal'){closeWaitingList();}"
-        style="
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          z-index: 25000;
-          backdrop-filter: blur(4px);
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        "
-      >
-        <div
-          onclick="event.stopPropagation()"
-          style="
-            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
-            border: 2px solid rgba(138, 180, 255, 0.3);
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 1000px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-          "
-        >
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
-            <h2 style="margin: 0; font-size: 24px; color: var(--primary)">Student Waiting List</h2>
-            <span onclick="closeWaitingList()" style="font-size: 28px; color: #6b7280; cursor: pointer">&times;</span>
+      <div id="waitingListModal" class="smn-modal-backdrop" onclick="if(event.target.id==='waitingListModal'){closeWaitingList();}">
+        <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 1100px">
+          <!-- Header -->
+          <div class="smn-glass-header-modal">
+            <div>
+              <h2 class="smn-glass-name" style="font-size: 1.5rem">Student Waiting List</h2>
+            </div>
+            <button class="smn-modal-close" onclick="closeWaitingList()">&times;</button>
           </div>
-          <button
-            onclick="openAddWaitingList()"
-            style="
-              margin-bottom: 20px;
-              width: 100%;
-              padding: 12px;
-              background: linear-gradient(135deg, #22c55e, #16a34a);
-              border: none;
-              border-radius: 10px;
-              color: white;
-              font-weight: 700;
-              cursor: pointer;
-            "
-          >
-            + Add to Waiting List
-          </button>
-          <div
-            id="waitingListContent"
-            style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px"
-          ></div>
+
+          <!-- Scrollable Content Wrapper -->
+          <div class="smn-modal-scroll">
+            <!-- Body -->
+            <div class="smn-modal-body">
+              <button class="smn-btn-save" onclick="openAddWaitingList()" style="width: 100%; margin-bottom: 24px">
+                + Add to Waiting List
+              </button>
+              <div
+                id="waitingListContent"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px"
+              ></div>
+            </div>
+          </div>
         </div>
       </div>
 
       <!-- Add Waiting List Student Modal -->
-      <div
-        id="addWaitingListModal"
-        onclick="if(event.target.id==='addWaitingListModal'){closeAddWaitingList();}"
-        style="
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          z-index: 26000;
-          backdrop-filter: blur(4px);
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        "
-      >
-        <div
-          onclick="event.stopPropagation()"
-          style="
-            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
-            border: 2px solid rgba(138, 180, 255, 0.3);
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 500px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-          "
-        >
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
-            <h2 style="margin: 0; font-size: 24px; color: var(--primary)">Add to Waiting List</h2>
-            <span onclick="closeAddWaitingList()" style="font-size: 28px; color: #6b7280; cursor: pointer">
-              &times;
-            </span>
+      <div id="addWaitingListModal" class="smn-modal-backdrop" onclick="if(event.target.id==='addWaitingListModal'){closeAddWaitingList();}" style="z-index: 61000">
+        <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 550px">
+          <!-- Header -->
+          <div class="smn-glass-header-modal">
+            <div>
+              <h2 class="smn-glass-name" style="font-size: 1.5rem">Add to Waiting List</h2>
+            </div>
+            <button class="smn-modal-close" onclick="closeAddWaitingList()">&times;</button>
           </div>
 
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Full Name *
-            </label>
-            <input
-              type="text"
-              id="waitingListFullName"
-              placeholder="Enter full name"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-            />
+          <!-- Scrollable Content Wrapper -->
+          <div class="smn-modal-scroll">
+            <!-- Body -->
+            <div class="smn-modal-body">
+            <div class="smn-form-group">
+              <label class="smn-form-label">Full Name *</label>
+              <input
+                type="text"
+                id="waitingListFullName"
+                class="smn-form-input"
+                placeholder="Enter full name"
+                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+              />
+            </div>
+
+            <div class="smn-form-group">
+              <label class="smn-form-label">Email *</label>
+              <input
+                type="email"
+                id="waitingListEmail"
+                class="smn-form-input"
+                placeholder="Enter email address"
+                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+              />
+            </div>
+
+            <div class="smn-form-group">
+              <label class="smn-form-label">Phone Number *</label>
+              <input
+                type="tel"
+                id="waitingListPhone"
+                class="smn-form-input"
+                placeholder="Enter phone number"
+                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+              />
+            </div>
+
+            <div class="smn-form-group">
+              <label class="smn-form-label">Preferred Language</label>
+              <input
+                type="text"
+                id="waitingListLanguage"
+                class="smn-form-input"
+                placeholder="e.g., English, Spanish, Armenian"
+                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+              />
+            </div>
+
+            <div class="smn-form-group">
+              <label class="smn-form-label">Preferred Start Date</label>
+              <input
+                type="date"
+                id="waitingListStartDate"
+                class="smn-form-input"
+                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+              />
+            </div>
+
+            <div class="smn-form-group">
+              <label class="smn-form-label">Notes</label>
+              <textarea
+                id="waitingListNotes"
+                class="smn-form-textarea"
+                placeholder="Any additional information..."
+              ></textarea>
+            </div>
+          </div>
           </div>
 
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Email *
-            </label>
-            <input
-              type="email"
-              id="waitingListEmail"
-              placeholder="Enter email address"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-            />
-          </div>
-
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Phone Number *
-            </label>
-            <input
-              type="tel"
-              id="waitingListPhone"
-              placeholder="Enter phone number"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-            />
-          </div>
-
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Preferred Language
-            </label>
-            <input
-              type="text"
-              id="waitingListLanguage"
-              placeholder="e.g., English, Spanish, Armenian"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-            />
-          </div>
-
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Preferred Start Date
-            </label>
-            <input
-              type="date"
-              id="waitingListStartDate"
-              style="
-                width: 100%;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-              "
-              onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-            />
-          </div>
-
-          <div style="margin-bottom: 20px">
-            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #f3f4f6; font-size: 14px">
-              Notes
-            </label>
-            <textarea
-              id="waitingListNotes"
-              placeholder="Any additional information..."
-              style="
-                width: 100%;
-                min-height: 100px;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.05);
-                border: 2px solid rgba(255, 255, 255, 0.2);
-                border-radius: 8px;
-                color: #f3f4f6;
-                font-size: 14px;
-                resize: vertical;
-              "
-            ></textarea>
-          </div>
-
-          <div style="display: flex; gap: 12px; margin-top: 24px">
-            <button
-              onclick="saveWaitingListStudent()"
-              style="
-                flex: 1;
-                padding: 12px;
-                background: linear-gradient(135deg, #22c55e, #16a34a);
-                border: none;
-                border-radius: 10px;
-                color: white;
-                font-weight: 700;
-                cursor: pointer;
-              "
-            >
-              Add to List
-            </button>
-            <button
-              onclick="closeAddWaitingList()"
-              style="
-                flex: 1;
-                padding: 12px;
-                background: rgba(255, 255, 255, 0.08);
-                border: 1px solid rgba(255, 255, 255, 0.15);
-                border-radius: 10px;
-                color: white;
-                font-weight: 600;
-                cursor: pointer;
-              "
-            >
-              Cancel
-            </button>
+          <!-- Footer -->
+          <div class="smn-modal-footer">
+            <button class="smn-btn-cancel" onclick="closeAddWaitingList()">Cancel</button>
+            <button class="smn-btn-save" onclick="saveWaitingListStudent()">Add to List</button>
           </div>
         </div>
       </div>
 
       <!-- Duplicate Students Modal -->
-      <div
-        id="duplicatesModal"
-        onclick="if(event.target.id==='duplicatesModal'){closeDuplicatesModal();}"
-        style="
-          display: none;
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          z-index: 25000;
-          backdrop-filter: blur(4px);
-          align-items: center;
-          justify-content: center;
-          padding: 20px;
-        "
-      >
-        <div
-          onclick="event.stopPropagation()"
-          style="
-            background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3e 100%);
-            border: 2px solid rgba(138, 180, 255, 0.3);
-            border-radius: 16px;
-            padding: 30px;
-            max-width: 900px;
-            width: 90%;
-            max-height: 90vh;
-            overflow-y: auto;
-          "
-        >
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px">
-            <h2 style="margin: 0; font-size: 24px; color: var(--primary)">Duplicate Students</h2>
-            <span onclick="closeDuplicatesModal()" style="font-size: 28px; color: #6b7280; cursor: pointer">
-              &times;
-            </span>
+      <div id="duplicatesModal" class="smn-modal-backdrop" onclick="if(event.target.id==='duplicatesModal'){closeDuplicatesModal();}">
+        <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 950px">
+          <!-- Header -->
+          <div class="smn-glass-header-modal">
+            <div>
+              <h2 class="smn-glass-name" style="font-size: 1.5rem">Duplicate Students</h2>
+            </div>
+            <button class="smn-modal-close" onclick="closeDuplicatesModal()">&times;</button>
           </div>
-          <div id="duplicatesContent"></div>
+
+          <!-- Scrollable Content Wrapper -->
+          <div class="smn-modal-scroll">
+            <!-- Body -->
+            <div class="smn-modal-body">
+              <div id="duplicatesContent"></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -5798,7 +5537,7 @@
           padding: 12px 16px;
           font-size: 0.9rem;
           color: white;
-          z-index: 25000;
+          z-index: 60000;
           box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
         "
       ></div>
@@ -6208,18 +5947,10 @@
           <div class="smn-header-row-1">
             <h1 class="smn-title">👥 Student Manager (NEW)</h1>
             <div class="smn-header-actions">
-              <button class="smn-btn-primary" onclick="openAddStudent()">
-                + Add Student
-              </button>
-              <button class="smn-btn-secondary" onclick="openBulkAddStudents()">
-                📋 Bulk Add
-              </button>
-              <button class="smn-btn-outline-purple" onclick="openWaitingList()">
-                Waiting List
-              </button>
-              <button class="smn-btn-outline-orange" onclick="findDuplicates()">
-                Find Duplicates
-              </button>
+              <button class="smn-btn-primary" onclick="openAddStudent()">+ Add Student</button>
+              <button class="smn-btn-secondary" onclick="openBulkAddStudents()">📋 Bulk Add</button>
+              <button class="smn-btn-outline-purple" onclick="openWaitingList()">Waiting List</button>
+              <button class="smn-btn-outline-orange" onclick="findDuplicates()">Find Duplicates</button>
               <button class="smn-close-btn" onclick="closeStudentManagerNew()">×</button>
             </div>
           </div>
@@ -6230,7 +5961,7 @@
               type="text"
               id="smnSearchInput"
               class="smn-search-input"
-              placeholder="🔍 Search by name, group, phone, email, notes..."
+              placeholder="Search by name, group, phone, email, notes..."
               oninput="smnFilterStudents()"
             />
             <select id="smnFilterGroup" class="smn-filter-select" onchange="smnFilterStudents()">
@@ -6239,9 +5970,10 @@
             </select>
             <select id="smnFilterStatus" class="smn-filter-select" onchange="smnFilterStudents()">
               <option value="">All Statuses</option>
-              <option value="active">Active</option>
+              <option value="active" selected>Active</option>
               <option value="paused">Paused</option>
               <option value="graduated">Graduated</option>
+              <option value="toggle-off">Toggle Off</option>
             </select>
             <select id="smnFilterPayment" class="smn-filter-select" onchange="smnFilterStudents()">
               <option value="">All Payment Status</option>
@@ -6253,9 +5985,7 @@
               <option value="highest">Price: Highest First</option>
               <option value="lowest">Price: Lowest First</option>
             </select>
-            <button class="smn-btn-clear" onclick="smnClearFilters()">
-              Clear Filters
-            </button>
+            <button class="smn-btn-clear" onclick="smnClearFilters()">Clear Filters</button>
           </div>
         </div>
         <div class="smn-students-grid" id="smnStudentsGrid"></div>
@@ -6263,7 +5993,14 @@
 
       <!-- Student Manager (NEW) Modal -->
       <div class="smn-modal-backdrop" id="smnModalBackdrop">
-        <div class="smn-modal-card" id="smnModalCard" role="dialog" aria-modal="true" aria-labelledby="smnModalName" onclick="event.stopPropagation()">
+        <div
+          class="smn-modal-card"
+          id="smnModalCard"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="smnModalName"
+          onclick="event.stopPropagation()"
+        >
           <button class="smn-modal-close" onclick="closeSmnModal()" aria-label="Close modal">
             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
@@ -6277,7 +6014,12 @@
               <div class="smn-glass-subtitle" id="smnModalGroup"></div>
             </div>
             <div class="smn-glass-meta">
-              <button class="smn-status-badge-modal active" id="smnModalStatusBadge" onclick="cycleSmnModalStatus()" aria-label="Toggle student status"></button>
+              <button
+                class="smn-status-badge-modal active"
+                id="smnModalStatusBadge"
+                onclick="cycleSmnModalStatus()"
+                aria-label="Toggle student status"
+              ></button>
             </div>
           </div>
 
@@ -6293,19 +6035,39 @@
             </div>
             <div class="smn-glass-stat">
               <div class="smn-glass-stat-label">Phone</div>
-              <input type="tel" class="smn-glass-stat-input" id="smnModalPhone" style="font-size: 1.1rem; color: #c084fc" />
+              <input
+                type="tel"
+                class="smn-glass-stat-input"
+                id="smnModalPhone"
+                style="font-size: 1.1rem; color: #c084fc"
+              />
             </div>
             <div class="smn-glass-stat">
               <div class="smn-glass-stat-label">Email</div>
-              <textarea class="smn-glass-stat-input" id="smnModalEmail" style="font-size: 0.9rem; color: #94a3b8" rows="2"></textarea>
+              <textarea
+                class="smn-glass-stat-input"
+                id="smnModalEmail"
+                style="font-size: 0.9rem; color: #94a3b8"
+                rows="2"
+              ></textarea>
             </div>
             <div class="smn-glass-stat">
               <div class="smn-glass-stat-label">Aliases</div>
-              <textarea class="smn-glass-stat-input" id="smnModalAliases" style="font-size: 0.85rem; color: #fbbf24" rows="2"></textarea>
+              <textarea
+                class="smn-glass-stat-input"
+                id="smnModalAliases"
+                style="font-size: 0.85rem; color: #fbbf24"
+                rows="2"
+              ></textarea>
             </div>
             <div class="smn-glass-stat">
               <div class="smn-glass-stat-label">Notes</div>
-              <textarea class="smn-glass-stat-input" id="smnModalNotes" style="font-size: 0.85rem; color: #a78bfa" rows="2"></textarea>
+              <textarea
+                class="smn-glass-stat-input"
+                id="smnModalNotes"
+                style="font-size: 0.85rem; color: #a78bfa"
+                rows="2"
+              ></textarea>
             </div>
           </div>
 
@@ -6378,9 +6140,7 @@
         <div class="header">
           <h1>
             Payment Records
-            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">
-              v2.17.0
-            </span>
+            <span style="font-size: 14px; color: rgba(255, 255, 255, 0.7); font-weight: 500">v2.17.0</span>
           </h1>
           <select id="paymentFilterDropdown" class="filter-dropdown">
             <option value="all">All Payments</option>
@@ -6712,7 +6472,7 @@
           right: 0;
           bottom: 0;
           background: rgba(0, 0, 0, 0.7);
-          z-index: 25000;
+          z-index: 60000;
           backdrop-filter: blur(6px);
           opacity: 0;
           transition: opacity 0.25s ease;
@@ -6914,7 +6674,7 @@
           right: 0;
           bottom: 0;
           background: rgba(0, 0, 0, 0.8);
-          z-index: 26000;
+          z-index: 61000;
           backdrop-filter: blur(8px);
           opacity: 0;
           transition: opacity 0.25s ease;
@@ -7358,10 +7118,7 @@
 
             try {
               // Load ALL payments from Supabase (no limit - we need accurate count)
-              const { data, error } = await supabase
-                .from('payments')
-                .select('*')
-                .order('date', { ascending: false });
+              const { data, error } = await supabase.from('payments').select('*').order('date', { ascending: false });
 
               if (error) {
                 console.error('❌ Error loading payments from Supabase:', error);
@@ -7743,7 +7500,7 @@
           // Save show_in_grid to Supabase (controls calendar visibility)
           if (typeof studentData.showInGrid === 'boolean') {
             payload.show_in_grid = studentData.showInGrid;
-//             console.log('✅ Adding show_in_grid to payload:', payload.show_in_grid);
+            //             console.log('✅ Adding show_in_grid to payload:', payload.show_in_grid);
           } else {
             console.warn('⚠️ showInGrid is not a boolean:', typeof studentData.showInGrid, studentData.showInGrid);
           }
@@ -7768,7 +7525,7 @@
             delete payload.id;
           }
 
-//           console.log('📤 Supabase payload:', isUpdate ? 'UPDATE' : 'INSERT', payload);
+          //           console.log('📤 Supabase payload:', isUpdate ? 'UPDATE' : 'INSERT', payload);
 
           try {
             let result;
@@ -13897,7 +13654,7 @@
             verboseLog('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
           }
 
-//           console.log('📝 Total changes detected:', changes.length, changes);
+          //           console.log('📝 Total changes detected:', changes.length, changes);
 
           student.name = name;
           student.group = group;
@@ -14090,7 +13847,7 @@
         }
 
         async function toggleVisibility(studentId, visible) {
-//           console.log('🔄 toggleVisibility called:', { studentId, visible });
+          //           console.log('🔄 toggleVisibility called:', { studentId, visible });
 
           // Handle both string and numeric IDs from Supabase
           const student = students.find(s => s.id === studentId || s.id === parseInt(studentId));
@@ -14099,11 +13856,11 @@
             return;
           }
 
-//           console.log('📝 Before update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
+          //           console.log('📝 Before update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
 
           student.showInGrid = visible;
 
-//           console.log('📝 After update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
+          //           console.log('📝 After update:', { id: student.id, name: student.name, showInGrid: student.showInGrid });
 
           // Save to Supabase
           const result = await saveStudent(student);
@@ -14114,7 +13871,7 @@
             return;
           }
 
-//           console.log('✅ Saved to Supabase:', result);
+          //           console.log('✅ Saved to Supabase:', result);
 
           // Update cache and invalidate TTL
           window.studentsCache = students;
@@ -14181,6 +13938,9 @@
           requestAnimationFrame(() => {
             modal.style.opacity = '1';
           });
+          
+          // Lock body scroll
+          document.body.style.overflow = 'hidden';
           // END POPUP BACK & EXIT FIX
         }
 
@@ -14198,6 +13958,9 @@
           // END POPUP BACK & EXIT FIX
 
           editingStudentId = null;
+          
+          // Restore body scroll
+          document.body.style.overflow = '';
         }
 
         function toggleGroup(btn, group) {
@@ -14331,7 +14094,7 @@
                 verboseLog('🏷️ Aliases changed:', `"${oldAliases}"`, '→', `"${newAliases}"`);
               }
 
-//               console.log('📝 Total changes detected:', changes.length, changes);
+              //               console.log('📝 Total changes detected:', changes.length, changes);
             }
           }
 
@@ -14976,6 +14739,9 @@
             modal.style.opacity = '1';
           });
 
+          // Lock body scroll
+          document.body.style.overflow = 'hidden';
+
           // Focus input after modal opens
           setTimeout(() => input.focus(), 100);
         }
@@ -14986,6 +14752,9 @@
 
           // Fade out animation
           modal.style.opacity = '0';
+          
+          // Restore body scroll
+          document.body.style.overflow = '';
 
           setTimeout(() => {
             modal.style.display = 'none';
@@ -15358,6 +15127,9 @@
           requestAnimationFrame(() => {
             modal.style.opacity = '1';
           });
+          
+          // Lock body scroll
+          document.body.style.overflow = 'hidden';
           // END POPUP BACK & EXIT FIX
         }
 
@@ -15367,6 +15139,9 @@
           // BEGIN POPUP BACK & EXIT FIX
           // Fade out before hiding
           modal.style.opacity = '0';
+          
+          // Restore body scroll
+          document.body.style.overflow = '';
 
           setTimeout(() => {
             modal.style.display = 'none';
@@ -15402,6 +15177,9 @@
           requestAnimationFrame(() => {
             modal.style.opacity = '1';
           });
+          
+          // Lock body scroll (parent modal already locked, but ensure it stays)
+          document.body.style.overflow = 'hidden';
           // END POPUP BACK & EXIT FIX
         }
 
@@ -15415,6 +15193,10 @@
           setTimeout(() => {
             modal.style.display = 'none';
             window.PopupManager?.activePopups?.delete('addWaitingListModal');
+            
+            // Restore parent modal display but keep body scroll locked
+            document.getElementById('waitingListModal').style.display = 'flex';
+            document.body.style.overflow = 'hidden';
           }, 250);
           // END POPUP BACK & EXIT FIX
         }
@@ -15639,10 +15421,16 @@
           }
 
           document.getElementById('duplicatesModal').style.display = 'flex';
+          
+          // Lock body scroll
+          document.body.style.overflow = 'hidden';
         }
 
         function closeDuplicatesModal() {
           document.getElementById('duplicatesModal').style.display = 'none';
+          
+          // Restore body scroll
+          document.body.style.overflow = '';
         }
 
         async function mergeDuplicates(primaryId, duplicateId) {
@@ -15883,7 +15671,9 @@
         function renderOneTimeSlots(oneTimeSchedules) {
           return oneTimeSchedules
             .map(override => {
-              const dateLabel = override.date ? new Date(override.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+              const dateLabel = override.date
+                ? new Date(override.date + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                : '';
               const displayText = `${override.day || ''} ${override.time || ''} (${dateLabel})`;
               return `<div class="schedule-item" style="background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4);" title="One-time class on ${override.date}">
           <div>📅 ${displayText}</div>
@@ -16050,7 +15840,7 @@
           // Show/hide the date picker row based on checkbox state
           const container = checkbox.closest('div').parentElement;
           const dateRow = container.querySelector('.slot-row:last-child');
-          
+
           if (checkbox.checked) {
             dateRow.style.display = 'flex';
             const dateInput = dateRow.querySelector('.one-time-date');
@@ -16118,7 +15908,7 @@
           itemContainers.forEach(container => {
             const firstRow = container.querySelector('.slot-row:first-child');
             const secondRow = container.querySelector('.slot-row:last-child');
-            
+
             const d = firstRow.querySelector('select').value.slice(0, 3);
             const t = firstRow.querySelector('input[type="time"]').value;
             const isOneTime = firstRow.querySelector('.one-time-checkbox')?.checked || false;
@@ -16861,7 +16651,7 @@
           const utcDate = new Date(now.toLocaleString('en-US', { timeZone: 'UTC' }));
           const laDate = new Date(now.toLocaleString('en-US', { timeZone: 'America/Los_Angeles' }));
           const laOffset = (laDate - utcDate) / (1000 * 60 * 60); // LA offset in hours
-          
+
           // Yerevan is typically UTC+4
           const yerevanOffset = 4;
           const offsetHours = yerevanOffset - laOffset; // Difference between Yerevan and LA
@@ -17022,7 +16812,7 @@
           const weekdays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
           const currentIndex = weekdays.indexOf(dayName);
           if (currentIndex === -1) return dayName;
-          const normalizedIndex = ((currentIndex + offset) % 7 + 7) % 7;
+          const normalizedIndex = (((currentIndex + offset) % 7) + 7) % 7;
           return weekdays[normalizedIndex];
         }
 
@@ -17107,11 +16897,7 @@
                         const yerevanResult = convertLATimeToYerevan(override.time || '', true);
                         const yerevanDay = escapeHtml(shiftWeekday(laDayRaw, yerevanResult.dayShift) || '');
                         const dayShiftLabel =
-                          yerevanResult.dayShift === 1
-                            ? ' (+1d)'
-                            : yerevanResult.dayShift === -1
-                              ? ' (-1d)'
-                              : '';
+                          yerevanResult.dayShift === 1 ? ' (+1d)' : yerevanResult.dayShift === -1 ? ' (-1d)' : '';
                         return `<span style="display: inline-flex; flex-direction: column; gap: 2px; padding: 10px 12px; margin: 4px; background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.35); border-radius: 10px; font-size: 12px; color: #fbbf24; min-width: 140px;">
                           <span style="font-weight: 700; color: #fde68a;">${escapeHtml(dateLabel)}</span>
                           <span style="color: rgba(255,255,255,0.85); font-size: 12px;">${laDay} • ${laTime} (Los Angeles)</span>
@@ -17233,9 +17019,10 @@
                             const chipStyle = isOneTime
                               ? 'padding: 10px 14px; background: rgba(251,191,36,0.18); border: 1px solid rgba(251,191,36,0.35); border-radius: 10px; font-size: 12px; color: #fbbf24; display: inline-flex; flex-direction: column; gap: 4px; min-width: 180px;'
                               : 'padding: 8px 14px; background: rgba(138,180,255,0.15); border: 1px solid rgba(138,180,255,0.3); border-radius: 8px; font-size: 12px; color: #8ab4ff; display: inline-flex; flex-direction: column; gap: 4px; min-width: 170px;';
-                            const dateBadge = isOneTime && s.dateLabel
-                              ? `<span style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(251,191,36,0.9);">One-Time • ${escapeHtml(s.dateLabel)}</span>`
-                              : '';
+                            const dateBadge =
+                              isOneTime && s.dateLabel
+                                ? `<span style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(251,191,36,0.9);">One-Time • ${escapeHtml(s.dateLabel)}</span>`
+                                : '';
                             return `<span style="${chipStyle}">${dateBadge}<span><strong>${groupName}</strong> — ${s.time} (Los Angeles)</span><span style="opacity: 0.7; font-size: 11px;">(${yerevanTime} Yerevan Time)</span></span>`;
                           })
                           .join('')
@@ -17380,9 +17167,10 @@
                             const chipStyle = isOneTime
                               ? 'padding: 10px 14px; background: rgba(168,85,247,0.2); border: 1px solid rgba(168,85,247,0.4); border-radius: 10px; font-size: 12px; color: #c084fc; display: inline-flex; flex-direction: column; gap: 4px; min-width: 190px;'
                               : 'padding: 8px 14px; background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; font-size: 12px; color: #10b981; display: inline-flex; flex-direction: column; gap: 4px; min-width: 170px;';
-                            const dateBadge = isOneTime && s.dateLabel
-                              ? `<span style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.85);">One-Time • ${escapeHtml(s.dateLabel)}${s.laDay ? ` · LA ${escapeHtml(s.laDay)}` : ''}</span>`
-                              : '';
+                            const dateBadge =
+                              isOneTime && s.dateLabel
+                                ? `<span style="font-size: 10px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255,255,255,0.85);">One-Time • ${escapeHtml(s.dateLabel)}${s.laDay ? ` · LA ${escapeHtml(s.laDay)}` : ''}</span>`
+                                : '';
                             return `<span style="${chipStyle}">${dateBadge}<span><strong>${groupName}</strong> — ${s.yerevanTime} (Yerevan)</span><span style="opacity: 0.7; font-size: 11px;">(${s.laTime} Los Angeles Time)</span></span>`;
                           })
                           .join('')
@@ -17426,7 +17214,7 @@
          */
         async function openStudentManagerNew() {
           console.log('🎓 Opening Student Manager (NEW)...');
-          
+
           const container = document.getElementById('studentManagerNewContainer');
           if (!container) {
             console.error('❌ Student Manager (NEW) container not found');
@@ -17464,7 +17252,7 @@
             // Use existing cache if available
             if (window.studentsCache && window.studentsCache.length > 0) {
               console.log(`✅ Using cached students: ${window.studentsCache.length}`);
-              smnRenderStudentCards(window.studentsCache);
+              smnFilterStudents(); // Apply filters on cached data
               return;
             }
 
@@ -17480,12 +17268,12 @@
             }
 
             console.log(`✅ Loaded ${students.length} students from Supabase`);
-            
+
             // Update cache
             window.studentsCache = students;
             window.studentsCacheTimestamp = Date.now();
 
-            smnRenderStudentCards(students);
+            smnFilterStudents(); // Apply filters on fresh data
           } catch (error) {
             console.error('❌ Failed to load students:', error);
           }
@@ -17496,17 +17284,17 @@
          */
         function smnSplitName(fullName) {
           if (!fullName) return { first: 'N/A', last: '' };
-          
+
           const parts = fullName.trim().split(/\s+/);
-          
+
           if (parts.length === 1) {
             return { first: parts[0], last: '' };
           }
-          
+
           // First word is first name, rest is last name
           return {
             first: parts[0],
-            last: parts.slice(1).join(' ')
+            last: parts.slice(1).join(' '),
           };
         }
 
@@ -17524,13 +17312,14 @@
             return groupA.localeCompare(groupB);
           });
 
-          grid.innerHTML = sortedStudents.map(student => {
-            const groupLetter = smnGetGroupLetter(student.group_name || student.group || '');
-            const statusClass = (student.status || 'active').toLowerCase();
-            const showInGrid = student.show_in_grid !== false;
-            const nameParts = smnSplitName(student.name);
+          grid.innerHTML = sortedStudents
+            .map(student => {
+              const groupLetter = smnGetGroupLetter(student.group_name || student.group || '');
+              const statusClass = (student.status || 'active').toLowerCase();
+              const showInGrid = student.show_in_grid !== false;
+              const nameParts = smnSplitName(student.name);
 
-            return `
+              return `
               <div class="smn-student-card" onclick="smnOpenModal(${student.id})">
                 <div class="smn-card-toggle">
                   <label class="smn-elegant-toggle" onclick="event.stopPropagation()">
@@ -17557,7 +17346,7 @@
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        ${student.balance || '0 $'}
+                        ${smnFormatBalance(student.balance)}
                       </div>
                       <div class="smn-meta-badge price">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -17571,7 +17360,8 @@
                 </div>
               </div>
             `;
-          }).join('');
+            })
+            .join('');
         }
 
         /**
@@ -17581,6 +17371,66 @@
           if (!groupName) return '?';
           const parts = groupName.split(' ');
           return parts[parts.length - 1] || '?';
+        }
+
+        /**
+         * Format balance/credit for display (3 digits max, show K for thousands)
+         */
+        function smnFormatBalance(balance) {
+          if (!balance) return '0 $';
+          const num = parseFloat(String(balance).replace(/[^0-9.-]/g, ''));
+          if (isNaN(num)) return '0 $';
+          
+          if (Math.abs(num) >= 1000) {
+            const k = num / 1000;
+            // Round to 1 decimal place if needed, but remove .0
+            const formatted = Math.round(k * 10) / 10;
+            return (formatted % 1 === 0 ? `${formatted | 0}K` : `${formatted}K`) + ' $';
+          }
+          
+          return String(Math.round(num)) + ' $';
+        }
+
+        /**
+         * Parse email field into clean array
+         */
+        function smnParseEmailArray(emailField) {
+          if (!emailField) return [];
+          
+          // If it's already an array, use it
+          if (Array.isArray(emailField)) {
+            return emailField.filter(e => e && e.trim());
+          }
+          
+          // If it's a string, parse it
+          let emailStr = String(emailField).trim();
+          
+          // Remove array brackets and quotes if present: ["email"] or ['email']
+          emailStr = emailStr.replace(/^\[|\]$/g, '').replace(/['"]/g, '');
+          
+          // Split by comma and clean up
+          return emailStr
+            .split(',')
+            .map(e => e.trim())
+            .filter(e => e && e.length > 0);
+        }
+
+        /**
+         * Format phone number as xxx-xxx-xxxx
+         */
+        function smnFormatPhone(phone) {
+          if (!phone) return '';
+          
+          // Remove all non-digit characters
+          const digits = String(phone).replace(/\D/g, '');
+          
+          // Format as xxx-xxx-xxxx
+          if (digits.length === 10) {
+            return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
+          }
+          
+          // Return original if not 10 digits
+          return phone;
         }
 
         /**
@@ -17614,9 +17464,15 @@
          */
         async function smnToggleCalendarVisibility(studentId, isVisible) {
           try {
+            // When toggling off, set price_per_class to 0
+            const updateData = { show_in_grid: isVisible };
+            if (!isVisible) {
+              updateData.price_per_class = '0';
+            }
+
             const { data, error } = await supabase
               .from('students')
-              .update({ show_in_grid: isVisible })
+              .update(updateData)
               .eq('id', studentId);
 
             if (error) throw error;
@@ -17626,15 +17482,23 @@
               const index = window.studentsCache.findIndex(s => s.id === studentId);
               if (index !== -1) {
                 window.studentsCache[index].show_in_grid = isVisible;
+                if (!isVisible) {
+                  window.studentsCache[index].price_per_class = '0';
+                }
               }
             }
 
-            console.log(`✅ Calendar visibility updated: ${isVisible ? 'ON' : 'OFF'}`);
+            console.log(`✅ Calendar visibility updated: ${isVisible ? 'ON' : 'OFF'}${!isVisible ? ' (price set to 0)' : ''}`);
 
             // Dispatch event for calendar to update
-            window.dispatchEvent(new CustomEvent('students:updated', {
-              detail: { source: 'smn-visibility-toggle', studentId }
-            }));
+            window.dispatchEvent(
+              new CustomEvent('students:updated', {
+                detail: { source: 'smn-visibility-toggle', studentId },
+              })
+            );
+
+            // Refresh the student grid to show updated data
+            smnFilterStudents();
           } catch (error) {
             console.error('❌ Failed to update calendar visibility:', error);
           }
@@ -17652,10 +17516,7 @@
             const currentIndex = statusOrder.indexOf((student.status || 'active').toLowerCase());
             const newStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
 
-            const { data, error } = await supabase
-              .from('students')
-              .update({ status: newStatus })
-              .eq('id', studentId);
+            const { data, error } = await supabase.from('students').update({ status: newStatus }).eq('id', studentId);
 
             if (error) throw error;
 
@@ -17667,13 +17528,15 @@
 
             console.log(`✅ Status changed to: ${newStatus}`);
 
-            // Re-render cards
-            smnRenderStudentCards(window.studentsCache);
+            // Re-render cards with filters applied
+            smnFilterStudents();
 
             // Dispatch event
-            window.dispatchEvent(new CustomEvent('students:updated', {
-              detail: { source: 'smn-status-cycle', studentId }
-            }));
+            window.dispatchEvent(
+              new CustomEvent('students:updated', {
+                detail: { source: 'smn-status-cycle', studentId },
+              })
+            );
           } catch (error) {
             console.error('❌ Failed to update status:', error);
           }
@@ -17691,24 +17554,32 @@
 
           // Populate modal
           document.getElementById('smnModalName').textContent = smnCurrentStudent.name || '';
-          
+
           // Ensure group name always shows "Group X" format
           let groupDisplay = smnCurrentStudent.group_name || smnCurrentStudent.group || '';
           if (groupDisplay && !groupDisplay.toLowerCase().startsWith('group')) {
             groupDisplay = 'Group ' + groupDisplay;
           }
           document.getElementById('smnModalGroup').textContent = groupDisplay;
-          
-          document.getElementById('smnModalPrice').textContent = smnCurrentStudent.price_per_class || '0 $';
-          document.getElementById('smnModalCredit').value = smnCurrentStudent.balance || '0 $';
-          document.getElementById('smnModalPhone').value = smnCurrentStudent.phone || '';
 
-          // Handle email array
-          const emailArray = Array.isArray(smnCurrentStudent.email) ? smnCurrentStudent.email : smnCurrentStudent.email ? [smnCurrentStudent.email] : [];
-          document.getElementById('smnModalEmail').value = emailArray.join(', ');
+          // Format price to always show "xxx $" format
+          const priceValue = smnCurrentStudent.price_per_class || '0';
+          const priceFormatted = String(priceValue).replace(/\s*\$?\s*$/, '') + ' $';
+          document.getElementById('smnModalPrice').textContent = priceFormatted;
+          
+          document.getElementById('smnModalCredit').value = smnCurrentStudent.balance || '0 $';
+          document.getElementById('smnModalPhone').value = smnFormatPhone(smnCurrentStudent.phone);
+
+          // Handle email array - parse all formats
+          const emailArray = smnParseEmailArray(smnCurrentStudent.email);
+          document.getElementById('smnModalEmail').value = emailArray.join('\n');
 
           // Handle aliases array
-          const aliasesArray = Array.isArray(smnCurrentStudent.aliases) ? smnCurrentStudent.aliases : smnCurrentStudent.aliases ? [smnCurrentStudent.aliases] : [];
+          const aliasesArray = Array.isArray(smnCurrentStudent.aliases)
+            ? smnCurrentStudent.aliases.filter(a => a && a !== '[]')
+            : smnCurrentStudent.aliases && smnCurrentStudent.aliases !== '[]'
+              ? [smnCurrentStudent.aliases]
+              : [];
           document.getElementById('smnModalAliases').value = aliasesArray.join(', ');
 
           // Handle notes
@@ -17728,31 +17599,50 @@
           });
 
           // Set active amount button
+          const currentPrice = String(smnCurrentStudent.price_per_class || '').replace(/\s*\$?\s*/g, '').trim();
           document.querySelectorAll('#smnAmountButtons .smn-btn').forEach(btn => {
-            const amount = btn.querySelector('.smn-btn-txt').textContent;
-            btn.classList.toggle('active', amount === smnCurrentStudent.price_per_class);
+            const amount = btn.querySelector('.smn-btn-txt').textContent.replace(/\s*\$?\s*/g, '').trim();
+            btn.classList.toggle('active', amount === currentPrice);
           });
 
           // Add auto-save on blur
           document.getElementById('smnModalCredit').onblur = smnAutoSaveField;
-          document.getElementById('smnModalPhone').onblur = smnAutoSaveField;
-          document.getElementById('smnModalEmail').onblur = smnAutoSaveField;
+          document.getElementById('smnModalPhone').onblur = function() {
+            // Save first
+            smnAutoSaveField.call(this);
+            // Then format for display (xxx-xxx-xxxx)
+            this.value = smnFormatPhone(smnCurrentStudent.phone);
+          };
+          document.getElementById('smnModalEmail').onblur = function() {
+            // Save first
+            smnAutoSaveField.call(this);
+            // Then format for display (one email per line)
+            const emailArray = smnParseEmailArray(smnCurrentStudent.email);
+            this.value = emailArray.join('\n');
+          };
           document.getElementById('smnModalAliases').onblur = smnAutoSaveField;
           document.getElementById('smnModalNotes').onblur = smnAutoSaveField;
 
           // Focus handlers for comma-separated format
-          document.getElementById('smnModalEmail').onfocus = function() {
-            const emailArray = Array.isArray(smnCurrentStudent.email) ? smnCurrentStudent.email : smnCurrentStudent.email ? [smnCurrentStudent.email] : [];
+          document.getElementById('smnModalEmail').onfocus = function () {
+            const emailArray = smnParseEmailArray(smnCurrentStudent.email);
             this.value = emailArray.join(', ');
           };
 
-          document.getElementById('smnModalAliases').onfocus = function() {
-            const aliasesArray = Array.isArray(smnCurrentStudent.aliases) ? smnCurrentStudent.aliases : smnCurrentStudent.aliases ? [smnCurrentStudent.aliases] : [];
+          document.getElementById('smnModalAliases').onfocus = function () {
+            const aliasesArray = Array.isArray(smnCurrentStudent.aliases)
+              ? smnCurrentStudent.aliases.filter(a => a && a !== '[]')
+              : smnCurrentStudent.aliases && smnCurrentStudent.aliases !== '[]'
+                ? [smnCurrentStudent.aliases]
+                : [];
             this.value = aliasesArray.join(', ');
           };
 
           // Show modal
           document.getElementById('smnModalBackdrop').classList.add('active');
+          
+          // Lock body scroll to prevent background scrolling
+          document.body.style.overflow = 'hidden';
         }
 
         /**
@@ -17761,6 +17651,9 @@
         function closeSmnModal() {
           document.getElementById('smnModalBackdrop').classList.remove('active');
           smnCurrentStudent = null;
+          
+          // Restore body scroll
+          document.body.style.overflow = '';
         }
 
         /**
@@ -17790,7 +17683,10 @@
             updateData.phone = value;
             console.log('✅ Phone auto-saved:', value);
           } else if (fieldId === 'smnModalEmail') {
-            const emailsRaw = value.split(',').map(e => e.trim()).filter(e => e);
+            const emailsRaw = value
+              .split(',')
+              .map(e => e.trim())
+              .filter(e => e);
             const invalidEmails = emailsRaw.filter(email => !smnValidateEmail(email));
 
             if (invalidEmails.length > 0) {
@@ -17804,7 +17700,10 @@
             console.log('✅ Emails auto-saved:', emailsRaw);
             event.target.value = emailsRaw.join('\n');
           } else if (fieldId === 'smnModalAliases') {
-            const aliasesRaw = value.split(',').map(a => a.trim()).filter(a => a);
+            const aliasesRaw = value
+              .split(',')
+              .map(a => a.trim())
+              .filter(a => a);
             smnCurrentStudent.aliases = aliasesRaw;
             updateData.aliases = aliasesRaw;
             console.log('✅ Aliases auto-saved:', aliasesRaw);
@@ -17817,10 +17716,7 @@
 
           // Save to Supabase
           try {
-            const { data, error } = await supabase
-              .from('students')
-              .update(updateData)
-              .eq('id', smnCurrentStudent.id);
+            const { data, error } = await supabase.from('students').update(updateData).eq('id', smnCurrentStudent.id);
 
             if (error) throw error;
 
@@ -17832,13 +17728,15 @@
               window.studentsCache[cacheIndex] = { ...window.studentsCache[cacheIndex], ...updateData };
             }
 
-            // Re-render cards
-            smnRenderStudentCards(window.studentsCache);
+            // Re-render cards with filters applied
+            smnFilterStudents();
 
             // Dispatch event
-            window.dispatchEvent(new CustomEvent('students:updated', {
-              detail: { source: 'smn-modal-auto-save', studentId: smnCurrentStudent.id }
-            }));
+            window.dispatchEvent(
+              new CustomEvent('students:updated', {
+                detail: { source: 'smn-modal-auto-save', studentId: smnCurrentStudent.id },
+              })
+            );
           } catch (error) {
             console.error('❌ Failed to save:', error);
             alert('Failed to save changes. Please try again.');
@@ -17879,13 +17777,15 @@
               window.studentsCache[cacheIndex].status = newStatus;
             }
 
-            // Re-render cards
-            smnRenderStudentCards(window.studentsCache);
+            // Re-render cards with filters applied
+            smnFilterStudents();
 
             // Dispatch event
-            window.dispatchEvent(new CustomEvent('students:updated', {
-              detail: { source: 'smn-modal-status-cycle', studentId: smnCurrentStudent.id }
-            }));
+            window.dispatchEvent(
+              new CustomEvent('students:updated', {
+                detail: { source: 'smn-modal-status-cycle', studentId: smnCurrentStudent.id },
+              })
+            );
           } catch (error) {
             console.error('❌ Failed to update status:', error);
             alert('Failed to update status. Please try again.');
@@ -17903,7 +17803,7 @@
             const newGroup = `Group ${letter}`;
             smnCurrentStudent.group_name = newGroup;
             smnCurrentStudent.group = newGroup;
-            
+
             document.getElementById('smnModalGroup').textContent = newGroup;
             console.log(`Group changed to: ${newGroup}`);
 
@@ -17924,13 +17824,15 @@
                 window.studentsCache[cacheIndex].group = newGroup;
               }
 
-              // Re-render cards
-              smnRenderStudentCards(window.studentsCache);
+              // Re-render cards with filters applied
+              smnFilterStudents();
 
               // Dispatch event
-              window.dispatchEvent(new CustomEvent('students:updated', {
-                detail: { source: 'smn-modal-group-change', studentId: smnCurrentStudent.id }
-              }));
+              window.dispatchEvent(
+                new CustomEvent('students:updated', {
+                  detail: { source: 'smn-modal-group-change', studentId: smnCurrentStudent.id },
+                })
+              );
             } catch (error) {
               console.error('❌ Failed to update group:', error);
               alert('Failed to update group. Please try again.');
@@ -17966,13 +17868,15 @@
                 window.studentsCache[cacheIndex].price_per_class = amount;
               }
 
-              // Re-render cards
-              smnRenderStudentCards(window.studentsCache);
+              // Re-render cards with filters applied
+              smnFilterStudents();
 
               // Dispatch event
-              window.dispatchEvent(new CustomEvent('students:updated', {
-                detail: { source: 'smn-modal-price-change', studentId: smnCurrentStudent.id }
-              }));
+              window.dispatchEvent(
+                new CustomEvent('students:updated', {
+                  detail: { source: 'smn-modal-price-change', studentId: smnCurrentStudent.id },
+                })
+              );
             } catch (error) {
               console.error('❌ Failed to update price:', error);
               alert('Failed to update price. Please try again.');
@@ -17981,7 +17885,7 @@
         }
 
         // Close modal on backdrop click
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
           const modalBackdrop = document.getElementById('smnModalBackdrop');
           if (modalBackdrop) {
             modalBackdrop.addEventListener('click', closeSmnModal);
@@ -18019,9 +17923,12 @@
                 student.phone,
                 student.notes,
                 ...(Array.isArray(student.email) ? student.email : [student.email]),
-                ...(Array.isArray(student.aliases) ? student.aliases : [student.aliases])
-              ].filter(Boolean).join(' ').toLowerCase();
-              
+                ...(Array.isArray(student.aliases) ? student.aliases : [student.aliases]),
+              ]
+                .filter(Boolean)
+                .join(' ')
+                .toLowerCase();
+
               return searchableText.includes(searchTerm);
             });
           }
@@ -18031,16 +17938,21 @@
             if (filterGroup === 'no-group') {
               filtered = filtered.filter(s => !s.group_name && !s.group);
             } else {
-              filtered = filtered.filter(s => 
-                (s.group_name || '').toLowerCase() === filterGroup.toLowerCase() ||
-                (s.group || '').toLowerCase() === filterGroup.toLowerCase()
+              filtered = filtered.filter(
+                s =>
+                  (s.group_name || '').toLowerCase() === filterGroup.toLowerCase() ||
+                  (s.group || '').toLowerCase() === filterGroup.toLowerCase()
               );
             }
           }
 
           // Status filter
           if (filterStatus) {
-            filtered = filtered.filter(s => (s.status || 'active').toLowerCase() === filterStatus.toLowerCase());
+            if (filterStatus === 'toggle-off') {
+              filtered = filtered.filter(s => s.show_in_grid === false);
+            } else {
+              filtered = filtered.filter(s => (s.status || 'active').toLowerCase() === filterStatus.toLowerCase());
+            }
           }
 
           // Payment filter
@@ -18076,7 +17988,7 @@
           document.getElementById('smnFilterStatus').value = '';
           document.getElementById('smnFilterPayment').value = '';
           document.getElementById('smnSortPrice').value = '';
-          
+
           console.log('🧹 Filters cleared');
           smnFilterStudents();
         }
@@ -18086,27 +17998,33 @@
          */
         async function smnPopulateGroupsFilter() {
           try {
-            const { data: groups, error } = await supabase
-              .from('groups')
-              .select('name')
-              .order('name');
+            // Use the existing loadGroupsFromSupabase function
+            const groups = await loadGroupsFromSupabase();
 
-            if (error) throw error;
+            if (!groups || groups.length === 0) {
+              console.log('⚠️ No groups found');
+              return;
+            }
 
             const groupSelect = document.getElementById('smnFilterGroup');
             if (!groupSelect) return;
 
-            // Keep existing options
-            const existingOptions = groupSelect.innerHTML;
-            
-            // Add group options
-            const groupOptions = groups.map(g => 
-              `<option value="${smnEscapeHtml(g.name)}">${smnEscapeHtml(g.name)}</option>`
-            ).join('');
+            // Keep existing options (All Groups, No Group)
+            const baseOptions = `
+              <option value="">All Groups</option>
+              <option value="no-group">No Group</option>
+            `;
 
-            groupSelect.innerHTML = existingOptions + groupOptions;
-            
-            console.log(`✅ Populated ${groups.length} groups in filter dropdown`);
+            // Filter active groups, sort alphabetically, and create options
+            const activeGroups = groups.filter(g => g.active !== false);
+            const sortedGroups = activeGroups.sort((a, b) => a.name.localeCompare(b.name));
+            const groupOptions = sortedGroups
+              .map(g => `<option value="${smnEscapeHtml(g.name)}">${smnEscapeHtml(g.name)}</option>`)
+              .join('');
+
+            groupSelect.innerHTML = baseOptions + groupOptions;
+
+            console.log(`✅ Populated ${sortedGroups.length} groups in filter dropdown (alphabetically sorted)`);
           } catch (error) {
             console.error('❌ Failed to populate groups filter:', error);
           }
@@ -18688,14 +18606,14 @@
             }
 
             // Format targetDate as YYYY-MM-DD
-            const targetDateStr =
-              typeof targetDate === 'string'
-                ? targetDate
-                : formatDateYYYYMMDD(targetDate);
+            const targetDateStr = typeof targetDate === 'string' ? targetDate : formatDateYYYYMMDD(targetDate);
 
             group.one_time_schedules.forEach(override => {
               if (override.date === targetDateStr) {
-                console.log(`[getOneTimeSessionsForDate] ✅ Found one-time class for ${group.name} on ${targetDateStr}:`, override);
+                console.log(
+                  `[getOneTimeSessionsForDate] ✅ Found one-time class for ${group.name} on ${targetDateStr}:`,
+                  override
+                );
                 sessions.push({
                   day: override.day,
                   time: override.time,
@@ -18706,7 +18624,9 @@
             });
 
             if (sessions.length === 0 && group.one_time_schedules.length > 0) {
-              console.log(`[getOneTimeSessionsForDate] ℹ️ ${group.name} has ${group.one_time_schedules.length} one-time schedules, but none match ${targetDateStr}`);
+              console.log(
+                `[getOneTimeSessionsForDate] ℹ️ ${group.name} has ${group.one_time_schedules.length} one-time schedules, but none match ${targetDateStr}`
+              );
             }
 
             return sessions;
@@ -18962,7 +18882,14 @@
               const currentTimeInSeconds = nowLA.hours * 3600 + nowLA.minutes * 60 + nowLA.seconds;
 
               // Construct a proper Date object from nowLA properties
-              const nowLADate = new Date(nowLA.year, nowLA.month - 1, nowLA.day, nowLA.hours, nowLA.minutes, nowLA.seconds);
+              const nowLADate = new Date(
+                nowLA.year,
+                nowLA.month - 1,
+                nowLA.day,
+                nowLA.hours,
+                nowLA.minutes,
+                nowLA.seconds
+              );
 
               // Check each day for the next 7 days
               for (let daysAhead = 0; daysAhead <= 7; daysAhead++) {
@@ -19534,8 +19461,10 @@
             const normalizedName = groupName;
             const fullGroupName = groupName && groupName.length === 1 ? `Group ${groupName}` : groupName;
 
-            return (skippedClasses[normalizedName] && skippedClasses[normalizedName][dateStr]) ||
-                   (skippedClasses[fullGroupName] && skippedClasses[fullGroupName][dateStr]);
+            return (
+              (skippedClasses[normalizedName] && skippedClasses[normalizedName][dateStr]) ||
+              (skippedClasses[fullGroupName] && skippedClasses[fullGroupName][dateStr])
+            );
           }
 
           // Check if a class is canceled (entire class)
@@ -19545,14 +19474,13 @@
             const normalizedName = groupName;
             const fullGroupName = groupName && groupName.length === 1 ? `Group ${groupName}` : groupName;
 
-            const result = (
+            const result =
               (skippedClasses[normalizedName] &&
                 skippedClasses[normalizedName][dateStr] &&
                 skippedClasses[normalizedName][dateStr].type === 'class-canceled') ||
               (skippedClasses[fullGroupName] &&
                 skippedClasses[fullGroupName][dateStr] &&
-                skippedClasses[fullGroupName][dateStr].type === 'class-canceled')
-            );
+                skippedClasses[fullGroupName][dateStr].type === 'class-canceled');
 
             // DEBUG: Log check for Nov 25 (commented out - too noisy)
             // if (dateStr === '2025-11-25') {
@@ -19640,7 +19568,9 @@
               : [];
 
             if (studentsInGroup.length > 0) {
-              console.log(`📧 [AUTO-EMAIL] Sending cancellation emails to ${studentsInGroup.length} students in ${groupName}`);
+              console.log(
+                `📧 [AUTO-EMAIL] Sending cancellation emails to ${studentsInGroup.length} students in ${groupName}`
+              );
 
               const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
               if (emailFrame && emailFrame.contentWindow) {
@@ -19675,7 +19605,7 @@
 
             // Refresh timer display
             if (window.ClassCountdownTimer && window.ClassCountdownTimer.isActive()) {
-//               console.log('[CLASS CANCELLED] Refreshing countdown timer...');
+              //               console.log('[CLASS CANCELLED] Refreshing countdown timer...');
               window.ClassCountdownTimer.destroy();
               setTimeout(() => {
                 window.ClassCountdownTimer.init();
@@ -19685,9 +19615,9 @@
             // Refresh calendar if visible
             if (typeof renderCalendar === 'function') {
               try {
-//                 console.log('[CLASS CANCELLED] Refreshing calendar display...');
+                //                 console.log('[CLASS CANCELLED] Refreshing calendar display...');
                 renderCalendar();
-//                 console.log('[CLASS CANCELLED] ✅ Calendar refreshed - class should now appear grayed out');
+                //                 console.log('[CLASS CANCELLED] ✅ Calendar refreshed - class should now appear grayed out');
               } catch (error) {
                 console.error('[CLASS CANCELLED] ❌ Error refreshing calendar:', error);
                 console.warn('[SkipClassManager] Could not refresh calendar:', error);
@@ -19700,7 +19630,7 @@
           // Forward payments made on a canceled date to the next active class
           async function forwardPaymentsForCanceledClass(groupName, canceledDateStr) {
             try {
-//               console.log('💸 [PaymentForwarding] Checking for payments on canceled date:', groupName, canceledDateStr);
+              //               console.log('💸 [PaymentForwarding] Checking for payments on canceled date:', groupName, canceledDateStr);
 
               // Get all students in this group
               const groupStudents = window.studentsCache
@@ -19708,7 +19638,7 @@
                 : students.filter(s => s.group && s.group.includes(groupName));
 
               if (!groupStudents || groupStudents.length === 0) {
-//                 console.log('💸 [PaymentForwarding] No students found in group:', groupName);
+                //                 console.log('💸 [PaymentForwarding] No students found in group:', groupName);
                 return;
               }
 
@@ -19728,7 +19658,7 @@
               }
 
               if (!payments || payments.length === 0) {
-//                 console.log('💸 [PaymentForwarding] No payments found on canceled date');
+                //                 console.log('💸 [PaymentForwarding] No payments found on canceled date');
                 return;
               }
 
@@ -19933,7 +19863,7 @@
 
             // User clicked cancel
             if (reason === null) {
-//               console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
+              //               console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
               hideSkipDialog();
               return;
             }
@@ -21818,7 +21748,7 @@
                 const calendarStartStr = formatDateYYYYMMDD(CALENDAR_START_DATE);
                 if (classDateStr < calendarStartStr) {
                   if (DEBUG_MODE) {
-//                     console.log('[DayData] Hiding', classDateStr, 'for', student.name, '- before calendar start');
+                    //                     console.log('[DayData] Hiding', classDateStr, 'for', student.name, '- before calendar start');
                   }
                   return; // Don't show this class
                 }
@@ -22248,7 +22178,9 @@
               hasClasses &&
               dayData.studentsWithClass.some(classInfo => {
                 const groupName = classInfo.student.group;
-                return groupName && window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr);
+                return (
+                  groupName && window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr)
+                );
               });
 
             // Cell styling - gray background if class is canceled
@@ -22316,8 +22248,7 @@
 
             // Check if THIS specific group is canceled on this date
             const isGroupCanceled =
-              window.SkipClassManager &&
-              window.SkipClassManager.isClassCanceled(groupName, dateStr);
+              window.SkipClassManager && window.SkipClassManager.isClassCanceled(groupName, dateStr);
 
             // Add ⚠️ symbol ONLY if this group is canceled
             if (isGroupCanceled) {
@@ -22476,11 +22407,11 @@
         // @param {HTMLElement} buttonElement - The button that was clicked
         // @param {string} clickedDateStr - The EXACT date (YYYY-MM-DD) that was clicked in the calendar
         window.sendReminderNow = async function (studentId, buttonElement, clickedDateStr) {
-//           console.log('[MANUAL][UNPAID EMAIL] ============================================');
-//           console.log('[MANUAL][UNPAID EMAIL] Manual payment reminder triggered');
-//           console.log('[MANUAL][UNPAID EMAIL] Student ID:', studentId);
-//           console.log('[MANUAL][UNPAID EMAIL] Clicked Date:', clickedDateStr);
-//           console.log('[MANUAL][UNPAID EMAIL] ============================================');
+          //           console.log('[MANUAL][UNPAID EMAIL] ============================================');
+          //           console.log('[MANUAL][UNPAID EMAIL] Manual payment reminder triggered');
+          //           console.log('[MANUAL][UNPAID EMAIL] Student ID:', studentId);
+          //           console.log('[MANUAL][UNPAID EMAIL] Clicked Date:', clickedDateStr);
+          //           console.log('[MANUAL][UNPAID EMAIL] ============================================');
 
           // Store original button state for restoration
           const originalHTML = buttonElement.innerHTML;
@@ -22495,7 +22426,7 @@
               throw new Error('Date parameter is required for manual payment emails');
             }
 
-//             console.log('[MANUAL][UNPAID EMAIL] ✅ Date validation passed:', clickedDateStr);
+            //             console.log('[MANUAL][UNPAID EMAIL] ✅ Date validation passed:', clickedDateStr);
 
             // Show loading state immediately
             buttonElement.disabled = true;
@@ -22506,7 +22437,7 @@
 
             // Get students from cache
             const students = getCachedStudents();
-//             console.log('[MANUAL][UNPAID EMAIL] Students in cache:', students?.length || 0);
+            //             console.log('[MANUAL][UNPAID EMAIL] Students in cache:', students?.length || 0);
 
             if (!students || students.length === 0) {
               console.error('[MANUAL][UNPAID EMAIL] ❌ No students in cache');
@@ -22521,8 +22452,8 @@
               throw new Error('Student not found');
             }
 
-//             console.log('[MANUAL][UNPAID EMAIL] ✅ Student found:', student.name);
-//             console.log('[MANUAL][UNPAID EMAIL] Student email:', student.email);
+            //             console.log('[MANUAL][UNPAID EMAIL] ✅ Student found:', student.name);
+            //             console.log('[MANUAL][UNPAID EMAIL] Student email:', student.email);
 
             // Validate student email
             if (!student.email || student.email.trim() === '') {
@@ -22531,7 +22462,7 @@
             }
 
             // Find the EXACT unpaid class for the clicked date
-//             console.log('[MANUAL][UNPAID EMAIL] Searching for unpaid class on:', clickedDateStr);
+            //             console.log('[MANUAL][UNPAID EMAIL] Searching for unpaid class on:', clickedDateStr);
 
             const currentMonth =
               window.currentCalendarData || getMonthData(new Date().getFullYear(), new Date().getMonth());
@@ -22569,22 +22500,25 @@
               });
             });
 
-//             console.log('[MANUAL][UNPAID EMAIL] Total unpaid classes found:', allUnpaidClasses.length);
-//             console.log('[MANUAL][UNPAID EMAIL] Unpaid dates:', allUnpaidClasses.map(c => c.dateStr).join(', '));
+            //             console.log('[MANUAL][UNPAID EMAIL] Total unpaid classes found:', allUnpaidClasses.length);
+            //             console.log('[MANUAL][UNPAID EMAIL] Unpaid dates:', allUnpaidClasses.map(c => c.dateStr).join(', '));
 
             // CRITICAL VALIDATION: The clicked date MUST be unpaid
             if (!unpaidClassForDate) {
               console.error('[MANUAL][UNPAID EMAIL] ❌ CRITICAL: Clicked date is NOT unpaid');
               console.error('[MANUAL][UNPAID EMAIL] Clicked date:', clickedDateStr);
-              console.error('[MANUAL][UNPAID EMAIL] Available unpaid dates:', allUnpaidClasses.map(c => c.dateStr));
+              console.error(
+                '[MANUAL][UNPAID EMAIL] Available unpaid dates:',
+                allUnpaidClasses.map(c => c.dateStr)
+              );
               throw new Error(`The selected date (${clickedDateStr}) is not unpaid. Cannot send payment reminder.`);
             }
 
-//             console.log('[MANUAL][UNPAID EMAIL] ✅ Clicked date IS unpaid:', clickedDateStr);
-//             console.log('[MANUAL][UNPAID EMAIL] Price for this class: $' + unpaidClassForDate.pricePerClass);
+            //             console.log('[MANUAL][UNPAID EMAIL] ✅ Clicked date IS unpaid:', clickedDateStr);
+            //             console.log('[MANUAL][UNPAID EMAIL] Price for this class: $' + unpaidClassForDate.pricePerClass);
 
             // Find email iframe
-//             console.log('[MANUAL][UNPAID EMAIL] Searching for email system iframe...');
+            //             console.log('[MANUAL][UNPAID EMAIL] Searching for email system iframe...');
             const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
 
             if (!emailFrame || !emailFrame.contentWindow) {
@@ -22597,8 +22531,8 @@
               throw new Error('Email system not available');
             }
 
-//             console.log('[MANUAL][UNPAID EMAIL] ✅ Email iframe found');
-//             console.log('[MANUAL][UNPAID EMAIL] Iframe src:', emailFrame.src);
+            //             console.log('[MANUAL][UNPAID EMAIL] ✅ Email iframe found');
+            //             console.log('[MANUAL][UNPAID EMAIL] Iframe src:', emailFrame.src);
 
             // Create promise for email send
             const sendPromise = new Promise((resolve, reject) => {
@@ -22613,7 +22547,7 @@
                   window.removeEventListener('message', handleMessage);
 
                   if (event.data.action === 'emailSent') {
-//                     console.log('[MANUAL][UNPAID EMAIL] ✅ Email sent successfully');
+                    //                     console.log('[MANUAL][UNPAID EMAIL] ✅ Email sent successfully');
                     resolve(event.data);
                   } else {
                     console.error('[MANUAL][UNPAID EMAIL] ❌ Email error:', event.data.error);
@@ -22644,22 +22578,22 @@
               manual: true, // Bypass duplicate check
             };
 
-//             console.log('[MANUAL][UNPAID EMAIL] Sending to email system via Supabase Resend:');
-//             console.log('[MANUAL][UNPAID EMAIL]   Student:', student.name, '(' + student.email + ')');
-//             console.log('[MANUAL][UNPAID EMAIL]   Primary date:', clickedDateStr);
-//             console.log('[MANUAL][UNPAID EMAIL]   Total unpaid classes:', allUnpaidClasses.length);
-//             console.log('[MANUAL][UNPAID EMAIL]   Service: SUPABASE RESEND (not Gmail)');
+            //             console.log('[MANUAL][UNPAID EMAIL] Sending to email system via Supabase Resend:');
+            //             console.log('[MANUAL][UNPAID EMAIL]   Student:', student.name, '(' + student.email + ')');
+            //             console.log('[MANUAL][UNPAID EMAIL]   Primary date:', clickedDateStr);
+            //             console.log('[MANUAL][UNPAID EMAIL]   Total unpaid classes:', allUnpaidClasses.length);
+            //             console.log('[MANUAL][UNPAID EMAIL]   Service: SUPABASE RESEND (not Gmail)');
 
             // Send via postMessage to email iframe
             emailFrame.contentWindow.postMessage(payload, '*');
 
-//             console.log('[MANUAL][UNPAID EMAIL] ⏳ Waiting for email system response...');
+            //             console.log('[MANUAL][UNPAID EMAIL] ⏳ Waiting for email system response...');
 
             // Wait for response
             const response = await sendPromise;
 
-//             console.log('[MANUAL][UNPAID EMAIL] ✅ SUCCESS - Email sent successfully');
-//             console.log('[MANUAL][UNPAID EMAIL] Response:', response);
+            //             console.log('[MANUAL][UNPAID EMAIL] ✅ SUCCESS - Email sent successfully');
+            //             console.log('[MANUAL][UNPAID EMAIL] Response:', response);
 
             // Show success state
             buttonElement.innerHTML = '✓';
@@ -22697,10 +22631,10 @@
 
             // Log email details if available
             if (response.emailContent) {
-//               console.log('[MANUAL][UNPAID EMAIL] Email details:');
-//               console.log('[MANUAL][UNPAID EMAIL]   Subject:', emailSubject);
-//               console.log('[MANUAL][UNPAID EMAIL]   Template: Payment Reminder');
-//               console.log('[MANUAL][UNPAID EMAIL]   Delivery: Supabase Resend Edge Function');
+              //               console.log('[MANUAL][UNPAID EMAIL] Email details:');
+              //               console.log('[MANUAL][UNPAID EMAIL]   Subject:', emailSubject);
+              //               console.log('[MANUAL][UNPAID EMAIL]   Template: Payment Reminder');
+              //               console.log('[MANUAL][UNPAID EMAIL]   Delivery: Supabase Resend Edge Function');
             }
 
             // Restore button after 2 seconds
@@ -22713,9 +22647,9 @@
               buttonElement.title = 'Send payment reminder now';
             }, 2000);
 
-//             console.log('[MANUAL][UNPAID EMAIL] ============================================');
-//             console.log('[MANUAL][UNPAID EMAIL] Manual send completed successfully');
-//             console.log('[MANUAL][UNPAID EMAIL] ============================================');
+            //             console.log('[MANUAL][UNPAID EMAIL] ============================================');
+            //             console.log('[MANUAL][UNPAID EMAIL] Manual send completed successfully');
+            //             console.log('[MANUAL][UNPAID EMAIL] ============================================');
           } catch (error) {
             console.error('[MANUAL][UNPAID EMAIL] ❌ ERROR:', error.message);
             console.error('[MANUAL][UNPAID EMAIL] Stack:', error.stack);
@@ -22739,9 +22673,9 @@
               buttonElement.title = 'Send payment reminder now';
             }, 3000);
 
-//             console.log('[MANUAL][UNPAID EMAIL] ============================================');
-//             console.log('[MANUAL][UNPAID EMAIL] Manual send failed');
-//             console.log('[MANUAL][UNPAID EMAIL] ============================================');
+            //             console.log('[MANUAL][UNPAID EMAIL] ============================================');
+            //             console.log('[MANUAL][UNPAID EMAIL] Manual send failed');
+            //             console.log('[MANUAL][UNPAID EMAIL] ============================================');
           }
         };
 
@@ -23086,7 +23020,7 @@
 
           // User clicked Cancel
           if (reason === null) {
-//             console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
+            //             console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
             return;
           }
 
