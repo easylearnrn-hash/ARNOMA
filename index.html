@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.20.0 - Glassmorphism Student Cards ✅');
+      console.log('✅ ARNOMA v2.19.0 - Automatic Schedule Change Emails ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -12912,15 +12912,9 @@
           }
 
           // Find student from cache or load from Supabase
-          // Handle both string and number IDs by comparing with type coercion
-          console.log('🔍 Looking for student ID:', studentId, 'Type:', typeof studentId);
-          console.log('📦 Cache exists?', !!window.studentsCache);
-          console.log('📦 Cache length:', window.studentsCache?.length);
-          
-          const student = window.studentsCache?.find(s => s.id == studentId);
+          const student = window.studentsCache?.find(s => s.id === studentId);
           if (!student) {
             console.error('❌ Student not found:', studentId);
-            console.error('📋 Available student IDs:', window.studentsCache?.map(s => ({ id: s.id, type: typeof s.id, name: s.name })));
             return;
           }
 
@@ -12931,12 +12925,7 @@
           document.getElementById('modalGroup').textContent = student.group_name || student.group || '';
           
           // Populate modal fields
-          // Handle price - if numeric, add $ sign for display
-          const priceDisplay = typeof student.price_per_class === 'number' 
-            ? `${student.price_per_class} $` 
-            : student.price_per_class || '0 $';
-          document.getElementById('modalPrice').textContent = priceDisplay;
-          
+          document.getElementById('modalPrice').textContent = student.price_per_class || '0 $';
           document.getElementById('modalCredit').value = student.balance || '0 $';
           document.getElementById('modalPhone').value = student.phone || '';
 
@@ -12965,13 +12954,10 @@
           });
 
           // Set active amount button based on price_per_class
-          // Handle both numeric (50) and string ("50 $") formats
-          const currentPrice = student.price_per_class;
+          const currentPrice = student.price_per_class || '';
           document.querySelectorAll('#amountButtons .btn').forEach(btn => {
-            const buttonText = btn.querySelector('.btn-txt').textContent; // e.g., "50 $"
-            const buttonValue = parseInt(buttonText.replace(/[^0-9]/g, '')); // Extract number: 50
-            const priceValue = typeof currentPrice === 'number' ? currentPrice : parseInt(String(currentPrice).replace(/[^0-9]/g, ''));
-            btn.classList.toggle('active', buttonValue === priceValue);
+            const amount = btn.querySelector('.btn-txt').textContent;
+            btn.classList.toggle('active', amount === currentPrice);
           });
 
           // Add auto-save on blur for input fields
@@ -13226,18 +13212,15 @@
           btn.classList.add('active');
 
           if (currentModalStudent) {
-            // Extract numeric value from "50 $" format
-            const numericValue = parseInt(amount.replace(/[^0-9]/g, ''));
-            
-            currentModalStudent.price_per_class = amount; // Keep formatted for display
+            currentModalStudent.price_per_class = amount;
             document.getElementById('modalPrice').textContent = amount;
-            console.log(`Price changed to: ${amount} (saving as: ${numericValue})`);
+            console.log(`Price changed to: ${amount}`);
 
-            // Save to Supabase - send numeric value only
+            // Save to Supabase
             try {
               const { data, error } = await supabase
                 .from('students')
-                .update({ price_per_class: numericValue })
+                .update({ price_per_class: amount })
                 .eq('id', currentModalStudent.id);
 
               if (error) {
@@ -13245,12 +13228,12 @@
                 throw error;
               }
 
-              console.log('☁️ Price saved to Supabase:', numericValue);
+              console.log('☁️ Price saved to Supabase:', amount);
 
-              // Update cache with numeric value
+              // Update cache
               const cacheIndex = window.studentsCache.findIndex(s => s.id === currentModalStudent.id);
               if (cacheIndex !== -1) {
-                window.studentsCache[cacheIndex].price_per_class = numericValue;
+                window.studentsCache[cacheIndex].price_per_class = amount;
               }
 
               // Update card display
@@ -24101,7 +24084,7 @@
 
         // Initialize on page load - MINIMAL WORK ONLY
         document.addEventListener('DOMContentLoaded', async function () {
-          console.log('✅ ARNOMA v2.20.0 - Glassmorphism Student Cards ✅');
+          console.log('✅ ARNOMA v2.19.0 - Automatic Schedule Change Emails ✅');
 
           // Check authentication FIRST
           const authenticated = await checkAuthentication();
