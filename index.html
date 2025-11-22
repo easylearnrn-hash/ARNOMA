@@ -2693,6 +2693,7 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
         overflow: hidden;
+        z-index: 10;
       }
 
       .smn-btn-primary::before {
@@ -2704,6 +2705,7 @@
         height: 100%;
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
         transition: left 0.5s;
+        z-index: -1;
       }
 
       .smn-btn-primary:hover::before {
@@ -2739,6 +2741,7 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
         overflow: hidden;
+        z-index: 10;
       }
 
       .smn-btn-secondary::before {
@@ -2750,6 +2753,7 @@
         height: 100%;
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
         transition: left 0.5s;
+        z-index: -1;
       }
 
       .smn-btn-secondary:hover::before {
@@ -2785,6 +2789,7 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
         overflow: hidden;
+        z-index: 10;
       }
 
       .smn-btn-outline-purple::before {
@@ -2798,6 +2803,7 @@
         opacity: 0;
         transition: opacity 0.3s;
         border-radius: 10px;
+        z-index: -1;
       }
 
       .smn-btn-outline-purple:hover::before {
@@ -2836,6 +2842,7 @@
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         white-space: nowrap;
         overflow: hidden;
+        z-index: 10;
       }
 
       .smn-btn-outline-orange::before {
@@ -2849,6 +2856,7 @@
         opacity: 0;
         transition: opacity 0.3s;
         border-radius: 10px;
+        z-index: -1;
       }
 
       .smn-btn-outline-orange:hover::before {
@@ -2889,6 +2897,8 @@
         box-shadow: 
           0 0 10px rgba(0, 0, 0, 0.2),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        position: relative;
+        z-index: 10;
       }
 
       .smn-close-btn:hover {
@@ -2924,6 +2934,8 @@
         background-repeat: no-repeat;
         background-position: 14px center;
         background-size: 20px 20px;
+        position: relative;
+        z-index: 10;
       }
 
       .smn-search-input::placeholder {
@@ -2960,6 +2972,8 @@
         background-repeat: no-repeat;
         background-position: right 10px center;
         background-size: 20px 20px;
+        position: relative;
+        z-index: 10;
       }
 
       .smn-filter-select:hover {
@@ -2998,6 +3012,8 @@
         box-shadow: 
           0 0 10px rgba(0, 0, 0, 0.1),
           inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        position: relative;
+        z-index: 10;
       }
 
       .smn-btn-clear:hover {
