@@ -2593,6 +2593,653 @@
         }
       }
       /* ========== END FLOATING NAV STYLES ========== */
+
+      /* ============================================
+         STUDENT MANAGER (NEW) - GLASSMORPHISM SYSTEM
+         ============================================ */
+      
+      #studentManagerNewContainer {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #0f172a;
+        z-index: 50000;
+        overflow-y: auto;
+        padding: 40px 20px;
+      }
+
+      #studentManagerNewContainer::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.12) 0%, transparent 50%);
+        animation: gradientShiftNew 20s ease infinite;
+        z-index: -1;
+      }
+
+      @keyframes gradientShiftNew {
+        0%, 100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.85;
+          transform: scale(1.1);
+        }
+      }
+
+      .smn-header {
+        max-width: 1400px;
+        margin: 0 auto 40px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .smn-title {
+        font-size: 32px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .smn-close-btn {
+        width: 44px;
+        height: 44px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .smn-close-btn:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: rotate(90deg);
+      }
+
+      .smn-students-grid {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
+        gap: 24px;
+      }
+
+      /* Student Card with Orbital Ring */
+      .smn-student-card {
+        position: relative;
+        background: rgba(26, 29, 53, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 28px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .smn-student-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
+        border-color: rgba(102, 126, 234, 0.3);
+      }
+
+      .smn-card-toggle {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        z-index: 10;
+      }
+
+      .smn-card-content {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .smn-avatar-container {
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .smn-avatar-orbit {
+        position: absolute;
+        inset: -8px;
+        border-radius: 24px;
+        border: 2px solid transparent;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.6), rgba(118, 75, 162, 0.4)) border-box;
+        -webkit-mask:
+          linear-gradient(#fff 0 0) padding-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        animation: rotateOrbit 12s linear infinite;
+        pointer-events: none;
+      }
+
+      @keyframes rotateOrbit {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+
+      .smn-avatar {
+        position: relative;
+        width: 88px;
+        height: 88px;
+        border-radius: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 34px;
+        font-weight: 800;
+        color: white;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 24px rgba(102, 126, 234, 0.4);
+      }
+
+      .smn-status-badge {
+        position: absolute;
+        bottom: -6px;
+        right: -6px;
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        border: 3px solid #1a1d35;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: statusPulseNew 3s ease-in-out infinite;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+      }
+
+      .smn-status-badge svg {
+        width: 16px;
+        height: 16px;
+        color: white;
+      }
+
+      .smn-status-badge.paused {
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.6);
+      }
+
+      .smn-status-badge.graduated {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.6);
+      }
+
+      @keyframes statusPulseNew {
+        0%, 100% {
+          transform: scale(1);
+          box-shadow: 0 4px 12px rgba(16, 185, 129, 0.6);
+        }
+        50% {
+          transform: scale(1.1);
+          box-shadow: 0 6px 20px rgba(16, 185, 129, 0.9);
+        }
+      }
+
+      .smn-identity-section {
+        flex: 1;
+      }
+
+      .smn-profile-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      .smn-student-name {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 12px;
+        color: white;
+      }
+
+      .smn-meta-badges {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .smn-meta-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .smn-meta-badge.group {
+        color: #ffd700;
+        text-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+      }
+
+      .smn-meta-badge.price {
+        color: #86efac;
+      }
+
+      .smn-meta-badge svg {
+        width: 14px;
+        height: 14px;
+        opacity: 0.8;
+      }
+
+      .smn-elegant-toggle {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px;
+      }
+
+      .smn-elegant-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .smn-elegant-toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.08);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 22px;
+        border: 1.5px solid rgba(255, 255, 255, 0.15);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .smn-elegant-toggle-slider:before {
+        position: absolute;
+        content: '';
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50%;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.8);
+      }
+
+      .smn-elegant-toggle input:checked + .smn-elegant-toggle-slider {
+        background: linear-gradient(135deg, #8ab4ff 0%, #667eea 100%);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow: 0 0 12px rgba(138, 180, 255, 0.6), 0 0 24px rgba(138, 180, 255, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.2);
+      }
+
+      .smn-elegant-toggle input:checked + .smn-elegant-toggle-slider:before {
+        transform: translateX(18px);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.9);
+      }
+
+      .smn-status-pill {
+        padding: 8px 16px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        user-select: none;
+      }
+
+      .smn-status-pill:hover {
+        transform: scale(1.05);
+      }
+
+      .smn-status-pill.active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #6ee7b7;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        text-shadow: 0 0 10px rgba(94, 255, 108, 0.5), 0 0 20px rgba(94, 255, 108, 0.32);
+        box-shadow: 0 0 15px rgba(76, 175, 80, 0.38), 0 0 30px rgba(76, 175, 80, 0.25), 0 0 45px rgba(76, 175, 80, 0.13), inset 0 0 10px rgba(94, 255, 108, 0.13);
+      }
+
+      .smn-status-pill.paused {
+        background: rgba(251, 191, 36, 0.15);
+        color: #fde047;
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        text-shadow: 0 0 10px rgba(253, 224, 71, 0.5), 0 0 20px rgba(253, 224, 71, 0.32);
+      }
+
+      .smn-status-pill.graduated {
+        background: rgba(168, 85, 247, 0.15);
+        color: #c4b5fd;
+        border: 1px solid rgba(168, 85, 247, 0.3);
+        text-shadow: 0 0 10px rgba(196, 181, 253, 0.5), 0 0 20px rgba(196, 181, 253, 0.32);
+      }
+
+      /* Modal System */
+      .smn-modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(12px);
+        z-index: 60000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeInNew 0.3s ease;
+      }
+
+      .smn-modal-backdrop.active {
+        display: flex;
+      }
+
+      @keyframes fadeInNew {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+
+      .smn-modal-card {
+        background: rgba(26, 29, 53, 0.95);
+        backdrop-filter: blur(40px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 32px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+        animation: slideUpNew 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      @keyframes slideUpNew {
+        from {
+          opacity: 0;
+          transform: scale(0.95) translateY(40px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .smn-modal-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+        font-family: inherit;
+        color: white;
+      }
+
+      .smn-modal-close:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: rotate(90deg);
+      }
+
+      .smn-glass-header-modal {
+        padding: 24px 32px;
+        background: linear-gradient(135deg, rgba(138, 180, 255, 0.15), rgba(168, 85, 247, 0.15));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .smn-glass-name {
+        font-size: 2rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff, #8ab4ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .smn-glass-subtitle {
+        font-size: 16px;
+        color: rgba(138, 180, 255, 0.7);
+        margin-top: 4px;
+        font-weight: 600;
+      }
+
+      .smn-glass-meta {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        margin-right: 50px;
+      }
+
+      .smn-status-badge-modal {
+        padding: 6px 16px;
+        border-radius: 6px;
+        font-size: 12px;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-block;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-family: inherit;
+        background: transparent;
+        border: none;
+      }
+
+      .smn-status-badge-modal:hover {
+        transform: scale(1.05);
+      }
+
+      .smn-status-badge-modal.active {
+        background: rgba(76, 175, 80, 0.25);
+        border: 2px solid #4caf50;
+        color: #5eff6c;
+        text-shadow: 0 0 10px rgba(94, 255, 108, 0.5), 0 0 20px rgba(94, 255, 108, 0.32);
+        box-shadow: 0 0 15px rgba(76, 175, 80, 0.38), 0 0 30px rgba(76, 175, 80, 0.25), 0 0 45px rgba(76, 175, 80, 0.13), inset 0 0 10px rgba(94, 255, 108, 0.13);
+      }
+
+      .smn-status-badge-modal.paused {
+        background: rgba(251, 191, 36, 0.25);
+        border: 2px solid #fbbf24;
+        color: #fde047;
+        text-shadow: 0 0 10px rgba(253, 224, 71, 0.5), 0 0 20px rgba(253, 224, 71, 0.32);
+        box-shadow: 0 0 15px rgba(251, 191, 36, 0.38), 0 0 30px rgba(251, 191, 36, 0.25), 0 0 45px rgba(251, 191, 36, 0.13), inset 0 0 10px rgba(253, 224, 71, 0.13);
+      }
+
+      .smn-status-badge-modal.graduated {
+        background: rgba(139, 92, 246, 0.25);
+        border: 2px solid #8b5cf6;
+        color: #c4b5fd;
+        text-shadow: 0 0 10px rgba(196, 181, 253, 0.5), 0 0 20px rgba(196, 181, 253, 0.32);
+        box-shadow: 0 0 15px rgba(139, 92, 246, 0.38), 0 0 30px rgba(139, 92, 246, 0.25), 0 0 45px rgba(139, 92, 246, 0.13), inset 0 0 10px rgba(196, 181, 253, 0.13);
+      }
+
+      .smn-glass-stats {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .smn-glass-stat {
+        padding: 20px;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        text-align: center;
+        box-shadow: inset 2px 2px 4px rgba(0, 0, 0, 0.15), inset -2px -2px 4px rgba(255, 255, 255, 0.05);
+      }
+
+      .smn-glass-stat-label {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.5);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 8px;
+      }
+
+      .smn-glass-stat-value {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #8ab4ff;
+        line-height: 1.3;
+        padding: 9px 12px 7px 12px;
+        min-height: 40px;
+        box-sizing: border-box;
+      }
+
+      .smn-glass-stat-input {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: #8ab4ff;
+        background: transparent;
+        border: 1px solid transparent;
+        border-radius: 8px;
+        padding: 8px 12px;
+        text-align: center;
+        width: 100%;
+        outline: none;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        line-height: 1.3;
+        resize: none;
+        min-height: 40px;
+        white-space: pre-wrap;
+      }
+
+      .smn-glass-stat-input:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow: 0 0 12px rgba(138, 180, 255, 0.3);
+        cursor: text;
+      }
+
+      .smn-glass-actions {
+        padding: 24px 32px;
+        background: rgba(0, 0, 0, 0.15);
+      }
+
+      .smn-glass-buttons {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .smn-glass-buttons:last-child {
+        margin-bottom: 0;
+      }
+
+      /* White Emboss Buttons */
+      .smn-btn-wrapper {
+        --size: 50px;
+        --padding: 5px;
+        --hue: 142deg;
+        width: var(--size);
+        height: var(--size);
+        border-radius: 50%;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06), inset 2px 2px 5px rgba(255, 255, 255, 0.8), inset -2px -2px 6px rgba(0, 0, 0, 0.04);
+        transition: all 0.3s ease;
+      }
+
+      .smn-btn-wrapper:has(.smn-btn.active) {
+        --size: 60px;
+        box-shadow: 0 0 15px hsla(var(--hue), 100%, 60%, 0.35), 0 0 30px hsla(var(--hue), 100%, 60%, 0.21), 0 0 45px hsla(var(--hue), 100%, 60%, 0.1), 0 10px 22px rgba(0, 0, 0, 0.12), 0 4px 10px rgba(0, 0, 0, 0.06), inset 2px 2px 5px rgba(255, 255, 255, 0.8), inset -2px -2px 6px rgba(0, 0, 0, 0.04);
+      }
+
+      .smn-btn-wrapper.group-A { --hue: 346deg; }
+      .smn-btn-wrapper.group-B { --hue: 23deg; }
+      .smn-btn-wrapper.group-C { --hue: 50deg; }
+      .smn-btn-wrapper.group-D { --hue: 145deg; }
+      .smn-btn-wrapper.group-E { --hue: 204deg; }
+      .smn-btn-wrapper.group-F { --hue: 260deg; }
+      .smn-btn-wrapper.amount { --hue: 145deg; }
+
+      .smn-btn {
+        width: calc(100% - 2 * var(--padding));
+        height: calc(100% - 2 * var(--padding));
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        background: #f5f5f5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: inset 3px 3px 6px rgba(0, 0, 0, 0.12), inset -3px -3px 7px rgba(255, 255, 255, 0.9), 0 3px 6px rgba(0, 0, 0, 0.08);
+        transition: transform 0.15s ease, box-shadow 0.25s ease;
+      }
+
+      .smn-btn-txt {
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        color: #333;
+        transition: all 0.3s ease;
+      }
+
+      .smn-btn-txt.small {
+        font-size: 13px;
+      }
+
+      .smn-btn.active {
+        box-shadow: inset 2px 2px 6px rgba(255, 255, 255, 0.9), inset -4px -4px 12px rgba(0, 0, 0, 0.08), 0 0 18px hsla(var(--hue), 80%, 65%, 0.25);
+      }
+
+      .smn-btn.active .smn-btn-txt {
+        background: linear-gradient(180deg, hsla(var(--hue), 100%, 48%, 1), hsla(var(--hue), 90%, 35%, 1));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 7px hsla(var(--hue), 100%, 48%, 0.95)) drop-shadow(0 0 12px hsla(var(--hue), 100%, 38%, 0.85));
+      }
+
+      .smn-btn:active {
+        transform: scale(0.96);
+      }
+
+      @media (max-width: 768px) {
+        .smn-students-grid {
+          grid-template-columns: 1fr;
+        }
+      }
     </style>
   </head>
   <body>
@@ -2863,6 +3510,7 @@
         </button>
         <button id="navTimerBtn" class="nav-btn" title="Class Countdown Timer">◷</button>
         <button id="navQuickViewBtn" class="nav-btn" title="Quick View – Group Schedules">◈</button>
+        <button id="navStudentManagerNewBtn" class="nav-btn" title="Student Manager (NEW)" onclick="openStudentManagerNew()">👥</button>
       </div>
       <!-- ========== END FLOATING NAV HTML ========== -->
 
@@ -5167,6 +5815,127 @@
         </div>
       </div>
       <!-- END QUICK VIEW MODAL -->
+
+      <!-- ============================================
+           STUDENT MANAGER (NEW) - FULL SCREEN MODULE
+           ============================================ -->
+      <div id="studentManagerNewContainer">
+        <div class="smn-header">
+          <h1 class="smn-title">Student Manager (NEW)</h1>
+          <button class="smn-close-btn" onclick="closeStudentManagerNew()">×</button>
+        </div>
+        <div class="smn-students-grid" id="smnStudentsGrid"></div>
+      </div>
+
+      <!-- Student Manager (NEW) Modal -->
+      <div class="smn-modal-backdrop" id="smnModalBackdrop">
+        <div class="smn-modal-card" id="smnModalCard" role="dialog" aria-modal="true" aria-labelledby="smnModalName" onclick="event.stopPropagation()">
+          <button class="smn-modal-close" onclick="closeSmnModal()" aria-label="Close modal">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+
+          <!-- Glass Header -->
+          <div class="smn-glass-header-modal">
+            <div>
+              <div class="smn-glass-name" id="smnModalName"></div>
+              <div class="smn-glass-subtitle" id="smnModalGroup"></div>
+            </div>
+            <div class="smn-glass-meta">
+              <button class="smn-status-badge-modal active" id="smnModalStatusBadge" onclick="cycleSmnModalStatus()" aria-label="Toggle student status"></button>
+            </div>
+          </div>
+
+          <!-- Glass Stats -->
+          <div class="smn-glass-stats">
+            <div class="smn-glass-stat">
+              <div class="smn-glass-stat-label">Pay/Class</div>
+              <div class="smn-glass-stat-value" id="smnModalPrice"></div>
+            </div>
+            <div class="smn-glass-stat">
+              <div class="smn-glass-stat-label">Credit</div>
+              <input type="text" class="smn-glass-stat-input" id="smnModalCredit" style="color: #fbbf24" />
+            </div>
+            <div class="smn-glass-stat">
+              <div class="smn-glass-stat-label">Phone</div>
+              <input type="tel" class="smn-glass-stat-input" id="smnModalPhone" style="font-size: 1.1rem; color: #c084fc" />
+            </div>
+            <div class="smn-glass-stat">
+              <div class="smn-glass-stat-label">Email</div>
+              <textarea class="smn-glass-stat-input" id="smnModalEmail" style="font-size: 0.9rem; color: #94a3b8" rows="2"></textarea>
+            </div>
+            <div class="smn-glass-stat">
+              <div class="smn-glass-stat-label">Aliases</div>
+              <textarea class="smn-glass-stat-input" id="smnModalAliases" style="font-size: 0.85rem; color: #fbbf24" rows="2"></textarea>
+            </div>
+            <div class="smn-glass-stat">
+              <div class="smn-glass-stat-label">Notes</div>
+              <textarea class="smn-glass-stat-input" id="smnModalNotes" style="font-size: 0.85rem; color: #a78bfa" rows="2"></textarea>
+            </div>
+          </div>
+
+          <!-- Glass Actions with White Emboss Buttons -->
+          <div class="smn-glass-actions">
+            <div class="smn-glass-buttons" id="smnGroupButtons">
+              <div class="smn-btn-wrapper group-A">
+                <button class="smn-btn" onclick="smnSelectGroup('A', this)">
+                  <span class="smn-btn-txt">A</span>
+                </button>
+              </div>
+              <div class="smn-btn-wrapper group-B">
+                <button class="smn-btn" onclick="smnSelectGroup('B', this)">
+                  <span class="smn-btn-txt">B</span>
+                </button>
+              </div>
+              <div class="smn-btn-wrapper group-C">
+                <button class="smn-btn" onclick="smnSelectGroup('C', this)">
+                  <span class="smn-btn-txt">C</span>
+                </button>
+              </div>
+              <div class="smn-btn-wrapper group-D">
+                <button class="smn-btn" onclick="smnSelectGroup('D', this)">
+                  <span class="smn-btn-txt">D</span>
+                </button>
+              </div>
+              <div class="smn-btn-wrapper group-E">
+                <button class="smn-btn" onclick="smnSelectGroup('E', this)">
+                  <span class="smn-btn-txt">E</span>
+                </button>
+              </div>
+              <div class="smn-btn-wrapper group-F">
+                <button class="smn-btn" onclick="smnSelectGroup('F', this)">
+                  <span class="smn-btn-txt">F</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="smn-glass-buttons" id="smnAmountButtons" style="margin-top: 16px">
+              <div class="smn-btn-wrapper amount">
+                <button class="smn-btn" onclick="smnSelectAmount('25 $', this)">
+                  <span class="smn-btn-txt small">25 $</span>
+                </button>
+              </div>
+              <div class="smn-btn-wrapper amount">
+                <button class="smn-btn" onclick="smnSelectAmount('50 $', this)">
+                  <span class="smn-btn-txt small">50 $</span>
+                </button>
+              </div>
+              <div class="smn-btn-wrapper amount">
+                <button class="smn-btn" onclick="smnSelectAmount('75 $', this)">
+                  <span class="smn-btn-txt small">75 $</span>
+                </button>
+              </div>
+              <div class="smn-btn-wrapper amount">
+                <button class="smn-btn" onclick="smnSelectAmount('100 $', this)">
+                  <span class="smn-btn-txt small">100 $</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- END STUDENT MANAGER (NEW) -->
 
       <!-- Hidden File Input for Backup Import -->
       <input type="file" id="backupFileInput" accept=".json" style="display: none" />
@@ -16207,6 +16976,550 @@
 
         // ============================
         // END QUICK VIEW FUNCTIONS
+        // ============================
+
+        // ============================================
+        // STUDENT MANAGER (NEW) - GLASSMORPHISM SYSTEM
+        // ============================================
+
+        let smnCurrentStudent = null;
+
+        /**
+         * Open Student Manager (NEW) - Full screen module
+         */
+        async function openStudentManagerNew() {
+          console.log('🎓 Opening Student Manager (NEW)...');
+          
+          const container = document.getElementById('studentManagerNewContainer');
+          if (!container) {
+            console.error('❌ Student Manager (NEW) container not found');
+            return;
+          }
+
+          // Show the container
+          container.style.display = 'block';
+
+          // Load students from Supabase
+          await smnLoadStudents();
+        }
+
+        /**
+         * Close Student Manager (NEW)
+         */
+        function closeStudentManagerNew() {
+          const container = document.getElementById('studentManagerNewContainer');
+          if (container) {
+            container.style.display = 'none';
+          }
+          console.log('🎓 Student Manager (NEW) closed');
+        }
+
+        /**
+         * Load students from Supabase and render cards
+         */
+        async function smnLoadStudents() {
+          try {
+            console.log('📦 Loading students for Student Manager (NEW)...');
+
+            // Use existing cache if available
+            if (window.studentsCache && window.studentsCache.length > 0) {
+              console.log(`✅ Using cached students: ${window.studentsCache.length}`);
+              smnRenderStudentCards(window.studentsCache);
+              return;
+            }
+
+            // Otherwise load from Supabase
+            const { data: students, error } = await supabase
+              .from('students')
+              .select('*')
+              .order('name', { ascending: true });
+
+            if (error) {
+              console.error('❌ Error loading students:', error);
+              throw error;
+            }
+
+            console.log(`✅ Loaded ${students.length} students from Supabase`);
+            
+            // Update cache
+            window.studentsCache = students;
+            window.studentsCacheTimestamp = Date.now();
+
+            smnRenderStudentCards(students);
+          } catch (error) {
+            console.error('❌ Failed to load students:', error);
+          }
+        }
+
+        /**
+         * Render student cards in the grid
+         */
+        function smnRenderStudentCards(students) {
+          const grid = document.getElementById('smnStudentsGrid');
+          if (!grid) return;
+
+          grid.innerHTML = students.map(student => {
+            const groupLetter = smnGetGroupLetter(student.group_name || student.group || '');
+            const statusClass = (student.status || 'active').toLowerCase();
+            const showInGrid = student.show_in_grid !== false;
+
+            return `
+              <div class="smn-student-card" onclick="smnOpenModal(${student.id})">
+                <div class="smn-card-toggle">
+                  <label class="smn-elegant-toggle" onclick="event.stopPropagation()">
+                    <input type="checkbox" ${showInGrid ? 'checked' : ''} onchange="smnToggleCalendarVisibility(${student.id}, this.checked)" />
+                    <span class="smn-elegant-toggle-slider"></span>
+                  </label>
+                </div>
+                <div class="smn-card-content">
+                  <div class="smn-avatar-container">
+                    <div class="smn-avatar-orbit"></div>
+                    <div class="smn-avatar">${groupLetter}</div>
+                    <div class="smn-status-badge ${statusClass}">
+                      ${smnGetStatusIcon(statusClass)}
+                    </div>
+                  </div>
+                  <div class="smn-identity-section">
+                    <div class="smn-profile-label">STUDENT PROFILE</div>
+                    <div class="smn-student-name">${smnEscapeHtml(student.name || 'N/A')}</div>
+                    <div class="smn-meta-badges">
+                      <div class="smn-meta-badge group">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        ${student.balance || '0 $'}
+                      </div>
+                      <div class="smn-meta-badge price">
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        ${student.price_per_class || '0 $'}
+                      </div>
+                    </div>
+                  </div>
+                  <div class="smn-status-pill ${statusClass}" onclick="event.stopPropagation(); smnCycleStatus(${student.id})">${statusClass.toUpperCase()}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+        }
+
+        /**
+         * Get group letter from group name
+         */
+        function smnGetGroupLetter(groupName) {
+          if (!groupName) return '?';
+          const parts = groupName.split(' ');
+          return parts[parts.length - 1] || '?';
+        }
+
+        /**
+         * Get status icon SVG
+         */
+        function smnGetStatusIcon(status) {
+          if (status === 'active') {
+            return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>`;
+          } else if (status === 'paused') {
+            return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 9v6m4-6v6"></path></svg>`;
+          } else {
+            return `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>`;
+          }
+        }
+
+        /**
+         * Escape HTML to prevent XSS
+         */
+        function smnEscapeHtml(str) {
+          if (!str) return '';
+          return String(str)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+        }
+
+        /**
+         * Toggle calendar visibility for a student
+         */
+        async function smnToggleCalendarVisibility(studentId, isVisible) {
+          try {
+            const { data, error } = await supabase
+              .from('students')
+              .update({ show_in_grid: isVisible })
+              .eq('id', studentId);
+
+            if (error) throw error;
+
+            // Update cache
+            if (window.studentsCache) {
+              const index = window.studentsCache.findIndex(s => s.id === studentId);
+              if (index !== -1) {
+                window.studentsCache[index].show_in_grid = isVisible;
+              }
+            }
+
+            console.log(`✅ Calendar visibility updated: ${isVisible ? 'ON' : 'OFF'}`);
+
+            // Dispatch event for calendar to update
+            window.dispatchEvent(new CustomEvent('students:updated', {
+              detail: { source: 'smn-visibility-toggle', studentId }
+            }));
+          } catch (error) {
+            console.error('❌ Failed to update calendar visibility:', error);
+          }
+        }
+
+        /**
+         * Cycle student status
+         */
+        async function smnCycleStatus(studentId) {
+          try {
+            const student = window.studentsCache?.find(s => s.id === studentId);
+            if (!student) return;
+
+            const statusOrder = ['active', 'paused', 'graduated'];
+            const currentIndex = statusOrder.indexOf((student.status || 'active').toLowerCase());
+            const newStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
+
+            const { data, error } = await supabase
+              .from('students')
+              .update({ status: newStatus })
+              .eq('id', studentId);
+
+            if (error) throw error;
+
+            // Update cache
+            const index = window.studentsCache.findIndex(s => s.id === studentId);
+            if (index !== -1) {
+              window.studentsCache[index].status = newStatus;
+            }
+
+            console.log(`✅ Status changed to: ${newStatus}`);
+
+            // Re-render cards
+            smnRenderStudentCards(window.studentsCache);
+
+            // Dispatch event
+            window.dispatchEvent(new CustomEvent('students:updated', {
+              detail: { source: 'smn-status-cycle', studentId }
+            }));
+          } catch (error) {
+            console.error('❌ Failed to update status:', error);
+          }
+        }
+
+        /**
+         * Open student detail modal
+         */
+        function smnOpenModal(studentId) {
+          smnCurrentStudent = window.studentsCache?.find(s => s.id === studentId);
+          if (!smnCurrentStudent) {
+            console.error('❌ Student not found:', studentId);
+            return;
+          }
+
+          // Populate modal
+          document.getElementById('smnModalName').textContent = smnCurrentStudent.name || '';
+          document.getElementById('smnModalGroup').textContent = smnCurrentStudent.group_name || smnCurrentStudent.group || '';
+          document.getElementById('smnModalPrice').textContent = smnCurrentStudent.price_per_class || '0 $';
+          document.getElementById('smnModalCredit').value = smnCurrentStudent.balance || '0 $';
+          document.getElementById('smnModalPhone').value = smnCurrentStudent.phone || '';
+
+          // Handle email array
+          const emailArray = Array.isArray(smnCurrentStudent.email) ? smnCurrentStudent.email : smnCurrentStudent.email ? [smnCurrentStudent.email] : [];
+          document.getElementById('smnModalEmail').value = emailArray.join(', ');
+
+          // Handle aliases array
+          const aliasesArray = Array.isArray(smnCurrentStudent.aliases) ? smnCurrentStudent.aliases : smnCurrentStudent.aliases ? [smnCurrentStudent.aliases] : [];
+          document.getElementById('smnModalAliases').value = aliasesArray.join(', ');
+
+          // Handle notes
+          document.getElementById('smnModalNotes').value = smnCurrentStudent.notes || '';
+
+          // Set status badge
+          const status = (smnCurrentStudent.status || 'active').toLowerCase();
+          const statusBadge = document.getElementById('smnModalStatusBadge');
+          statusBadge.textContent = status.toUpperCase();
+          statusBadge.className = `smn-status-badge-modal ${status}`;
+
+          // Set active group button
+          const groupLetter = smnGetGroupLetter(smnCurrentStudent.group_name || smnCurrentStudent.group || '');
+          document.querySelectorAll('#smnGroupButtons .smn-btn').forEach((btn, index) => {
+            const letter = String.fromCharCode(65 + index); // A, B, C, D, E, F
+            btn.classList.toggle('active', letter === groupLetter);
+          });
+
+          // Set active amount button
+          document.querySelectorAll('#smnAmountButtons .smn-btn').forEach(btn => {
+            const amount = btn.querySelector('.smn-btn-txt').textContent;
+            btn.classList.toggle('active', amount === smnCurrentStudent.price_per_class);
+          });
+
+          // Add auto-save on blur
+          document.getElementById('smnModalCredit').onblur = smnAutoSaveField;
+          document.getElementById('smnModalPhone').onblur = smnAutoSaveField;
+          document.getElementById('smnModalEmail').onblur = smnAutoSaveField;
+          document.getElementById('smnModalAliases').onblur = smnAutoSaveField;
+          document.getElementById('smnModalNotes').onblur = smnAutoSaveField;
+
+          // Focus handlers for comma-separated format
+          document.getElementById('smnModalEmail').onfocus = function() {
+            const emailArray = Array.isArray(smnCurrentStudent.email) ? smnCurrentStudent.email : smnCurrentStudent.email ? [smnCurrentStudent.email] : [];
+            this.value = emailArray.join(', ');
+          };
+
+          document.getElementById('smnModalAliases').onfocus = function() {
+            const aliasesArray = Array.isArray(smnCurrentStudent.aliases) ? smnCurrentStudent.aliases : smnCurrentStudent.aliases ? [smnCurrentStudent.aliases] : [];
+            this.value = aliasesArray.join(', ');
+          };
+
+          // Show modal
+          document.getElementById('smnModalBackdrop').classList.add('active');
+        }
+
+        /**
+         * Close student detail modal
+         */
+        function closeSmnModal() {
+          document.getElementById('smnModalBackdrop').classList.remove('active');
+          smnCurrentStudent = null;
+        }
+
+        /**
+         * Validate email format
+         */
+        function smnValidateEmail(email) {
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          return emailRegex.test(email);
+        }
+
+        /**
+         * Auto-save field on blur
+         */
+        async function smnAutoSaveField(event) {
+          if (!smnCurrentStudent) return;
+
+          const fieldId = event.target.id;
+          const value = event.target.value;
+          let updateData = {};
+
+          if (fieldId === 'smnModalCredit') {
+            smnCurrentStudent.balance = value;
+            updateData.balance = value;
+            console.log('✅ Credit auto-saved:', value);
+          } else if (fieldId === 'smnModalPhone') {
+            smnCurrentStudent.phone = value;
+            updateData.phone = value;
+            console.log('✅ Phone auto-saved:', value);
+          } else if (fieldId === 'smnModalEmail') {
+            const emailsRaw = value.split(',').map(e => e.trim()).filter(e => e);
+            const invalidEmails = emailsRaw.filter(email => !smnValidateEmail(email));
+
+            if (invalidEmails.length > 0) {
+              console.error('❌ Invalid email format:', invalidEmails);
+              alert(`Invalid email format: ${invalidEmails.join(', ')}`);
+              return;
+            }
+
+            smnCurrentStudent.email = emailsRaw;
+            updateData.email = emailsRaw;
+            console.log('✅ Emails auto-saved:', emailsRaw);
+            event.target.value = emailsRaw.join('\n');
+          } else if (fieldId === 'smnModalAliases') {
+            const aliasesRaw = value.split(',').map(a => a.trim()).filter(a => a);
+            smnCurrentStudent.aliases = aliasesRaw;
+            updateData.aliases = aliasesRaw;
+            console.log('✅ Aliases auto-saved:', aliasesRaw);
+            event.target.value = aliasesRaw.join('\n');
+          } else if (fieldId === 'smnModalNotes') {
+            smnCurrentStudent.notes = value;
+            updateData.notes = value;
+            console.log('✅ Notes auto-saved:', value);
+          }
+
+          // Save to Supabase
+          try {
+            const { data, error } = await supabase
+              .from('students')
+              .update(updateData)
+              .eq('id', smnCurrentStudent.id);
+
+            if (error) throw error;
+
+            console.log('☁️ Saved to Supabase:', updateData);
+
+            // Update cache
+            const cacheIndex = window.studentsCache.findIndex(s => s.id === smnCurrentStudent.id);
+            if (cacheIndex !== -1) {
+              window.studentsCache[cacheIndex] = { ...window.studentsCache[cacheIndex], ...updateData };
+            }
+
+            // Re-render cards
+            smnRenderStudentCards(window.studentsCache);
+
+            // Dispatch event
+            window.dispatchEvent(new CustomEvent('students:updated', {
+              detail: { source: 'smn-modal-auto-save', studentId: smnCurrentStudent.id }
+            }));
+          } catch (error) {
+            console.error('❌ Failed to save:', error);
+            alert('Failed to save changes. Please try again.');
+          }
+        }
+
+        /**
+         * Cycle modal status
+         */
+        async function cycleSmnModalStatus() {
+          if (!smnCurrentStudent) return;
+
+          const statusOrder = ['active', 'paused', 'graduated'];
+          const currentIndex = statusOrder.indexOf((smnCurrentStudent.status || 'active').toLowerCase());
+          const newStatus = statusOrder[(currentIndex + 1) % statusOrder.length];
+
+          smnCurrentStudent.status = newStatus;
+
+          const statusBadge = document.getElementById('smnModalStatusBadge');
+          statusBadge.textContent = newStatus.toUpperCase();
+          statusBadge.className = `smn-status-badge-modal ${newStatus}`;
+
+          console.log(`Modal status changed to: ${newStatus}`);
+
+          try {
+            const { data, error } = await supabase
+              .from('students')
+              .update({ status: newStatus })
+              .eq('id', smnCurrentStudent.id);
+
+            if (error) throw error;
+
+            console.log('☁️ Status saved to Supabase:', newStatus);
+
+            // Update cache
+            const cacheIndex = window.studentsCache.findIndex(s => s.id === smnCurrentStudent.id);
+            if (cacheIndex !== -1) {
+              window.studentsCache[cacheIndex].status = newStatus;
+            }
+
+            // Re-render cards
+            smnRenderStudentCards(window.studentsCache);
+
+            // Dispatch event
+            window.dispatchEvent(new CustomEvent('students:updated', {
+              detail: { source: 'smn-modal-status-cycle', studentId: smnCurrentStudent.id }
+            }));
+          } catch (error) {
+            console.error('❌ Failed to update status:', error);
+            alert('Failed to update status. Please try again.');
+          }
+        }
+
+        /**
+         * Select group for student
+         */
+        async function smnSelectGroup(letter, btn) {
+          document.querySelectorAll('#smnGroupButtons .smn-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          if (smnCurrentStudent) {
+            const newGroup = `Group ${letter}`;
+            smnCurrentStudent.group_name = newGroup;
+            smnCurrentStudent.group = newGroup;
+            
+            document.getElementById('smnModalGroup').textContent = newGroup;
+            console.log(`Group changed to: ${newGroup}`);
+
+            try {
+              const { data, error } = await supabase
+                .from('students')
+                .update({ group_name: newGroup })
+                .eq('id', smnCurrentStudent.id);
+
+              if (error) throw error;
+
+              console.log('☁️ Group saved to Supabase:', newGroup);
+
+              // Update cache
+              const cacheIndex = window.studentsCache.findIndex(s => s.id === smnCurrentStudent.id);
+              if (cacheIndex !== -1) {
+                window.studentsCache[cacheIndex].group_name = newGroup;
+                window.studentsCache[cacheIndex].group = newGroup;
+              }
+
+              // Re-render cards
+              smnRenderStudentCards(window.studentsCache);
+
+              // Dispatch event
+              window.dispatchEvent(new CustomEvent('students:updated', {
+                detail: { source: 'smn-modal-group-change', studentId: smnCurrentStudent.id }
+              }));
+            } catch (error) {
+              console.error('❌ Failed to update group:', error);
+              alert('Failed to update group. Please try again.');
+            }
+          }
+        }
+
+        /**
+         * Select amount for student
+         */
+        async function smnSelectAmount(amount, btn) {
+          document.querySelectorAll('#smnAmountButtons .smn-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          if (smnCurrentStudent) {
+            smnCurrentStudent.price_per_class = amount;
+            document.getElementById('smnModalPrice').textContent = amount;
+            console.log(`Price changed to: ${amount}`);
+
+            try {
+              const { data, error } = await supabase
+                .from('students')
+                .update({ price_per_class: amount })
+                .eq('id', smnCurrentStudent.id);
+
+              if (error) throw error;
+
+              console.log('☁️ Price saved to Supabase:', amount);
+
+              // Update cache
+              const cacheIndex = window.studentsCache.findIndex(s => s.id === smnCurrentStudent.id);
+              if (cacheIndex !== -1) {
+                window.studentsCache[cacheIndex].price_per_class = amount;
+              }
+
+              // Re-render cards
+              smnRenderStudentCards(window.studentsCache);
+
+              // Dispatch event
+              window.dispatchEvent(new CustomEvent('students:updated', {
+                detail: { source: 'smn-modal-price-change', studentId: smnCurrentStudent.id }
+              }));
+            } catch (error) {
+              console.error('❌ Failed to update price:', error);
+              alert('Failed to update price. Please try again.');
+            }
+          }
+        }
+
+        // Close modal on backdrop click
+        document.addEventListener('DOMContentLoaded', function() {
+          const modalBackdrop = document.getElementById('smnModalBackdrop');
+          if (modalBackdrop) {
+            modalBackdrop.addEventListener('click', closeSmnModal);
+          }
+        });
+
+        // Close modal on ESC key
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape' && smnCurrentStudent) {
+            closeSmnModal();
+          }
+        });
+
+        // ============================
+        // END STUDENT MANAGER (NEW)
         // ============================
 
         // ========== BEGIN FLOATING NAV FUNCTIONS ==========
