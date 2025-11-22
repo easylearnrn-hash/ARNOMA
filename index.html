@@ -12931,7 +12931,12 @@
           document.getElementById('modalGroup').textContent = student.group_name || student.group || '';
           
           // Populate modal fields
-          document.getElementById('modalPrice').textContent = student.price_per_class || '0 $';
+          // Handle price - if numeric, add $ sign for display
+          const priceDisplay = typeof student.price_per_class === 'number' 
+            ? `${student.price_per_class} $` 
+            : student.price_per_class || '0 $';
+          document.getElementById('modalPrice').textContent = priceDisplay;
+          
           document.getElementById('modalCredit').value = student.balance || '0 $';
           document.getElementById('modalPhone').value = student.phone || '';
 
@@ -12960,10 +12965,13 @@
           });
 
           // Set active amount button based on price_per_class
-          const currentPrice = student.price_per_class || '';
+          // Handle both numeric (50) and string ("50 $") formats
+          const currentPrice = student.price_per_class;
           document.querySelectorAll('#amountButtons .btn').forEach(btn => {
-            const amount = btn.querySelector('.btn-txt').textContent;
-            btn.classList.toggle('active', amount === currentPrice);
+            const buttonText = btn.querySelector('.btn-txt').textContent; // e.g., "50 $"
+            const buttonValue = parseInt(buttonText.replace(/[^0-9]/g, '')); // Extract number: 50
+            const priceValue = typeof currentPrice === 'number' ? currentPrice : parseInt(String(currentPrice).replace(/[^0-9]/g, ''));
+            btn.classList.toggle('active', buttonValue === priceValue);
           });
 
           // Add auto-save on blur for input fields
@@ -13218,15 +13226,18 @@
           btn.classList.add('active');
 
           if (currentModalStudent) {
-            currentModalStudent.price_per_class = amount;
+            // Extract numeric value from "50 $" format
+            const numericValue = parseInt(amount.replace(/[^0-9]/g, ''));
+            
+            currentModalStudent.price_per_class = amount; // Keep formatted for display
             document.getElementById('modalPrice').textContent = amount;
-            console.log(`Price changed to: ${amount}`);
+            console.log(`Price changed to: ${amount} (saving as: ${numericValue})`);
 
-            // Save to Supabase
+            // Save to Supabase - send numeric value only
             try {
               const { data, error } = await supabase
                 .from('students')
-                .update({ price_per_class: amount })
+                .update({ price_per_class: numericValue })
                 .eq('id', currentModalStudent.id);
 
               if (error) {
@@ -13234,12 +13245,12 @@
                 throw error;
               }
 
-              console.log('☁️ Price saved to Supabase:', amount);
+              console.log('☁️ Price saved to Supabase:', numericValue);
 
-              // Update cache
+              // Update cache with numeric value
               const cacheIndex = window.studentsCache.findIndex(s => s.id === currentModalStudent.id);
               if (cacheIndex !== -1) {
-                window.studentsCache[cacheIndex].price_per_class = amount;
+                window.studentsCache[cacheIndex].price_per_class = numericValue;
               }
 
               // Update card display
