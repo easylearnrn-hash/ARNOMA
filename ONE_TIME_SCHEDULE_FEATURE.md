@@ -1,14 +1,14 @@
 # One-Time Schedule Override Feature
 
-**Version**: 2.10.0  
-**Date**: November 21, 2025  
-**Status**: ✅ Implemented
+**Version**: 2.10.0 **Date**: November 21, 2025 **Status**: ✅ Implemented
 
 ---
 
 ## Overview
 
-The one-time schedule feature allows teachers to temporarily override a group's recurring weekly schedule for a specific date. After that date passes, the system automatically reverts to the normal recurring schedule.
+The one-time schedule feature allows teachers to temporarily override a group's
+recurring weekly schedule for a specific date. After that date passes, the
+system automatically reverts to the normal recurring schedule.
 
 ---
 
@@ -16,9 +16,11 @@ The one-time schedule feature allows teachers to temporarily override a group's 
 
 **Normal Schedule**: Tuesday 8:00 PM (recurring weekly)
 
-**Scenario**: Teacher needs to cancel Tuesday's class and reschedule to Wednesday for one week only.
+**Scenario**: Teacher needs to cancel Tuesday's class and reschedule to
+Wednesday for one week only.
 
-**Solution**: Add a one-time schedule override for Wednesday with the specific date. Next week automatically returns to the regular Tuesday schedule.
+**Solution**: Add a one-time schedule override for Wednesday with the specific
+date. Next week automatically returns to the regular Tuesday schedule.
 
 ---
 
@@ -36,12 +38,14 @@ In the **Group Manager** → **Edit Schedule** section:
 ### 2. Data Structure
 
 **Supabase Schema**:
+
 ```sql
 ALTER TABLE groups
 ADD COLUMN one_time_schedules JSONB DEFAULT '[]'::jsonb;
 ```
 
 **Format**:
+
 ```json
 [
   {
@@ -65,7 +69,8 @@ When generating the calendar for a specific date:
 
 ### 4. Automatic Cleanup
 
-- One-time schedules are automatically filtered out when their date is in the past
+- One-time schedules are automatically filtered out when their date is in the
+  past
 - Cleanup runs:
   - On app startup
   - Once per day (24-hour interval)
@@ -132,8 +137,8 @@ File: `ADD_ONE_TIME_SCHEDULES_COLUMN.sql`
 ALTER TABLE groups
 ADD COLUMN IF NOT EXISTS one_time_schedules JSONB DEFAULT '[]'::jsonb;
 
-COMMENT ON COLUMN groups.one_time_schedules IS 
-'JSON array of one-time schedule overrides. Each object contains: 
+COMMENT ON COLUMN groups.one_time_schedules IS
+'JSON array of one-time schedule overrides. Each object contains:
 date (YYYY-MM-DD), day (day name), time (12h format), oneTime (true)';
 ```
 
@@ -208,7 +213,8 @@ date (YYYY-MM-DD), day (day name), time (12h format), oneTime (true)';
 
 ## Future Enhancements (Optional)
 
-1. **Visual indicator** on calendar cells showing one-time overrides (e.g., blue border)
+1. **Visual indicator** on calendar cells showing one-time overrides (e.g., blue
+   border)
 2. **Bulk override creation** for multiple dates at once
 3. **Override history log** for audit purposes
 4. **Email notifications** when a one-time schedule is added
@@ -249,6 +255,5 @@ date (YYYY-MM-DD), day (day name), time (12h format), oneTime (true)';
 
 ---
 
-**Last Updated**: November 21, 2025  
-**Developer**: AI Agent (GitHub Copilot)  
+**Last Updated**: November 21, 2025 **Developer**: AI Agent (GitHub Copilot)
 **Production Ready**: ✅ Yes

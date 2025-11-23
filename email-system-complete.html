@@ -5320,7 +5320,13 @@ ARNOMA Team"
             const student = event.data.student;
             const groupName = event.data.groupName;
             const canceledDate = event.data.canceledDate;
-            const reason = event.data.reason || 'Schedule adjustment';
+            let reason = event.data.reason || 'Schedule adjustment';
+            
+            // Ensure reason is a string (handle Promise or object cases)
+            if (typeof reason === 'object') {
+              reason = 'Schedule adjustment';
+            }
+            reason = String(reason);
 
             // Format the date nicely (e.g., "Monday, November 25, 2025")
             const dateObj = new Date(canceledDate + 'T00:00:00');

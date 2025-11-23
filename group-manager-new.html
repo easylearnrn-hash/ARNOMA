@@ -1,0 +1,1522 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ARNOMA - Group Manager NEW [v2.21.0 - Complete Redesign]</title>
+    <!--
+      v2.21.0 - Complete Group Manager Redesign
+
+      DESIGN SYSTEM:
+      - Matches Student Manager NEW glassmorphism design
+      - Same card structure, neon glow, blur effects
+      - Same modal architecture (static blur + scrollable content)
+      - Same button styles and animations
+      - Same header system with gradient text
+      - Same hover/active effects
+
+      FEATURES:
+      - Group List with glassmorphism cards
+      - Add/Edit/Delete Group modals
+      - Group color picker with live preview
+      - Schedule editor (LA/Yerevan timezone support)
+      - Active/Inactive toggle
+      - Student count per group
+      - Search and filter functionality
+      - Responsive grid layout (3/2/1 columns)
+
+      MODAL FIXES (v2.20.2 - v2.20.6):
+      - Separated .modal-card (blur) from .modal-scroll (content)
+      - Removed backdrop-filter from all scrollable content
+      - Body scroll lock on modal open/close
+      - No blur flicker issues
+    -->
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        --dark-bg: #1a1d35;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #0f172a;
+        min-height: 100vh;
+        padding: 40px 20px;
+        color: white;
+      }
+
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background:
+          radial-gradient(circle at 20% 30%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+          radial-gradient(circle at 80% 70%, rgba(118, 75, 162, 0.12) 0%, transparent 50%);
+        animation: gradientShift 20s ease infinite;
+        z-index: -1;
+      }
+
+      @keyframes gradientShift {
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.85;
+          transform: scale(1.1);
+        }
+      }
+
+      /* ============================================
+         HEADER SECTION
+         ============================================ */
+
+      .header {
+        max-width: 1400px;
+        margin: 0 auto 40px;
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(16px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        padding: 24px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        position: relative;
+        z-index: 100;
+      }
+
+      .header-row-1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .header-actions {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+
+      .header-row-2 {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      .page-title {
+        font-size: 28px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #8ab4ff, #a855f7);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+      }
+
+      .page-subtitle {
+        font-size: 14px;
+        color: rgba(138, 180, 255, 0.7);
+        margin-top: 4px;
+        font-weight: 600;
+      }
+
+      /* Header Buttons */
+      .btn-header-primary {
+        position: relative;
+        padding: 11px 24px;
+        background: rgba(16, 185, 129, 0.15);
+        border: 2px solid rgba(16, 185, 129, 0.4);
+        border-radius: 12px;
+        color: #6ee7b7;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow:
+          0 0 15px rgba(16, 185, 129, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        font-family: inherit;
+        border-style: solid;
+      }
+
+      .btn-header-primary:hover {
+        background: rgba(16, 185, 129, 0.25);
+        border-color: #10b981;
+        color: #d1fae5;
+        transform: translateY(-2px) scale(1.02);
+        box-shadow:
+          0 0 25px rgba(16, 185, 129, 0.4),
+          0 4px 12px rgba(16, 185, 129, 0.3);
+      }
+
+      .btn-header-secondary {
+        position: relative;
+        padding: 11px 24px;
+        background: rgba(59, 130, 246, 0.15);
+        border: 2px solid rgba(59, 130, 246, 0.4);
+        border-radius: 12px;
+        color: #93c5fd;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow:
+          0 0 15px rgba(59, 130, 246, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        font-family: inherit;
+        border-style: solid;
+      }
+
+      .btn-header-secondary:hover {
+        background: rgba(59, 130, 246, 0.25);
+        border-color: #3b82f6;
+        color: #dbeafe;
+        transform: translateY(-2px) scale(1.02);
+        box-shadow:
+          0 0 25px rgba(59, 130, 246, 0.4),
+          0 4px 12px rgba(59, 130, 246, 0.3);
+      }
+
+      .search-input {
+        flex: 1;
+        min-width: 280px;
+        padding: 12px 18px 12px 44px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: white;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: 14px center;
+        background-size: 20px 20px;
+      }
+
+      .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .search-input:focus {
+        outline: none;
+        background-color: rgba(255, 255, 255, 0.06);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow:
+          inset 0 2px 4px rgba(0, 0, 0, 0.1),
+          0 0 0 4px rgba(138, 180, 255, 0.15);
+      }
+
+      .filter-select {
+        padding: 12px 36px 12px 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 2px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        color: white;
+        font-size: 14px;
+        font-weight: 600;
+        min-width: 170px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.5)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 10px center;
+        background-size: 20px 20px;
+        font-family: inherit;
+      }
+
+      .filter-select:hover {
+        background-color: rgba(255, 255, 255, 0.06);
+        border-color: rgba(255, 255, 255, 0.15);
+      }
+
+      .filter-select:focus {
+        outline: none;
+        background-color: rgba(255, 255, 255, 0.06);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow:
+          inset 0 2px 4px rgba(0, 0, 0, 0.1),
+          0 0 0 4px rgba(138, 180, 255, 0.15),
+          0 0 20px rgba(138, 180, 255, 0.2);
+      }
+
+      .filter-select option {
+        background: #1e293b;
+        color: white;
+        padding: 12px;
+      }
+
+      .btn-header-clear {
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        white-space: nowrap;
+        box-shadow:
+          0 0 10px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        font-family: inherit;
+        border-style: solid;
+      }
+
+      .btn-header-clear:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: translateY(-1px);
+        box-shadow:
+          0 0 15px rgba(255, 255, 255, 0.1),
+          0 4px 8px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.15);
+      }
+
+      /* ============================================
+         GROUP GRID
+         ============================================ */
+
+      .groups-grid {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+        gap: 24px;
+      }
+
+      /* ============================================
+         GROUP CARD
+         ============================================ */
+
+      .group-card {
+        position: relative;
+        background: rgba(26, 29, 53, 0.6);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        padding: 28px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+      }
+
+      .group-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 12px 48px rgba(102, 126, 234, 0.4);
+        border-color: rgba(102, 126, 234, 0.3);
+      }
+
+      .group-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 20px;
+      }
+
+      .group-icon-wrapper {
+        position: relative;
+        flex-shrink: 0;
+      }
+
+      .group-icon-orbit {
+        position: absolute;
+        inset: -8px;
+        border-radius: 24px;
+        border: 2px solid transparent;
+        background: linear-gradient(
+            135deg,
+            var(--group-color, rgba(102, 126, 234, 0.6)),
+            var(--group-color-light, rgba(118, 75, 162, 0.4))
+          )
+          border-box;
+        -webkit-mask:
+          linear-gradient(#fff 0 0) padding-box,
+          linear-gradient(#fff 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        animation: rotate 12s linear infinite;
+        pointer-events: none;
+      }
+
+      @keyframes rotate {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .group-icon {
+        position: relative;
+        width: 88px;
+        height: 88px;
+        border-radius: 20px;
+        background: var(--group-gradient, linear-gradient(135deg, #667eea 0%, #764ba2 100%));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        font-weight: 800;
+        color: white;
+        border: 3px solid rgba(255, 255, 255, 0.15);
+        box-shadow: 0 8px 24px var(--group-shadow, rgba(102, 126, 234, 0.4));
+      }
+
+      .group-toggle-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 8px;
+      }
+
+      .group-status-pill {
+        padding: 6px 14px;
+        border-radius: 10px;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+      }
+
+      .group-status-pill.active {
+        background: rgba(16, 185, 129, 0.15);
+        color: #6ee7b7;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        text-shadow:
+          0 0 8px rgba(94, 255, 108, 0.4),
+          0 0 16px rgba(94, 255, 108, 0.26);
+        box-shadow:
+          0 0 12px rgba(76, 175, 80, 0.3),
+          0 0 24px rgba(76, 175, 80, 0.2),
+          inset 0 0 8px rgba(94, 255, 108, 0.1);
+      }
+
+      .group-status-pill.inactive {
+        background: rgba(139, 92, 246, 0.15);
+        color: #c4b5fd;
+        border: 1px solid rgba(139, 92, 246, 0.3);
+      }
+
+      .elegant-toggle {
+        position: relative;
+        display: inline-block;
+        width: 40px;
+        height: 22px;
+      }
+
+      .elegant-toggle input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      .elegant-toggle-slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(255, 255, 255, 0.08);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 22px;
+        border: 1.5px solid rgba(255, 255, 255, 0.15);
+        box-shadow:
+          inset 0 2px 4px rgba(0, 0, 0, 0.2),
+          0 2px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      .elegant-toggle-slider:before {
+        position: absolute;
+        content: '';
+        height: 16px;
+        width: 16px;
+        left: 2px;
+        bottom: 2px;
+        background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
+        transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 50%;
+        box-shadow:
+          0 2px 6px rgba(0, 0, 0, 0.3),
+          inset 0 1px 2px rgba(255, 255, 255, 0.8);
+      }
+
+      .elegant-toggle input:checked + .elegant-toggle-slider {
+        background: linear-gradient(135deg, #8ab4ff 0%, #667eea 100%);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow:
+          0 0 12px rgba(138, 180, 255, 0.6),
+          0 0 24px rgba(138, 180, 255, 0.4),
+          inset 0 1px 2px rgba(255, 255, 255, 0.2);
+      }
+
+      .elegant-toggle input:checked + .elegant-toggle-slider:before {
+        transform: translateX(18px);
+      }
+
+      .group-info {
+        flex: 1;
+      }
+
+      .group-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 6px;
+        font-weight: 600;
+      }
+
+      .group-name {
+        font-size: 26px;
+        font-weight: 700;
+        line-height: 1.2;
+        margin-bottom: 12px;
+        color: white;
+      }
+
+      .group-meta {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+
+      .meta-badge {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 10px;
+        padding: 6px 12px;
+        font-size: 13px;
+        font-weight: 600;
+      }
+
+      .meta-badge.students {
+        color: #86efac;
+        background: rgba(16, 185, 129, 0.08);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+      }
+
+      .meta-badge.schedule {
+        color: #93c5fd;
+        background: rgba(59, 130, 246, 0.08);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+      }
+
+      .meta-badge svg {
+        width: 14px;
+        height: 14px;
+        opacity: 0.8;
+      }
+
+      .group-schedule {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.8;
+        margin-bottom: 16px;
+        min-height: 44px;
+        background: rgba(255, 255, 255, 0.03);
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-weight: 500;
+      }
+
+      .schedule-day {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: rgba(138, 180, 255, 0.1);
+        border: 1px solid rgba(138, 180, 255, 0.2);
+        border-radius: 8px;
+        color: #8ab4ff;
+        font-size: 13px;
+        font-weight: 600;
+        margin-right: 8px;
+        margin-bottom: 6px;
+        white-space: nowrap;
+      }
+
+      .schedule-time {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 700;
+      }
+
+      .schedule-empty {
+        color: rgba(255, 255, 255, 0.4);
+        font-style: italic;
+        text-align: center;
+      }
+
+      .group-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .btn-group-action {
+        padding: 8px 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-family: inherit;
+      }
+
+      .btn-group-action:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.25);
+        color: white;
+        transform: translateY(-1px);
+      }
+
+      .btn-group-action.edit {
+        color: #93c5fd;
+        border-color: rgba(59, 130, 246, 0.3);
+      }
+
+      .btn-group-action.edit:hover {
+        background: rgba(59, 130, 246, 0.15);
+        border-color: rgba(59, 130, 246, 0.5);
+      }
+
+      .btn-group-action.delete {
+        color: #fca5a5;
+        border-color: rgba(239, 68, 68, 0.3);
+      }
+
+      .btn-group-action.delete:hover {
+        background: rgba(239, 68, 68, 0.15);
+        border-color: rgba(239, 68, 68, 0.5);
+      }
+
+      /* ============================================
+         MODALS (Add/Edit/Delete)
+         ============================================ */
+
+      .modal-backdrop {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(12px);
+        z-index: 70000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .modal-backdrop.active {
+        display: flex;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      .modal-card {
+        background: rgba(26, 29, 53, 0.95);
+        backdrop-filter: blur(40px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 32px;
+        max-width: 650px;
+        width: 100%;
+        max-height: 90vh;
+        overflow: hidden;
+        box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6);
+        animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        display: flex;
+        flex-direction: column;
+      }
+
+      @keyframes slideUp {
+        from {
+          opacity: 0;
+          transform: scale(0.95) translateY(40px);
+        }
+        to {
+          opacity: 1;
+          transform: scale(1) translateY(0);
+        }
+      }
+
+      .modal-scroll {
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: 100%;
+      }
+
+      .modal-scroll::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .modal-scroll::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 0 32px 32px 0;
+      }
+
+      .modal-scroll::-webkit-scrollbar-thumb {
+        background: rgba(138, 180, 255, 0.3);
+        border-radius: 10px;
+      }
+
+      .modal-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(138, 180, 255, 0.5);
+      }
+
+      .modal-close {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        width: 36px;
+        height: 36px;
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+        padding: 0;
+        font-family: inherit;
+        color: white;
+        font-size: 28px;
+        line-height: 1;
+      }
+
+      .modal-close:hover {
+        background: rgba(255, 255, 255, 0.15);
+        transform: rotate(90deg);
+      }
+
+      .modal-header {
+        padding: 24px 32px;
+        background: linear-gradient(135deg, rgba(138, 180, 255, 0.15), rgba(168, 85, 247, 0.15));
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .modal-title {
+        font-size: 1.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #fff, #8ab4ff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .modal-body {
+        padding: 28px 32px;
+      }
+
+      .form-group {
+        margin-bottom: 24px;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 10px;
+        font-weight: 700;
+        color: rgba(255, 255, 255, 0.85);
+        font-size: 13px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .form-input,
+      .form-textarea {
+        width: 100%;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: white;
+        font-size: 14px;
+        font-family: inherit;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-sizing: border-box;
+      }
+
+      .form-input::placeholder,
+      .form-textarea::placeholder {
+        color: rgba(255, 255, 255, 0.35);
+      }
+
+      .form-input:focus,
+      .form-textarea:focus {
+        outline: none;
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(138, 180, 255, 0.5);
+        box-shadow:
+          0 0 0 4px rgba(138, 180, 255, 0.1),
+          0 0 20px rgba(138, 180, 255, 0.2);
+      }
+
+      .form-textarea {
+        min-height: 100px;
+        resize: vertical;
+      }
+
+      /* Color Picker */
+      .color-picker-grid {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 12px;
+        margin-top: 12px;
+      }
+
+      .color-option {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 12px;
+        border: 3px solid transparent;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+      }
+
+      .color-option:hover {
+        transform: scale(1.1);
+        border-color: rgba(255, 255, 255, 0.3);
+      }
+
+      .color-option.selected {
+        border-color: white;
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
+      }
+
+      .color-option.selected::after {
+        content: '✓';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: white;
+        font-size: 20px;
+        font-weight: 900;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+      }
+
+      .color-preview {
+        width: 100%;
+        height: 60px;
+        border-radius: 12px;
+        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 32px;
+        font-weight: 800;
+        color: white;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+        border: 3px solid rgba(255, 255, 255, 0.15);
+      }
+
+      .modal-footer {
+        padding: 24px 32px;
+        background: rgba(0, 0, 0, 0.15);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        display: flex;
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .btn-modal-save {
+        padding: 12px 28px;
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
+        border: 2px solid rgba(16, 185, 129, 0.5);
+        border-radius: 12px;
+        color: #6ee7b7;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+      }
+
+      .btn-modal-save:hover {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.4));
+        border-color: rgba(16, 185, 129, 0.7);
+        box-shadow: 0 0 25px rgba(16, 185, 129, 0.4);
+        transform: translateY(-2px);
+      }
+
+      .btn-modal-cancel {
+        padding: 12px 28px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+      }
+
+      .btn-modal-cancel:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.25);
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      .btn-modal-delete {
+        padding: 12px 28px;
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+        border: 2px solid rgba(239, 68, 68, 0.5);
+        border-radius: 12px;
+        color: #fca5a5;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
+        box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+      }
+
+      .btn-modal-delete:hover {
+        background: linear-gradient(135deg, rgba(239, 68, 68, 0.4), rgba(220, 38, 38, 0.4));
+        border-color: rgba(239, 68, 68, 0.7);
+        box-shadow: 0 0 25px rgba(239, 68, 68, 0.4);
+        transform: translateY(-2px);
+      }
+
+      /* Empty State */
+      .empty-state {
+        text-align: center;
+        padding: 80px 40px;
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      .empty-state-icon {
+        font-size: 72px;
+        margin-bottom: 20px;
+      }
+
+      .empty-state-title {
+        font-size: 24px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .empty-state-text {
+        font-size: 14px;
+        line-height: 1.6;
+      }
+
+      /* Responsive */
+      @media (max-width: 1024px) {
+        .groups-grid {
+          grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        }
+      }
+
+      @media (max-width: 768px) {
+        .groups-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .header-row-1,
+        .header-row-2 {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .header-actions {
+          width: 100%;
+          flex-wrap: wrap;
+        }
+
+        .search-input {
+          min-width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Header Section -->
+    <div class="header">
+      <div class="header-row-1">
+        <div>
+          <h1 class="page-title">📚 Group Manager</h1>
+          <div class="page-subtitle">Manage class groups and schedules</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn-header-primary" onclick="openAddGroupModal()">+ Add Group</button>
+          <button class="btn-header-secondary" onclick="openReorderModal()">↕️ Reorder</button>
+        </div>
+      </div>
+      <div class="header-row-2">
+        <input
+          type="text"
+          class="search-input"
+          id="searchInput"
+          placeholder="Search groups by name or schedule..."
+          oninput="filterGroups()"
+        />
+        <select class="filter-select" id="statusFilter" onchange="filterGroups()">
+          <option value="">All Groups</option>
+          <option value="active" selected>Active Only</option>
+          <option value="inactive">Inactive Only</option>
+        </select>
+        <select class="filter-select" id="sortSelect" onchange="sortGroups()">
+          <option value="name">Sort by Name</option>
+          <option value="students">Sort by Student Count</option>
+          <option value="recent">Recently Updated</option>
+        </select>
+        <button class="btn-header-clear" onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
+    <!-- Groups Grid -->
+    <div class="groups-grid" id="groupsGrid"></div>
+
+    <!-- Add/Edit Group Modal -->
+    <div id="groupModal" class="modal-backdrop" onclick="if(event.target.id==='groupModal'){closeGroupModal();}">
+      <div class="modal-card" onclick="event.stopPropagation()">
+        <button class="modal-close" onclick="closeGroupModal()">&times;</button>
+
+        <div class="modal-scroll">
+          <!-- Header -->
+          <div class="modal-header">
+            <h2 class="modal-title" id="modalTitle">Add New Group</h2>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body">
+            <!-- Group Name -->
+            <div class="form-group">
+              <label class="form-label">Group Name *</label>
+              <input type="text" class="form-input" id="groupNameInput" placeholder="e.g., Group A, Advanced Class" />
+            </div>
+
+            <!-- Group Color -->
+            <div class="form-group">
+              <label class="form-label">Group Color</label>
+              <div class="color-picker-grid" id="colorPicker"></div>
+              <div class="color-preview" id="colorPreview">📚</div>
+            </div>
+
+            <!-- Schedule -->
+            <div class="form-group">
+              <label class="form-label">Schedule</label>
+              <textarea
+                class="form-textarea"
+                id="scheduleInput"
+                placeholder="e.g., Monday 8:00 PM, Wednesday 8:00 PM"
+              ></textarea>
+              <div style="margin-top: 8px; font-size: 12px; color: rgba(255, 255, 255, 0.5)">
+                Format: Day Time, Day Time (e.g., Monday 8:00 PM, Wednesday 8:00 PM)
+              </div>
+            </div>
+
+            <!-- Timezone Info -->
+            <div class="form-group">
+              <label class="form-label">Timezone</label>
+              <div
+                style="
+                  padding: 12px 16px;
+                  background: rgba(59, 130, 246, 0.1);
+                  border: 1px solid rgba(59, 130, 246, 0.3);
+                  border-radius: 10px;
+                  color: #93c5fd;
+                  font-size: 13px;
+                  line-height: 1.6;
+                "
+              >
+                <strong>Base Timezone:</strong>
+                America/Los_Angeles (LA Time)
+                <br />
+                All schedules are stored in LA time and converted automatically for display.
+              </div>
+            </div>
+
+            <!-- Active Status -->
+            <div class="form-group">
+              <label class="form-label">Status</label>
+              <label class="elegant-toggle" onclick="event.stopPropagation()">
+                <input type="checkbox" id="activeToggle" checked />
+                <span class="elegant-toggle-slider"></span>
+              </label>
+              <span style="margin-left: 12px; font-size: 14px; color: rgba(255, 255, 255, 0.7)">
+                <span id="activeLabel">Active</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeGroupModal()">Cancel</button>
+            <button class="btn-modal-save" onclick="saveGroup()">Save Group</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal-backdrop" onclick="if(event.target.id==='deleteModal'){closeDeleteModal();}">
+      <div class="modal-card" onclick="event.stopPropagation()" style="max-width: 500px">
+        <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+
+        <div class="modal-scroll">
+          <!-- Header -->
+          <div class="modal-header">
+            <h2 class="modal-title">⚠️ Delete Group</h2>
+          </div>
+
+          <!-- Body -->
+          <div class="modal-body">
+            <div style="text-align: center; padding: 20px">
+              <div style="font-size: 64px; margin-bottom: 20px">🗑️</div>
+              <p style="font-size: 16px; line-height: 1.6; color: rgba(255, 255, 255, 0.8); margin-bottom: 16px">
+                Are you sure you want to delete
+                <strong id="deleteGroupName"></strong>
+                ?
+              </p>
+              <p style="font-size: 14px; color: rgba(255, 255, 255, 0.5)">This action cannot be undone.</p>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="modal-footer">
+            <button class="btn-modal-cancel" onclick="closeDeleteModal()">Cancel</button>
+            <button class="btn-modal-delete" onclick="confirmDelete()">Delete Group</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Demo Data - In production, this would come from Supabase
+      const groupColors = [
+        { name: 'Red', value: '#ef4444', gradient: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)' },
+        { name: 'Orange', value: '#f97316', gradient: 'linear-gradient(135deg, #f97316 0%, #ea580c 100%)' },
+        { name: 'Yellow', value: '#eab308', gradient: 'linear-gradient(135deg, #eab308 0%, #ca8a04 100%)' },
+        { name: 'Green', value: '#10b981', gradient: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' },
+        { name: 'Blue', value: '#3b82f6', gradient: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' },
+        { name: 'Purple', value: '#8b5cf6', gradient: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' },
+        { name: 'Pink', value: '#ec4899', gradient: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' },
+        { name: 'Cyan', value: '#06b6d4', gradient: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' },
+        { name: 'Teal', value: '#14b8a6', gradient: 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)' },
+        { name: 'Indigo', value: '#6366f1', gradient: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)' },
+        { name: 'Rose', value: '#f43f5e', gradient: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)' },
+        { name: 'Violet', value: '#a855f7', gradient: 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)' },
+      ];
+
+      let groups = [
+        {
+          id: 1,
+          name: 'Group A',
+          color: groupColors[0],
+          schedule: 'Monday 8:00 PM, Wednesday 8:00 PM',
+          studentCount: 12,
+          active: true,
+          updated_at: new Date(),
+        },
+        {
+          id: 2,
+          name: 'Group B',
+          color: groupColors[1],
+          schedule: 'Tuesday 7:00 PM, Thursday 7:00 PM',
+          studentCount: 8,
+          active: true,
+          updated_at: new Date(),
+        },
+        {
+          id: 3,
+          name: 'Group C',
+          color: groupColors[2],
+          schedule: 'Monday 6:00 PM, Friday 6:00 PM',
+          studentCount: 15,
+          active: false,
+          updated_at: new Date(),
+        },
+        {
+          id: 4,
+          name: 'Advanced Class',
+          color: groupColors[4],
+          schedule: 'Saturday 10:00 AM',
+          studentCount: 5,
+          active: true,
+          updated_at: new Date(),
+        },
+      ];
+
+      let currentGroup = null;
+      let groupToDelete = null;
+      let selectedColor = groupColors[0];
+
+      // Format schedule elegantly
+      function formatSchedule(scheduleString) {
+        if (!scheduleString || scheduleString.trim() === '') {
+          return '<div class="schedule-empty">No schedule set</div>';
+        }
+
+        // Split by comma and format each part
+        const parts = scheduleString.split(',').map(part => part.trim());
+
+        return parts
+          .map(part => {
+            // Try to extract day and time
+            const match = part.match(/^(\w+)\s+(.+)$/);
+            if (match) {
+              const day = match[1];
+              const time = match[2];
+              return `<span class="schedule-day">📅 ${day} <span class="schedule-time">${time}</span></span>`;
+            }
+            // If format doesn't match, just wrap it
+            return `<span class="schedule-day">${part}</span>`;
+          })
+          .join(' ');
+      }
+
+      // Initialize
+      function init() {
+        renderGroups();
+        renderColorPicker();
+        updateActiveToggleLabel();
+      }
+
+      // Render Groups
+      function renderGroups() {
+        const grid = document.getElementById('groupsGrid');
+        const filtered = getFilteredGroups();
+
+        if (filtered.length === 0) {
+          grid.innerHTML = `
+            <div class="empty-state" style="grid-column: 1 / -1;">
+              <div class="empty-state-icon">📚</div>
+              <div class="empty-state-title">No Groups Found</div>
+              <div class="empty-state-text">Click "Add Group" to create your first group</div>
+            </div>
+          `;
+          return;
+        }
+
+        grid.innerHTML = filtered
+          .map(
+            group => `
+          <div class="group-card" onclick="openEditGroupModal(${group.id})" style="--group-color: ${group.color.value}; --group-color-light: ${group.color.value}88; --group-gradient: ${group.color.gradient}; --group-shadow: ${group.color.value}66">
+            <div class="group-card-header">
+              <div class="group-icon-wrapper">
+                <div class="group-icon-orbit"></div>
+                <div class="group-icon">${group.name.charAt(group.name.length - 1)}</div>
+              </div>
+              <div class="group-toggle-wrapper">
+                <div class="group-status-pill ${group.active ? 'active' : 'inactive'}">
+                  ${group.active ? 'Active' : 'Inactive'}
+                </div>
+                <label class="elegant-toggle" onclick="event.stopPropagation()">
+                  <input type="checkbox" ${group.active ? 'checked' : ''} onchange="toggleGroupActive(${group.id}, this.checked)" />
+                  <span class="elegant-toggle-slider"></span>
+                </label>
+              </div>
+            </div>
+
+            <div class="group-info">
+              <div class="group-label">GROUP</div>
+              <div class="group-name">${group.name}</div>
+
+              <div class="group-meta">
+                <div class="meta-badge students">
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                  ${group.studentCount} students
+                </div>
+              </div>
+
+              <div class="group-schedule">
+                ${formatSchedule(group.schedule)}
+              </div>
+
+              <div class="group-actions">
+                <button class="btn-group-action edit" onclick="event.stopPropagation(); openEditGroupModal(${group.id})">
+                  ✏️ Edit
+                </button>
+                <button class="btn-group-action delete" onclick="event.stopPropagation(); openDeleteModal(${group.id})">
+                  🗑️ Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        `
+          )
+          .join('');
+      }
+
+      // Render Color Picker
+      function renderColorPicker() {
+        const picker = document.getElementById('colorPicker');
+        picker.innerHTML = groupColors
+          .map(
+            (color, index) => `
+          <div
+            class="color-option ${selectedColor.value === color.value ? 'selected' : ''}"
+            style="background: ${color.gradient}"
+            onclick="selectColor(${index})"
+          ></div>
+        `
+          )
+          .join('');
+        updateColorPreview();
+      }
+
+      // Select Color
+      function selectColor(index) {
+        selectedColor = groupColors[index];
+        renderColorPicker();
+      }
+
+      // Update Color Preview
+      function updateColorPreview() {
+        const preview = document.getElementById('colorPreview');
+        const nameInput = document.getElementById('groupNameInput');
+        if (preview) {
+          preview.style.background = selectedColor.gradient;
+          preview.style.boxShadow = `0 8px 24px ${selectedColor.value}66`;
+          // Show first letter of group name, or 📚 if empty
+          const displayText =
+            nameInput && nameInput.value.trim()
+              ? nameInput.value.trim().charAt(nameInput.value.trim().length - 1)
+              : '📚';
+          preview.textContent = displayText;
+        }
+      }
+
+      // Toggle Group Active Status
+      function toggleGroupActive(id, active) {
+        const group = groups.find(g => g.id === id);
+        if (group) {
+          group.active = active;
+          renderGroups();
+          console.log(`Group ${group.name} set to ${active ? 'active' : 'inactive'}`);
+        }
+      }
+
+      // Filter Groups
+      function getFilteredGroups() {
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+        const statusFilter = document.getElementById('statusFilter').value;
+
+        return groups.filter(group => {
+          const matchesSearch =
+            group.name.toLowerCase().includes(searchTerm) || (group.schedule || '').toLowerCase().includes(searchTerm);
+
+          const matchesStatus =
+            statusFilter === '' ||
+            (statusFilter === 'active' && group.active) ||
+            (statusFilter === 'inactive' && !group.active);
+
+          return matchesSearch && matchesStatus;
+        });
+      }
+
+      function filterGroups() {
+        renderGroups();
+      }
+
+      // Sort Groups
+      function sortGroups() {
+        const sortBy = document.getElementById('sortSelect').value;
+
+        if (sortBy === 'name') {
+          groups.sort((a, b) => a.name.localeCompare(b.name));
+        } else if (sortBy === 'students') {
+          groups.sort((a, b) => b.studentCount - a.studentCount);
+        } else if (sortBy === 'recent') {
+          groups.sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+        }
+
+        renderGroups();
+      }
+
+      // Clear Filters
+      function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('statusFilter').value = 'active';
+        document.getElementById('sortSelect').value = 'name';
+        renderGroups();
+      }
+
+      // Open Add Group Modal
+      function openAddGroupModal() {
+        currentGroup = null;
+        document.getElementById('modalTitle').textContent = 'Add New Group';
+        document.getElementById('groupNameInput').value = '';
+        document.getElementById('scheduleInput').value = '';
+        document.getElementById('activeToggle').checked = true;
+        selectedColor = groupColors[0];
+        renderColorPicker();
+        openGroupModal();
+      }
+
+      // Open Edit Group Modal
+      function openEditGroupModal(id) {
+        const group = groups.find(g => g.id === id);
+        if (!group) return;
+
+        currentGroup = group;
+        document.getElementById('modalTitle').textContent = 'Edit Group';
+        document.getElementById('groupNameInput').value = group.name;
+        document.getElementById('scheduleInput').value = group.schedule || '';
+        document.getElementById('activeToggle').checked = group.active;
+        selectedColor = group.color;
+        renderColorPicker();
+        openGroupModal();
+      }
+
+      // Open Group Modal
+      function openGroupModal() {
+        const modal = document.getElementById('groupModal');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+        updateActiveToggleLabel();
+
+        // Update preview when group name changes
+        const nameInput = document.getElementById('groupNameInput');
+        if (nameInput) {
+          nameInput.addEventListener('input', updateColorPreview);
+        }
+        updateColorPreview();
+      }
+
+      // Close Group Modal
+      function closeGroupModal() {
+        const modal = document.getElementById('groupModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+      }
+
+      // Update Active Toggle Label
+      function updateActiveToggleLabel() {
+        const toggle = document.getElementById('activeToggle');
+        const label = document.getElementById('activeLabel');
+        if (toggle && label) {
+          toggle.addEventListener('change', () => {
+            label.textContent = toggle.checked ? 'Active' : 'Inactive';
+          });
+          label.textContent = toggle.checked ? 'Active' : 'Inactive';
+        }
+      }
+
+      // Save Group
+      function saveGroup() {
+        const name = document.getElementById('groupNameInput').value.trim();
+        const schedule = document.getElementById('scheduleInput').value.trim();
+        const active = document.getElementById('activeToggle').checked;
+
+        if (!name) {
+          alert('Please enter a group name');
+          return;
+        }
+
+        if (currentGroup) {
+          // Update existing group
+          currentGroup.name = name;
+          currentGroup.schedule = schedule;
+          currentGroup.color = selectedColor;
+          currentGroup.active = active;
+          currentGroup.updated_at = new Date();
+          console.log('Group updated:', currentGroup);
+        } else {
+          // Add new group
+          const newGroup = {
+            id: groups.length + 1,
+            name,
+            schedule,
+            color: selectedColor,
+            studentCount: 0,
+            active,
+            updated_at: new Date(),
+          };
+          groups.push(newGroup);
+          console.log('Group added:', newGroup);
+        }
+
+        renderGroups();
+        closeGroupModal();
+      }
+
+      // Open Delete Modal
+      function openDeleteModal(id) {
+        groupToDelete = groups.find(g => g.id === id);
+        if (!groupToDelete) return;
+
+        document.getElementById('deleteGroupName').textContent = groupToDelete.name;
+        const modal = document.getElementById('deleteModal');
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+      }
+
+      // Close Delete Modal
+      function closeDeleteModal() {
+        const modal = document.getElementById('deleteModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+        groupToDelete = null;
+      }
+
+      // Confirm Delete
+      function confirmDelete() {
+        if (!groupToDelete) return;
+
+        groups = groups.filter(g => g.id !== groupToDelete.id);
+        console.log('Group deleted:', groupToDelete.name);
+        renderGroups();
+        closeDeleteModal();
+      }
+
+      // Open Reorder Modal (placeholder)
+      function openReorderModal() {
+        alert('Demo Mode: Reorder functionality would allow drag-and-drop group ordering');
+      }
+
+      // Initialize on load
+      init();
+    </script>
+  </body>
+</html>

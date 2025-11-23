@@ -11,12 +11,12 @@ ADD COLUMN IF NOT EXISTS one_time_schedules JSONB DEFAULT '[]'::jsonb;
 COMMENT ON COLUMN groups.one_time_schedules IS 'JSON array of one-time schedule overrides. Each object contains: date (YYYY-MM-DD), day (day name), time (12h format), oneTime (true)';
 
 -- Verify the column was added
-SELECT 
-  column_name, 
-  data_type, 
+SELECT
+  column_name,
+  data_type,
   column_default
-FROM information_schema.columns 
-WHERE table_name = 'groups' 
+FROM information_schema.columns
+WHERE table_name = 'groups'
   AND column_name = 'one_time_schedules';
 
 SELECT '✅ one_time_schedules column added successfully!' as status;

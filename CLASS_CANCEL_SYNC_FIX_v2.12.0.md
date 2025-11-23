@@ -2,9 +2,13 @@
 
 ## 🚨 Critical Issue Fixed
 
-**Problem**: When a class was canceled from the **Countdown Timer**, the main Smart Payment Calendar did NOT update to show the class as grayed out. The cancellation only worked properly when initiated from the **Calendar Sidebar**.
+**Problem**: When a class was canceled from the **Countdown Timer**, the main
+Smart Payment Calendar did NOT update to show the class as grayed out. The
+cancellation only worked properly when initiated from the **Calendar Sidebar**.
 
-**Root Cause**: The countdown timer was calculating the class date using **local system time** instead of **LA timezone**, causing a date mismatch between the cancellation request and the calendar data.
+**Root Cause**: The countdown timer was calculating the class date using **local
+system time** instead of **LA timezone**, causing a date mismatch between the
+cancellation request and the calendar data.
 
 ## ✅ Solution Implemented
 
@@ -25,6 +29,7 @@ nextClass = {
 ```
 
 **Why This Matters**:
+
 - The date is calculated ONCE when building the timer, using LA timezone
 - No need to recalculate later (which could use wrong timezone)
 - Guarantees exact match with calendar data
@@ -32,6 +37,7 @@ nextClass = {
 ### 2. Use Stored Date Instead of Recalculating
 
 **Before** (v2.11.0):
+
 ```javascript
 function confirmCancelClass() {
   const dateStr = calculateClassDate(pendingSkip.dayName, pendingSkip.laTime);
@@ -41,6 +47,7 @@ function confirmCancelClass() {
 ```
 
 **After** (v2.12.0):
+
 ```javascript
 function confirmCancelClass() {
   const dateStr = pendingSkip.classDate || calculateClassDate(...); // fallback
@@ -54,6 +61,7 @@ function confirmCancelClass() {
 Added `[CLASS CANCELLED]` logs throughout the cancellation flow:
 
 **When Initiating Cancellation**:
+
 ```
 [CLASS CANCELLED] Initiating cancellation: {
   source: 'COUNTDOWN_TIMER',
@@ -65,6 +73,7 @@ Added `[CLASS CANCELLED]` logs throughout the cancellation flow:
 ```
 
 **When Saving Cancellation**:
+
 ```
 [CLASS CANCELLED] ✅ Saved to skippedClasses: {
   groupName: 'Group A',
@@ -75,6 +84,7 @@ Added `[CLASS CANCELLED]` logs throughout the cancellation flow:
 ```
 
 **When Refreshing UI**:
+
 ```
 [CLASS CANCELLED] Refreshing calendar display...
 [CLASS CANCELLED] ✅ Calendar refreshed - class should now appear grayed out
@@ -91,6 +101,7 @@ CALENDAR SIDEBAR → cancelGroupClassFromSidebar() ─┘
 ```
 
 **Shared `cancelClass()` function**:
+
 1. ✅ Marks class as `type: 'class-canceled'` in `skippedClasses`
 2. ✅ Saves to Supabase via `saveSkippedClasses()`
 3. ✅ Refreshes countdown timer
@@ -100,11 +111,13 @@ CALENDAR SIDEBAR → cancelGroupClassFromSidebar() ─┘
 ## 📊 Expected Behavior
 
 ### Before Fix (v2.11.0)
+
 - ❌ Cancel from countdown timer → Calendar still shows active class
 - ✅ Cancel from sidebar → Calendar shows gray/strikethrough
 - ⚠️ Timezone mismatch causes wrong date to be canceled
 
 ### After Fix (v2.12.0)
+
 - ✅ Cancel from countdown timer → Calendar shows gray/strikethrough
 - ✅ Cancel from sidebar → Calendar shows gray/strikethrough
 - ✅ Both methods produce IDENTICAL results
@@ -115,17 +128,20 @@ CALENDAR SIDEBAR → cancelGroupClassFromSidebar() ─┘
 When a class is canceled, the calendar shows:
 
 **Calendar Cell**:
+
 - Gray background for entire cell
 - "⚫ CANCELED" label in cell header
 - Gray dots for all students in that class
 
 **Calendar Sidebar**:
+
 - Status: "Canceled" with 🚫 icon
 - Gray color (#94a3b8)
 - Excluded from paid/unpaid totals
 - Shows in "CANCELED" summary box
 
 **Countdown Timer**:
+
 - Canceled class is removed from upcoming list
 - Timer automatically shows next active class
 
@@ -155,6 +171,7 @@ When a class is canceled, the calendar shows:
    - Consistent with countdown timer flow
 
 ### Files Modified
+
 - `index.html` (v2.12.0)
 
 ## 🧪 Testing Checklist
@@ -175,6 +192,7 @@ When a class is canceled, the calendar shows:
 If cancellation doesn't sync:
 
 1. **Check Console Logs**:
+
    ```
    [CLASS CANCELLED] Initiating cancellation: ...
    [CLASS CANCELLED] ✅ Saved to skippedClasses: ...
@@ -200,8 +218,10 @@ If cancellation doesn't sync:
 
 - **Timezone Critical**: Always use LA timezone for date calculations
 - **Date Format**: Always `YYYY-MM-DD` (not locale-specific)
-- **Source Tracking**: Logs show whether canceled from `COUNTDOWN_TIMER` or `CALENDAR_SIDEBAR`
-- **Database Migration**: Ensure `skip_type` column exists (run `MIGRATION-CLASS-CANCELLATION-SUPPORT.sql`)
+- **Source Tracking**: Logs show whether canceled from `COUNTDOWN_TIMER` or
+  `CALENDAR_SIDEBAR`
+- **Database Migration**: Ensure `skip_type` column exists (run
+  `MIGRATION-CLASS-CANCELLATION-SUPPORT.sql`)
 
 ## 🎓 How It Works
 
@@ -218,8 +238,6 @@ If cancellation doesn't sync:
 
 ---
 
-**Version**: 2.12.0  
-**Date**: November 21, 2025  
-**Status**: ✅ Complete  
-**Breaking Changes**: None  
-**Migration Required**: No (but ensure `skip_type` column exists)
+**Version**: 2.12.0 **Date**: November 21, 2025 **Status**: ✅ Complete
+**Breaking Changes**: None **Migration Required**: No (but ensure `skip_type`
+column exists)

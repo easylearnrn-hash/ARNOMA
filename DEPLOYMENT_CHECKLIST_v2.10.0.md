@@ -1,8 +1,7 @@
 # One-Time Schedule Feature - Deployment Checklist
 
-**Version**: 2.10.0  
-**Date**: November 21, 2025  
-**Feature**: One-Time Schedule Override
+**Version**: 2.10.0 **Date**: November 21, 2025 **Feature**: One-Time Schedule
+Override
 
 ---
 
@@ -18,16 +17,17 @@ Run this SQL in Supabase SQL Editor:
 ALTER TABLE groups
 ADD COLUMN IF NOT EXISTS one_time_schedules JSONB DEFAULT '[]'::jsonb;
 
-COMMENT ON COLUMN groups.one_time_schedules IS 
-'JSON array of one-time schedule overrides. Each object contains: 
+COMMENT ON COLUMN groups.one_time_schedules IS
+'JSON array of one-time schedule overrides. Each object contains:
 date (YYYY-MM-DD), day (day name), time (12h format), oneTime (true)';
 ```
 
 **Verify**:
+
 ```sql
 SELECT column_name, data_type, column_default
-FROM information_schema.columns 
-WHERE table_name = 'groups' 
+FROM information_schema.columns
+WHERE table_name = 'groups'
   AND column_name = 'one_time_schedules';
 ```
 
@@ -71,7 +71,8 @@ Expected result: Column exists with type `jsonb` and default `'[]'::jsonb`
 
 1. Push `index.html` to production
 2. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
-3. Verify version in browser console: `ARNOMA v2.10.0 - One-Time Schedule Override`
+3. Verify version in browser console:
+   `ARNOMA v2.10.0 - One-Time Schedule Override`
 
 ---
 
@@ -89,7 +90,8 @@ Expected result: Column exists with type `jsonb` and default `'[]'::jsonb`
 8. Open browser DevTools Console
 9. Look for: `📅 Schedule Update Check: { ..., oneTimeSchedules: [...] }`
 
-**Expected**: 
+**Expected**:
+
 - No errors in console
 - One-time schedule saved successfully
 - `group.one_time_schedules` contains the override
@@ -102,6 +104,7 @@ Expected result: Column exists with type `jsonb` and default `'[]'::jsonb`
 4. Verify they do NOT appear on the regular day for that week
 
 **Expected**:
+
 - Calendar shows students on override date only
 - Regular schedule applies to all other weeks
 
@@ -109,9 +112,11 @@ Expected result: Column exists with type `jsonb` and default `'[]'::jsonb`
 
 1. Add a one-time override for today or a past date
 2. Reload the page
-3. Check browser console for: `🧹 Cleaned X expired one-time schedules from group...`
+3. Check browser console for:
+   `🧹 Cleaned X expired one-time schedules from group...`
 
 **Expected**:
+
 - Past overrides are automatically removed
 - Console shows cleanup message
 
@@ -126,6 +131,7 @@ Expected result: Column exists with type `jsonb` and default `'[]'::jsonb`
 5. Click **💾 Save**
 
 **Expected**:
+
 - Changes persist
 - Calendar updates immediately
 
@@ -137,6 +143,7 @@ Expected result: Column exists with type `jsonb` and default `'[]'::jsonb`
 4. Click **💾 Save**
 
 **Expected**:
+
 - Override removed from database
 - Calendar reverts to regular schedule
 
@@ -148,7 +155,8 @@ Watch browser console for:
 
 - ✅ `📅 Schedule Update Check:` – Shows schedule changes being saved
 - ✅ `🧹 Cleaned X expired one-time schedules` – Shows automatic cleanup
-- ✅ `✅ ARNOMA v2.10.0 - One-Time Schedule Override ✅` – Confirms correct version
+- ✅ `✅ ARNOMA v2.10.0 - One-Time Schedule Override ✅` – Confirms correct
+  version
 
 ---
 
@@ -178,7 +186,8 @@ Watch browser console for:
    ```
 3. Clear browser cache
 
-**Note**: Rolling back the database column will **delete all one-time overrides**. Only do this if absolutely necessary.
+**Note**: Rolling back the database column will **delete all one-time
+overrides**. Only do this if absolutely necessary.
 
 ---
 
@@ -208,7 +217,5 @@ Once all tests pass:
 
 ---
 
-**Deployed by**: _______________  
-**Date**: _______________  
-**Time**: _______________  
-**Production URL**: https://arnoma.app (or your domain)
+**Deployed by**: ******\_\_\_****** **Date**: ******\_\_\_****** **Time**:
+******\_\_\_****** **Production URL**: https://arnoma.app (or your domain)
