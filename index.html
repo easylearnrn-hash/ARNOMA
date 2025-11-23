@@ -3,14 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ARNOMA - Student Management [v2.20.6 - Modal Content Blur Fix]</title>
+    <title>ARNOMA - Student Management [v2.20.8 - Cancel Class DataCloneError Fix]</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate, max-age=0" />
     <parameter name="Pragma" content="no-cache" />
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.20.6" />
-    <meta name="build-timestamp" content="20251122-150000" />
+    <meta name="version" content="2.20.8" />
+    <meta name="build-timestamp" content="20251123-130000" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -93,7 +93,7 @@
       }, 300);
 
       // VERSION CHECK - This should appear FIRST in console
-      console.log('✅ ARNOMA v2.19.0 - Automatic Schedule Change Emails ✅');
+      console.log('✅ ARNOMA v2.20.8 - Cancel Class DataCloneError Fix ✅');
 
       // Supabase Client Initialization
       const SUPABASE_URL = 'https://zlvnxvrzotamhpezqedr.supabase.co';
@@ -3633,7 +3633,7 @@
       }
 
       /* ========== GLASSMORPHISM MODAL FORM ELEMENTS ========== */
-      
+
       .smn-modal-body {
         padding: 28px 32px;
       }
@@ -3676,7 +3676,9 @@
         outline: none;
         background: rgba(255, 255, 255, 0.06);
         border-color: rgba(138, 180, 255, 0.5);
-        box-shadow: 0 0 0 4px rgba(138, 180, 255, 0.1), 0 0 20px rgba(138, 180, 255, 0.2);
+        box-shadow:
+          0 0 0 4px rgba(138, 180, 255, 0.1),
+          0 0 20px rgba(138, 180, 255, 0.2);
       }
 
       .smn-form-textarea {
@@ -3715,7 +3717,9 @@
         background: rgba(138, 180, 255, 0.25);
         border-color: rgba(138, 180, 255, 0.6);
         color: #8ab4ff;
-        box-shadow: 0 0 15px rgba(138, 180, 255, 0.3), inset 0 1px 3px rgba(138, 180, 255, 0.2);
+        box-shadow:
+          0 0 15px rgba(138, 180, 255, 0.3),
+          inset 0 1px 3px rgba(138, 180, 255, 0.2);
       }
 
       .smn-modal-footer {
@@ -4997,7 +5001,11 @@
       </div>
 
       <!-- Add/Edit Student Modal -->
-      <div id="studentModal" class="smn-modal-backdrop" onclick="if(event.target.id==='studentModal'){closeStudentModal();}">
+      <div
+        id="studentModal"
+        class="smn-modal-backdrop"
+        onclick="if(event.target.id==='studentModal'){closeStudentModal();}"
+      >
         <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 600px">
           <!-- Header -->
           <div class="smn-glass-header-modal">
@@ -5011,151 +5019,152 @@
           <div class="smn-modal-scroll">
             <!-- Body -->
             <div class="smn-modal-body">
-            <!-- Student Name -->
-            <div class="smn-form-group">
-              <label class="smn-form-label">Student Name *</label>
-              <input
-                type="text"
-                id="studentName"
-                class="smn-form-input"
-                placeholder="Enter full name"
-                onkeydown="if(event.key==='Enter'){saveStudent();}"
-              />
-            </div>
-
-            <!-- Group Selection -->
-            <div class="smn-form-group">
-              <label class="smn-form-label">Group(s)</label>
-              <div class="smn-button-group">
-                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'A')">A</button>
-                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'B')">B</button>
-                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'C')">C</button>
-                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'D')">D</button>
-                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'E')">E</button>
-                <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'F')">F</button>
-              </div>
-              <input
-                type="text"
-                id="customGroups"
-                class="smn-form-input"
-                placeholder="Or enter custom groups (comma-separated, optional)"
-                onkeydown="if(event.key==='Enter'){saveStudent();}"
-              />
-            </div>
-
-            <!-- Pay Per Class -->
-            <div class="smn-form-group">
-              <label class="smn-form-label">Pay Per Class</label>
-              <div class="smn-button-group">
-                <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 25)">$25</button>
-                <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 50)">$50</button>
-                <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 75)">$75</button>
-                <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 100)">$100</button>
-              </div>
-              <input
-                type="number"
-                id="studentPay"
-                class="smn-form-input"
-                placeholder="Or enter custom amount"
-                onkeydown="if(event.key==='Enter'){saveStudent();}"
-              />
-            </div>
-
-            <!-- Credit Balance -->
-            <div class="smn-form-group">
-              <label class="smn-form-label" style="color: #eab308">💰 Credit Balance</label>
-              <div style="margin-bottom: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.5); line-height: 1.4">
-                Credit will auto-apply to upcoming classes until it reaches $0
-              </div>
-              <div style="position: relative">
-                <span
-                  style="
-                    position: absolute;
-                    left: 16px;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    color: #eab308;
-                    font-weight: 700;
-                    font-size: 16px;
-                    pointer-events: none;
-                  "
-                >
-                  $
-                </span>
+              <!-- Student Name -->
+              <div class="smn-form-group">
+                <label class="smn-form-label">Student Name *</label>
                 <input
-                  type="number"
-                  id="studentBalance"
+                  type="text"
+                  id="studentName"
                   class="smn-form-input"
-                  placeholder="0.00"
-                  step="0.01"
-                  min="0"
-                  style="
-                    padding-left: 38px;
-                    background: rgba(234, 179, 8, 0.1);
-                    border-color: rgba(234, 179, 8, 0.3);
-                    color: #eab308;
-                    font-weight: 700;
-                  "
+                  placeholder="Enter full name"
                   onkeydown="if(event.key==='Enter'){saveStudent();}"
                 />
               </div>
-              <div id="currentBalanceDisplay" style="margin-top: 8px; font-size: 11px; color: rgba(255, 255, 255, 0.4)"></div>
-            </div>
 
-            <!-- Phone -->
-            <div class="smn-form-group">
-              <label class="smn-form-label">Phone</label>
-              <input
-                type="tel"
-                id="studentPhone"
-                class="smn-form-input"
-                placeholder="(555) 123-4567"
-                onkeydown="if(event.key==='Enter'){saveStudent();}"
-              />
-            </div>
+              <!-- Group Selection -->
+              <div class="smn-form-group">
+                <label class="smn-form-label">Group(s)</label>
+                <div class="smn-button-group">
+                  <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'A')">A</button>
+                  <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'B')">B</button>
+                  <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'C')">C</button>
+                  <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'D')">D</button>
+                  <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'E')">E</button>
+                  <button class="smn-toggle-btn group-select-btn" onclick="toggleGroup(this, 'F')">F</button>
+                </div>
+                <input
+                  type="text"
+                  id="customGroups"
+                  class="smn-form-input"
+                  placeholder="Or enter custom groups (comma-separated, optional)"
+                  onkeydown="if(event.key==='Enter'){saveStudent();}"
+                />
+              </div>
 
-            <!-- Email -->
-            <div class="smn-form-group">
-              <label class="smn-form-label">
-                Email(s)
-                <span style="color: rgba(255, 255, 255, 0.4); font-weight: 400; font-size: 11px; text-transform: none">
-                  (comma-separated for multiple)
-                </span>
-              </label>
-              <input
-                type="text"
-                id="studentEmail"
-                class="smn-form-input"
-                placeholder="email1@example.com, email2@example.com"
-                onkeydown="if(event.key==='Enter'){saveStudent();}"
-              />
-              <div style="color: rgba(255, 255, 255, 0.4); font-size: 11px; margin-top: 8px">
-                💡 You can add multiple emails separated by commas. All emails will receive notifications.
+              <!-- Pay Per Class -->
+              <div class="smn-form-group">
+                <label class="smn-form-label">Pay Per Class</label>
+                <div class="smn-button-group">
+                  <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 25)">$25</button>
+                  <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 50)">$50</button>
+                  <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 75)">$75</button>
+                  <button class="smn-toggle-btn pay-select-btn" onclick="selectPayAmount(this, 100)">$100</button>
+                </div>
+                <input
+                  type="number"
+                  id="studentPay"
+                  class="smn-form-input"
+                  placeholder="Or enter custom amount"
+                  onkeydown="if(event.key==='Enter'){saveStudent();}"
+                />
+              </div>
+
+              <!-- Credit Balance -->
+              <div class="smn-form-group">
+                <label class="smn-form-label" style="color: #eab308">💰 Credit Balance</label>
+                <div style="margin-bottom: 10px; font-size: 12px; color: rgba(255, 255, 255, 0.5); line-height: 1.4">
+                  Credit will auto-apply to upcoming classes until it reaches $0
+                </div>
+                <div style="position: relative">
+                  <span
+                    style="
+                      position: absolute;
+                      left: 16px;
+                      top: 50%;
+                      transform: translateY(-50%);
+                      color: #eab308;
+                      font-weight: 700;
+                      font-size: 16px;
+                      pointer-events: none;
+                    "
+                  >
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    id="studentBalance"
+                    class="smn-form-input"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    style="
+                      padding-left: 38px;
+                      background: rgba(234, 179, 8, 0.1);
+                      border-color: rgba(234, 179, 8, 0.3);
+                      color: #eab308;
+                      font-weight: 700;
+                    "
+                    onkeydown="if(event.key==='Enter'){saveStudent();}"
+                  />
+                </div>
+                <div
+                  id="currentBalanceDisplay"
+                  style="margin-top: 8px; font-size: 11px; color: rgba(255, 255, 255, 0.4)"
+                ></div>
+              </div>
+
+              <!-- Phone -->
+              <div class="smn-form-group">
+                <label class="smn-form-label">Phone</label>
+                <input
+                  type="tel"
+                  id="studentPhone"
+                  class="smn-form-input"
+                  placeholder="(555) 123-4567"
+                  onkeydown="if(event.key==='Enter'){saveStudent();}"
+                />
+              </div>
+
+              <!-- Email -->
+              <div class="smn-form-group">
+                <label class="smn-form-label">
+                  Email(s)
+                  <span
+                    style="color: rgba(255, 255, 255, 0.4); font-weight: 400; font-size: 11px; text-transform: none"
+                  >
+                    (comma-separated for multiple)
+                  </span>
+                </label>
+                <input
+                  type="text"
+                  id="studentEmail"
+                  class="smn-form-input"
+                  placeholder="email1@example.com, email2@example.com"
+                  onkeydown="if(event.key==='Enter'){saveStudent();}"
+                />
+                <div style="color: rgba(255, 255, 255, 0.4); font-size: 11px; margin-top: 8px">
+                  💡 You can add multiple emails separated by commas. All emails will receive notifications.
+                </div>
+              </div>
+
+              <!-- Aliases -->
+              <div class="smn-form-group">
+                <label class="smn-form-label">Aliases (comma-separated)</label>
+                <input
+                  type="text"
+                  id="studentAliases"
+                  class="smn-form-input"
+                  placeholder="Nick, Nickname"
+                  onkeydown="if(event.key==='Enter'){saveStudent();}"
+                />
+              </div>
+
+              <!-- Notes -->
+              <div class="smn-form-group">
+                <label class="smn-form-label">Notes</label>
+                <textarea id="studentNotes" class="smn-form-textarea" placeholder="Additional notes..."></textarea>
               </div>
             </div>
-
-            <!-- Aliases -->
-            <div class="smn-form-group">
-              <label class="smn-form-label">Aliases (comma-separated)</label>
-              <input
-                type="text"
-                id="studentAliases"
-                class="smn-form-input"
-                placeholder="Nick, Nickname"
-                onkeydown="if(event.key==='Enter'){saveStudent();}"
-              />
-            </div>
-
-            <!-- Notes -->
-            <div class="smn-form-group">
-              <label class="smn-form-label">Notes</label>
-              <textarea
-                id="studentNotes"
-                class="smn-form-textarea"
-                placeholder="Additional notes..."
-              ></textarea>
-            </div>
-          </div>
           </div>
 
           <!-- Footer -->
@@ -5168,7 +5177,11 @@
 
       <!-- BEGIN BULK ADD STUDENTS FEATURE -->
       <!-- Bulk Add Students Modal -->
-      <div id="bulkAddStudentsModal" class="smn-modal-backdrop" onclick="if(event.target.id==='bulkAddStudentsModal'){closeBulkAddStudents();}">
+      <div
+        id="bulkAddStudentsModal"
+        class="smn-modal-backdrop"
+        onclick="if(event.target.id==='bulkAddStudentsModal'){closeBulkAddStudents();}"
+      >
         <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 750px">
           <!-- Header -->
           <div class="smn-glass-header-modal">
@@ -5183,38 +5196,49 @@
           <div class="smn-modal-scroll">
             <!-- Body -->
             <div class="smn-modal-body">
-            <div class="smn-info-box">
-              <strong>Flexible Format:</strong> One student per line — comma-separated or labeled
-              <br />
-              <code>Name, Email, Phone, Group, $Amount</code>
-              <br />
-              <code>Name (Alias), Email, Phone, Group, $Amount</code>
+              <div class="smn-info-box">
+                <strong>Flexible Format:</strong>
+                One student per line — comma-separated or labeled
+                <br />
+                <code>Name, Email, Phone, Group, $Amount</code>
+                <br />
+                <code>Name (Alias), Email, Phone, Group, $Amount</code>
+              </div>
+
+              <div
+                style="
+                  margin-bottom: 16px;
+                  padding: 10px;
+                  background: rgba(255, 255, 255, 0.03);
+                  border-radius: 10px;
+                  border: 1px solid rgba(255, 255, 255, 0.08);
+                  color: rgba(255, 255, 255, 0.5);
+                  font-size: 12px;
+                "
+              >
+                <strong style="color: rgba(255, 255, 255, 0.7)">Examples:</strong>
+                <br />
+                <span style="font-family: monospace; color: #8ab4ff">
+                  Hasmik Antonova (Level Up), Hasmik.Antonova@gmail.com, 909-555-4321, A, $100
+                </span>
+                <br />
+                <span style="font-family: monospace; color: #8ab4ff">
+                  Varduni Nerseyan, Varduni1982@yahoo.com, (818)299-7867, E, $100
+                </span>
+              </div>
+
+              <textarea
+                id="bulkStudentInput"
+                class="smn-form-textarea"
+                placeholder="Paste student records here (one per line)..."
+                style="min-height: 280px; font-family: monospace; line-height: 1.8"
+              ></textarea>
+
+              <div
+                id="bulkAddValidationMessage"
+                style="margin-top: 12px; padding: 10px; border-radius: 8px; display: none"
+              ></div>
             </div>
-
-            <div style="margin-bottom: 16px; padding: 10px; background: rgba(255, 255, 255, 0.03); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); color: rgba(255, 255, 255, 0.5); font-size: 12px">
-              <strong style="color: rgba(255, 255, 255, 0.7)">Examples:</strong>
-              <br />
-              <span style="font-family: monospace; color: #8ab4ff">
-                Hasmik Antonova (Level Up), Hasmik.Antonova@gmail.com, 909-555-4321, A, $100
-              </span>
-              <br />
-              <span style="font-family: monospace; color: #8ab4ff">
-                Varduni Nerseyan, Varduni1982@yahoo.com, (818)299-7867, E, $100
-              </span>
-            </div>
-
-            <textarea
-              id="bulkStudentInput"
-              class="smn-form-textarea"
-              placeholder="Paste student records here (one per line)..."
-              style="min-height: 280px; font-family: monospace; line-height: 1.8"
-            ></textarea>
-
-            <div
-              id="bulkAddValidationMessage"
-              style="margin-top: 12px; padding: 10px; border-radius: 8px; display: none"
-            ></div>
-          </div>
           </div>
 
           <!-- Footer -->
@@ -5227,7 +5251,11 @@
       <!-- END BULK ADD STUDENTS FEATURE -->
 
       <!-- Waiting List Modal -->
-      <div id="waitingListModal" class="smn-modal-backdrop" onclick="if(event.target.id==='waitingListModal'){closeWaitingList();}">
+      <div
+        id="waitingListModal"
+        class="smn-modal-backdrop"
+        onclick="if(event.target.id==='waitingListModal'){closeWaitingList();}"
+      >
         <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 1100px">
           <!-- Header -->
           <div class="smn-glass-header-modal">
@@ -5254,7 +5282,12 @@
       </div>
 
       <!-- Add Waiting List Student Modal -->
-      <div id="addWaitingListModal" class="smn-modal-backdrop" onclick="if(event.target.id==='addWaitingListModal'){closeAddWaitingList();}" style="z-index: 61000">
+      <div
+        id="addWaitingListModal"
+        class="smn-modal-backdrop"
+        onclick="if(event.target.id==='addWaitingListModal'){closeAddWaitingList();}"
+        style="z-index: 61000"
+      >
         <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 550px">
           <!-- Header -->
           <div class="smn-glass-header-modal">
@@ -5268,69 +5301,69 @@
           <div class="smn-modal-scroll">
             <!-- Body -->
             <div class="smn-modal-body">
-            <div class="smn-form-group">
-              <label class="smn-form-label">Full Name *</label>
-              <input
-                type="text"
-                id="waitingListFullName"
-                class="smn-form-input"
-                placeholder="Enter full name"
-                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-              />
-            </div>
+              <div class="smn-form-group">
+                <label class="smn-form-label">Full Name *</label>
+                <input
+                  type="text"
+                  id="waitingListFullName"
+                  class="smn-form-input"
+                  placeholder="Enter full name"
+                  onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+                />
+              </div>
 
-            <div class="smn-form-group">
-              <label class="smn-form-label">Email *</label>
-              <input
-                type="email"
-                id="waitingListEmail"
-                class="smn-form-input"
-                placeholder="Enter email address"
-                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-              />
-            </div>
+              <div class="smn-form-group">
+                <label class="smn-form-label">Email *</label>
+                <input
+                  type="email"
+                  id="waitingListEmail"
+                  class="smn-form-input"
+                  placeholder="Enter email address"
+                  onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+                />
+              </div>
 
-            <div class="smn-form-group">
-              <label class="smn-form-label">Phone Number *</label>
-              <input
-                type="tel"
-                id="waitingListPhone"
-                class="smn-form-input"
-                placeholder="Enter phone number"
-                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-              />
-            </div>
+              <div class="smn-form-group">
+                <label class="smn-form-label">Phone Number *</label>
+                <input
+                  type="tel"
+                  id="waitingListPhone"
+                  class="smn-form-input"
+                  placeholder="Enter phone number"
+                  onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+                />
+              </div>
 
-            <div class="smn-form-group">
-              <label class="smn-form-label">Preferred Language</label>
-              <input
-                type="text"
-                id="waitingListLanguage"
-                class="smn-form-input"
-                placeholder="e.g., English, Spanish, Armenian"
-                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-              />
-            </div>
+              <div class="smn-form-group">
+                <label class="smn-form-label">Preferred Language</label>
+                <input
+                  type="text"
+                  id="waitingListLanguage"
+                  class="smn-form-input"
+                  placeholder="e.g., English, Spanish, Armenian"
+                  onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+                />
+              </div>
 
-            <div class="smn-form-group">
-              <label class="smn-form-label">Preferred Start Date</label>
-              <input
-                type="date"
-                id="waitingListStartDate"
-                class="smn-form-input"
-                onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
-              />
-            </div>
+              <div class="smn-form-group">
+                <label class="smn-form-label">Preferred Start Date</label>
+                <input
+                  type="date"
+                  id="waitingListStartDate"
+                  class="smn-form-input"
+                  onkeydown="if(event.key==='Enter'){saveWaitingListStudent();}"
+                />
+              </div>
 
-            <div class="smn-form-group">
-              <label class="smn-form-label">Notes</label>
-              <textarea
-                id="waitingListNotes"
-                class="smn-form-textarea"
-                placeholder="Any additional information..."
-              ></textarea>
+              <div class="smn-form-group">
+                <label class="smn-form-label">Notes</label>
+                <textarea
+                  id="waitingListNotes"
+                  class="smn-form-textarea"
+                  placeholder="Any additional information..."
+                ></textarea>
+              </div>
             </div>
-          </div>
           </div>
 
           <!-- Footer -->
@@ -5342,7 +5375,11 @@
       </div>
 
       <!-- Duplicate Students Modal -->
-      <div id="duplicatesModal" class="smn-modal-backdrop" onclick="if(event.target.id==='duplicatesModal'){closeDuplicatesModal();}">
+      <div
+        id="duplicatesModal"
+        class="smn-modal-backdrop"
+        onclick="if(event.target.id==='duplicatesModal'){closeDuplicatesModal();}"
+      >
         <div class="smn-modal-card" onclick="event.stopPropagation()" style="max-width: 950px">
           <!-- Header -->
           <div class="smn-glass-header-modal">
@@ -13924,7 +13961,7 @@
           requestAnimationFrame(() => {
             modal.style.opacity = '1';
           });
-          
+
           // Lock body scroll
           document.body.style.overflow = 'hidden';
           // END POPUP BACK & EXIT FIX
@@ -13944,7 +13981,7 @@
           // END POPUP BACK & EXIT FIX
 
           editingStudentId = null;
-          
+
           // Restore body scroll
           document.body.style.overflow = '';
         }
@@ -14738,7 +14775,7 @@
 
           // Fade out animation
           modal.style.opacity = '0';
-          
+
           // Restore body scroll
           document.body.style.overflow = '';
 
@@ -15113,7 +15150,7 @@
           requestAnimationFrame(() => {
             modal.style.opacity = '1';
           });
-          
+
           // Lock body scroll
           document.body.style.overflow = 'hidden';
           // END POPUP BACK & EXIT FIX
@@ -15125,7 +15162,7 @@
           // BEGIN POPUP BACK & EXIT FIX
           // Fade out before hiding
           modal.style.opacity = '0';
-          
+
           // Restore body scroll
           document.body.style.overflow = '';
 
@@ -15163,7 +15200,7 @@
           requestAnimationFrame(() => {
             modal.style.opacity = '1';
           });
-          
+
           // Lock body scroll (parent modal already locked, but ensure it stays)
           document.body.style.overflow = 'hidden';
           // END POPUP BACK & EXIT FIX
@@ -15179,7 +15216,7 @@
           setTimeout(() => {
             modal.style.display = 'none';
             window.PopupManager?.activePopups?.delete('addWaitingListModal');
-            
+
             // Restore parent modal display but keep body scroll locked
             document.getElementById('waitingListModal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -15407,14 +15444,14 @@
           }
 
           document.getElementById('duplicatesModal').style.display = 'flex';
-          
+
           // Lock body scroll
           document.body.style.overflow = 'hidden';
         }
 
         function closeDuplicatesModal() {
           document.getElementById('duplicatesModal').style.display = 'none';
-          
+
           // Restore body scroll
           document.body.style.overflow = '';
         }
@@ -17366,14 +17403,14 @@
           if (!balance) return '0 $';
           const num = parseFloat(String(balance).replace(/[^0-9.-]/g, ''));
           if (isNaN(num)) return '0 $';
-          
+
           if (Math.abs(num) >= 1000) {
             const k = num / 1000;
             // Round to 1 decimal place if needed, but remove .0
             const formatted = Math.round(k * 10) / 10;
             return (formatted % 1 === 0 ? `${formatted | 0}K` : `${formatted}K`) + ' $';
           }
-          
+
           return String(Math.round(num)) + ' $';
         }
 
@@ -17382,18 +17419,18 @@
          */
         function smnParseEmailArray(emailField) {
           if (!emailField) return [];
-          
+
           // If it's already an array, use it
           if (Array.isArray(emailField)) {
             return emailField.filter(e => e && e.trim());
           }
-          
+
           // If it's a string, parse it
           let emailStr = String(emailField).trim();
-          
+
           // Remove array brackets and quotes if present: ["email"] or ['email']
           emailStr = emailStr.replace(/^\[|\]$/g, '').replace(/['"]/g, '');
-          
+
           // Split by comma and clean up
           return emailStr
             .split(',')
@@ -17406,15 +17443,15 @@
          */
         function smnFormatPhone(phone) {
           if (!phone) return '';
-          
+
           // Remove all non-digit characters
           const digits = String(phone).replace(/\D/g, '');
-          
+
           // Format as xxx-xxx-xxxx
           if (digits.length === 10) {
             return `${digits.slice(0, 3)}-${digits.slice(3, 6)}-${digits.slice(6)}`;
           }
-          
+
           // Return original if not 10 digits
           return phone;
         }
@@ -17456,10 +17493,7 @@
               updateData.price_per_class = '0';
             }
 
-            const { data, error } = await supabase
-              .from('students')
-              .update(updateData)
-              .eq('id', studentId);
+            const { data, error } = await supabase.from('students').update(updateData).eq('id', studentId);
 
             if (error) throw error;
 
@@ -17474,7 +17508,9 @@
               }
             }
 
-            console.log(`✅ Calendar visibility updated: ${isVisible ? 'ON' : 'OFF'}${!isVisible ? ' (price set to 0)' : ''}`);
+            console.log(
+              `✅ Calendar visibility updated: ${isVisible ? 'ON' : 'OFF'}${!isVisible ? ' (price set to 0)' : ''}`
+            );
 
             // Dispatch event for calendar to update
             window.dispatchEvent(
@@ -17552,7 +17588,7 @@
           const priceValue = smnCurrentStudent.price_per_class || '0';
           const priceFormatted = String(priceValue).replace(/\s*\$?\s*$/, '') + ' $';
           document.getElementById('smnModalPrice').textContent = priceFormatted;
-          
+
           document.getElementById('smnModalCredit').value = smnCurrentStudent.balance || '0 $';
           document.getElementById('smnModalPhone').value = smnFormatPhone(smnCurrentStudent.phone);
 
@@ -17585,21 +17621,26 @@
           });
 
           // Set active amount button
-          const currentPrice = String(smnCurrentStudent.price_per_class || '').replace(/\s*\$?\s*/g, '').trim();
+          const currentPrice = String(smnCurrentStudent.price_per_class || '')
+            .replace(/\s*\$?\s*/g, '')
+            .trim();
           document.querySelectorAll('#smnAmountButtons .smn-btn').forEach(btn => {
-            const amount = btn.querySelector('.smn-btn-txt').textContent.replace(/\s*\$?\s*/g, '').trim();
+            const amount = btn
+              .querySelector('.smn-btn-txt')
+              .textContent.replace(/\s*\$?\s*/g, '')
+              .trim();
             btn.classList.toggle('active', amount === currentPrice);
           });
 
           // Add auto-save on blur
           document.getElementById('smnModalCredit').onblur = smnAutoSaveField;
-          document.getElementById('smnModalPhone').onblur = function() {
+          document.getElementById('smnModalPhone').onblur = function () {
             // Save first
             smnAutoSaveField.call(this);
             // Then format for display (xxx-xxx-xxxx)
             this.value = smnFormatPhone(smnCurrentStudent.phone);
           };
-          document.getElementById('smnModalEmail').onblur = function() {
+          document.getElementById('smnModalEmail').onblur = function () {
             // Save first
             smnAutoSaveField.call(this);
             // Then format for display (one email per line)
@@ -17626,7 +17667,7 @@
 
           // Show modal
           document.getElementById('smnModalBackdrop').classList.add('active');
-          
+
           // Lock body scroll to prevent background scrolling
           document.body.style.overflow = 'hidden';
         }
@@ -17637,7 +17678,7 @@
         function closeSmnModal() {
           document.getElementById('smnModalBackdrop').classList.remove('active');
           smnCurrentStudent = null;
-          
+
           // Restore body scroll
           document.body.style.overflow = '';
         }
@@ -19550,8 +19591,10 @@
 
             // AUTO-SEND: Class Cancellation Email to all students in this group
             const studentsInGroup = window.studentsCache
-              ? window.studentsCache.filter(s => s.group && s.group.includes(groupName))
+              ? window.studentsCache.filter(s => s.group && s.group.includes(groupName) && s.status === 'active')
               : [];
+
+            console.log(`📧 [CLASS CANCELLED] Found ${studentsInGroup.length} active students in group ${groupName}`);
 
             if (studentsInGroup.length > 0) {
               console.log(
@@ -19559,34 +19602,53 @@
               );
 
               const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+              console.log('📧 [AUTO-EMAIL] Email iframe found:', !!emailFrame);
+              
               if (emailFrame && emailFrame.contentWindow) {
+                let emailsSent = 0;
                 studentsInGroup.forEach(student => {
                   if (student.email) {
-                    emailFrame.contentWindow.postMessage(
-                      {
-                        action: 'sendClassCancellationEmail',
-                        student: {
-                          name: student.name,
-                          email: student.email,
-                        },
-                        groupName: groupName,
-                        canceledDate: dateStr,
-                        reason: note || 'Schedule adjustment',
+                    console.log(`📧 [AUTO-EMAIL] Sending to ${student.name} (${student.email})`);
+                    
+                    // Create a plain object with only the necessary string values to avoid DataCloneError
+                    const emailData = {
+                      action: 'sendClassCancellationEmail',
+                      student: {
+                        name: String(student.name || ''),
+                        email: String(student.email || ''),
                       },
-                      '*'
-                    );
+                      groupName: String(groupName || ''),
+                      canceledDate: String(dateStr || ''),
+                      reason: String(note || 'Schedule adjustment'),
+                    };
+                    
+                    try {
+                      emailFrame.contentWindow.postMessage(emailData, '*');
+                      emailsSent++;
+                      console.log(`✅ [AUTO-EMAIL] Email request sent for ${student.name}`);
+                    } catch (error) {
+                      console.error(`❌ [AUTO-EMAIL] Failed to send email for ${student.name}:`, error);
+                    }
+                  } else {
+                    console.warn(`⚠️ [AUTO-EMAIL] Student ${student.name} has no email address`);
                   }
                 });
 
+                console.log(`✅ [AUTO-EMAIL] Sent ${emailsSent} cancellation email requests`);
+
                 if (window.showNotificationSimple) {
                   showNotificationSimple(
-                    `📧 Cancellation emails sent to ${studentsInGroup.length} student${studentsInGroup.length !== 1 ? 's' : ''}`,
+                    `📧 Cancellation emails sent to ${emailsSent} student${emailsSent !== 1 ? 's' : ''}`,
                     'success'
                   );
                 }
               } else {
-                console.warn('⚠️ Email iframe not found, cannot send cancellation emails');
+                console.error('❌ [AUTO-EMAIL] Email iframe not found or not ready');
+                console.error('   - Make sure email-system-complete.html is loaded in an iframe');
+                alert('⚠️ Email system not ready. Cancellation emails could not be sent.\n\nPlease ensure the email iframe is loaded.');
               }
+            } else {
+              console.log(`ℹ️ [CLASS CANCELLED] No active students found in ${groupName} - no emails to send`);
             }
 
             // Refresh timer display
@@ -22982,11 +23044,11 @@
 
         // Cancel class for a specific group from the sidebar
         function cancelGroupClassFromSidebar(groupName, dateStr) {
-          // console.log('[CLASS CANCELLED] Initiating cancellation:', {
-          //   source: 'CALENDAR_SIDEBAR',
-          //   group: groupName,
-          //   date: dateStr,
-          // });
+          console.log('[CLASS CANCELLED] 🚨 Cancel button clicked:', {
+            source: 'CALENDAR_SIDEBAR',
+            group: groupName,
+            date: dateStr,
+          });
 
           const dateObj = new Date(dateStr);
           const dateDisplay = dateObj.toLocaleDateString('en-US', {
@@ -23006,22 +23068,29 @@
 
           // User clicked Cancel
           if (reason === null) {
-            //             console.log('[CLASS CANCELLED] User canceled the cancellation prompt');
+            console.log('[CLASS CANCELLED] ℹ️ User canceled the cancellation prompt');
             return;
           }
 
+          console.log('[CLASS CANCELLED] ✅ User confirmed cancellation. Reason:', reason || '(none provided)');
+
           // Cancel the class
           if (window.SkipClassManager && window.SkipClassManager.cancelClass) {
+            console.log('[CLASS CANCELLED] 📞 Calling SkipClassManager.cancelClass()...');
             const success = window.SkipClassManager.cancelClass(groupName, dateStr, reason || 'Class canceled');
 
             if (success) {
-              // console.log('[CLASS CANCELLED] ✅ Successfully canceled via CALENDAR_SIDEBAR:', {
-              //   group: groupName,
-              //   date: dateStr,
-              //   reason: reason || 'Class canceled',
-              // });
+              console.log('[CLASS CANCELLED] ✅ Successfully canceled via CALENDAR_SIDEBAR:', {
+                group: groupName,
+                date: dateStr,
+                reason: reason || 'Class canceled',
+              });
+              
+              // Show success message
+              alert(`✅ Class canceled successfully!\n\nGroup: ${groupName}\nDate: ${dateDisplay}\n\nCancellation emails have been sent to all students.`);
             } else {
               console.error('[CLASS CANCELLED] ❌ Failed to cancel class');
+              alert('❌ Failed to cancel class. Please check the console for errors.');
             }
 
             // Refresh the sidebar to show updated status
