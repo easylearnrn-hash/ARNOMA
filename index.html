@@ -9693,16 +9693,20 @@
             return;
           }
 
+          console.log('✅ Token validation passed, looking for syncBtn...');
           const btn = document.getElementById('syncBtn');
           if (!btn) {
-            console.error('syncBtn element not found');
+            console.error('❌ syncBtn element not found');
             return;
           }
+          
+          console.log('✅ syncBtn found, disabling and starting fetch...');
           btn.disabled = true;
           const originalText = btn.innerHTML;
           btn.innerHTML = '⏳';
 
           try {
+            console.log('📧 Showing notification and preparing query...');
             showNotification("🔍 Fetching today's payment emails...", 'info');
 
             const today = new Date();
@@ -9712,10 +9716,12 @@
             const query = `from:usbank@notifications.usbank.com subject:Zelle after:${afterDate}`;
             const searchUrl = `https://gmail.googleapis.com/gmail/v1/users/me/messages?q=${encodeURIComponent(query)}&maxResults=100`;
 
+            console.log('🌐 Fetching from Gmail API:', searchUrl);
             const searchResponse = await fetch(searchUrl, {
               headers: { Authorization: `Bearer ${gmailAccessToken}` },
             });
 
+            console.log('📬 Gmail API response status:', searchResponse.status);
             if (!searchResponse.ok) {
               if (searchResponse.status === 401) {
                 localStorage.removeItem(STORAGE_KEYS.GMAIL_TOKEN);
@@ -9729,13 +9735,16 @@
 
             const searchData = await searchResponse.json();
 
+            console.log('📊 Search results:', searchData.messages ? searchData.messages.length : 0, 'messages found');
             if (!searchData.messages || searchData.messages.length === 0) {
+              console.log('📭 No payment emails found for today');
               showNotification('📭 No payment emails found today', 'info');
               btn.disabled = false;
               btn.innerHTML = originalText;
               return;
             }
 
+            console.log('🔄 Processing', searchData.messages.length, 'messages...');
             const existingPayments = PaymentStore.getAll();
             const existingPaymentsForCheck = [...existingPayments]; // Keep original for duplicate checking
 
