@@ -73,7 +73,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="3.13.1">
+    <meta name="version" content="3.14.0">
     <title>ARNOMA Email System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -991,10 +991,11 @@
                             <div id="previewBody" contenteditable="true" style="color: #333; outline: none; cursor: text;"
                                  oninput="syncPreviewToCode()"
                                  onpaste="handlePreviewPaste(event)"
+                                 onclick="syncCursorFromPreviewToCode(event)"
                                  onmouseup="savePreviewSelection()"
                                  onkeyup="savePreviewSelection()"
                                  onfocus="savePreviewSelection()"
-                                 title="✏️ Click to edit - changes sync to code automatically">
+                                 title="✏️ Click to edit - changes sync to code automatically | Click any element to jump to code">
                                 Start typing to see your email preview with sample student data...
                             </div>
                         </div>
@@ -2323,8 +2324,20 @@
             closeEditor();
         }
         function closeEditor() {
-            document.getElementById('editorModal').classList.remove('active');
+            const modal = document.getElementById('editorModal');
+            modal.classList.remove('active');
+            
+            // Comprehensive cleanup to prevent any visual glitches
             document.body.style.overflow = '';
+            document.body.style.filter = '';
+            document.body.style.backdropFilter = '';
+            document.body.style.webkitBackdropFilter = '';
+            
+            // Clear modal dataset
+            delete modal.dataset.editingId;
+            
+            // Force repaint to ensure overlay fully disappears
+            void document.body.offsetHeight;
         }
 
         // ============================================================
@@ -2479,8 +2492,7 @@
 
         function insertInfoBox() {
             const textarea = document.getElementById('htmlBodyEditor');
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
+            const previewBody = document.getElementById('previewBody');
 
             const infoBoxHTML = `
 <div style="background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border: 2px solid rgba(102,126,234,0.3); border-radius: 16px; padding: 20px; margin: 24px 0; backdrop-filter: blur(10px);">
@@ -2489,14 +2501,46 @@
     <p style="margin: 8px 0;"><strong>Detail:</strong> Add details here</p>
 </div>`;
 
-            textarea.value = textarea.value.substring(0, start) + infoBoxHTML + textarea.value.substring(end);
-
-            textarea.focus();
-            textarea.selectionStart = start;
-            textarea.selectionEnd = start + infoBoxHTML.length;
-
-            // Update preview after inserting info box
-            updatePreview();
+            // Check if preview is focused - insert there instead
+            if (document.activeElement === previewBody) {
+                // Insert into contenteditable preview
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0) {
+                    const range = selection.getRangeAt(0);
+                    range.deleteContents();
+                    
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = infoBoxHTML;
+                    const fragment = document.createDocumentFragment();
+                    while (tempDiv.firstChild) {
+                        fragment.appendChild(tempDiv.firstChild);
+                    }
+                    range.insertNode(fragment);
+                    
+                    // Sync back to code editor
+                    syncPreviewToCode();
+                    console.log('✅ Info box inserted into preview and synced to code');
+                } else {
+                    // Fallback: append to end of preview
+                    previewBody.innerHTML += infoBoxHTML;
+                    syncPreviewToCode();
+                    console.log('✅ Info box appended to preview (no selection)');
+                }
+            } else {
+                // Insert into code editor (textarea)
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                
+                textarea.value = textarea.value.substring(0, start) + infoBoxHTML + textarea.value.substring(end);
+                
+                textarea.focus();
+                textarea.selectionStart = start;
+                textarea.selectionEnd = start + infoBoxHTML.length;
+                
+                // Update preview after inserting info box
+                updatePreview();
+                console.log('✅ Info box inserted into code editor');
+            }
         }
 
         // ============================================================
@@ -2591,6 +2635,77 @@
             if (document.activeElement === previewBody) {
                 lastPreviewSelection = window.getSelection();
                 console.log('💾 Preview selection saved');
+            }
+        }
+
+        function syncCursorFromPreviewToCode(event) {
+            const previewBody = document.getElementById('previewBody');
+            const codeEditor = document.getElementById('htmlBodyEditor');
+            
+            if (!previewBody || !codeEditor) return;
+
+            try {
+                // Get the clicked element and its path in the DOM
+                const clickedElement = event.target;
+                
+                // Get the outer HTML of the clicked element (or closest parent with a tag)
+                let targetElement = clickedElement;
+                while (targetElement && targetElement !== previewBody && targetElement.nodeType !== 1) {
+                    targetElement = targetElement.parentNode;
+                }
+                
+                if (!targetElement || targetElement === previewBody) {
+                    console.log('📍 Click was on preview root, skipping sync');
+                    return;
+                }
+
+                // Get the element's outer HTML as search string
+                const targetHTML = targetElement.outerHTML;
+                
+                // Try to find this HTML in the code editor
+                const codeContent = codeEditor.value;
+                const position = codeContent.indexOf(targetHTML);
+                
+                if (position !== -1) {
+                    // Found exact match - set cursor to beginning of this element
+                    codeEditor.focus();
+                    codeEditor.selectionStart = position;
+                    codeEditor.selectionEnd = position;
+                    
+                    // Scroll textarea to show the cursor
+                    // Calculate approximate line number
+                    const textBeforeCursor = codeContent.substring(0, position);
+                    const lineNumber = (textBeforeCursor.match(/\n/g) || []).length;
+                    const lineHeight = 20; // Approximate line height
+                    const scrollPosition = lineNumber * lineHeight - 100; // Offset to show context
+                    
+                    codeEditor.scrollTop = Math.max(0, scrollPosition);
+                    
+                    console.log(`✅ Synced cursor to code editor at position ${position} (line ~${lineNumber + 1})`);
+                } else {
+                    // Try to find a partial match or tag name
+                    const tagName = targetElement.tagName.toLowerCase();
+                    const searchPattern = `<${tagName}`;
+                    const firstMatch = codeContent.indexOf(searchPattern);
+                    
+                    if (firstMatch !== -1) {
+                        codeEditor.focus();
+                        codeEditor.selectionStart = firstMatch;
+                        codeEditor.selectionEnd = firstMatch;
+                        
+                        const textBeforeCursor = codeContent.substring(0, firstMatch);
+                        const lineNumber = (textBeforeCursor.match(/\n/g) || []).length;
+                        const lineHeight = 20;
+                        const scrollPosition = lineNumber * lineHeight - 100;
+                        codeEditor.scrollTop = Math.max(0, scrollPosition);
+                        
+                        console.log(`⚠️ Exact match not found, jumped to first <${tagName}> tag at position ${firstMatch}`);
+                    } else {
+                        console.log('❌ Could not find element in code');
+                    }
+                }
+            } catch (error) {
+                console.error('❌ Error syncing cursor from preview to code:', error);
             }
         }
 
