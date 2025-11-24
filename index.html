@@ -9323,15 +9323,21 @@
         // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
         // Gmail connection stability - check and refresh token automatically
         async function ensureGmailTokenValid() {
+          console.log('🔍 ensureGmailTokenValid() called');
+          
           // If token is not loaded in memory, try to reload from storage
           if (!gmailAccessToken) {
+            console.log('⚠️ No token in memory, attempting to reload from storage...');
             const connection = getGmailConnection();
+            console.log('Connection from storage:', connection ? 'Found' : 'Not found');
+            
             if (connection && connection.access_token) {
               gmailAccessToken = connection.access_token;
               gmailTokenExpiry = connection.expiry_date.toString();
-              debugLog('✅ Gmail token reloaded from storage');
+              console.log('✅ Gmail token reloaded from storage');
             } else {
               // Still no token available
+              console.error('❌ No token available in storage');
               return false;
             }
           }
@@ -9675,9 +9681,14 @@
         }
 
         async function fetchTodaysEmails() {
+          console.log('☁️ Fetch Today\'s Emails button clicked');
+          
           // Check token validity before attempting sync
           const isValid = await ensureGmailTokenValid();
+          console.log('Token valid:', isValid, 'gmailAccessToken exists:', !!gmailAccessToken);
+          
           if (!isValid || !gmailAccessToken) {
+            console.error('❌ Gmail not connected or token invalid');
             showNotification('⚠️ Please connect Gmail first', 'warning');
             return;
           }
