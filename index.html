@@ -9702,6 +9702,7 @@
           
           console.log('✅ syncBtn found, disabling and starting fetch...');
           btn.disabled = true;
+          btn.classList.add('spinning'); // Add spinning animation
           const originalText = btn.innerHTML;
           btn.innerHTML = '⏳';
 
@@ -9739,6 +9740,7 @@
             if (!searchData.messages || searchData.messages.length === 0) {
               console.log('📭 No payment emails found for today');
               showNotification('📭 No payment emails found today', 'info');
+              btn.classList.remove('spinning'); // Remove spinning animation
               btn.disabled = false;
               btn.innerHTML = originalText;
               return;
@@ -9797,6 +9799,7 @@
             console.error("Error fetching today's emails:", error);
             showNotification('❌ Error: ' + error.message, 'error');
           } finally {
+            btn.classList.remove('spinning'); // Remove spinning animation
             btn.disabled = false;
             btn.innerHTML = originalText;
           }
