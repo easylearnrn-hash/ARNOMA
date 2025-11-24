@@ -73,7 +73,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="3.19.0">
+    <meta name="version" content="3.19.1">
     <title>ARNOMA Email System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -2262,6 +2262,9 @@
         function openEditor() {
             document.getElementById('editorModal').classList.add('active');
             document.body.style.overflow = 'hidden';
+            
+            // Initialize preview-to-editor cursor sync (v3.19.0)
+            setTimeout(initPreviewToEditorSync, 100);
         }
 
         function saveTemplate() {
@@ -2776,14 +2779,6 @@
                 console.log('✅ Preview-to-editor cursor sync initialized');
             }
         }
-
-        // Call init when editor opens
-        const originalOpenEditor = openEditor;
-        function openEditor() {
-            originalOpenEditor();
-            setTimeout(initPreviewToEditorSync, 100);
-        }
-
 
         function openAutomations() {
             document.getElementById('automationsModal').classList.add('active');

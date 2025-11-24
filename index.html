@@ -9,8 +9,8 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.20.9" />
-    <meta name="build-timestamp" content="20251123-131500" />
+    <meta name="version" content="2.21.2" />
+    <meta name="build-timestamp" content="20251123-152500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
       (function () {
@@ -326,6 +326,15 @@
       window.paymentsCache = [];
       window.studentsCache = [];
       window.groupsCache = [];
+
+      // PERFORMANCE: Cache email iframe reference to avoid 20+ DOM queries
+      window.emailIframe = null;
+      window.getEmailIframe = function () {
+        if (!window.emailIframe || !document.body.contains(window.emailIframe)) {
+          window.emailIframe = document.querySelector('iframe[src*="email-system-complete.html"]');
+        }
+        return window.emailIframe;
+      };
 
       // ============================================================================
       // LOS ANGELES TIMEZONE UTILITIES
@@ -5553,15 +5562,24 @@
         style="
           display: none;
           position: fixed;
-          background: rgba(17, 24, 39, 0.95);
-          backdrop-filter: blur(20px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 14px;
-          padding: 12px 16px;
-          font-size: 0.9rem;
-          color: white;
+          background: linear-gradient(135deg, rgba(17, 24, 39, 0.92) 0%, rgba(31, 41, 55, 0.88) 100%);
+          backdrop-filter: blur(16px) saturate(180%);
+          -webkit-backdrop-filter: blur(16px) saturate(180%);
+          border: 1px solid rgba(138, 180, 255, 0.25);
+          border-radius: 16px;
+          padding: 14px 20px;
+          font-size: 13px;
+          color: rgba(255, 255, 255, 0.95);
           z-index: 60000;
-          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+          box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.4),
+            0 2px 8px rgba(138, 180, 255, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.1);
+          pointer-events: none;
+          transition:
+            opacity 0.2s ease,
+            transform 0.2s ease;
+          line-height: 1.5;
         "
       ></div>
 
@@ -9305,7 +9323,18 @@
         // BEGIN PAYMENT RECORDS ORDER & HIGHLIGHT FIX
         // Gmail connection stability - check and refresh token automatically
         async function ensureGmailTokenValid() {
-          if (!gmailAccessToken) return false;
+          // If token is not loaded in memory, try to reload from storage
+          if (!gmailAccessToken) {
+            const connection = getGmailConnection();
+            if (connection && connection.access_token) {
+              gmailAccessToken = connection.access_token;
+              gmailTokenExpiry = connection.expiry_date.toString();
+              debugLog('✅ Gmail token reloaded from storage');
+            } else {
+              // Still no token available
+              return false;
+            }
+          }
 
           // Check if token is about to expire (within 5 minutes)
           const expiry = parseInt(gmailTokenExpiry || '0');
@@ -10659,7 +10688,7 @@
           try {
             verboseLog('[AliasEmail] 📧 Sending alias added email to:', student.name, 'Alias:', aliasAdded);
 
-            const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
+            const emailFrame = window.getEmailIframe();
             if (!emailFrame) {
               console.error('[AliasEmail] ❌ Email system iframe not found');
               return { success: false, error: 'Email system not loaded' };
@@ -11661,14 +11690,10 @@
 
         function startAutoRefresh() {
           stopAutoRefresh();
-          autoRefreshInterval = setInterval(() => {
-            // Don't auto-refresh if Gmail is not connected
-            if (!getGmailConnection()) {
-              debugLog('⏸️ Skipping auto-refresh - Gmail not connected');
-              return;
-            }
+          autoRefreshInterval = setInterval(async () => {
+            // refreshPayments() will handle token validation and refresh via ensureGmailTokenValid()
             debugLog('🔄 Auto-refreshing payments...');
-            refreshPayments();
+            await refreshPayments();
           }, TIMING.AUTO_REFRESH_INTERVAL);
         }
 
@@ -15662,8 +15687,9 @@
             </label>
           </div>
           <div class="schedule-display">
-            ${group.schedule ? renderScheduleSlots(group.schedule) : '<em style="color:#94a3b8;font-size:0.9rem;">No schedule set</em>'}
+            ${group.schedule ? renderScheduleSlots(group.schedule) : ''}
             ${group.one_time_schedules && group.one_time_schedules.length > 0 ? renderOneTimeSlots(group.one_time_schedules) : ''}
+            ${!group.schedule && (!group.one_time_schedules || group.one_time_schedules.length === 0) ? '<em style="color:#94a3b8;font-size:0.9rem;">No schedule set</em>' : ''}
           </div>
           <div class="group-actions">
             <button onclick="editGroupSchedule('${escapeHtml(group.name)}')">✏️ Edit Schedule</button>
@@ -16303,15 +16329,42 @@
 
             // Format display based on time remaining
             let displayText = '';
+            let timeColor = '#8ab4ff'; // Default blue
+
             if (totalHours >= 24) {
               const days = Math.floor(totalHours / 24);
               const hours = totalHours % 24;
               displayText = `${days}d ${hours}h ${remainingMins}m`;
+              timeColor = '#6ee7b7'; // Green for safe time
+            } else if (totalHours >= 6) {
+              displayText = `${totalHours}h ${remainingMins}m`;
+              timeColor = '#6ee7b7'; // Green
+            } else if (totalHours >= 2) {
+              displayText = `${totalHours}h ${remainingMins}m`;
+              timeColor = '#fbbf24'; // Orange for upcoming
             } else {
               displayText = `${totalHours}h ${remainingMins}m`;
+              timeColor = '#f87171'; // Red for critical
             }
 
-            panel.innerHTML = `Next ${day} at ${time}<br><b style="font-size:1.2rem;">${displayText}</b>`;
+            panel.innerHTML = `
+              <div style="color: rgba(255, 255, 255, 0.7); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+                ⏰ Next Class
+              </div>
+              <div style="color: rgba(255, 255, 255, 0.95); font-weight: 600; margin-bottom: 8px; font-size: 14px;">
+                ${day} at ${time}
+              </div>
+              <div style="
+                color: ${timeColor};
+                font-weight: 700;
+                font-size: 20px;
+                text-shadow: 0 2px 8px ${timeColor}40;
+                font-variant-numeric: tabular-nums;
+                letter-spacing: 0.5px;
+              ">
+                ${displayText}
+              </div>
+            `;
           };
           update();
           countdownTimer = setInterval(update, 60000);
@@ -19603,13 +19656,13 @@
 
               const emailFrame = document.querySelector('iframe[src*="email-system-complete.html"]');
               console.log('📧 [AUTO-EMAIL] Email iframe found:', !!emailFrame);
-              
+
               if (emailFrame && emailFrame.contentWindow) {
                 let emailsSent = 0;
                 studentsInGroup.forEach(student => {
                   if (student.email) {
                     console.log(`📧 [AUTO-EMAIL] Sending to ${student.name} (${student.email})`);
-                    
+
                     // Create a plain object with only the necessary string values to avoid DataCloneError
                     const emailData = {
                       action: 'sendClassCancellationEmail',
@@ -19621,7 +19674,7 @@
                       canceledDate: String(dateStr || ''),
                       reason: String(note || 'Schedule adjustment'),
                     };
-                    
+
                     try {
                       emailFrame.contentWindow.postMessage(emailData, '*');
                       emailsSent++;
@@ -19645,7 +19698,9 @@
               } else {
                 console.error('❌ [AUTO-EMAIL] Email iframe not found or not ready');
                 console.error('   - Make sure email-system-complete.html is loaded in an iframe');
-                alert('⚠️ Email system not ready. Cancellation emails could not be sent.\n\nPlease ensure the email iframe is loaded.');
+                alert(
+                  '⚠️ Email system not ready. Cancellation emails could not be sent.\n\nPlease ensure the email iframe is loaded.'
+                );
               }
             } else {
               console.log(`ℹ️ [CLASS CANCELLED] No active students found in ${groupName} - no emails to send`);
@@ -23085,9 +23140,11 @@
                 date: dateStr,
                 reason: reason || 'Class canceled',
               });
-              
+
               // Show success message
-              alert(`✅ Class canceled successfully!\n\nGroup: ${groupName}\nDate: ${dateDisplay}\n\nCancellation emails have been sent to all students.`);
+              alert(
+                `✅ Class canceled successfully!\n\nGroup: ${groupName}\nDate: ${dateDisplay}\n\nCancellation emails have been sent to all students.`
+              );
             } else {
               console.error('[CLASS CANCELLED] ❌ Failed to cancel class');
               alert('❌ Failed to cancel class. Please check the console for errors.');
