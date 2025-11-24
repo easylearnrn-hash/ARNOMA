@@ -9,7 +9,7 @@
     <meta http-equiv="Expires" content="-1" />
 
     <!-- CACHE BUSTER: Force reload by changing title and meta tags -->
-    <meta name="version" content="2.21.3" />
+    <meta name="version" content="2.21.5" />
     <meta name="build-timestamp" content="20251123-152500" />
     <!-- Mobile Device Detection and Redirect -->
     <script>
@@ -9706,6 +9706,9 @@
           console.log('🌀 Added spinning class, button classes:', btn.className);
           const originalText = btn.innerHTML;
           btn.innerHTML = '🔄'; // Use spinning arrows emoji
+          
+          // Ensure spinner shows for at least 1.5 seconds for visibility
+          const minDisplayTime = new Promise(resolve => setTimeout(resolve, 1500));
 
           try {
             console.log('📧 Showing notification and preparing query...');
@@ -9800,6 +9803,9 @@
             console.error("Error fetching today's emails:", error);
             showNotification('❌ Error: ' + error.message, 'error');
           } finally {
+            // Wait for minimum display time to ensure animation is visible
+            await minDisplayTime;
+            
             btn.classList.remove('spinning'); // Remove spinning animation
             console.log('⏹️ Removed spinning class, button classes:', btn.className);
             btn.disabled = false;
