@@ -2,8 +2,8 @@
 <html lang="en">
 <!--
     ╔═══════════════════════════════════════════════════════════════════╗
-    ║  ARNOMA EMAIL AUTOMATION SYSTEM v3.18.0                           ║
-    ║  Template Editor Bug Fixes + Cursor Sync Enhancement             ║
+    ║  ARNOMA EMAIL AUTOMATION SYSTEM v3.17.0                           ║
+    ║  All 12 Production Templates Loaded by Default                   ║
     ╚═══════════════════════════════════════════════════════════════════╝
 
     🎯 SYSTEM OVERVIEW:
@@ -322,6 +322,7 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            isolation: isolate; /* Isolate backdrop-filter to modal only */
         }
 
         .modal.active {
@@ -337,6 +338,7 @@
             background: rgba(15,23,42,0.8);
             backdrop-filter: blur(12px);
             -webkit-backdrop-filter: blur(12px);
+            will-change: opacity; /* Hint browser to optimize layer */
         }
 
         .modal-card {
@@ -2250,12 +2252,6 @@
         function closeSentEmails() {
             document.getElementById('sentEmailsModal').classList.remove('active');
             document.body.style.overflow = '';
-            
-            // Force browser repaint to prevent visual artifacts
-            document.body.style.transform = 'translateZ(0)';
-            setTimeout(() => {
-                document.body.style.transform = '';
-            }, 10);
         }
         function openEditor() {
             document.getElementById('editorModal').classList.add('active');
@@ -2332,17 +2328,13 @@
             const modal = document.getElementById('editorModal');
             modal.classList.remove('active');
             
-            // Properly restore body overflow and clear any lingering modal state
-            document.body.style.overflow = '';
-            
-            // Force browser repaint to prevent color/filter artifacts
-            // This fixes the pink tint bug caused by backdrop-filter interaction with body pseudo-elements
-            document.body.style.transform = 'translateZ(0)';
+            // Force cleanup of any lingering backdrop effects
             requestAnimationFrame(() => {
-                document.body.style.transform = '';
+                document.body.style.overflow = '';
+                // Clear any inline styles that might have been added
+                document.body.style.removeProperty('filter');
+                document.body.style.removeProperty('backdrop-filter');
             });
-            
-            console.log('✅ Template editor closed - theme colors preserved');
         }
 
         // ============================================================
@@ -2497,9 +2489,9 @@
 
         function insertInfoBox() {
             const textarea = document.getElementById('htmlBodyEditor');
-            const previewBody = document.getElementById('previewBody');
-            
-            // Info box HTML template
+            const start = textarea.selectionStart;
+            const end = textarea.selectionEnd;
+
             const infoBoxHTML = `
 <div style="background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border: 2px solid rgba(102,126,234,0.3); border-radius: 16px; padding: 20px; margin: 24px 0; backdrop-filter: blur(10px);">
     <p style="margin: 8px 0; color: #667eea; font-weight: 600;">TEXT GOES HERE</p>
@@ -2507,41 +2499,13 @@
     <p style="margin: 8px 0;"><strong>Detail:</strong> Add details here</p>
 </div>`;
 
-            // Check if preview is focused (user is editing in preview)
-            if (document.activeElement === previewBody && lastPreviewSelection) {
-                // Insert into preview at cursor position
-                const range = lastPreviewSelection.getRangeAt(0);
-                range.deleteContents();
-                
-                const tempDiv = document.createElement('div');
-                tempDiv.innerHTML = infoBoxHTML;
-                const fragment = document.createDocumentFragment();
-                while (tempDiv.firstChild) {
-                    fragment.appendChild(tempDiv.firstChild);
-                }
-                
-                range.insertNode(fragment);
-                
-                // Sync preview changes back to code editor
-                syncPreviewToCode();
-                
-                console.log('📦 Info box inserted into preview and synced to code');
-            } else {
-                // Insert into code editor at cursor position
-                const start = textarea.selectionStart;
-                const end = textarea.selectionEnd;
+            textarea.value = textarea.value.substring(0, start) + infoBoxHTML + textarea.value.substring(end);
 
-                textarea.value = textarea.value.substring(0, start) + infoBoxHTML + textarea.value.substring(end);
+            textarea.focus();
+            textarea.selectionStart = start;
+            textarea.selectionEnd = start + infoBoxHTML.length;
 
-                // Restore focus and set cursor after inserted content
-                textarea.focus();
-                const newCursorPos = start + infoBoxHTML.length;
-                textarea.setSelectionRange(newCursorPos, newCursorPos);
-
-                console.log('📦 Info box inserted into code editor');
-            }
-
-            // Update preview to reflect changes
+            // Update preview after inserting info box
             updatePreview();
         }
 
@@ -2638,85 +2602,6 @@
                 lastPreviewSelection = window.getSelection();
                 console.log('💾 Preview selection saved');
             }
-        }
-
-        // ============================================================
-        // PREVIEW-TO-EDITOR CURSOR SYNC
-        // ============================================================
-        // Maps clicks in preview to corresponding HTML in editor with cursor positioning
-        function syncPreviewClickToEditor(event) {
-            const previewBody = document.getElementById('previewBody');
-            const codeEditor = document.getElementById('htmlBodyEditor');
-            
-            if (!previewBody || !codeEditor) return;
-
-            // Get the clicked element within preview
-            let clickedElement = event.target;
-            
-            // Get the full HTML content
-            const fullHTML = codeEditor.value;
-            
-            // Get the clicked element's outer HTML
-            let elementHTML = clickedElement.outerHTML;
-            
-            // If clicked on text node, get parent element
-            if (clickedElement.nodeType === 3) {
-                clickedElement = clickedElement.parentElement;
-                elementHTML = clickedElement.outerHTML;
-            }
-
-            // Find first 50 chars of element HTML to search in code
-            const searchPattern = elementHTML.substring(0, Math.min(50, elementHTML.length));
-            
-            // Find position in code editor
-            const position = fullHTML.indexOf(searchPattern);
-            
-            if (position !== -1) {
-                // Focus the code editor
-                codeEditor.focus();
-                
-                // Set cursor position at the found HTML element
-                codeEditor.setSelectionRange(position, position);
-                
-                // Scroll the textarea to make the cursor visible
-                // Calculate approximate line number
-                const textBeforeCursor = fullHTML.substring(0, position);
-                const lineNumber = (textBeforeCursor.match(/\n/g) || []).length;
-                const lineHeight = 20; // Approximate line height in pixels
-                const scrollPosition = lineNumber * lineHeight - 100; // Offset to center
-                
-                codeEditor.scrollTop = Math.max(0, scrollPosition);
-                
-                // Flash highlight effect on the textarea (visual feedback)
-                codeEditor.style.transition = 'background 0.3s ease';
-                const originalBg = codeEditor.style.background;
-                codeEditor.style.background = 'rgba(102,126,234,0.15)';
-                
-                setTimeout(() => {
-                    codeEditor.style.background = originalBg;
-                }, 300);
-                
-                console.log(`🎯 Synced preview click to editor position ${position} (line ~${lineNumber})`);
-            } else {
-                console.log('⚠️ Could not find exact match in code');
-            }
-        }
-
-        // Initialize preview click handler when editor opens
-        function initializePreviewClickSync() {
-            const previewBody = document.getElementById('previewBody');
-            if (previewBody && !previewBody.dataset.clickSyncEnabled) {
-                previewBody.addEventListener('click', syncPreviewClickToEditor);
-                previewBody.dataset.clickSyncEnabled = 'true';
-                console.log('✅ Preview-to-editor cursor sync initialized');
-            }
-        }
-
-        // Call initialization when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializePreviewClickSync);
-        } else {
-            initializePreviewClickSync();
         }
 
         function openAutomations() {
