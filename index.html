@@ -6205,10 +6205,10 @@
               id="autoRefreshToggle"
               class="control-btn"
               onclick="toggleAutoRefresh()"
-              title="Toggle 30-second auto-refresh (currently OFF)"
+              title="Toggle 15-second auto-refresh (currently OFF)"
               style="font-size: 11px; font-weight: 700"
             >
-              30s
+              15s
             </button>
             <button
               id="earningsForecastBtn"
@@ -7132,7 +7132,7 @@
         // Timing constants
         const TIMING = {
           NEW_PAYMENT_INDICATOR: 60000, // 60 seconds
-          AUTO_REFRESH_INTERVAL: 30000, // 30 seconds
+          AUTO_REFRESH_INTERVAL: 15000, // 15 seconds
           API_DELAY: 100, // 100ms between API calls
           FULL_SYNC_API_DELAY: 150, // 150ms to respect Gmail rate limits during full sync
         };
@@ -11697,9 +11697,9 @@
 
           if (autoRefreshEnabled) {
             toggleBtn.classList.add('auto-refresh-active');
-            toggleBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
+            toggleBtn.title = 'Auto-refresh ON (every 15s) - Click to disable';
             startAutoRefresh();
-            showNotification('✅ Auto-refresh enabled (every 30 seconds)', 'success');
+            showNotification('✅ Auto-refresh enabled (every 15 seconds)', 'success');
           } else {
             toggleBtn.classList.remove('auto-refresh-active');
             toggleBtn.title = 'Auto-refresh OFF - Click to enable';
@@ -25477,7 +25477,7 @@
           const autoRefreshBtn = document.getElementById('autoRefreshToggle');
           if (autoRefreshEnabled && autoRefreshBtn) {
             autoRefreshBtn.classList.add('auto-refresh-active');
-            autoRefreshBtn.title = 'Auto-refresh ON (every 30s) - Click to disable';
+            autoRefreshBtn.title = 'Auto-refresh ON (every 15s) - Click to disable';
             startAutoRefresh();
           }
 
