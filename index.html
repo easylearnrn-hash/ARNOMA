@@ -20292,6 +20292,25 @@
             // debugLog('🚀 Initializing AbsentManager...');
             await loadAbsences();
             isInitialized = true;
+            
+            // Set up real-time subscription for cross-device sync
+            debugLog('🔔 Setting up real-time subscription for student_absences...');
+            const channel = supabase
+              .channel('student_absences_changes')
+              .on('postgres_changes', 
+                { event: '*', schema: 'public', table: 'student_absences' },
+                async (payload) => {
+                  debugLog('🔔 Absence change detected from another device:', payload);
+                  // Reload absences from Supabase to stay in sync
+                  await loadAbsences();
+                  // Refresh calendar if visible
+                  if (typeof renderCalendar === 'function') {
+                    renderCalendar();
+                  }
+                }
+              )
+              .subscribe();
+            debugLog('✅ Real-time subscription active for absences');
           }
 
           // Public API
