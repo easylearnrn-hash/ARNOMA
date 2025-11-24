@@ -73,7 +73,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="3.18.0">
+    <meta name="version" content="3.19.0">
     <title>ARNOMA Email System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -1942,7 +1942,13 @@
                 document.body.addEventListener('click', (e) => {
                     // Don't close if clicking the info icon itself (to allow opening)
                     const icon = e.target.closest('.info-icon');
-                    if (!icon) {
+                    
+                    // Don't close if clicking inside preview (prevents interference with preview-to-editor sync)
+                    const isPreviewClick = e.target.closest('.preview-container') || 
+                                          e.target.closest('#previewBody') ||
+                                          e.target.id === 'previewBody';
+                    
+                    if (!icon && !isPreviewClick) {
                         console.log('🔴 CLICK detected outside tooltip - hiding');
                         this.handleMouseLeave();
                     }
@@ -2550,6 +2556,32 @@
                 previewBody = previewBody.replace(regex, value);
             }
 
+            // Inject line markers for accurate preview-to-code mapping
+            // Split body into lines and add invisible markers
+            const bodyLines = body.split('\n');
+            let markedPreviewBody = '';
+            let currentLineNum = 0;
+            
+            for (let i = 0; i < bodyLines.length; i++) {
+                const line = bodyLines[i];
+                currentLineNum = i;
+                
+                // Add line marker before each line
+                markedPreviewBody += `<span class="line-marker" data-line="${currentLineNum}" style="display:none;"></span>`;
+                
+                // Replace variables in this line
+                let processedLine = line;
+                for (const [key, value] of Object.entries(sampleData)) {
+                    const regex = new RegExp(`\\{\\{${key}\\}\\}`, 'g');
+                    processedLine = processedLine.replace(regex, value);
+                }
+                
+                markedPreviewBody += processedLine;
+                if (i < bodyLines.length - 1) {
+                    markedPreviewBody += '\n';
+                }
+            }
+
             // Update preview elements
             const subjectElement = document.getElementById('previewSubject');
             const bodyElement = document.getElementById('previewBody');
@@ -2559,7 +2591,7 @@
             }
 
             if (bodyElement) {
-                bodyElement.innerHTML = previewBody || 'Start typing to see your email preview with sample student data...';
+                bodyElement.innerHTML = markedPreviewBody || 'Start typing to see your email preview with sample student data...';
             }
 
             setTimeout(() => { isUpdatingFromCode = false; }, 100);
@@ -2599,10 +2631,159 @@
         function savePreviewSelection() {
             const previewBody = document.getElementById('previewBody');
             if (document.activeElement === previewBody) {
-                lastPreviewSelection = window.getSelection();
-                console.log('💾 Preview selection saved');
+                const selection = window.getSelection();
+                // Only save if user actually selected text (not just clicked)
+                if (selection && selection.toString().length > 0) {
+                    lastPreviewSelection = selection;
+                    console.log('💾 Preview selection saved:', selection.toString().substring(0, 30) + '...');
+                }
             }
         }
+
+        // ============================================================
+        // PREVIEW-TO-EDITOR CURSOR SYNC (v3.19.0)
+        // ============================================================
+        let lastPreviewClickTime = 0;
+        const CLICK_THROTTLE_MS = 100;
+
+        function setCursorToLine(lineNumber) {
+            const textarea = document.getElementById('htmlBodyEditor');
+            if (!textarea) return;
+
+            try {
+                // Split content into lines
+                const lines = textarea.value.split('\n');
+                
+                // Ensure line number is valid
+                if (lineNumber < 0 || lineNumber >= lines.length) {
+                    console.warn('⚠️ Line number out of range:', lineNumber);
+                    return;
+                }
+
+                // Calculate character position for the target line
+                let charPosition = 0;
+                for (let i = 0; i < lineNumber; i++) {
+                    charPosition += lines[i].length + 1; // +1 for newline
+                }
+
+                // Set cursor position
+                textarea.focus();
+                textarea.setSelectionRange(charPosition, charPosition);
+
+                // Scroll line into view
+                const lineHeight = 20; // Approximate line height in pixels
+                const scrollPosition = lineNumber * lineHeight;
+                textarea.scrollTop = scrollPosition - (textarea.clientHeight / 3);
+
+                console.log(`✅ Cursor set to line ${lineNumber}`);
+
+                // Visual feedback: briefly highlight the line
+                highlightEditorLine(lineNumber);
+            } catch (error) {
+                console.error('❌ Error setting cursor position:', error);
+            }
+        }
+
+        function highlightEditorLine(lineNumber) {
+            // Create temporary highlight effect
+            const textarea = document.getElementById('htmlBodyEditor');
+            if (!textarea) return;
+
+            // Store original background
+            const originalBg = textarea.style.backgroundColor;
+            
+            // Add subtle flash effect
+            textarea.style.transition = 'background-color 0.3s ease';
+            textarea.style.backgroundColor = 'rgba(102, 126, 234, 0.15)';
+            
+            setTimeout(() => {
+                textarea.style.backgroundColor = originalBg;
+                setTimeout(() => {
+                    textarea.style.transition = '';
+                }, 300);
+            }, 300);
+        }
+
+        function handlePreviewClick(event) {
+            // Throttle clicks to prevent multiple syncs
+            const now = Date.now();
+            if (now - lastPreviewClickTime < CLICK_THROTTLE_MS) {
+                return;
+            }
+            lastPreviewClickTime = now;
+
+            // Don't sync if user is selecting text
+            const selection = window.getSelection();
+            if (selection && selection.toString().length > 0) {
+                return;
+            }
+
+            // Find the nearest line marker
+            let target = event.target;
+            let lineMarker = null;
+            let depth = 0;
+            const MAX_DEPTH = 10;
+
+            // Walk up the DOM tree to find the nearest line marker
+            while (target && depth < MAX_DEPTH) {
+                // Check if this element has a line marker sibling before it
+                const prevSibling = target.previousElementSibling;
+                if (prevSibling && prevSibling.classList.contains('line-marker')) {
+                    lineMarker = prevSibling;
+                    break;
+                }
+
+                // Check if this element IS a line marker
+                if (target.classList && target.classList.contains('line-marker')) {
+                    lineMarker = target;
+                    break;
+                }
+
+                // Check children for line markers
+                if (target.querySelector) {
+                    const childMarker = target.querySelector('.line-marker');
+                    if (childMarker) {
+                        lineMarker = childMarker;
+                        break;
+                    }
+                }
+
+                target = target.parentElement;
+                depth++;
+            }
+
+            if (lineMarker) {
+                const lineNumber = parseInt(lineMarker.getAttribute('data-line'), 10);
+                if (!isNaN(lineNumber)) {
+                    console.log(`🎯 Preview clicked → jumping to line ${lineNumber}`);
+                    setCursorToLine(lineNumber);
+                } else {
+                    console.warn('⚠️ Line marker found but invalid line number:', lineMarker.getAttribute('data-line'));
+                }
+            } else {
+                console.log('ℹ️ No line marker found near clicked element');
+            }
+        }
+
+        // Initialize preview-to-editor sync when modal opens
+        function initPreviewToEditorSync() {
+            const previewBody = document.getElementById('previewBody');
+            if (previewBody) {
+                // Remove any existing listener to prevent duplicates
+                previewBody.removeEventListener('click', handlePreviewClick);
+                // Add the click handler
+                previewBody.addEventListener('click', handlePreviewClick);
+                console.log('✅ Preview-to-editor cursor sync initialized');
+            }
+        }
+
+        // Call init when editor opens
+        const originalOpenEditor = openEditor;
+        function openEditor() {
+            originalOpenEditor();
+            setTimeout(initPreviewToEditorSync, 100);
+        }
+
 
         function openAutomations() {
             document.getElementById('automationsModal').classList.add('active');
