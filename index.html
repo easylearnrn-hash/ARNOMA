@@ -9703,8 +9703,9 @@
           console.log('✅ syncBtn found, disabling and starting fetch...');
           btn.disabled = true;
           btn.classList.add('spinning'); // Add spinning animation
+          console.log('🌀 Added spinning class, button classes:', btn.className);
           const originalText = btn.innerHTML;
-          btn.innerHTML = '⏳';
+          btn.innerHTML = '🔄'; // Use spinning arrows emoji
 
           try {
             console.log('📧 Showing notification and preparing query...');
@@ -9800,6 +9801,7 @@
             showNotification('❌ Error: ' + error.message, 'error');
           } finally {
             btn.classList.remove('spinning'); // Remove spinning animation
+            console.log('⏹️ Removed spinning class, button classes:', btn.className);
             btn.disabled = false;
             btn.innerHTML = originalText;
           }
