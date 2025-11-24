@@ -2,8 +2,8 @@
 <html lang="en">
 <!--
     ╔═══════════════════════════════════════════════════════════════════╗
-    ║  ARNOMA EMAIL AUTOMATION SYSTEM v3.17.0                           ║
-    ║  All 12 Production Templates Loaded by Default                   ║
+    ║  ARNOMA EMAIL AUTOMATION SYSTEM v3.18.0                           ║
+    ║  Template Editor Bug Fixes + Cursor Sync Enhancement             ║
     ╚═══════════════════════════════════════════════════════════════════╝
 
     🎯 SYSTEM OVERVIEW:
@@ -73,7 +73,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="version" content="3.14.0">
+    <meta name="version" content="3.18.0">
     <title>ARNOMA Email System</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -991,11 +991,10 @@
                             <div id="previewBody" contenteditable="true" style="color: #333; outline: none; cursor: text;"
                                  oninput="syncPreviewToCode()"
                                  onpaste="handlePreviewPaste(event)"
-                                 onclick="syncCursorFromPreviewToCode(event)"
                                  onmouseup="savePreviewSelection()"
                                  onkeyup="savePreviewSelection()"
                                  onfocus="savePreviewSelection()"
-                                 title="✏️ Click to edit - changes sync to code automatically | Click any element to jump to code">
+                                 title="✏️ Click to edit - changes sync to code automatically">
                                 Start typing to see your email preview with sample student data...
                             </div>
                         </div>
@@ -2251,6 +2250,12 @@
         function closeSentEmails() {
             document.getElementById('sentEmailsModal').classList.remove('active');
             document.body.style.overflow = '';
+            
+            // Force browser repaint to prevent visual artifacts
+            document.body.style.transform = 'translateZ(0)';
+            setTimeout(() => {
+                document.body.style.transform = '';
+            }, 10);
         }
         function openEditor() {
             document.getElementById('editorModal').classList.add('active');
@@ -2327,17 +2332,17 @@
             const modal = document.getElementById('editorModal');
             modal.classList.remove('active');
             
-            // Comprehensive cleanup to prevent any visual glitches
+            // Properly restore body overflow and clear any lingering modal state
             document.body.style.overflow = '';
-            document.body.style.filter = '';
-            document.body.style.backdropFilter = '';
-            document.body.style.webkitBackdropFilter = '';
             
-            // Clear modal dataset
-            delete modal.dataset.editingId;
+            // Force browser repaint to prevent color/filter artifacts
+            // This fixes the pink tint bug caused by backdrop-filter interaction with body pseudo-elements
+            document.body.style.transform = 'translateZ(0)';
+            requestAnimationFrame(() => {
+                document.body.style.transform = '';
+            });
             
-            // Force repaint to ensure overlay fully disappears
-            void document.body.offsetHeight;
+            console.log('✅ Template editor closed - theme colors preserved');
         }
 
         // ============================================================
@@ -2428,46 +2433,46 @@
         function insertVariable(variable) {
             const previewBody = document.getElementById('previewBody');
             const textarea = document.getElementById('htmlBodyEditor');
-            
+
             // Check if preview is focused/active OR if we have a stored preview selection
             const isPreviewFocused = document.activeElement === previewBody;
             const hasPreviewSelection = lastPreviewSelection && lastPreviewSelection.rangeCount > 0;
-            
+
             if ((isPreviewFocused || hasPreviewSelection) && previewBody) {
                 // Insert into preview at cursor position
                 const selection = lastPreviewSelection || window.getSelection();
-                
+
                 if (selection.rangeCount > 0) {
                     const range = selection.getRangeAt(0);
-                    
+
                     // Only delete if there's actually selected text
                     if (!range.collapsed) {
                         range.deleteContents();
                     }
-                    
+
                     // Create text node with the variable
                     const textNode = document.createTextNode(variable);
                     range.insertNode(textNode);
-                    
+
                     // Move cursor after the inserted variable
                     range.setStartAfter(textNode);
                     range.setEndAfter(textNode);
                     range.collapse(false);
-                    
+
                     // Update the selection
                     const newSelection = window.getSelection();
                     newSelection.removeAllRanges();
                     newSelection.addRange(range);
-                    
+
                     // Store the new selection
                     lastPreviewSelection = newSelection;
-                    
+
                     // Keep focus on preview
                     previewBody.focus();
-                    
+
                     // Sync preview changes to code
                     syncPreviewToCode();
-                    
+
                     console.log('✅ Variable inserted into preview:', variable);
                 }
             } else {
@@ -2485,7 +2490,7 @@
 
                 // Update preview after inserting variable
                 updatePreview();
-                
+
                 console.log('✅ Variable inserted into code editor:', variable);
             }
         }
@@ -2493,7 +2498,8 @@
         function insertInfoBox() {
             const textarea = document.getElementById('htmlBodyEditor');
             const previewBody = document.getElementById('previewBody');
-
+            
+            // Info box HTML template
             const infoBoxHTML = `
 <div style="background: linear-gradient(135deg, rgba(102,126,234,0.1), rgba(118,75,162,0.1)); border: 2px solid rgba(102,126,234,0.3); border-radius: 16px; padding: 20px; margin: 24px 0; backdrop-filter: blur(10px);">
     <p style="margin: 8px 0; color: #667eea; font-weight: 600;">TEXT GOES HERE</p>
@@ -2501,46 +2507,42 @@
     <p style="margin: 8px 0;"><strong>Detail:</strong> Add details here</p>
 </div>`;
 
-            // Check if preview is focused - insert there instead
-            if (document.activeElement === previewBody) {
-                // Insert into contenteditable preview
-                const selection = window.getSelection();
-                if (selection.rangeCount > 0) {
-                    const range = selection.getRangeAt(0);
-                    range.deleteContents();
-                    
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = infoBoxHTML;
-                    const fragment = document.createDocumentFragment();
-                    while (tempDiv.firstChild) {
-                        fragment.appendChild(tempDiv.firstChild);
-                    }
-                    range.insertNode(fragment);
-                    
-                    // Sync back to code editor
-                    syncPreviewToCode();
-                    console.log('✅ Info box inserted into preview and synced to code');
-                } else {
-                    // Fallback: append to end of preview
-                    previewBody.innerHTML += infoBoxHTML;
-                    syncPreviewToCode();
-                    console.log('✅ Info box appended to preview (no selection)');
+            // Check if preview is focused (user is editing in preview)
+            if (document.activeElement === previewBody && lastPreviewSelection) {
+                // Insert into preview at cursor position
+                const range = lastPreviewSelection.getRangeAt(0);
+                range.deleteContents();
+                
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = infoBoxHTML;
+                const fragment = document.createDocumentFragment();
+                while (tempDiv.firstChild) {
+                    fragment.appendChild(tempDiv.firstChild);
                 }
+                
+                range.insertNode(fragment);
+                
+                // Sync preview changes back to code editor
+                syncPreviewToCode();
+                
+                console.log('📦 Info box inserted into preview and synced to code');
             } else {
-                // Insert into code editor (textarea)
+                // Insert into code editor at cursor position
                 const start = textarea.selectionStart;
                 const end = textarea.selectionEnd;
-                
+
                 textarea.value = textarea.value.substring(0, start) + infoBoxHTML + textarea.value.substring(end);
-                
+
+                // Restore focus and set cursor after inserted content
                 textarea.focus();
-                textarea.selectionStart = start;
-                textarea.selectionEnd = start + infoBoxHTML.length;
-                
-                // Update preview after inserting info box
-                updatePreview();
-                console.log('✅ Info box inserted into code editor');
+                const newCursorPos = start + infoBoxHTML.length;
+                textarea.setSelectionRange(newCursorPos, newCursorPos);
+
+                console.log('📦 Info box inserted into code editor');
             }
+
+            // Update preview to reflect changes
+            updatePreview();
         }
 
         // ============================================================
@@ -2638,75 +2640,83 @@
             }
         }
 
-        function syncCursorFromPreviewToCode(event) {
+        // ============================================================
+        // PREVIEW-TO-EDITOR CURSOR SYNC
+        // ============================================================
+        // Maps clicks in preview to corresponding HTML in editor with cursor positioning
+        function syncPreviewClickToEditor(event) {
             const previewBody = document.getElementById('previewBody');
             const codeEditor = document.getElementById('htmlBodyEditor');
             
             if (!previewBody || !codeEditor) return;
 
-            try {
-                // Get the clicked element and its path in the DOM
-                const clickedElement = event.target;
-                
-                // Get the outer HTML of the clicked element (or closest parent with a tag)
-                let targetElement = clickedElement;
-                while (targetElement && targetElement !== previewBody && targetElement.nodeType !== 1) {
-                    targetElement = targetElement.parentNode;
-                }
-                
-                if (!targetElement || targetElement === previewBody) {
-                    console.log('📍 Click was on preview root, skipping sync');
-                    return;
-                }
-
-                // Get the element's outer HTML as search string
-                const targetHTML = targetElement.outerHTML;
-                
-                // Try to find this HTML in the code editor
-                const codeContent = codeEditor.value;
-                const position = codeContent.indexOf(targetHTML);
-                
-                if (position !== -1) {
-                    // Found exact match - set cursor to beginning of this element
-                    codeEditor.focus();
-                    codeEditor.selectionStart = position;
-                    codeEditor.selectionEnd = position;
-                    
-                    // Scroll textarea to show the cursor
-                    // Calculate approximate line number
-                    const textBeforeCursor = codeContent.substring(0, position);
-                    const lineNumber = (textBeforeCursor.match(/\n/g) || []).length;
-                    const lineHeight = 20; // Approximate line height
-                    const scrollPosition = lineNumber * lineHeight - 100; // Offset to show context
-                    
-                    codeEditor.scrollTop = Math.max(0, scrollPosition);
-                    
-                    console.log(`✅ Synced cursor to code editor at position ${position} (line ~${lineNumber + 1})`);
-                } else {
-                    // Try to find a partial match or tag name
-                    const tagName = targetElement.tagName.toLowerCase();
-                    const searchPattern = `<${tagName}`;
-                    const firstMatch = codeContent.indexOf(searchPattern);
-                    
-                    if (firstMatch !== -1) {
-                        codeEditor.focus();
-                        codeEditor.selectionStart = firstMatch;
-                        codeEditor.selectionEnd = firstMatch;
-                        
-                        const textBeforeCursor = codeContent.substring(0, firstMatch);
-                        const lineNumber = (textBeforeCursor.match(/\n/g) || []).length;
-                        const lineHeight = 20;
-                        const scrollPosition = lineNumber * lineHeight - 100;
-                        codeEditor.scrollTop = Math.max(0, scrollPosition);
-                        
-                        console.log(`⚠️ Exact match not found, jumped to first <${tagName}> tag at position ${firstMatch}`);
-                    } else {
-                        console.log('❌ Could not find element in code');
-                    }
-                }
-            } catch (error) {
-                console.error('❌ Error syncing cursor from preview to code:', error);
+            // Get the clicked element within preview
+            let clickedElement = event.target;
+            
+            // Get the full HTML content
+            const fullHTML = codeEditor.value;
+            
+            // Get the clicked element's outer HTML
+            let elementHTML = clickedElement.outerHTML;
+            
+            // If clicked on text node, get parent element
+            if (clickedElement.nodeType === 3) {
+                clickedElement = clickedElement.parentElement;
+                elementHTML = clickedElement.outerHTML;
             }
+
+            // Find first 50 chars of element HTML to search in code
+            const searchPattern = elementHTML.substring(0, Math.min(50, elementHTML.length));
+            
+            // Find position in code editor
+            const position = fullHTML.indexOf(searchPattern);
+            
+            if (position !== -1) {
+                // Focus the code editor
+                codeEditor.focus();
+                
+                // Set cursor position at the found HTML element
+                codeEditor.setSelectionRange(position, position);
+                
+                // Scroll the textarea to make the cursor visible
+                // Calculate approximate line number
+                const textBeforeCursor = fullHTML.substring(0, position);
+                const lineNumber = (textBeforeCursor.match(/\n/g) || []).length;
+                const lineHeight = 20; // Approximate line height in pixels
+                const scrollPosition = lineNumber * lineHeight - 100; // Offset to center
+                
+                codeEditor.scrollTop = Math.max(0, scrollPosition);
+                
+                // Flash highlight effect on the textarea (visual feedback)
+                codeEditor.style.transition = 'background 0.3s ease';
+                const originalBg = codeEditor.style.background;
+                codeEditor.style.background = 'rgba(102,126,234,0.15)';
+                
+                setTimeout(() => {
+                    codeEditor.style.background = originalBg;
+                }, 300);
+                
+                console.log(`🎯 Synced preview click to editor position ${position} (line ~${lineNumber})`);
+            } else {
+                console.log('⚠️ Could not find exact match in code');
+            }
+        }
+
+        // Initialize preview click handler when editor opens
+        function initializePreviewClickSync() {
+            const previewBody = document.getElementById('previewBody');
+            if (previewBody && !previewBody.dataset.clickSyncEnabled) {
+                previewBody.addEventListener('click', syncPreviewClickToEditor);
+                previewBody.dataset.clickSyncEnabled = 'true';
+                console.log('✅ Preview-to-editor cursor sync initialized');
+            }
+        }
+
+        // Call initialization when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializePreviewClickSync);
+        } else {
+            initializePreviewClickSync();
         }
 
         function openAutomations() {
